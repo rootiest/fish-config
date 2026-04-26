@@ -1,7 +1,7 @@
+#!/usr/bin/env fish
+
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
-
-#!/usr/bin/env fish
 
 # 1. Read input and extract session ID
 set -l input (cat)
