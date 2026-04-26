@@ -23,7 +23,7 @@ A feature-rich Fish shell configuration for CachyOS (Arch Linux), built around a
 This config layers on top of the CachyOS base Fish configuration and adds:
 
 - **Catppuccin Mocha** theming throughout (prompt, FZF, Zellij)
-- **Starship** prompt with Bobthefish fallback color definitions
+- **Starship** prompt with VI key bindings
 - **Fisher** plugin management with FZF key bindings and Catppuccin syntax colors
 - **Smart CLI wrappers** that prefer modern tools (`bat`, `lsd`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Auto Python venv** activation on directory change (direnv-aware)
@@ -42,9 +42,9 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 ├── fish_variables        # Universal variables
 ├── conf.d/               # Auto-sourced configuration fragments
 │   ├── abbr.fish         # All abbreviations
-│   ├── bobthefish.fish   # Bobthefish theme + VI key bindings
 │   ├── cheat.fish        # cheat.sh completions
 │   ├── fzf.fish          # FZF key binding initialization
+│   ├── keybindings.fish  # Custom key bindings
 │   ├── tailscale.fish    # Tailscale CLI completions
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases

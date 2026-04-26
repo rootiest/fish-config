@@ -37,6 +37,9 @@ set -gx SUDO_EDITOR $EDITOR
 #   ──────────────────────────── GPG variables ─────────────────────────────
 set -gx GPG_TTY (tty)
 
+#   ────────────────────────────── Key bindings ────────────────────────────
+set -g fish_key_bindings fish_vi_key_bindings
+
 #   ──────────────────────── Source FZF integration ────────────────────────
 source ~/.config/fish/integrations/fzf.fish
 # Configure FZF theme
