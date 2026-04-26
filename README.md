@@ -1,0 +1,526 @@
+# Fish Shell Configuration
+
+A feature-rich Fish shell configuration for CachyOS (Arch Linux), built around a Catppuccin Mocha aesthetic with a curated set of modern CLI tool integrations, smart shell functions, and a heavily customized abbreviation system for keyboard-driven workflows.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Structure](#structure)
+- [Plugins](#plugins)
+- [Theme & Prompt](#theme--prompt)
+- [Integrations](#integrations)
+- [Functions](#functions)
+- [Abbreviations](#abbreviations)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Personalization](#personalization)
+- [Full Requirements](#full-requirements)
+
+---
+
+## Overview
+
+This config layers on top of the CachyOS base Fish configuration and adds:
+
+- **Catppuccin Mocha** theming throughout (prompt, FZF, Zellij)
+- **Starship** prompt with Bobthefish fallback color definitions
+- **Fisher** plugin management with FZF key bindings and Catppuccin syntax colors
+- **Smart CLI wrappers** that prefer modern tools (`bat`, `lsd`, `btop`, `dust`, `prettyping`) with graceful fallbacks
+- **Auto Python venv** activation on directory change (direnv-aware)
+- **Kitty terminal** deep integration for splits, tabs, and SSH
+- **AI workflow** helpers for Claude and Gemini session management
+- **WakaTime** shell activity tracking
+
+---
+
+## Structure
+
+```
+~/.config/fish/
+├── config.fish           # Main entry point
+├── fish_plugins          # Fisher plugin list
+├── fish_variables        # Universal variables
+├── conf.d/               # Auto-sourced configuration fragments
+│   ├── abbr.fish         # All abbreviations
+│   ├── bobthefish.fish   # Bobthefish theme + VI key bindings
+│   ├── cheat.fish        # cheat.sh completions
+│   ├── fzf.fish          # FZF key binding initialization
+│   ├── tailscale.fish    # Tailscale CLI completions
+│   ├── wakatime.fish     # WakaTime shell hook
+│   └── zoxide.fish       # Zoxide z/zi aliases
+├── functions/            # Custom functions (one per file)
+├── completions/          # Custom tab completions
+├── integrations/         # Integration scripts
+│   └── fzf.fish          # FZF theme and binding config
+└── themes/               # Catppuccin theme files
+    ├── Catppuccin Mocha.theme
+    ├── Catppuccin Macchiato.theme
+    ├── Catppuccin Frappe.theme
+    └── Catppuccin Latte.theme
+```
+
+---
+
+## Plugins
+
+Managed via [Fisher](https://github.com/jorgebucaran/fisher):
+
+| Plugin | Purpose |
+|---|---|
+| `jorgebucaran/fisher` | Plugin manager |
+| `patrickf1/fzf.fish` | FZF key bindings for history, files, processes, git |
+| `catppuccin/fish` | Catppuccin Mocha syntax highlighting |
+| `jorgebucaran/autopair.fish` | Auto-close brackets, quotes, and other pairs |
+| `jorgebucaran/replay.fish` | Run bash commands in fish without losing state |
+| `nickeb96/puffer-fish` | Expand `...` to `../..`, `!!` to last command, etc. |
+| `mattmc3/magic-enter.fish` | Smart Enter: runs `ls` / `git status` on blank line |
+| `jorgebucaran/spark.fish` | Sparkline bar charts in the terminal |
+
+Install plugins after cloning:
+
+```fish
+fisher update
+```
+
+---
+
+## Theme & Prompt
+
+### Starship
+
+The primary prompt is [Starship](https://starship.rs/), initialized in `config.fish`. Configure it via `~/.config/starship.toml`.
+
+### FZF
+
+FZF is themed to Catppuccin Mocha with the following colors set via `FZF_DEFAULT_OPTS`:
+
+- Background: `#1E1E2E` / `#313244`
+- Foreground: `#CDD6F4`
+- Highlights: `#F38BA8` (red), `#CBA6F7` (mauve), `#B4BEFE` (lavender)
+
+**Key bindings** (from `fzf.fish`):
+
+| Binding | Action |
+|---|---|
+| `Ctrl+R` | Search command history |
+| `Ctrl+F` | Search directory files |
+| `Ctrl+Alt+F` | Search git-tracked files |
+| `Ctrl+Alt+L` | Search git log |
+| `Ctrl+Alt+S` | Search git status |
+| `Ctrl+V` | Search shell variables |
+| `Ctrl+Alt+P` | Search running processes |
+
+---
+
+## Integrations
+
+### Zoxide
+
+Smart `cd` replacement. `z <keyword>` jumps to the best frecency match; `zi` opens an interactive selector.
+
+### DirEnv
+
+Automatically loads `.envrc` files on directory change. Takes priority over the built-in auto-venv logic.
+
+### Auto Python Venv
+
+When entering a directory containing a `.venv/`, the virtualenv is automatically activated. It is deactivated when you leave the project tree. DirEnv-managed directories are skipped to avoid conflicts.
+
+### WakaTime
+
+Every shell command is reported to WakaTime for time-tracking. Disable by setting `FISH_WAKATIME_DISABLED=1`.
+
+### Tailscale
+
+Full tab completion for the `tailscale` CLI is provided via `conf.d/tailscale.fish`.
+
+---
+
+## Functions
+
+### Modern CLI Replacements
+
+These functions wrap modern alternatives with graceful fallbacks to standard tools.
+
+| Function | Replaces | Tool |
+|---|---|---|
+| `ls` | `ls` | `lsd` with hyperlinks |
+| `cat` | `cat` | `bat` (plain, no pager) |
+| `less` | `less` | `most` |
+| `ping` | `ping` | `prettyping --nolegend` |
+| `top` | `top` | `btop` |
+| `rg` | `rg` | ripgrep with `--hyperlink-format=kitty` |
+| `ssh` | `ssh` | `kitten ssh` when inside Kitty |
+| `du` | `du` | `duf` (disks) / `dust` (directories) — auto-detected by argument |
+| `mkdir` | `mkdir` | Always passes `-p` in interactive mode |
+
+#### `du` — Smart Disk Usage
+
+```fish
+du              # → duf  (disk overview)
+du /some/dir    # → dust (directory breakdown)
+du --disk       # → duf  (force disk view)
+du --dir        # → dust (force directory view)
+du --dua        # → dua  (interactive mode)
+```
+
+#### `rm` — Trash-Aware Remove
+
+```fish
+rm              # List current trash contents
+rm file.txt     # Move to trash (recoverable)
+rm -r dir/      # Move directory to trash
+rm -e           # Empty all trash
+rm -e --within 2weeks  # Empty trash older than 2 weeks
+rm -S file.txt  # Permanent secure delete + fstrim
+rm -f file.txt  # Falls through to standard rm -f
+```
+
+### Directory & File Listing
+
+| Function | Description |
+|---|---|
+| `l` | `lsd -la` — long listing with git status and header |
+| `ls` | `lsd` with hyperlinks |
+| `lt` | `lsd --tree --depth=2` — shallow tree |
+| `ltr` | Reversed time-sorted listing |
+| `lS` | Size-sorted listing |
+| `llm` | Long listing sorted by modification time |
+| `lstree` | Full recursive tree via lsd |
+
+### Git
+
+| Function | Description |
+|---|---|
+| `git-clean` | Fetch, prune, update current branch, delete orphaned local branches |
+| `git-clean --force` | Same but force-deletes unmerged orphaned branches |
+| `clone` | `clone-in-kitty` wrapper |
+
+### Package Management (Arch / paru)
+
+| Function | Description |
+|---|---|
+| `pkg <name>` | Install package: `paru -S <name>` |
+| `search <query>` | Search/install interactively: `paru <query>` |
+| `upgrade` | Full system upgrade: `paru -Syu --noconfirm` |
+| `cleanup` | Log and remove orphaned packages |
+
+### Docker
+
+| Function | Description |
+|---|---|
+| `ld` / `lzd` | Launch LazyDocker using the currently active Docker context |
+| `dockup [dir]` | Pull latest images and restart docker compose services |
+| `docker ps` | Intercepted to use `dops` for a prettier process listing |
+
+### Network
+
+| Function | Description |
+|---|---|
+| `gip` | Show both public IPv4 and IPv6 addresses |
+| `gip4` | Show public IPv4 address only |
+| `gip6` | Show public IPv6 address (or error if unavailable) |
+| `ports` | List all active TCP listeners via `lsof` |
+
+### Clipboard
+
+| Function | Description |
+|---|---|
+| `y <text>` | Copy text to clipboard (Wayland `wl-copy` or X11 `xclip`) |
+| `cb <text>` | Copy to clipboard (alias for `y`) |
+| `paste` | Paste from clipboard to stdout |
+
+### Kitty Terminal
+
+| Function | Description |
+|---|---|
+| `split [-h\|-v] [cmd]` | Open a new Kitty split pane, optionally running a command |
+| `spwin` | Spawn a new Kitty OS window via `spawn-window.sh` |
+| `detach <cmd>` | Run a command fully detached (`nohup`), no output |
+| `bkg <cmd>` | Background a command, discarding all output |
+
+### System
+
+| Function | Description |
+|---|---|
+| `lock` | Lock the session via `loginctl lock-session` |
+| `screensleep` | Turn off the display via KDE PowerDevil |
+| `wake-lock <cmd>` | Run a command with `systemd-inhibit` to prevent sleep |
+| `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
+| `monitors` | Open a 4-pane Kitty layout running `btop` locally and on remote servers |
+| `tmux-clean` | Kill all detached tmux sessions |
+
+### Editors & Development
+
+| Function | Description |
+|---|---|
+| `edit` / `e` | Open in Neovim |
+| `view` | Open in Neovim read-only mode |
+| `nvimup` | Update Neovim headlessly |
+| `nlazyup` | Sync Lazy.nvim plugins headlessly |
+
+### AI Assistants
+
+| Function | Description |
+|---|---|
+| `claude-resume` | Resume Claude Code session from `.claude_session` in CWD |
+| `gemini-resume` | Resume Gemini CLI session from `.gemini_session` in CWD |
+| `code-resume` | Smart resume — tries Claude then Gemini, falls back to picker |
+| `superpowers [on\|off]` | Enable/disable the Superpowers extension for Claude and Gemini |
+
+### Fetch & Info
+
+| Function | Description |
+|---|---|
+| `ffetch` | Run fastfetch with `~/.fastfetch.jsonc` if present |
+| `cffetch` | Clear screen then run fastfetch |
+| `hist` | FZF history search — selected command is placed in the prompt and copied to clipboard |
+| `qr <text>` | Generate a terminal QR code |
+
+### Miscellaneous
+
+| Function | Description |
+|---|---|
+| `upgrade` | System upgrade via paru |
+| `zellij` | Zellij with `--theme catppuccin-mocha` |
+| `antigravity` | Wrapper that suppresses a noisy deprecation warning |
+| `bash` | Drop into bash (raw Fish session via `rawfish`) |
+| `sbver` | Show system/binary versions |
+
+---
+
+## Abbreviations
+
+Abbreviations expand in-place as you type, keeping your history clean.
+
+### Editors
+
+| Abbr | Expands To |
+|---|---|
+| `n`, `nv` | `nvim` |
+| `e` | `edit` |
+| `se` | `sudoedit` |
+| `v` | `antigravity` (VSCode-equivalent) |
+| `k` | `kate` |
+
+### Navigation
+
+| Abbr | Expands To |
+|---|---|
+| `cdnv` | `cd ~/.config/nvim` |
+| `:cdf` | `cd ~/.config/fish/` |
+| `:cdk` | `cd ~/.config/kitty/` |
+| `:cdh` | `cd ~` |
+| `:cdp` | `cd ~/projects/` (with cursor placement) |
+| `:cdcz` | `cd ~/.local/share/chezmoi/` |
+| `cdnote` | `cd ~/Documents/Rootiest Notes/` |
+
+### Git
+
+| Abbr | Expands To |
+|---|---|
+| `g` | `git` |
+| `lg` | `lazygit` |
+
+### Chezmoi
+
+| Abbr | Expands To |
+|---|---|
+| `cm` / `cz` | `chezmoi` |
+| `cme` | `chezmoi edit` |
+| `cmad` | `chezmoi add` |
+| `cmap` | `chezmoi apply` |
+| `cmf` | `chezmoi forget` |
+| `cmi` | `chezmoi init` |
+
+### Kitty Window Management
+
+These abbreviations mirror Vim/tmux ergonomics for managing Kitty splits, tabs, and windows.
+
+| Abbr | Action |
+|---|---|
+| `:q` | Close active pane |
+| `:Q` | Close active tab |
+| `:w` | New OS window |
+| `:t` | New tab |
+| `:wv` | Horizontal split |
+| `:wh` | Vertical split |
+| `:tp` / `:tn` | Navigate tabs left/right |
+| `:tl "Title"` | Rename current tab |
+| `:tgn` | New tab in `~/.config/nvim` |
+| `:tgf` | New tab in `~/.config/fish` |
+| `:tgp` | New tab in `~/projects` |
+| `:tgr` | New root tab (`sudo -i`) |
+
+### SSH
+
+| Abbr | Expands To |
+|---|---|
+| `sshr` | `ssh rootiest@rootiest-server.local` |
+| `sshrt` | `ssh rootiest-server` |
+
+### Docker
+
+| Abbr | Expands To |
+|---|---|
+| `dcr` | `docker context use rootiest` |
+| `dcl` | `docker context use default` |
+| `dck` | `docker context use racknerd` |
+| `dcls` | `docker context ls` |
+| `lzd` | `ld` (LazyDocker) |
+
+### Systemctl
+
+| Abbr | Expands To |
+|---|---|
+| `sc` | `systemctl` |
+| `ssc` | `sudo systemctl` |
+| `scu` | `systemctl --user` |
+| `st` | `systemctl status` |
+| `scr` | `systemctl restart` |
+
+### Beads (bd)
+
+| Abbr | Expands To |
+|---|---|
+| `bl` | `bd list` |
+| `bs` | `bd sync` |
+| `bc` | `bd create --title` |
+| `lb` | `lazybeads` |
+
+---
+
+## Dependencies
+
+### Required
+
+| Tool | Purpose |
+|---|---|
+| [Fish](https://fishshell.com/) | Shell |
+| [Fisher](https://github.com/jorgebucaran/fisher) | Plugin manager |
+| [Starship](https://starship.rs/) | Prompt |
+| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder |
+| [zoxide](https://github.com/ajeetdsouza/zoxide) | Smart directory jumper |
+| [direnv](https://direnv.net/) | Per-directory env loading |
+| [paru](https://github.com/Morganamilo/paru) | AUR helper |
+
+### Recommended
+
+| Tool | Replaces |
+|---|---|
+| [lsd](https://github.com/lsd-rs/lsd) | `ls` |
+| [bat](https://github.com/sharkdp/bat) | `cat` |
+| [btop](https://github.com/aristocratsupply/btop) | `top` |
+| [dust](https://github.com/bootandy/dust) | `du` (directories) |
+| [duf](https://github.com/muesli/duf) | `du` (disks) |
+| [prettyping](https://github.com/denilsonsa/prettyping) | `ping` |
+| [most](https://www.jedsoft.org/most/) | `less` |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) | `grep` |
+| [lazygit](https://github.com/jesseduffield/lazygit) | git TUI |
+| [lazydocker](https://github.com/jesseduffield/lazydocker) | Docker TUI |
+| [trash-cli](https://github.com/andreafrancia/trash-cli) | Safe `rm` |
+| [Kitty](https://sw.kovidgoyal.net/kitty/) | Terminal emulator |
+| [WakaTime](https://wakatime.com/) | Activity tracking |
+
+---
+
+## Installation
+
+This config is managed as a Git repository. To use it on a new machine:
+
+```fish
+# Back up any existing config
+mv ~/.config/fish ~/.config/fish.bak
+
+# Clone this repo
+git clone <repo-url> ~/.config/fish
+
+# Install Fisher and plugins
+curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+fisher update
+
+# Apply the Catppuccin Mocha theme
+fish_config theme save "Catppuccin Mocha"
+```
+
+A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are sourced from `~/.config/.user-dots/fish/secrets.fish` and excluded from version control.
+
+---
+
+## Personalization
+
+Sensitive credentials and machine-specific paths are kept out of version control via a secondary private directory at `~/.config/.user-dots/fish/`. Two files are sourced automatically by `config.fish` if they exist:
+
+```
+~/.config/.user-dots/fish/
+├── secrets.fish   # API keys, tokens, passwords, personal identifiers
+└── local.fish     # Machine-specific paths and environment variables
+```
+
+### secrets.fish
+
+Use this file for anything you would not commit to a public repo: API keys, auth tokens, passwords, and personal identifiers like usernames or email addresses.
+
+```fish
+# ~/.config/.user-dots/fish/secrets.fish
+
+### Identity ###
+set -gx MY_NAME "Your Name"
+set -gx MY_EMAIL "you@example.com"
+set -gx GPG_RECIPIENT "you@example.com"
+
+### API Keys & Tokens ###
+set -gx GITHUB_TOKEN ghp_yourTokenHere
+set -gx OPENAI_API_KEY sk-proj-yourKeyHere
+set -gx GITEA_TOKEN yourGiteaTokenHere
+set -gx GITEA_CHOSEN_LOGIN your.gitea.instance
+set -gx TEA_LOGIN your.gitea.instance
+
+### Backup ###
+set -gx KOPIA_PASSWORD yourKopiaPassword
+```
+
+### local.fish
+
+Use this file for paths and variables that are specific to one machine — things that would break or be wrong on any other system.
+
+```fish
+# ~/.config/.user-dots/fish/local.fish
+
+# Project root for quick cd
+set -gx cdp /home/youruser/projects
+
+# CDPATH — directories searched by cd
+set -gx CDPATH . /home/youruser/projects /home/youruser
+```
+
+### How it works
+
+`config.fish` sources both files with an existence check so the public config works cleanly on any machine that doesn't have the private repo:
+
+```fish
+if test -f $HOME/.config/.user-dots/fish/secrets.fish
+    source $HOME/.config/.user-dots/fish/secrets.fish
+end
+
+if test -f $HOME/.config/.user-dots/fish/local.fish
+    source $HOME/.config/.user-dots/fish/local.fish
+end
+```
+
+`fish_variables` (which fish auto-manages and may contain universal variable state) is excluded from this repo via `.gitignore`.
+
+---
+
+## Full Requirements
+
+For a complete, categorized list of all non-standard tools required or used by this configuration, see [requirements.md](requirements.md).
+
+---
+
+## License
+
+Copyright (C) 2026 Rootiest
+
+This project is licensed under the **GNU Affero General Public License v3.0 or later** (AGPLv3+).
+See the [LICENSE](LICENSE) file for the full license text.

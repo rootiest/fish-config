@@ -1,0 +1,14 @@
+# Debug Files/Folders
+OLD/
+*.OLD
+*.DISABLE
+*.DISABLED
+*_old
+
+# AI Session IDs
+.claude_session
+.gemini_session
+.remember/
+
+# Auto-managed by fish; contains machine-local state and universal vars
+fish_variables
