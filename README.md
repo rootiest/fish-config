@@ -431,7 +431,7 @@ This config is managed as a Git repository. To use it on a new machine:
 mv ~/.config/fish ~/.config/fish.bak
 
 # Clone this repo
-git clone <repo-url> ~/.config/fish
+git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
 
 # Install Fisher and plugins
 curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
