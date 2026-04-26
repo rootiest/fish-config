@@ -6,7 +6,17 @@
 #          ╰──────────────────────────────────────────────────────────╯
 
 #   ──────────────────────── Source CachyOS configs ────────────────────────
-source /usr/share/cachyos-fish-config/cachyos-config.fish
+if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
+    source /usr/share/cachyos-fish-config/cachyos-config.fish
+end
+
+# CachyOS defines aliases for ls/lt/cleanup that shadow our function files.
+# Erase them and immediately source our versions.
+for _fname in ls lt cleanup
+    functions --erase $_fname
+    source $__fish_config_dir/functions/$_fname.fish
+end
+set --erase _fname
 
 #   ───────────────────────── Source user secrets ──────────────────────────
 if test -f $HOME/.config/.user-dots/fish/secrets.fish
