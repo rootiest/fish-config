@@ -313,7 +313,6 @@ Abbreviations expand in-place as you type, keeping your history clean.
 | `:cdh` | `cd ~` |
 | `:cdp` | `cd ~/projects/` (with cursor placement) |
 | `:cdcz` | `cd ~/.local/share/chezmoi/` |
-| `cdnote` | `cd ~/Documents/Rootiest Notes/` |
 
 ### Git
 
@@ -354,20 +353,19 @@ These abbreviations mirror Vim/tmux ergonomics for managing Kitty splits, tabs, 
 
 ### SSH
 
-| Abbr | Expands To |
-|---|---|
-| `sshr` | `ssh rootiest@rootiest-server.local` |
-| `sshrt` | `ssh rootiest-server` |
+Machine-specific SSH abbreviations (e.g. `sshr`, `sshrt`) live in `~/.config/.user-dots/fish/local.fish`.
+(See [Personalization](#personalization) for examples)
 
 ### Docker
 
 | Abbr | Expands To |
 |---|---|
-| `dcr` | `docker context use rootiest` |
 | `dcl` | `docker context use default` |
-| `dck` | `docker context use racknerd` |
 | `dcls` | `docker context ls` |
 | `lzd` | `ld` (LazyDocker) |
+
+Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/local.fish`.
+(See [Personalization](#personalization) for examples)
 
 ### Systemctl
 
@@ -492,6 +490,16 @@ set -gx cdp /home/youruser/projects
 
 # CDPATH — directories searched by cd
 set -gx CDPATH . /home/youruser/projects /home/youruser
+
+### SSH ###
+# Quick shortcuts to your own servers
+abbr -a sshr 'ssh you@your-server.local'
+abbr -a sshw 'ssh you@work-server.example.com'
+
+### Docker contexts ###
+# Named shortcuts for your own Docker contexts (docker context ls)
+abbr -a dcr 'docker context use my-remote-server'
+abbr -a dcw 'docker context use work-server'
 ```
 
 ### How it works

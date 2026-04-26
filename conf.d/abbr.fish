@@ -195,15 +195,8 @@ abbr -a editt kitty @ launch --type tab nvim
 # Spawn window
 abbr -a :sw spwin
 
-### SSH ###
-abbr -a sshr 'ssh rootiest@rootiest-server.local'
-abbr -a sshrt 'ssh rootiest-server'
-abbr -a sshrl 'ssh rootiest@rootiest-server.local'
-
 ### Docker ###
-abbr -a dcr 'docker context use rootiest # Rootiest Server'
 abbr -a dcl 'docker context use default # Local Host'
-abbr -a dck 'docker context use racknerd # RackNerd Server'
 abbr -a lzd ld
 abbr -a dcls 'docker context ls'
 
@@ -225,5 +218,3 @@ abbr -a ssct 'sudo systemctl status'
 abbr -a sscs 'sudo systemctl start'
 abbr -a sscr 'sudo systemctl restart'
 
-### Rootiest Notes ###
-abbr -a cdnote 'cd ~/Documents/Rootiest\ Notes/ # Rootiest Notes'
