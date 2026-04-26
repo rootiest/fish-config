@@ -17,6 +17,21 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
 end
 set --erase _fname
 
+#   ──────────────────────────── Bootstrap Fisher ──────────────────────────
+if not type -q fisher
+    echo "Fisher plugin manager not found."
+    read -l -P "Install Fisher and plugins now? [Y/n] " _fisher_reply
+    if test -z "$_fisher_reply" -o "$_fisher_reply" = Y -o "$_fisher_reply" = y
+        echo "Installing Fisher..."
+        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+        fisher update
+        fish_config theme choose "Catppuccin Mocha"
+    else
+        echo "Skipping Fisher install. Some features may be unavailable."
+    end
+    set --erase _fisher_reply
+end
+
 #   ───────────────────────── Source user secrets ──────────────────────────
 if test -f $HOME/.config/.user-dots/fish/secrets.fish
     source $HOME/.config/.user-dots/fish/secrets.fish

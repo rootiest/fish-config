@@ -433,14 +433,9 @@ mv ~/.config/fish ~/.config/fish.bak
 
 # Clone this repo
 git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
-
-# Install Fisher and plugins
-curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-fisher update
-
-# Apply the Catppuccin Mocha theme
-fish_config theme save "Catppuccin Mocha"
 ```
+
+Then open a new Fish shell — Fisher and all plugins will be installed automatically on first launch, and the Catppuccin Mocha theme will be applied.
 
 A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are sourced from `~/.config/.user-dots/fish/secrets.fish` and excluded from version control.
 
