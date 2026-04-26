@@ -25,7 +25,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 - **Catppuccin Mocha** theming throughout (prompt, FZF, Zellij)
 - **Starship** prompt with VI key bindings
 - **Fisher** plugin management with FZF key bindings and Catppuccin syntax colors
-- **Smart CLI wrappers** that prefer modern tools (`bat`, `lsd`, `btop`, `dust`, `prettyping`) with graceful fallbacks
+- **Smart CLI wrappers** that prefer modern tools (`eza`, `bat`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Auto Python venv** activation on directory change (direnv-aware)
 - **Kitty terminal** deep integration for splits, tabs, and SSH
 - **AI workflow** helpers for Claude and Gemini session management
@@ -144,7 +144,7 @@ These functions wrap modern alternatives with graceful fallbacks to standard too
 
 | Function | Replaces | Tool |
 |---|---|---|
-| `ls` | `ls` | `lsd` with hyperlinks |
+| `ls` | `ls` | `eza` (falls back to `lsd`, then system `ls`) |
 | `cat` | `cat` | `bat` (plain, no pager) |
 | `less` | `less` | `most` |
 | `ping` | `ping` | `prettyping --nolegend` |
@@ -180,13 +180,13 @@ rm -f file.txt  # Falls through to standard rm -f
 
 | Function | Description |
 |---|---|
-| `l` | `lsd -la` — long listing with git status and header |
-| `ls` | `lsd` with hyperlinks |
-| `lt` | `lsd --tree --depth=2` — shallow tree |
-| `ltr` | Reversed time-sorted listing |
-| `lS` | Size-sorted listing |
-| `llm` | Long listing sorted by modification time |
-| `lstree` | Full recursive tree via lsd |
+| `l` | `eza` — long listing, all files, git status and header |
+| `ls` | `eza` — with icons, color, and hyperlinks |
+| `lt` | `eza` — tree listing, depth 2 |
+| `ltr` | `eza` — long listing, reversed modification time |
+| `lS` | `eza` — size-sorted listing |
+| `llm` | `eza` — long listing sorted by modification time |
+| `lstree` | `eza` — full recursive tree |
 
 ### Git
 
@@ -406,7 +406,8 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 
 | Tool | Replaces |
 |---|---|
-| [lsd](https://github.com/lsd-rs/lsd) | `ls` |
+| [eza](https://github.com/eza-community/eza) | `ls` (preferred) |
+| [lsd](https://github.com/lsd-rs/lsd) | `ls` (fallback) |
 | [bat](https://github.com/sharkdp/bat) | `cat` |
 | [btop](https://github.com/aristocratsupply/btop) | `top` |
 | [dust](https://github.com/bootandy/dust) | `du` (directories) |
