@@ -65,6 +65,21 @@ abbr -a ag. antigravity .
 abbr -a :q kitty @ close-window # Kitty (Closes the active split/pane)
 abbr -a :Q kitty @ close-tab # Kitty (Closes the whole tab)
 
+######### Alternates ##########
+### ls alternates
+# List all files
+abbr -a l ls
+# List all files by size
+abbr -a lS lss
+# List all files by reverse modified time
+abbr -a lsR lsr
+# List by extension
+abbr -a lX lx
+# Tree listing (depth 2)
+abbr -a lT lt
+# Full tree listing
+abbr -a lsT lstree
+
 # Window Creation (OS Windows)
 # abbr -a :w wezterm cli spawn --new-window # WezTerm
 abbr -a :w kitty @ launch --type=os-window # Kitty
@@ -217,4 +232,3 @@ abbr -a scr 'systemctl restart'
 abbr -a ssct 'sudo systemctl status'
 abbr -a sscs 'sudo systemctl start'
 abbr -a sscr 'sudo systemctl restart'
-

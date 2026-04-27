@@ -180,12 +180,13 @@ rm -f file.txt  # Falls through to standard rm -f
 
 | Function | Description |
 |---|---|
-| `l` | `eza` — long listing, all files, git status and header |
-| `ls` | `eza` — with icons, color, and hyperlinks |
+| `ls` | `eza` — long listing, all files, icons, color, hyperlinks |
+| `lss` | `eza` — size-sorted long listing with gradient color scale |
+| `lsr` | `eza` — reversed time-sorted oneline listing |
+| `ltr` | `eza` — long listing, reversed modification time, age color scale |
+| `lD` | `eza` — directories only |
+| `lx` | `eza` — long listing sorted by extension |
 | `lt` | `eza` — tree listing, depth 2 |
-| `ltr` | `eza` — long listing, reversed modification time |
-| `lS` | `eza` — size-sorted listing |
-| `llm` | `eza` — long listing sorted by modification time |
 | `lstree` | `eza` — full recursive tree |
 
 ### Git
@@ -302,6 +303,17 @@ Abbreviations expand in-place as you type, keeping your history clean.
 | `se` | `sudoedit` |
 | `v` | `antigravity` (VSCode-equivalent) |
 | `k` | `kate` |
+
+### Listing
+
+| Abbr | Expands To |
+|---|---|
+| `l` | `ls` |
+| `lS` | `lss` (size-sorted) |
+| `lsR` | `lsr` (reversed time) |
+| `lX` | `lx` (extension-sorted) |
+| `lT` | `lt` (tree, depth 2) |
+| `lsT` | `lstree` (full tree) |
 
 ### Navigation
 

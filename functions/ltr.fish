@@ -3,9 +3,9 @@
 
 function ltr --description 'Reversed time-sorted listing'
     if which eza >/dev/null 2>&1
-        eza --long --sort=modified --reverse --icons --color=auto --hyperlink $argv
+        eza --long --all --sort=modified --reverse --icons --hyperlink --color=auto --color-scale=age --color-scale-mode=gradient $argv
     else if which lsd >/dev/null 2>&1
-        lsd -ltr $argv
+        lsd --long --all --sort=time --reverse --color=auto --hyperlink=always $argv
     else
         command ls --color=auto -ltr $argv
     end
