@@ -218,7 +218,7 @@ abbr -a dcls 'docker context ls'
 ### Beads ###
 abbr -a bl 'bd list'
 abbr -a bs 'bd sync'
-abbr -a bc 'bd create --title'
+abbr -a bC 'bd create --title'
 abbr -a bsh 'bd show'
 abbr -a lb lazybeads
 

@@ -193,6 +193,8 @@ rm -f file.txt  # Falls through to standard rm -f
 
 | Function | Description |
 |---|---|
+| `branch` | Switch to or create a git branch |
+| `gitup` | Fetch updates and show git status |
 | `git-clean` | Fetch, prune, update current branch, delete orphaned local branches |
 | `git-clean --force` | Same but force-deletes unmerged orphaned branches |
 | `clone` | `clone-in-kitty` wrapper |
@@ -257,6 +259,7 @@ rm -f file.txt  # Falls through to standard rm -f
 |---|---|
 | `edit` / `e` | Open in Neovim |
 | `view` | Open in Neovim read-only mode |
+| `fc` | Edit and execute the last command (Bash-style `fc`) |
 | `nvimup` | Update Neovim headlessly |
 | `nlazyup` | Sync Lazy.nvim plugins headlessly |
 
@@ -338,6 +341,7 @@ Abbreviations expand in-place as you type, keeping your history clean.
 | Abbr | Expands To |
 |---|---|
 | `cm` / `cz` | `chezmoi` |
+| `cmcd` | `chezmoi cd` |
 | `cme` | `chezmoi edit` |
 | `cmad` | `chezmoi add` |
 | `cmap` | `chezmoi apply` |
@@ -387,7 +391,11 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 | `ssc` | `sudo systemctl` |
 | `scu` | `systemctl --user` |
 | `st` | `systemctl status` |
+| `scs` | `systemctl start` |
 | `scr` | `systemctl restart` |
+| `ssct` | `sudo systemctl status` |
+| `sscs` | `sudo systemctl start` |
+| `sscr` | `sudo systemctl restart` |
 
 ### Beads (bd)
 
@@ -395,7 +403,8 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 |---|---|
 | `bl` | `bd list` |
 | `bs` | `bd sync` |
-| `bc` | `bd create --title` |
+| `bC` | `bd create --title` |
+| `bsh` | `bd show` |
 | `lb` | `lazybeads` |
 
 ---
