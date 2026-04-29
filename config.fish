@@ -43,6 +43,7 @@ if test -f $HOME/.config/.user-dots/fish/local.fish
 end
 
 #   ──────────────────────────── PATH variables ────────────────────────────
+fish_add_path ~/.local/bin
 fish_add_path ~/Applications
 fish_add_path ~/scripts
 fish_add_path -mg --move ~/.cargo/bin
