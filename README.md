@@ -218,6 +218,7 @@ rm -f file.txt  # Falls through to standard rm -f
 | `git-clean` | Fetch, prune, update current branch, delete orphaned local branches |
 | `git-clean --force` | Same but force-deletes unmerged orphaned branches |
 | `clone` | `clone-in-kitty` wrapper |
+| `gitui` | Fast terminal Git UI |
 
 ### Package Management (Arch / paru)
 
@@ -272,6 +273,14 @@ rm -f file.txt  # Falls through to standard rm -f
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
 | `monitors` | Open a 4-pane Kitty layout running `btop` locally and on remote servers |
 | `tmux-clean` | Kill all detached tmux sessions |
+| `limine-edit` | Safely edit and re-verify Limine bootloader configuration |
+
+### Media & Utilities
+
+| Function | Description |
+|---|---|
+| `dng2avif` | Convert DNG raw images to 10-bit HDR AVIF |
+| `steam-dl` | Run Steam while inhibiting system sleep |
 
 ### Editors & Development
 
