@@ -9,12 +9,14 @@ A feature-rich Fish shell configuration for CachyOS (Arch Linux), built around a
 - [Plugins](#plugins)
 - [Theme & Prompt](#theme--prompt)
 - [Integrations](#integrations)
+- [Key Bindings](#key-bindings)
 - [Functions](#functions)
 - [Abbreviations](#abbreviations)
 - [Dependencies](#dependencies)
 - [Installation](#installation)
 - [Personalization](#personalization)
 - [Full Requirements](#full-requirements)
+- [License](#license)
 
 ---
 
