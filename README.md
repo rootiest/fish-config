@@ -136,6 +136,18 @@ Full tab completion for the `tailscale` CLI is provided via `conf.d/tailscale.fi
 
 ---
 
+## Key Bindings
+
+Beyond standard shell and FZF bindings, these custom interactive shortcuts are available:
+
+| Binding | Action | Description |
+|---|---|---|
+| `Ctrl+G` | Previous Path Head | Behaves like `!$:h` in Bash. Inserts the directory part of the previous command's last argument. |
+| `Ctrl+F` | Interactive History Sub | Behaves like `!!:s/old/new/` in Bash. Performs substitution on the previous command using `old/new` syntax. |
+| `Ctrl+Alt+U` | Replace Command Token | Strips the first token (the command) from the current line. **If the line is empty**, it pulls the previous command and strips its first token, placing the cursor at the start for a quick replacement (e.g., changing `mkdir` to `cd` while keeping the paths). |
+
+---
+
 ## Functions
 
 ### Modern CLI Replacements
