@@ -1,7 +1,12 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
-
-### Abreviations ###
+#
+#          ╭──────────────────────────────────────────────────────────╮
+#          │                       Abreviations                       │
+#          ╰──────────────────────────────────────────────────────────╯
+#
+# This file contains all the abbreviations for the terminal.
+# It is sourced by Fish on startup.
 
 # Neovim
 abbr -a n nvim
@@ -232,3 +237,11 @@ abbr -a scr 'systemctl restart'
 abbr -a ssct 'sudo systemctl status'
 abbr -a sscs 'sudo systemctl start'
 abbr -a sscr 'sudo systemctl restart'
+
+### History Expansions and Substitutions ###
+abbr -a !^ --position anywhere --function expand_bang_caret
+abbr -a '!*' --position anywhere --function expand_bang_all
+abbr -a typo_sub --position anywhere --regex '\^([^^]+)\^([^^]*)' --function expand_typo_sub
+abbr -a bang_string --position anywhere --regex '![\w.-]+' --function expand_bang_string
+abbr -a bang_search --position anywhere --regex '!\?[\w.-]+\??' --function expand_bang_search
+abbr -a bang_minus_n --position anywhere --regex '!-(\d+)' --function expand_bang_minus_n
