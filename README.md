@@ -48,6 +48,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── fzf.fish          # FZF key binding initialization
 │   ├── keybindings.fish  # Custom key bindings
 │   ├── tailscale.fish    # Tailscale CLI completions
+│   ├── theme.fish        # Theme syntax highlighting colors
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases
 ├── functions/            # Custom functions (one per file)
