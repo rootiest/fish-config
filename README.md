@@ -45,9 +45,10 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 ├── conf.d/               # Auto-sourced configuration fragments
 │   ├── abbr.fish         # All abbreviations
 │   ├── cheat.fish        # cheat.sh completions
+│   ├── key_bindings.fish # Custom key bindings
 │   ├── fzf.fish          # FZF key binding initialization
-│   ├── keybindings.fish  # Custom key bindings
 │   ├── tailscale.fish    # Tailscale CLI completions
+│   ├── theme.fish        # Theme syntax highlighting colors
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases
 ├── functions/            # Custom functions (one per file)
@@ -100,17 +101,7 @@ FZF is themed to Catppuccin Mocha with the following colors set via `FZF_DEFAULT
 - Foreground: `#CDD6F4`
 - Highlights: `#F38BA8` (red), `#CBA6F7` (mauve), `#B4BEFE` (lavender)
 
-**Key bindings** (from `fzf.fish`):
-
-| Binding | Action |
-|---|---|
-| `Ctrl+R` | Search command history |
-| `Ctrl+F` | Search directory files |
-| `Ctrl+Alt+F` | Search git-tracked files |
-| `Ctrl+Alt+L` | Search git log |
-| `Ctrl+Alt+S` | Search git status |
-| `Ctrl+V` | Search shell variables |
-| `Ctrl+Alt+P` | Search running processes |
+See [FZF Bindings](#fzf-bindings) under Key Bindings for the default FZF shortcuts.
 
 ---
 
@@ -118,7 +109,7 @@ FZF is themed to Catppuccin Mocha with the following colors set via `FZF_DEFAULT
 
 ### Zoxide
 
-Smart `cd` replacement. `z <keyword>` jumps to the best frecency match; `zi` opens an interactive selector.
+Smart `cd` replacement. `cd` (or `z`) `<keyword>` jumps to the best frecency match; `cdi` (or `zi`) opens an interactive selector.
 
 ### DirEnv
 
@@ -139,6 +130,21 @@ Full tab completion for the `tailscale` CLI is provided via `conf.d/tailscale.fi
 ---
 
 ## Key Bindings
+
+### FZF Bindings
+
+These are the default FZF bindings (from `fzf.fish`):
+
+| Binding | Action |
+|---|---|
+| `Ctrl+R` | Search command history |
+| `Ctrl+Alt+F` | Search git-tracked files |
+| `Ctrl+Alt+L` | Search git log |
+| `Ctrl+Alt+S` | Search git status |
+| `Ctrl+V` | Search shell variables |
+| `Ctrl+Alt+P` | Search running processes |
+
+### User Bindings
 
 Beyond standard shell and FZF bindings, these custom interactive shortcuts are available:
 
@@ -212,6 +218,7 @@ rm -f file.txt  # Falls through to standard rm -f
 | `git-clean` | Fetch, prune, update current branch, delete orphaned local branches |
 | `git-clean --force` | Same but force-deletes unmerged orphaned branches |
 | `clone` | `clone-in-kitty` wrapper |
+| `gitui` | Fast terminal Git UI |
 
 ### Package Management (Arch / paru)
 
@@ -266,6 +273,14 @@ rm -f file.txt  # Falls through to standard rm -f
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
 | `monitors` | Open a 4-pane Kitty layout running `btop` locally and on remote servers |
 | `tmux-clean` | Kill all detached tmux sessions |
+| `limine-edit` | Safely edit and re-verify Limine bootloader configuration |
+
+### Media & Utilities
+
+| Function | Description |
+|---|---|
+| `dng2avif` | Convert DNG raw images to 10-bit HDR AVIF |
+| `steam-dl` | Run Steam while inhibiting system sleep |
 
 ### Editors & Development
 
