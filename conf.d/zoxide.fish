@@ -92,9 +92,10 @@ alias z=__zoxide_z
 abbr --erase zi &>/dev/null
 alias zi=__zoxide_zi
 
+abbr --erase cdi &>/dev/null
+alias cdi=__zoxide_zi
+
 # =============================================================================
-#
-# To initialize zoxide, add this to your configuration (usually
-# ~/.config/fish/config.fish):
-#
-#   zoxide init fish | source
+# Initialize zoxide:
+
+zoxide init --cmd=cd fish | source

@@ -118,7 +118,7 @@ FZF is themed to Catppuccin Mocha with the following colors set via `FZF_DEFAULT
 
 ### Zoxide
 
-Smart `cd` replacement. `z <keyword>` jumps to the best frecency match; `zi` opens an interactive selector.
+Smart `cd` replacement. `cd` (or `z`) `<keyword>` jumps to the best frecency match; `cdi` (or `zi`) opens an interactive selector.
 
 ### DirEnv
 
