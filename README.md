@@ -143,7 +143,7 @@ Beyond standard shell and FZF bindings, these custom interactive shortcuts are a
 | Binding | Action | Description |
 |---|---|---|
 | `Ctrl+G` | Previous Path Head | Behaves like `!$:h` in Bash. Inserts the directory part of the previous command's last argument. |
-| `Ctrl+F` | Interactive History Sub | Behaves like `!!:s/old/new/` in Bash. Performs substitution on the previous command using `old/new` syntax. |
+| `Ctrl+F` | Interactive History Substitution | Behaves like `!!:s/old/new/` in Bash. Performs substitution on the previous command using `old/new` syntax. When no text is entered, prepends `sudo` to the previous command. The `old/new/n` syntax will perform substitution on the command `n` lines previous in the history. |
 | `Ctrl+Alt+U` | Replace Command Token | Strips the first token (the command) from the current line. **If the line is empty**, it pulls the previous command and strips its first token, placing the cursor at the start for a quick replacement (e.g., changing `mkdir` to `cd` while keeping the paths). |
 
 ---
@@ -308,6 +308,19 @@ rm -f file.txt  # Falls through to standard rm -f
 ## Abbreviations
 
 Abbreviations expand in-place as you type, keeping your history clean.
+
+### History Expansions (Bash-style)
+
+These abbreviations replicate Bash's bang-style history expansions. They expand anywhere in the command line when a trigger key (like `Space` or `Enter`) is pressed.
+
+| Abbr | Expansion | Description |
+|---|---|---|
+| `!^` | First argument | Expands to the first argument of the previous command |
+| `!*` | All arguments | Expands to all arguments of the previous command |
+| `!-n` | n-th previous | Expands to the n-th previous command in history (e.g., `!-2`) |
+| `!string` | Prefix search | Expands to the most recent command starting with `string` |
+| `!?string?` | Contains search | Expands to the most recent command containing `string` |
+| `^old^new` | Quick substitution | Replaces `old` with `new` in the previous command and expands to it |
 
 ### Editors
 
