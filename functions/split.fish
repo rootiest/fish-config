@@ -1,28 +1,45 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Run a command in a new Kitty split
-function split --description 'Run a command in a new Kitty split'
-    if test "$TERM" != xterm-kitty
-        echo "Error: The 'split' command requires Kitty terminal." >&2
+# Run a command in a new terminal split
+function split --description 'Run a command in a new terminal split'
+    set -l is_kitty 0
+    set -l is_wezterm 0
+
+    if test "$TERM" = xterm-kitty
+        set is_kitty 1
+    else if test "$TERM_PROGRAM" = WezTerm
+        set is_wezterm 1
+    else
+        echo "Error: The 'split' command requires Kitty or WezTerm terminal." >&2
         return 1
     end
 
-    set -l location hsplit
+    set -l kitty_loc hsplit
+    set -l wez_loc --bottom
 
     switch $argv[1]
         case -h --horizontal
-            set location hsplit
+            set kitty_loc hsplit
+            set wez_loc --bottom
             set -e argv[1]
         case -v --vertical
-            set location vsplit
+            set kitty_loc vsplit
+            set wez_loc --right
             set -e argv[1]
     end
 
     if test (count $argv) -gt 0
-        # Set HIDE_GREETING=1 before fish starts
-        kitty @ launch --location=$location --cwd=$PWD env HIDE_GREETING=1 fish -c "$argv; exec fish"
+        if test $is_kitty -eq 1
+            kitty @ launch --location=$kitty_loc --cwd=$PWD env HIDE_GREETING=1 fish -c "$argv; exec fish"
+        else if test $is_wezterm -eq 1
+            wezterm cli split-pane $wez_loc --cwd $PWD -- env HIDE_GREETING=1 fish -c "$argv; exec fish" >/dev/null
+        end
     else
-        kitty @ launch --location=$location --cwd=$PWD env HIDE_GREETING=1 fish -c "exec fish"
+        if test $is_kitty -eq 1
+            kitty @ launch --location=$kitty_loc --cwd=$PWD env HIDE_GREETING=1 fish -c "exec fish"
+        else if test $is_wezterm -eq 1
+            wezterm cli split-pane $wez_loc --cwd $PWD -- env HIDE_GREETING=1 fish -c "exec fish" >/dev/null
+        end
     end
 end
