@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function superpowers --description "Toggle superpowers extension for Gemini and Claude"
+# Toggle superpowers extension for Gemini and Claude
+function superpowers --description 'Toggle superpowers extension for Gemini and Claude'
     set -l scope_gemini workspace
     set -l scope_claude project
     set -l mode ""

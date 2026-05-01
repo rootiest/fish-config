@@ -1,12 +1,13 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function bd-pull -d "Pull new Gitea issues into local Beads and link them"
+# Pull new Gitea issues into local Beads and link them
+function bd-pull --description 'Pull new Gitea issues into local Beads and link them'
     if not set -q argv[1]; echo "Need repo owner/name"; return 1; end
     if not set -q GITEA_TOKEN; echo "\$GITEA_TOKEN not set"; return 1; end
 
     set -l REPO $argv[1]
-    set -l GITEA_URL "https://git.rootiest.dev"
+    if not set -q GITEA_URL; echo "\$GITEA_URL not set"; return 1; end
     set -l IMPORT_COUNT 0
 
     echo (set_color blue)"📡 Checking Gitea: $REPO..."(set_color normal)

@@ -1,4 +1,5 @@
-function expand_bang_search
+# Execute expand_bang_search
+function expand_bang_search --description 'Execute expand_bang_search'
     set -l token $argv[1]
     if test -z "$token"
         set token (commandline -t)

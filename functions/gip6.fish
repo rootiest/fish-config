@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function gip6 -d "Get public IPv6 address"
+# Get public IPv6 address
+function gip6 --description 'Get public IPv6 address'
     # Use -6 to force IPv6 and --fail to catch network errors
     set -l ip (curl -6 -s --fail https://icanhazip.com 2>/dev/null)
     

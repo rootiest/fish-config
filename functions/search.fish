@@ -5,6 +5,6 @@
 # This runs `paru` with the search flags.
 # The `$argv` variable passes all arguments given to the `search` function
 # directly to the `paru` command.
-function search
+function search --wraps='paru' --description 'directly to the `paru` command.'
     paru $argv
 end

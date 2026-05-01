@@ -1,4 +1,5 @@
-function expand_bang_string
+# Execute expand_bang_string
+function expand_bang_string --description 'Execute expand_bang_string'
     # Fish 4.x passes the matched token as argv[1]
     set -l token $argv[1]
     if test -z "$token"

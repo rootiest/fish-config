@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function code-resume
+# Execute code-resume
+function code-resume --description 'Execute code-resume'
     if test -f .claude_session
         set -l sid (cat .claude_session)
         echo "Resuming Claude session: $sid"

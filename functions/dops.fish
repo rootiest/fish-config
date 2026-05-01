@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function docker
+# Execute docker
+function docker --description 'Execute docker'
     if test -n "$argv[1]"
         switch $argv[1]
             case ps

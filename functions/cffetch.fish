@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function cffetch --wraps='clear;fastfetch' --description 'alias cffetch=clear;fastfetch'
+# alias cffetch=clear;fastfetch
+function cffetch --description 'alias cffetch=clear;fastfetch'
     clear
     if which fastfetch >/dev/null 2>&1
         if ls ~/.fastfetch.jsonc >/dev/null 2>&1

@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function du
+# Execute du
+function du --description 'Execute du'
     set cmd ""
     set args
 

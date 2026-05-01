@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Substitutes text in the command line using the ^old^new pattern from the previous command
 function __substitute_typo
     set -l cursor_pos (commandline -C)
     set -l cmd (commandline)

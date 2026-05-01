@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# prettyping with default nolegend
 function ping --description 'prettyping with default nolegend'
     if command -q prettyping
         # Check if the user specifically asked for the legend

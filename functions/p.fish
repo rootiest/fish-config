@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Put from clipboard
 function p --description 'Put from clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv
