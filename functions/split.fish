@@ -2,6 +2,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 function split --description 'Run a command in a new Kitty split'
+    if test "$TERM" != xterm-kitty
+        echo "Error: The 'split' command requires Kitty terminal." >&2
+        return 1
+    end
+
     set -l location hsplit
 
     switch $argv[1]

@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 function rg --description 'alias rg=rg --hyperlink-format=kitty'
- command rg --hyperlink-format=kitty $argv
-        
+    if test "$TERM" = xterm-kitty
+        command rg --hyperlink-format=kitty $argv
+    else
+        command rg $argv
+    end
 end

@@ -81,7 +81,9 @@ set -Ux FZF_DEFAULT_OPTS "\
 #
 # The Auto-Venv script above will ignore directories with a
 # .envrc file (direnv configuration) to prevent conflicts.
-direnv hook fish | source
+if type -q direnv
+    direnv hook fish | source
+end
 
 #   ────────────────────────────── Auto-Venv ───────────────────────────────
 # Auto-activate Python venv on directory change

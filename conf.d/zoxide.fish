@@ -1,7 +1,12 @@
 # =============================================================================
 #
+#
 # Utility functions for zoxide.
 #
+
+if not type -q zoxide
+    return
+end
 
 # pwd based on the value of _ZO_RESOLVE_SYMLINKS.
 function __zoxide_pwd

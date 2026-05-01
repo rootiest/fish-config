@@ -19,16 +19,24 @@ abbr -a v antigravity
 # Kate
 abbr -a k kate
 # WezTerm SSH
-abbr -a s wezterm ssh
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a s wezterm ssh
+end
 # Neovim in a new tab
-#abbr -a editt wezterm cli spawn nvim # WezTerm
-abbr -a editt kitty @ launch --type=tab --cwd=current nvim # Kitty
+if test "$TERM" = xterm-kitty
+    abbr -a editt kitty @ launch --type=tab --cwd=current nvim # Kitty
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a editt wezterm cli spawn nvim # WezTerm
+end
 # LazyGit
 abbr -a lg lazygit
 # Sudo shell
 abbr -a sudu sudo -s
 # Kitty
-abbr -a kt kitty
+if test "$TERM" = xterm-kitty
+    abbr -a kt kitty
+end
 # cat
 abbr -a c cat
 # chezmoi
@@ -65,10 +73,14 @@ abbr -a g git
 abbr -a ag antigravity
 abbr -a ag. antigravity .
 # Quit
-# abbr -a :q wezterm cli kill-pane # WezTerm
-# abbr -a :Q wezterm cli kill-pane # WezTerm
-abbr -a :q kitty @ close-window # Kitty (Closes the active split/pane)
-abbr -a :Q kitty @ close-tab # Kitty (Closes the whole tab)
+if test "$TERM" = xterm-kitty
+    abbr -a :q kitty @ close-window # Kitty (Closes the active split/pane)
+    abbr -a :Q kitty @ close-tab # Kitty (Closes the whole tab)
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :q wezterm cli kill-pane # WezTerm
+    abbr -a :Q wezterm cli kill-pane # WezTerm
+end
 
 ######### Alternates ##########
 ### ls alternates
@@ -86,116 +98,162 @@ abbr -a lT lt
 abbr -a lsT lstree
 
 # Window Creation (OS Windows)
-# abbr -a :w wezterm cli spawn --new-window # WezTerm
-abbr -a :w kitty @ launch --type=os-window # Kitty
+if test "$TERM" = xterm-kitty
+    abbr -a :w kitty @ launch --type=os-window # Kitty
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :w wezterm cli spawn --new-window # WezTerm
+end
 
 # Window Splits (Panes)
-# abbr -a :wv wezterm cli split-pane --bottom # WezTerm
-abbr -a :wv kitty @ launch --location=hsplit # Kitty (Horizontal split)
-# abbr -a :wh wezterm cli split-pane --right # WezTerm
-abbr -a :wh kitty @ launch --location=vsplit # Kitty (Vertical split)
+if test "$TERM" = xterm-kitty
+    abbr -a :wv kitty @ launch --location=hsplit # Kitty (Horizontal split)
+    abbr -a :wh kitty @ launch --location=vsplit # Kitty (Vertical split)
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :wv wezterm cli split-pane --bottom # WezTerm
+    abbr -a :wh wezterm cli split-pane --right # WezTerm
+end
 
 # Window Detach (Move Pane)
-# abbr -a :wo wezterm cli move-pane-to-new-tab --new-window # WezTerm
-abbr -a :wo kitty @ detach-window --target-tab=new # Kitty (Moves pane to new tab)
-# abbr -a :wot wezterm cli move-pane-to-new-tab # WezTerm
-abbr -a :wot kitty @ detach-window # Kitty (Same as above, default behavior)
+if test "$TERM" = xterm-kitty
+    abbr -a :wo kitty @ detach-window --target-tab=new # Kitty (Moves pane to new tab)
+    abbr -a :wot kitty @ detach-window # Kitty (Same as above, default behavior)
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :wo wezterm cli move-pane-to-new-tab --new-window # WezTerm
+    abbr -a :wot wezterm cli move-pane-to-new-tab # WezTerm
+end
 
 # Tab Creation
-# abbr -a :t wezterm cli spawn # WezTerm
-abbr -a :t kitty @ launch --type=tab # Kitty
+if test "$TERM" = xterm-kitty
+    abbr -a :t kitty @ launch --type=tab # Kitty
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :t wezterm cli spawn # WezTerm
+end
 
 # Rename Tab
-# abbr -a :tl wezterm cli set-tab-title # WezTerm
-abbr -a :tl "kitty @ set-tab-title" # Kitty -> Usage: :tl "New Title"
+if test "$TERM" = xterm-kitty
+    abbr -a :tl "kitty @ set-tab-title" # Kitty -> Usage: :tl "New Title"
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :tl wezterm cli set-tab-title # WezTerm
+end
 
 # Rename Window
-# abbr -a :tw wezterm cli set-window-title # WezTerm
-abbr -a :tw "kitty @ set-window-title" # Kitty
+if test "$TERM" = xterm-kitty
+    abbr -a :tw "kitty @ set-window-title" # Kitty
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :tw wezterm cli set-window-title # WezTerm
+end
 
 # Rename Workspace
-# abbr -a :twk wezterm cli rename-workspace # WezTerm
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :twk wezterm cli rename-workspace # WezTerm
+end
 # Kitty does not have a direct CLI equivalent for renaming a dynamic "workspace" session.
 
 # Tab Navigation
-# abbr -a :tp wezterm cli activate-tab --tab-relative -1 # WezTerm
-abbr -a :tp "kitty @ focus-tab --match neighbor:left" # Kitty
-# abbr -a :tn wezterm cli activate-tab --tab-relative 1 # WezTerm
-abbr -a :tn "kitty @ focus-tab --match neighbor:right" # Kitty
+if test "$TERM" = xterm-kitty
+    abbr -a :tp "kitty @ focus-tab --match neighbor:left" # Kitty
+    abbr -a :tn "kitty @ focus-tab --match neighbor:right" # Kitty
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :tp wezterm cli activate-tab --tab-relative -1 # WezTerm
+    abbr -a :tn wezterm cli activate-tab --tab-relative 1 # WezTerm
+end
 
 # Specialty Tab Shortcuts (New Tab in specific dir)
-# abbr -a :tgk wezterm cli spawn --cwd ~/.config/kitty # WezTerm
-abbr -a :tgk kitty @ launch --type=tab --cwd ~/.config/kitty # Kitty
-# abbr -a :tgn wezterm cli spawn --cwd ~/.config/nvim # WezTerm
-abbr -a :tgn kitty @ launch --type=tab --cwd ~/.config/nvim # Kitty
-# abbr -a :tgf wezterm cli spawn --cwd ~/.config/fish # WezTerm
-abbr -a :tgf kitty @ launch --type=tab --cwd ~/.config/fish # Kitty
-# abbr -a :tgh wezterm cli spawn --cwd ~ # WezTerm
-abbr -a :tgh kitty @ launch --type=tab --cwd ~
-# abbr -a :tgcz wezterm cli spawn --cwd ~/.local/share/chezmoi # WezTerm
-abbr -a :tgcz kitty @ launch --type=tab --cwd ~/.local/share/chezmoi # Kitty
-# abbr -a :tgcm wezterm cli spawn --cwd ~/.config/chezmoi # WezTerm
-abbr -a :tgcm kitty @ launch --type=tab --cwd ~/.config/chezmoi # Kitty
-# abbr -a :tgp wezterm cli spawn --cwd ~/projects # WezTerm
-abbr -a :tgp kitty @ launch --type=tab --cwd ~/projects # Kitty
-# abbr -a :tgr wezterm cli spawn -- sudo -i # WezTerm
-abbr -a :tgr kitty @ launch --type=tab -- sudo -i
+if test "$TERM" = xterm-kitty
+    abbr -a :tgk kitty @ launch --type=tab --cwd ~/.config/kitty # Kitty
+    abbr -a :tgn kitty @ launch --type=tab --cwd ~/.config/nvim # Kitty
+    abbr -a :tgf kitty @ launch --type=tab --cwd ~/.config/fish # Kitty
+    abbr -a :tgh kitty @ launch --type=tab --cwd ~
+    abbr -a :tgcz kitty @ launch --type=tab --cwd ~/.local/share/chezmoi # Kitty
+    abbr -a :tgcm kitty @ launch --type=tab --cwd ~/.config/chezmoi # Kitty
+    abbr -a :tgp kitty @ launch --type=tab --cwd ~/projects # Kitty
+    abbr -a :tgr kitty @ launch --type=tab -- sudo -i
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :tgk wezterm cli spawn --cwd ~/.config/kitty # WezTerm
+    abbr -a :tgn wezterm cli spawn --cwd ~/.config/nvim # WezTerm
+    abbr -a :tgf wezterm cli spawn --cwd ~/.config/fish # WezTerm
+    abbr -a :tgh wezterm cli spawn --cwd ~ # WezTerm
+    abbr -a :tgcz wezterm cli spawn --cwd ~/.local/share/chezmoi # WezTerm
+    abbr -a :tgcm wezterm cli spawn --cwd ~/.config/chezmoi # WezTerm
+    abbr -a :tgp wezterm cli spawn --cwd ~/projects # WezTerm
+    abbr -a :tgr wezterm cli spawn -- sudo -i # WezTerm
+end
 
 # Specialty Window Shortcuts (New OS Window in specific dir)
-# abbr -a :wgk wezterm cli spawn --new-window --cwd ~/.config/kitty # WezTerm
-abbr -a :wgk kitty @ launch --type=os-window --cwd ~/.config/kitty # Kitty
-# abbr -a :wgn wezterm cli spawn --new-window --cwd ~/.config/nvim # WezTerm
-abbr -a :wgn kitty @ launch --type=os-window --cwd ~/.config/nvim # Kitty
-# abbr -a :wgf wezterm cli spawn --new-window --cwd ~/.config/fish # WezTerm
-abbr -a :wgf kitty @ launch --type=os-window --cwd ~/.config/fish # Kitty
-# abbr -a :wgh wezterm cli spawn --new-window --cwd ~ # WezTerm
-abbr -a :wgh kitty @ launch --type=os-window --cwd ~
-# abbr -a :wgzd wezterm cli spawn --new-window --cwd ~/.local/share/chezmoi # WezTerm
-abbr -a :wgzd kitty @ launch --type=os-window --cwd ~/.local/share/chezmoi # Kitty
-# abbr -a :wgcz wezterm cli spawn --new-window --cwd ~/.config/chezmoi # WezTerm
-abbr -a :wgcz kitty @ launch --type=os-window --cwd ~/.config/chezmoi # Kitty
-# abbr -a :wgp wezterm cli spawn --new-window --cwd ~/projects # WezTerm
-abbr -a :wgp kitty @ launch --type=os-window --cwd ~/projects # Kitty
-# abbr -a :wgr wezterm cli spawn --new-window -- sudo -i # WezTerm
-abbr -a :wgr kitty @ launch --type=os-window -- sudo -i # Kitty
+if test "$TERM" = xterm-kitty
+    abbr -a :wgk kitty @ launch --type=os-window --cwd ~/.config/kitty # Kitty
+    abbr -a :wgn kitty @ launch --type=os-window --cwd ~/.config/nvim # Kitty
+    abbr -a :wgf kitty @ launch --type=os-window --cwd ~/.config/fish # Kitty
+    abbr -a :wgh kitty @ launch --type=os-window --cwd ~
+    abbr -a :wgzd kitty @ launch --type=os-window --cwd ~/.local/share/chezmoi # Kitty
+    abbr -a :wgcz kitty @ launch --type=os-window --cwd ~/.config/chezmoi # Kitty
+    abbr -a :wgp kitty @ launch --type=os-window --cwd ~/projects # Kitty
+    abbr -a :wgr kitty @ launch --type=os-window -- sudo -i # Kitty
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :wgk wezterm cli spawn --new-window --cwd ~/.config/kitty # WezTerm
+    abbr -a :wgn wezterm cli spawn --new-window --cwd ~/.config/nvim # WezTerm
+    abbr -a :wgf wezterm cli spawn --new-window --cwd ~/.config/fish # WezTerm
+    abbr -a :wgh wezterm cli spawn --new-window --cwd ~ # WezTerm
+    abbr -a :wgzd wezterm cli spawn --new-window --cwd ~/.local/share/chezmoi # WezTerm
+    abbr -a :wgcz wezterm cli spawn --new-window --cwd ~/.config/chezmoi # WezTerm
+    abbr -a :wgp wezterm cli spawn --new-window --cwd ~/projects # WezTerm
+    abbr -a :wgr wezterm cli spawn --new-window -- sudo -i # WezTerm
+end
 
 # Specialty Window Vertical Shortcuts (Split Bottom)
-# abbr -a :wvgk wezterm cli split-pane --bottom --cwd ~/.config/kitty # WezTerm
-abbr -a :wvgk kitty @ launch --location=hsplit --cwd ~/.config/kitty # Kitty
-# abbr -a :wvgn wezterm cli split-pane --bottom --cwd ~/.config/nvim # WezTerm
-abbr -a :wvgn kitty @ launch --location=hsplit --cwd ~/.config/nvim # Kitty
-# abbr -a :wvgf wezterm cli split-pane --bottom --cwd ~/.config/fish # WezTerm
-abbr -a :wvgf kitty @ launch --location=hsplit --cwd ~/.config/fish # Kitty
-# abbr -a :wvgh wezterm cli split-pane --bottom --cwd ~ # WezTerm
-abbr -a :wvgh kitty @ launch --location=hsplit --cwd ~ # Kitty
-# abbr -a :wvgcz wezterm cli split-pane --bottom --cwd ~/.local/share/chezmoi # WezTerm
-abbr -a :wvgcz kitty @ launch --location=hsplit --cwd ~/.local/share/chezmoi # Kitty
-# abbr -a :wvgcm wezterm cli split-pane --bottom --cwd ~/.config/chezmoi # WezTerm
-abbr -a :wvgcm kitty @ launch --location=hsplit --cwd ~/.config/chezmoi # Kitty
-# abbr -a :wvgp wezterm cli split-pane --bottom --cwd ~/projects # WezTerm
-abbr -a :wvgp kitty @ launch --location=hsplit --cwd ~/projects # Kitty
-# abbr -a :wvgr wezterm cli split-pane --bottom -- sudo -i # WezTerm
-abbr -a :wvgr kitty @ launch --location=hsplit -- sudo -i # Kitty
+if test "$TERM" = xterm-kitty
+    abbr -a :wvgk kitty @ launch --location=hsplit --cwd ~/.config/kitty # Kitty
+    abbr -a :wvgn kitty @ launch --location=hsplit --cwd ~/.config/nvim # Kitty
+    abbr -a :wvgf kitty @ launch --location=hsplit --cwd ~/.config/fish # Kitty
+    abbr -a :wvgh kitty @ launch --location=hsplit --cwd ~ # Kitty
+    abbr -a :wvgcz kitty @ launch --location=hsplit --cwd ~/.local/share/chezmoi # Kitty
+    abbr -a :wvgcm kitty @ launch --location=hsplit --cwd ~/.config/chezmoi # Kitty
+    abbr -a :wvgp kitty @ launch --location=hsplit --cwd ~/projects # Kitty
+    abbr -a :wvgr kitty @ launch --location=hsplit -- sudo -i # Kitty
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :wvgk wezterm cli split-pane --bottom --cwd ~/.config/kitty # WezTerm
+    abbr -a :wvgn wezterm cli split-pane --bottom --cwd ~/.config/nvim # WezTerm
+    abbr -a :wvgf wezterm cli split-pane --bottom --cwd ~/.config/fish # WezTerm
+    abbr -a :wvgh wezterm cli split-pane --bottom --cwd ~ # WezTerm
+    abbr -a :wvgcz wezterm cli split-pane --bottom --cwd ~/.local/share/chezmoi # WezTerm
+    abbr -a :wvgcm wezterm cli split-pane --bottom --cwd ~/.config/chezmoi # WezTerm
+    abbr -a :wvgp wezterm cli split-pane --bottom --cwd ~/projects # WezTerm
+    abbr -a :wvgr wezterm cli split-pane --bottom -- sudo -i # WezTerm
+end
 
 # Specialty Window Horizontal Shortcuts (Split Right)
-# abbr -a :whgk wezterm cli split-pane --bottom --cwd ~/.config/kitty # WezTerm
-abbr -a :whgk kitty @ launch --location=vsplit --cwd ~/.config/kitty # Kitty
-# abbr -a :whgn wezterm cli split-pane --bottom --cwd ~/.config/nvim # WezTerm
-abbr -a :whgn kitty @ launch --location=vsplit --cwd ~/.config/nvim # Kitty
-# abbr -a :whgf wezterm cli split-pane --bottom --cwd ~/.config/fish # WezTerm
-abbr -a :whgf kitty @ launch --location=vsplit --cwd ~/.config/fish # Kitty
-# abbr -a :whgh wezterm cli split-pane --bottom --cwd ~ # WezTerm
-abbr -a :whgh kitty @ launch --location=vsplit --cwd ~ # Kitty
-# abbr -a :whgcz wezterm cli split-pane --bottom --cwd ~/.local/share/chezmoi # WezTerm
-abbr -a :whgcz kitty @ launch --location=vsplit --cwd ~/.local/share/chezmoi # Kitty
-# abbr -a :whgcm wezterm cli split-pane --bottom --cwd ~/.config/chezmoi # WezTerm
-abbr -a :whgcm kitty @ launch --location=vsplit --cwd ~/.config/chezmoi # Kitty
-# abbr -a :whgp wezterm cli split-pane --bottom --cwd ~/projects # WezTerm
-abbr -a :whgp kitty @ launch --location=vsplit --cwd ~/projects # Kitty
-# abbr -a :whgr wezterm cli split-pane --bottom -- sudo -i # WezTerm
-abbr -a :whgr kitty @ launch --location=vsplit --cwd current sudo -i # Kitty -> Specialty cd Shortcuts
-abbr -a :cdk 'cd ~/.config/kitty/ # Kitty Config'
-abbr -a :cdkn 'cd ~/.config/kitty;nvim'
+if test "$TERM" = xterm-kitty
+    abbr -a :whgk kitty @ launch --location=vsplit --cwd ~/.config/kitty # Kitty
+    abbr -a :whgn kitty @ launch --location=vsplit --cwd ~/.config/nvim # Kitty
+    abbr -a :whgf kitty @ launch --location=vsplit --cwd ~/.config/fish # Kitty
+    abbr -a :whgh kitty @ launch --location=vsplit --cwd ~ # Kitty
+    abbr -a :whgcz kitty @ launch --location=vsplit --cwd ~/.local/share/chezmoi # Kitty
+    abbr -a :whgcm kitty @ launch --location=vsplit --cwd ~/.config/chezmoi # Kitty
+    abbr -a :whgp kitty @ launch --location=vsplit --cwd ~/projects # Kitty
+    abbr -a :whgr kitty @ launch --location=vsplit --cwd current sudo -i # Kitty -> Specialty cd Shortcuts
+    abbr -a :cdk 'cd ~/.config/kitty/ # Kitty Config'
+    abbr -a :cdkn 'cd ~/.config/kitty;nvim'
+end
+if test "$TERM_PROGRAM" = WezTerm
+    abbr -a :whgk wezterm cli split-pane --bottom --cwd ~/.config/kitty # WezTerm
+    abbr -a :whgn wezterm cli split-pane --bottom --cwd ~/.config/nvim # WezTerm
+    abbr -a :whgf wezterm cli split-pane --bottom --cwd ~/.config/fish # WezTerm
+    abbr -a :whgh wezterm cli split-pane --bottom --cwd ~ # WezTerm
+    abbr -a :whgcz wezterm cli split-pane --bottom --cwd ~/.local/share/chezmoi # WezTerm
+    abbr -a :whgcm wezterm cli split-pane --bottom --cwd ~/.config/chezmoi # WezTerm
+    abbr -a :whgp wezterm cli split-pane --bottom --cwd ~/projects # WezTerm
+    abbr -a :whgr wezterm cli split-pane --bottom -- sudo -i # WezTerm
+end
 abbr -a :cdn cd '~/.config/nvim/ # Neovim Config'
 abbr -a :cdnn 'cd ~/.config/nvim;nvim'
 abbr -a :cdf 'cd ~/.config/fish/ # Fish Config'
@@ -211,9 +269,13 @@ abbr -a :cdp --regex ':cdp' --set-cursor 'cd ~/projects/%'
 abbr -a :cdpn 'cd ~/projects;nvim'
 abbr -a :cdw 'cd ~/.config/wezterm/ # WezTerm Config'
 abbr -a :cdwn 'cd ~/.config/wezterm;nvim'
-abbr -a editt kitty @ launch --type tab nvim
+if test "$TERM" = xterm-kitty
+    abbr -a editt kitty @ launch --type tab nvim
+end
 # Spawn window
-abbr -a :sw spwin
+if test "$TERM" = xterm-kitty
+    abbr -a :sw spwin
+end
 
 ### Docker ###
 abbr -a dcl 'docker context use default # Local Host'
