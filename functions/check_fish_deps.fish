@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function check_fish_deps --description "Check all fish-related dependencies"
+# Check all fish-related dependencies
+function check_fish_deps --description 'Check all fish-related dependencies'
     set -l required fish fisher starship fzf zoxide direnv paru
     set -l integrations wakatime tailscale
     set -l recommended eza lsd bat btop dust duf prettyping most rg lazygit lazydocker trash kitty wezterm

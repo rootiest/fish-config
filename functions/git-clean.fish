@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Sync main, prune remotes, and delete orphaned branches
 function git-clean --description 'Sync main, prune remotes, and delete orphaned branches'
     set -l options h/help f/force
     argparse $options -- $argv

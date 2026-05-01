@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Provides interactive history substitution using old/new pattern or sudo fallback
 function __interactive_history_sub
     set -l current_line (commandline -b)
     set -l last_cmd $history[1]

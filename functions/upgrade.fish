@@ -4,6 +4,6 @@
 # Function for upgrading the system with paru.
 # This runs `paru` with the `-Syu` flags to sync, refresh, and upgrade all
 # packages, and adds `--no-confirm` to bypass the confirmation prompt.
-function upgrade
+function upgrade --wraps='paru' --description 'packages, and adds `--no-confirm` to bypass the confirmation prompt.'
     paru -Syu --noconfirm
 end

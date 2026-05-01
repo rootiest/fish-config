@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Pull and restart docker compose containers
 function dockup --description 'Pull and restart docker compose containers'
     # Define colors
     set -l clr_error (set_color red)

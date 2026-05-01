@@ -1,4 +1,5 @@
-function fc --description "Edit and execute the last command (Bash-style fc)"
+# Edit and execute the last command (Bash-style fc)
+function fc --description 'Edit and execute the last command (Bash-style fc)'
     set -l tmpfile (mktemp /tmp/fish_fc.XXXXXX).fish
 
     if count $argv >/dev/null

@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function spark --description Sparklines
+# Sparklines
+function spark --description 'Sparklines'
     argparse --ignore-unknown --name=spark v/version h/help m/min= M/max= -- $argv || return
 
     if set --query _flag_version[1]

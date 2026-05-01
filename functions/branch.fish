@@ -1,3 +1,4 @@
+# Switch to or create a git branch
 function branch --description 'Switch to or create a git branch'
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
         echo "Not a git repo."

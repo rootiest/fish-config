@@ -1,4 +1,5 @@
-function expand_bang_minus_n
+# Execute expand_bang_minus_n
+function expand_bang_minus_n --description 'Execute expand_bang_minus_n'
     set -l token $argv[1]
     if test -z "$token"; set token (commandline -t); end
     

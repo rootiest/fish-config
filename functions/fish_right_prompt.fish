@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function fish_right_prompt
+# Execute fish_right_prompt
+function fish_right_prompt --description 'Execute fish_right_prompt'
     # 1. Docker Context in Blue
     set -l docker_ctx (docker context show 2>/dev/null)
     if test -n "$docker_ctx"; and test "$docker_ctx" != default

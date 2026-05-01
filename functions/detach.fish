@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function detach
+# Execute detach
+function detach --description 'Execute detach'
     set -l show_help 0
     set -l args
 

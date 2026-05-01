@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Convert DNG raw to 10-bit HDR AVIF
 function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
     set -l options (fish_opt -s h -l help)
     set -a options (fish_opt -s i -l input -r)

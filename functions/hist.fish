@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function hist -d "Search fish history and put it in the prompt"
+# Search fish history and put it in the prompt
+function hist --description 'Search fish history and put it in the prompt'
     set -l selected (history | fzf --reverse --height 40% --with-nth 3..)
 
     if test -n "$selected"

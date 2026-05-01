@@ -12,7 +12,8 @@
 #   bkg firefox
 #   bkg code .
 #
-function bkg
+# Execute bkg
+function bkg --description 'Execute bkg'
     # Check if a command was provided as an argument.
     if test -z "$argv[1]"
         echo "Usage: bkg <command> [arguments...]"

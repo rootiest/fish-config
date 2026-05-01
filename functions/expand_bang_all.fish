@@ -1,4 +1,5 @@
-function expand_bang_all
+# Execute expand_bang_all
+function expand_bang_all --description 'Execute expand_bang_all'
     set -l token $argv[1]
     if test -z "$token"; set token (commandline -t); end
     

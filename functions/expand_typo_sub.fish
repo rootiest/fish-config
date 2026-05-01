@@ -1,4 +1,5 @@
-function expand_typo_sub
+# Execute expand_typo_sub
+function expand_typo_sub --description 'Execute expand_typo_sub'
     # In newer Fish, the matched token is often passed as $argv[1] 
     # if the abbr is set up correctly. We'll fallback to commandline just in case.
         set -l last_cmd $history[1]

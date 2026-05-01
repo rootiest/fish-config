@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Run a command in a new Kitty split
 function split --description 'Run a command in a new Kitty split'
     if test "$TERM" != xterm-kitty
         echo "Error: The 'split' command requires Kitty terminal." >&2

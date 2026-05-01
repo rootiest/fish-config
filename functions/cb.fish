@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Copy to clipboard
 function cb --description 'Copy to clipboard'
     if type -q wl-copy
         if set -q argv[1]

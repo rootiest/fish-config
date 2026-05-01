@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Tree listing, depth 2
 function lt --description 'Tree listing, depth 2'
     if which eza >/dev/null 2>&1
         eza --tree --level=2 --icons --color=auto --hyperlink $argv

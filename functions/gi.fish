@@ -1,4 +1,5 @@
-function gi --description "Generate .gitignore files using the gitignore.io API"
+# Generate .gitignore files using the gitignore.io API
+function gi --description 'Generate .gitignore files using the gitignore.io API'
     # Define the flags
     argparse h/help d/description l/list -- $argv
     or return 1

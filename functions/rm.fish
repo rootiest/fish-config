@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Ultimate rm: trash, list, empty, and secure-erase
 function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
     # 1. No arguments: Show the Trash contents (Quick view)
     if not set -q argv[1]
