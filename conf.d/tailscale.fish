@@ -14,6 +14,10 @@
 
 # fish completion for tailscale                            -*- shell-script -*-
 
+if not type -q tailscale
+    return
+end
+
 function __tailscale_debug
     set -l file "$BASH_COMP_DEBUG_FILE"
     if test -n "$file"

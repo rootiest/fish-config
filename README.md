@@ -103,6 +103,8 @@ See [FZF Bindings](#fzf-bindings) under Key Bindings for the default FZF shortcu
 
 ## Integrations
 
+> **Note:** All integrations listed below are designed to elegantly fallback to basic commands or safely ignore their configuration if their required external dependencies are not installed on the system.
+
 ### Zoxide
 
 Smart `cd` replacement. `cd` (or `z`) `<keyword>` jumps to the best frecency match; `cdi` (or `zi`) opens an interactive selector.
