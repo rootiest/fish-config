@@ -35,3 +35,8 @@ function y --description 'Yank to clipboard'
         eval $copy_cmd
     end
 end
+
+# Alias cb=y
+function cb --wraps='y' --description 'Alias cb=y'
+    y $argv
+end
