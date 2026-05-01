@@ -103,7 +103,7 @@ See [FZF Bindings](#fzf-bindings) under Key Bindings for the default FZF shortcu
 
 ## Integrations
 
-> **Note:** All integrations listed below are designed to elegantly fallback to basic commands or safely ignore their configuration if their required external dependencies are not installed on the system.
+> **Note:** All integrations listed below are designed to gracefully fallback to basic commands or safely ignore their configuration if their required external dependencies are not installed on the system.
 
 ### Zoxide
 
@@ -388,9 +388,9 @@ These abbreviations replicate Bash's bang-style history expansions. They expand 
 | `cmf` | `chezmoi forget` |
 | `cmi` | `chezmoi init` |
 
-### Kitty Window Management
+### Kitty / WezTerm Window Management
 
-These abbreviations mirror Vim/tmux ergonomics for managing Kitty splits, tabs, and windows.
+These abbreviations mirror Vim/tmux ergonomics for managing terminal splits, tabs, and windows. They automatically detect whether you are using Kitty or WezTerm and execute the appropriate terminal CLI commands.
 
 | Abbr | Action |
 |---|---|
@@ -479,7 +479,7 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 | [lazygit](https://github.com/jesseduffield/lazygit) | git TUI |
 | [lazydocker](https://github.com/jesseduffield/lazydocker) | Docker TUI |
 | [trash-cli](https://github.com/andreafrancia/trash-cli) | Safe `rm` |
-| [Kitty](https://sw.kovidgoyal.net/kitty/) | Terminal emulator |
+| [Kitty](https://sw.kovidgoyal.net/kitty/) / [WezTerm](https://wezfurlong.org/wezterm/) | Terminal emulator |
 | [WakaTime](https://wakatime.com/) | Activity tracking |
 
 ---
