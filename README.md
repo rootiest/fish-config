@@ -252,12 +252,12 @@ rm -f file.txt  # Falls through to standard rm -f
 | `cb <text>` | Copy to clipboard (alias for `y`) |
 | `paste` | Paste from clipboard to stdout |
 
-### Kitty Terminal
+### Terminal
 
 | Function | Description |
 |---|---|
-| `split [-h\|-v] [cmd]` | Open a new Kitty split pane, optionally running a command |
-| `spwin` | Spawn a new Kitty OS window via `spawn-window.sh` |
+| `split [-h\|-v] [cmd]` | Open a new split pane, optionally running a command |
+| `spwin` | Spawn a new OS window |
 | `detach <cmd>` | Run a command fully detached (`nohup`), no output |
 | `bkg <cmd>` | Background a command, discarding all output |
 
@@ -269,9 +269,9 @@ rm -f file.txt  # Falls through to standard rm -f
 | `screensleep` | Turn off the display via KDE PowerDevil |
 | `wake-lock <cmd>` | Run a command with `systemd-inhibit` to prevent sleep |
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
-| `monitors` | Open a 4-pane Kitty layout running `btop` locally and on remote servers |
 | `tmux-clean` | Kill all detached tmux sessions |
 | `limine-edit` | Safely edit and re-verify Limine bootloader configuration |
+| `sbver` | Verify bootloader signing status for Secure Boot |
 
 ### Media & Utilities
 
@@ -284,7 +284,7 @@ rm -f file.txt  # Falls through to standard rm -f
 
 | Function | Description |
 |---|---|
-| `edit` / `e` | Open in Neovim |
+| `edit` / `e` | Open in Neovim (or `$EDITOR`) |
 | `view` | Open in Neovim read-only mode |
 | `fc` | Edit and execute the last command (Bash-style `fc`) |
 | `nvimup` | Update Neovim headlessly |
@@ -316,7 +316,6 @@ rm -f file.txt  # Falls through to standard rm -f
 | `zellij` | Zellij with `--theme catppuccin-mocha` |
 | `antigravity` | Wrapper that suppresses a noisy deprecation warning |
 | `bash` | Drop into bash (raw Fish session via `rawfish`) |
-| `sbver` | Show system/binary versions |
 
 ---
 
