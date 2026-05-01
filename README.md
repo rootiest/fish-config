@@ -79,11 +79,7 @@ Managed via [Fisher](https://github.com/jorgebucaran/fisher):
 | `mattmc3/magic-enter.fish` | Smart Enter: runs `ls` / `git status` on blank line |
 | `jorgebucaran/spark.fish` | Sparkline bar charts in the terminal |
 
-Install plugins after cloning:
-
-```fish
-fisher update
-```
+Fisher and all listed plugins are installed automatically by the bootstrap script in `config.fish` upon launching the shell for the first time.
 
 ---
 
