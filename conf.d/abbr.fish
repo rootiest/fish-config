@@ -73,6 +73,7 @@ abbr -a g git
 abbr -a ag antigravity
 abbr -a ag. antigravity .
 # Quit
+abbr -a /exit exit
 if test "$TERM" = xterm-kitty
     abbr -a :q kitty @ close-window # Kitty (Closes the active split/pane)
     abbr -a :Q kitty @ close-tab # Kitty (Closes the whole tab)

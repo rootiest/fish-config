@@ -17,6 +17,72 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
 end
 set --erase _fname
 
+#   ───────────────────────────── XDG variables ────────────────────────────
+# XDG Base Directory variables (standard practice)
+set -gx XDG_CONFIG_HOME $HOME/.config # Sets default config dir to ~/.config
+set -gx XDG_CACHE_HOME $HOME/.cache # Sets default cache dir to ~/.cache
+set -gx XDG_DATA_HOME $HOME/.local/share # Sets default data dir to ~/.local/share
+set -gx XDG_STATE_HOME $HOME/.local/state # Sets default state dir to ~/.local/state
+
+# Attempt to keep various config/cache files out of the home directory root
+set -gx RANDFILE "$XDG_STATE_HOME/rnd"
+set -gx WGETRC "$XDG_CONFIG_HOME/wget/wgetrc"
+set -gx WGET_HSTS_FILE "$XDG_CACHE_HOME/wget-hsts"
+set -gx NPM_CONFIG_PREFIX "$XDG_DATA_HOME/npm-global"
+set -gx NPM_CONFIG_USERCONFIG "$XDG_CONFIG_HOME/npm/npmrc"
+set -gx ANDROID_USER_HOME "$XDG_DATA_HOME/android"
+set -gx CARGO_HOME "$XDG_DATA_HOME/cargo"
+set -gx RUSTUP_HOME "$XDG_DATA_HOME/rustup"
+set -gx GOPATH "$XDG_DATA_HOME/go"
+set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"
+set -gx GNUPGHOME "$XDG_CONFIG_HOME/gnupg"
+set -gx WAKATIME_HOME "$XDG_CONFIG_HOME/wakatime"
+set -gx HISTFILE "$XDG_STATE_HOME/bash_history"
+set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | source $MYVIMRC"
+set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
+set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
+set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
+
+#   ─────────────────────────── Editor variables ───────────────────────────
+#   Set Editor variables with fallback to vi if nvim isn't available. This ensures that
+#   tools that rely on these variables (like git commit messages) will work out of the box,
+#   while still preferring nvim if it's installed.
+if type -q nvim
+    set -gx NVIM_APPNAME nvim
+    set -gx EDITOR (command -s nvim)
+else
+    set -gx EDITOR (command -s vi)
+end
+set -gx VISUAL $EDITOR
+set -gx SUDO_EDITOR $EDITOR
+
+#   ──────────────────────────── GPG variables ─────────────────────────────
+#   Helps ensure that GPG can prompt for passphrases correctly when invoked from the terminal.
+set -gx GPG_TTY (tty)
+
+#   ──────────────────────────── PATH variables ────────────────────────────
+#   Adds common user bin directories to the PATH. The -mg --move option for cargo ensures that
+#   the cargo bin directory is moved to the end of the PATH, which can help avoid conflicts
+#   with system-installed Rust tools while still allowing user-installed cargo binaries to be found.
+fish_add_path $HOME/.local/bin
+fish_add_path $HOME/Applications
+fish_add_path $HOME/scripts
+fish_add_path -mg --move $CARGO_HOME/bin
+fish_add_path $BUN_INSTALL/bin
+fish_add_path $XDG_DATA_HOME/npm-global/bin
+fish_add_path $HOME/.lmstudio/bin
+
+#   ───────────────────────── CDPATH projects dir ──────────────────────────
+# Allows cd-ing to directories within $HOME/projects or $HOME without needing to specify the full path.
+# For example, if you have a project at $HOME/projects/myproject,
+# you can simply run 'cd myproject' from anywhere and it will take you there.
+# 'cd' command prioritizes directories in CDPATH, so if you have a directory with
+# the same name in both $HOME/projects and $HOME, it will take you to the one in $HOME/projects first.
+# Additionally, directories inside the CWD will still take precedence over CDPATH,
+# so if you have a directory named 'myproject' in the current directory,
+# running 'cd myproject' will take you there instead of $HOME/projects/myproject.
+set -gx CDPATH . $HOME/projects $HOME
+
 #   ──────────────────────────── Bootstrap Fisher ──────────────────────────
 if not type -q fisher
     echo "Fisher plugin manager not found."
@@ -32,106 +98,68 @@ if not type -q fisher
     set --erase _fisher_reply
 end
 
-#   ───────────────────────── Source user secrets ──────────────────────────
-if test -f $HOME/.config/.user-dots/fish/secrets.fish
-    source $HOME/.config/.user-dots/fish/secrets.fish
-end
+#   ─────────────────────── visual/interactive setup ───────────────────────
+# Run only if we're in an interactive session (not a script or non-interactive shell)
+if status is-interactive
+    #   ────────────────────────────── Key bindings ────────────────────────────
+    #   Helps ensure that key bindings are consistent with the Vi editing mode set below.
+    #   This is optional but can improve the user experience for those who prefer Vi-style key bindings.
+    set -g fish_key_bindings fish_vi_key_bindings
 
-#   ─────────────────────── Source machine-local config ─────────────────────
-if test -f $HOME/.config/.user-dots/fish/local.fish
-    source $HOME/.config/.user-dots/fish/local.fish
-end
-
-#   ──────────────────────────── PATH variables ────────────────────────────
-fish_add_path ~/.local/bin
-fish_add_path ~/Applications
-fish_add_path ~/scripts
-fish_add_path -mg --move ~/.cargo/bin
-fish_add_path ~/.npm-global/bin
-fish_add_path ~/.lmstudio/bin
-
-#   ─────────────────────────── Editor variables ───────────────────────────
-if command -v nvim >/dev/null
-    set -gx EDITOR (command -s nvim)
-else
-    set -gx EDITOR (command -s vi)
-end
-set -gx VISUAL $EDITOR
-set -gx SUDO_EDITOR $EDITOR
-
-#   ──────────────────────────── GPG variables ─────────────────────────────
-set -gx GPG_TTY (tty)
-
-#   ────────────────────────────── Key bindings ────────────────────────────
-set -g fish_key_bindings fish_vi_key_bindings
-
-#   ──────────────────────── Source FZF integration ────────────────────────
-source ~/.config/fish/integrations/fzf.fish
-# Configure FZF theme
-set -Ux FZF_DEFAULT_OPTS "\
---color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
---color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
---color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8 \
---color=selected-bg:#45475A \
---color=border:#6C7086,label:#CDD6F4"
-
-#   ──────────────────────────────── DirENV ────────────────────────────────
-# Tool to handle automatic environment loading in directories and their children
-# Use when children need to load venv as well.
-#
-# The Auto-Venv script above will ignore directories with a
-# .envrc file (direnv configuration) to prevent conflicts.
-if type -q direnv
-    direnv hook fish | source
-end
-
-#   ────────────────────────────── Auto-Venv ───────────────────────────────
-# Auto-activate Python venv on directory change
-function __auto_source_fallback_venv --on-variable PWD
-    status --is-command-substitution; and return
-
-    # 1. Skip if direnv is already managing this directory
-    if set -q DIRENV_DIR; or test -e ".envrc"
-        return
+    #   ──────────────────────── Source FZF integration ────────────────────────
+    #   Sources the FZF integration script, which provides enhanced command history
+    #   searching and file finding capabilities.
+    if test -f $HOME/.config/fish/integrations/fzf.fish
+        source $HOME/.config/fish/integrations/fzf.fish
     end
 
-    # 2. If we are already in a venv, check if we've left its tree
-    if set -q VIRTUAL_ENV
-        # Check if the current PWD is still within the directory that owns the venv
-        # (Assuming the venv is at the root of the project)
-        set -l venv_root (string replace -r '/.venv$' '' $VIRTUAL_ENV)
-        if not string match -q "$venv_root*" "$PWD"
-            type -q deactivate; and deactivate
-        end
-        return
+    #   ──────────────────────────────── DirENV ────────────────────────────────
+    # Tool to handle automatic environment loading in directories and their children
+    # Use when children need to load venv as well.
+    #
+    # The Auto-Venv script above will ignore directories with a
+    # .envrc file (direnv configuration) to prevent conflicts.
+    if type -q direnv
+        direnv hook fish | source
     end
 
-    # 3. Only source the venv if we aren't already in one
-    if test -e ".venv/bin/activate.fish"
-        source .venv/bin/activate.fish
+    #   Helps ensure that Claude Code's terminal output is clean and doesn't have flickering issues.
+    set -gx CLAUDE_CODE_NO_FLICKER 1
+
+    #   ─────────────────────────── Starship prompt ────────────────────────────
+    #   Initializes the Starship prompt, which provides a highly customizable and informative command prompt.
+    #   This is wrapped in a check to ensure that it only runs if Starship is installed,
+    #   preventing errors if it's not available.
+    if type -q starship
+        # STARSHIP_START
+        starship init fish | source
+        # STARSHIP_END
     end
+
+    #   ╭────────────────────────────── OVERRIDES ─────────────────────────────╮
+    #   |       Run these last so they can override any previous settings.     |
+    #   |    This is useful for machine-specific behavior or configurations.   |
+    #   ╰────────────────────────────── OVERRIDES ─────────────────────────────╯
+    #   ───────────────────────── Source user secrets ──────────────────────────
+    #   Sources a secrets.fish file if it exists, which can be used to store
+    #   sensitive environment variables and configurations that shouldn't be
+    #   committed to version control.
+    #   This allows you to keep things like API keys, database credentials,
+    #   and other secrets out of your main config files and safely ignored by git.
+    if test -f $HOME/.config/.user-dots/fish/secrets.fish
+        source $HOME/.config/.user-dots/fish/secrets.fish
+    end
+
+    #   ─────────────────────── Source machine-local config ────────────────────
+    #   Sources a local.fish file if it exists, which can be used for machine-specific
+    #   variables and configurations that shouldn't be shared across machines.
+    #   This allows you to have different settings on different machines without affecting
+    #   your main config or secrets files. For example, you might want different PATH additions,
+    #   aliases, or environment variables on your work laptop vs. your home desktop.
+    if test -f $HOME/.config/.user-dots/fish/local.fish
+        source $HOME/.config/.user-dots/fish/local.fish
+    end
+    #    ╭──────────────────────────── END OVERRIDES ──────────────────────────╮
+    #    |                        End of override section.                     |
+    #    ╰──────────────────────────── END OVERRIDES ──────────────────────────╯
 end
-
-#   ──────────────────── Docker Contexts for LazyDocker ────────────────────
-function ld --description 'Run lazydocker on the current Docker context'
-    # Fetch the host endpoint of the currently active Docker context
-    set -l current_host (docker context inspect --format '{{.Endpoints.docker.Host}}')
-
-    # Run lazydocker with the DOCKER_HOST variable set for this command only
-    env DOCKER_HOST=$current_host lazydocker
-end
-
-#   ────────────────────── Claude Code Env Variables ───────────────────────
-set -gx CLAUDE_CODE_NO_FLICKER 1
-
-#   ───────────────────── Directory shortcut variables ─────────────────────
-set -U cdp ~/projects
-
-#   ───────────────────────── CDPATH projects dir ──────────────────────────
-# Allows cd-ing to projects automatically from anywhere
-set -U CDPATH . ~/projects ~
-
-#   ─────────────────────────── Starship prompt ────────────────────────────
-# STARSHIP_START
-starship init fish | source
-# STARSHIP_END

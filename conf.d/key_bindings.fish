@@ -36,6 +36,14 @@
 # If the current command text is empty, the previous command's first token will be used instead.
 # ──────────────────────────────────────────────────────────────────────
 
+# ────────────── Bind Quick Qalc Evaluation to Ctrl+Alt+= ──────────────
+# Passes the current command line buffer to the Qalculate! CLI (qalc)
+#
+# Example: If you type `150 * 1.08` and press Ctrl+Alt+=, 
+# it will print the result (162) and clear the command line.
+# This allows for rapid-fire math without leaving the current shell.
+# ──────────────────────────────────────────────────────────────────────
+
 function fish_user_key_bindings
 
     #   ───────────────────────────── Set Bindings ─────────────────────────────
@@ -44,6 +52,7 @@ function fish_user_key_bindings
     bind ctrl-g __insert_previous_path_head
     bind ctrl-f __interactive_history_sub
     bind ctrl-alt-u _replace_command_token
+    bind ctrl-alt-= qalc_eval
 
     # Set bindings for all Vi modes:
     # 'default' is Vi-Command, 'insert' is Vi-Insert, 'visual' is Vi-Visual
@@ -51,5 +60,6 @@ function fish_user_key_bindings
         bind --mode $mode ctrl-g __insert_previous_path_head
         bind --mode $mode ctrl-f __interactive_history_sub
         bind --mode $mode ctrl-alt-u _replace_command_token
+        bind --mode $mode ctrl-alt-= qalc_eval
     end
 end
