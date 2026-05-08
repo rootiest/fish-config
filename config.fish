@@ -12,7 +12,7 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
     # Erase them and immediately source our versions.
     for _fname in ls lt cleanup
         functions --erase $_fname
-        source $__fish_config_dir/functions/$_fname.fish
+        source "$__fish_config_dir/functions/$_fname.fish"
     end
 end
 set --erase _fname
@@ -42,6 +42,9 @@ set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | source $MYVIMRC"
 set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
 set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
 set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
+
+#   ───────────────────── Misc Configuration variables ─────────────────────
+set -gx LESS -R # Ensures colors render correctly in less pager
 
 #   ─────────────────────────── Editor variables ───────────────────────────
 #   Set Editor variables with fallback to vi if nvim isn't available. This ensures that
@@ -109,8 +112,8 @@ if status is-interactive
     #   ──────────────────────── Source FZF integration ────────────────────────
     #   Sources the FZF integration script, which provides enhanced command history
     #   searching and file finding capabilities.
-    if test -f $HOME/.config/fish/integrations/fzf.fish
-        source $HOME/.config/fish/integrations/fzf.fish
+    if test -f "$__fish_config_dir/integrations/fzf.fish"
+        source "$__fish_config_dir/integrations/fzf.fish"
     end
 
     #   ──────────────────────────────── DirENV ────────────────────────────────
@@ -140,14 +143,17 @@ if status is-interactive
     #   |       Run these last so they can override any previous settings.     |
     #   |    This is useful for machine-specific behavior or configurations.   |
     #   ╰────────────────────────────── OVERRIDES ─────────────────────────────╯
+    #
+    # Define user-dots path variable for a more legible secrets/local config.
+    set -l dot_fish "$XDG_CONFIG_HOME/.user-dots/fish"
     #   ───────────────────────── Source user secrets ──────────────────────────
     #   Sources a secrets.fish file if it exists, which can be used to store
     #   sensitive environment variables and configurations that shouldn't be
     #   committed to version control.
     #   This allows you to keep things like API keys, database credentials,
     #   and other secrets out of your main config files and safely ignored by git.
-    if test -f $HOME/.config/.user-dots/fish/secrets.fish
-        source $HOME/.config/.user-dots/fish/secrets.fish
+    if test -f "$dot_fish/secrets.fish"
+        source "$dot_fish/secrets.fish"
     end
 
     #   ─────────────────────── Source machine-local config ────────────────────
@@ -156,8 +162,8 @@ if status is-interactive
     #   This allows you to have different settings on different machines without affecting
     #   your main config or secrets files. For example, you might want different PATH additions,
     #   aliases, or environment variables on your work laptop vs. your home desktop.
-    if test -f $HOME/.config/.user-dots/fish/local.fish
-        source $HOME/.config/.user-dots/fish/local.fish
+    if test -f "$dot_fish/local.fish"
+        source "$dot_fish/local.fish"
     end
     #    ╭──────────────────────────── END OVERRIDES ──────────────────────────╮
     #    |                        End of override section.                     |
