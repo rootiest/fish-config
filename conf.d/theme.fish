@@ -4,10 +4,9 @@
 #          ╭──────────────────────────────────────────────────────────╮
 #          │                       Fish Theme                         │
 #          ╰──────────────────────────────────────────────────────────╯
-#
-# Catppuccin Mocha syntax highlighting colors.
-# These variables were migrated from the universal scope to global scope.
+# Catppuccin Mocha
 
+#   ────────────────────── Syntax highlighting colors ──────────────────────
 set --global fish_color_autosuggestion 6c7086
 set --global fish_color_cancel f38ba8
 set --global fish_color_command 89b4fa
@@ -47,3 +46,11 @@ set --global fish_pager_color_selected_background
 set --global fish_pager_color_selected_completion
 set --global fish_pager_color_selected_description
 set --global fish_pager_color_selected_prefix
+
+#   ─────────────────────────── FZF theme colors ───────────────────────────
+set -Ux FZF_DEFAULT_OPTS "\
+--color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
+--color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
+--color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8 \
+--color=selected-bg:#45475A \
+--color=border:#6C7086,label:#CDD6F4"

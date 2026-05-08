@@ -541,9 +541,6 @@ Use this file for paths and variables that are specific to one machine — thing
 ```fish
 # ~/.config/.user-dots/fish/local.fish
 
-# Project root for quick cd
-set -gx cdp /home/youruser/projects
-
 # CDPATH — directories searched by cd
 set -gx CDPATH . /home/youruser/projects /home/youruser
 
