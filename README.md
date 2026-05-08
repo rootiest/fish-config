@@ -299,6 +299,8 @@ rm -f file.txt  # Falls through to standard rm -f
 | `gemini-resume` | Resume Gemini CLI session from `.gemini_session` in CWD |
 | `code-resume` | Smart resume — tries Claude then Gemini, falls back to picker |
 | `superpowers [on\|off]` | Enable/disable the Superpowers extension for Claude and Gemini |
+| `claude-docs` | Ask Claude to sync `README.md` with recent session changes |
+| `claude-pr` | Create a branch, commit, push, and open a PR via Claude |
 
 ### Fetch & Info
 
