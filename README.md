@@ -152,6 +152,7 @@ Beyond standard shell and FZF bindings, these custom interactive shortcuts are a
 | `Ctrl+F` | Interactive History Substitution | Behaves like `!!:s/old/new/` in Bash. Performs substitution on the previous command using `old/new` syntax. When no text is entered, prepends `sudo` to the previous command. The `old/new/n` syntax will perform substitution on the command `n` lines previous in the history. |
 | `Ctrl+Alt+U` | Replace Command Token | Strips the first token (the command) from the current line. **If the line is empty**, it pulls the previous command and strips its first token, placing the cursor at the start for a quick replacement (e.g., changing `mkdir` to `cd` while keeping the paths). |
 | `Ctrl+Alt+=` | Inline Qalculate! Evaluation | Passes the current command-line buffer to `qalc` (Qalculate!) and prints the result, then clears the buffer. Allows rapid-fire math without leaving the shell — type `150 * 1.08`, press `Ctrl+Alt+=`, and see `162` immediately. |
+| `Ctrl+Enter` | Smart Execute | Context-aware Enter key. Empty buffer → standard Enter. Buffer ending with `=` → evaluates it as a math expression via `qalc` (same as `Ctrl+Alt+=`). Any other content → executes the command normally. |
 
 ---
 
@@ -244,6 +245,8 @@ rm -f file.txt  # Falls through to standard rm -f
 | `gip4` | Show public IPv4 address only |
 | `gip6` | Show public IPv6 address (or error if unavailable) |
 | `ports` | List all active TCP listeners via `lsof` |
+| `fast-cli` | Run a bandwidth speed test using fast.com |
+| `fast` | Friendly error shown when `fast` is typed instead of `fast-cli` |
 
 ### Clipboard
 
@@ -438,6 +441,12 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 | `ssct` | `sudo systemctl status` |
 | `sscs` | `sudo systemctl start` |
 | `sscr` | `sudo systemctl restart` |
+
+### Speed Test
+
+| Abbr | Expands To |
+|---|---|
+| `speedtest-fast` | `fast-cli` (speed test via fast.com) |
 
 ### Beads (bd)
 

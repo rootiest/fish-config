@@ -1,7 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-function qalc_eval
+# Returns the result of a qalc calculation
+function _qalc_eval
     # Get the current command line buffer
     set -l cmd (commandline)
 

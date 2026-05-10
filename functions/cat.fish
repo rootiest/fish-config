@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# Use bat for files and ls for directories when using cat
 function cat --wraps='bat' --description 'Use bat for files and ls for directories'
     # If no arguments are provided, cat usually waits for stdin. 
     # We'll maintain that behavior by skipping the directory check if $argv is empty.

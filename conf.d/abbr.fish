@@ -97,6 +97,9 @@ abbr -a lX lx
 abbr -a lT lt
 # Full tree listing
 abbr -a lsT lstree
+### speed-test alternates
+# Speedtest using fast.com
+abbr -a speedtest-fast fast-cli
 
 # Window Creation (OS Windows)
 if test "$TERM" = xterm-kitty
