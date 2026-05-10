@@ -66,12 +66,54 @@ function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
                 set -a trash_paths $arg
             end
         end
-
         if type -q trash; and set -q trash_paths[1]
-            trash put $trash_paths
-            # Refresh Dolphin view
+            set -l trash_output (trash put $trash_paths 2>&1)
+            set -l exit_status $status
+
+            if test $exit_status -ne 0
+                # 1. Extract the core message (e.g., "No such file or directory")
+                set -l raw_msg (string replace -r '.*Message: (.+?) \(os error.*' '$1' -- "$trash_output")
+
+                # 2. Find which paths are actually missing
+                set -l culprits
+                for p in $trash_paths
+                    if not test -e "$p"
+                        set -a culprits "$p"
+                    end
+                end
+
+                # 3. Display Logic
+                set_color red --bold
+                echo -n "error: "
+                set_color normal
+                echo $raw_msg
+
+                if set -q culprits[1]
+                    # If we found missing files, show the user's source paths
+                    for c in $culprits
+                        set_color blue
+                        echo -n "  ↳ Source: "
+                        set_color normal
+                        echo $c
+                    end
+                else
+                    # 1. Strip ANSI escape codes (color) so regex works correctly
+                    # 2. Remove the 'error: ' prefix
+                    # 3. Unescape quotes and trim whitespace
+                    set -l clean_detail (string replace -ra '\e\[[^m]*m' '' -- "$trash_output" \
+                                    | string replace -r '^error: ' '' \
+                                    | string unescape \
+                                    | string trim)
+
+                    set_color yellow
+                    echo -n "  ↳ Technical detail: "
+                    set_color normal
+                    echo $clean_detail
+                end
+            end
+
             dbus-send --type=signal /OrgKdeKDirNotify org.kde.KDirNotify.FilesChanged stringArray:"trash:/" >/dev/null 2>&1 &
-            return
+            return $exit_status
         end
     end
 
