@@ -103,7 +103,8 @@ See [FZF Bindings](#fzf-bindings) under Key Bindings for the default FZF shortcu
 
 ## Integrations
 
-> **Note:** All integrations listed below are designed to gracefully fallback to basic commands or safely ignore their configuration if their required external dependencies are not installed on the system.
+> [!NOTE]
+> All integrations listed below are designed to gracefully fallback to basic commands or safely ignore their configuration if their required external dependencies are not installed on the system.
 
 ### Zoxide
 
@@ -122,7 +123,11 @@ Automatically loads `.envrc` files on directory change. Takes priority over the 
 
 ### Auto Python Venv
 
-When entering a directory containing a `.venv/`, the virtualenv is automatically activated. It is deactivated when you leave the project tree. DirEnv-managed directories are skipped to avoid conflicts.
+When entering a directory containing a `.venv/`, the virtualenv is automatically activated.  
+It is automatically deactivated when you leave the project tree.
+
+> [!TIP]
+> DirEnv-managed directories are skipped by the auto-venv logic to avoid conflicts.
 
 ### WakaTime
 
