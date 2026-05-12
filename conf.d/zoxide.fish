@@ -33,11 +33,26 @@ if status is-interactive
                 _zoxide_cd $HOME
             else if test "$argv" = -
                 _zoxide_cd -
-            else if test -d $argv[-1]
-                _zoxide_cd $argv[-1]
             else
-                set -l result (command zoxide query $argv)
-                and _zoxide_cd $result
+                # Check if the argument is a directory (respecting CDPATH)
+                set -l is_dir 1
+                if test -d $argv[-1]
+                    set is_dir 0
+                else if not string match -rq '^\.?\.?/' -- $argv[-1]
+                    for i in $CDPATH
+                        if test -n "$i" -a -d "$i/$argv[-1]"
+                            set is_dir 0
+                            break
+                        end
+                    end
+                end
+
+                if test $is_dir -eq 0
+                    _zoxide_cd $argv[-1]
+                else
+                    set -l result (command zoxide query -- $argv)
+                    and _zoxide_cd $result
+                end
             end
         end
 
