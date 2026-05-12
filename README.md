@@ -15,7 +15,7 @@ A feature-rich Fish shell configuration for CachyOS (Arch Linux), built around a
 - [Dependencies](#dependencies)
 - [Installation](#installation)
 - [Personalization](#personalization)
-- [Full Requirements](#full-requirements)
+- [Attribution](#attribution)
 - [License](#license)
 
 ---
@@ -107,7 +107,14 @@ See [FZF Bindings](#fzf-bindings) under Key Bindings for the default FZF shortcu
 
 ### Zoxide
 
-Smart `cd` replacement. `cd` (or `z`) `<keyword>` jumps to the best frecency match; `cdi` (or `zi`) opens an interactive selector.
+Smart `cd` replacement powered by frecency scoring. `cd`, `z`, and `cdi`/`zi` are all mapped to zoxide-backed navigation functions.
+
+| Command | Description |
+|---|---|
+| `cd <path>` / `z <path>` | Jump to a matching directory by frecency; falls back to exact path |
+| `cdi` / `zi` | Open an interactive fzf selector across all frecency-ranked directories |
+
+Tab completions for `cd` and `z` blend standard directory entries (CWD and `CDPATH`) with zoxide frecency results, so familiar paths and frequently-visited destinations appear together in a single list. Full tab completions for the `zoxide` CLI itself (subcommands: `add`, `query`, `remove`, `import`, `init`) are provided via `completions/zoxide.fish`.
 
 ### DirEnv
 
@@ -493,6 +500,10 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 | [Kitty](https://sw.kovidgoyal.net/kitty/) / [WezTerm](https://wezfurlong.org/wezterm/) | Terminal emulator |
 | [WakaTime](https://wakatime.com/) | Activity tracking |
 
+### Full Requirements
+
+For a complete, categorized list of all non-standard tools required or used by this configuration, see [requirements.md](requirements.md).
+
 ---
 
 ## Installation
@@ -512,7 +523,6 @@ Then open a new Fish shell — Fisher and all plugins will be installed automati
 A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are sourced from `~/.config/.user-dots/fish/secrets.fish` and excluded from version control.
 
 ---
-
 ## Personalization
 
 Sensitive credentials and machine-specific paths are kept out of version control via a secondary private directory at `~/.config/.user-dots/fish/`. Two files are sourced automatically by `config.fish` if they exist:
@@ -585,9 +595,9 @@ end
 
 ---
 
-## Full Requirements
+## Attribution
 
-For a complete, categorized list of all non-standard tools required or used by this configuration, see [requirements.md](requirements.md).
+The core of the [Zoxide integration](#zoxide) in this repository was originally adapted from the [icezyclon/zoxide.fish](https://github.com/icezyclon/zoxide.fish) plugin (MIT Licensed) and has since been heavily customized for performance and Fish 4.x compatibility.
 
 ---
 
