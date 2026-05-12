@@ -36,3 +36,10 @@ OLD/
 # Auto-managed by fish; contains machine-local state and universal vars
 fish_variables
 .claude
+
+# Personal testing/temporary files
+[Tt][Mm][Pp]/
+[Tt][Ee][Mm][Pp]/
+[Tt][Ee][Mm][Pp][Oo][Rr][Aa][Rr][Yy]/
+[Tt][Ee][Ss][Tt][Ii][Nn][Gg]/
+[Dd][Ee][Bb][Uu][Gg]/
