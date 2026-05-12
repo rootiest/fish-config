@@ -1,3 +1,5 @@
+# Sourced from icezyclon/zoxide.fish (MIT)
+
 set -l commands add help import init query remove
 
 # disable normal all-files completion

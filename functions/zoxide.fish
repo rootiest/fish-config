@@ -1,3 +1,5 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # Adapted from icezyclon/zoxide.fish (MIT)
 # Heavily customized for Fish 4.x compatibility and performance
 
