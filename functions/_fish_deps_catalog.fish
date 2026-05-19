@@ -27,7 +27,7 @@ function _fish_deps_catalog
     set -g _fdc_cargo \
         fish "" "" starship "" zoxide "" "" \
         "" "" \
-        eza lsd bat "" du-dust "" "" "" ripgrep "" "" trash-cli "" ""
+        eza lsd bat "" du-dust "" "" "" ripgrep "" "" trashy "" ""
 
     set -g _fdc_pm \
         fish cargo "" starship fzf zoxide direnv "" \
