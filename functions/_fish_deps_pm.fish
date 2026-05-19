@@ -3,7 +3,7 @@
 
 # Detect the first available system package manager.
 function _fish_deps_detect_pm
-    for pm in paru pacman apt brew pkg dnf yum
+    for pm in paru yay pacman apt brew pkg dnf yum
         if type -q $pm
             echo $pm
             return
@@ -23,6 +23,8 @@ function _fish_deps_pm_install --argument-names pkg
     switch $pm
         case paru
             paru -S --noconfirm $pkg
+        case yay
+            yay -S --noconfirm $pkg
         case pacman
             sudo pacman -S --noconfirm $pkg
         case apt
@@ -49,6 +51,8 @@ function _fish_deps_pm_upgrade --argument-names pkg
     switch $pm
         case paru
             paru -S --noconfirm $pkg
+        case yay
+            yay -S --noconfirm $pkg
         case pacman
             sudo pacman -S --noconfirm $pkg
         case apt
