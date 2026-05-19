@@ -18,7 +18,7 @@ function _fish_deps_catalog
         eza lsd bat btop dust duf prettyping most rg lazygit lazydocker trash kitty wezterm
 
     set -g _fdc_tiers \
-        req req req req req req req \
+        req req req req req req rec \
         int int \
         rec rec rec rec rec rec rec rec rec rec rec rec rec rec
 

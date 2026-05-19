@@ -499,12 +499,12 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 | [fzf](https://github.com/junegunn/fzf) | Fuzzy finder |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | Smart directory jumper |
 | [direnv](https://direnv.net/) | Per-directory env loading |
-| [paru](https://github.com/Morganamilo/paru) | AUR helper |
 
 ### Recommended
 
 | Tool | Replaces |
 |---|---|
+| [paru](https://github.com/Morganamilo/paru) / [yay](https://github.com/Jguer/yay) | AUR helper (Arch only) |
 | [eza](https://github.com/eza-community/eza) | `ls` (preferred) |
 | [lsd](https://github.com/lsd-rs/lsd) | `ls` (fallback) |
 | [bat](https://github.com/sharkdp/bat) | `cat` |
