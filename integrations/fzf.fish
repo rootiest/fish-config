@@ -191,8 +191,12 @@ function fzf_key_bindings
     set -l -- total_lines (count $command_line)
     set -l -- fzf_query (string escape -- $command_line[$current_line])
 
+    # preview-wrap-sign requires newer fzf; omit it on older builds
+    set -l _fzf_preview_wrap_sign ''
+    test "$_fzf_transform_action" = bg-transform; and set _fzf_preview_wrap_sign ' --preview-wrap-sign="↳ "'
+
     set -lx -- FZF_DEFAULT_OPTS (__fzf_defaults '' \
-      '--nth=2..,.. --scheme=history --multi --no-multi-line --no-wrap --wrap-sign="\t\t\t↳ " --preview-wrap-sign="↳ "' \
+      '--nth=2..,.. --scheme=history --multi --no-multi-line --no-wrap --wrap-sign="\t\t\t↳ "'$_fzf_preview_wrap_sign \
       '--bind=\'shift-delete:execute-silent(for i in (string split0 -- <{+f}); eval builtin history delete --exact --case-sensitive -- (string escape -n -- $i | string replace -r "^\d*\\\\\\t" ""); end)+reload(eval $FZF_DEFAULT_COMMAND)\'' \
       '--bind="alt-enter:become(string join0 -- (string collect -- {+2..} | fish_indent -i))"' \
       "--bind=ctrl-r:toggle-sort,alt-r:toggle-raw --highlight-line $FZF_CTRL_R_OPTS" \
