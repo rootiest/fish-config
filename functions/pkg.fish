@@ -1,10 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Function for installing packages with paru.
-# This runs `paru` with the `-S` flag to install one or more packages.
-# The `$argv` variable passes all arguments given to the `pkg` function
-# directly to the `paru` command.
-function pkg --wraps='paru' --description 'directly to the `paru` command.'
-    paru -S $argv
+function pkg --description 'Install packages via paru or yay'
+    set -l aur ""
+    if type -q paru
+        set aur paru
+    else if type -q yay
+        set aur yay
+    else
+        echo "No AUR helper found (install paru or yay)" >&2
+        return 1
+    end
+    $aur -S $argv
 end
