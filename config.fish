@@ -75,6 +75,7 @@ fish_add_path $BUN_INSTALL/bin
 fish_add_path $XDG_DATA_HOME/npm-global/bin
 fish_add_path $HOME/.lmstudio/bin
 fish_add_path $HOME/.resend/bin
+fish_add_path $HOME/.fzf/bin
 
 #   ───────────────────────── CDPATH projects dir ──────────────────────────
 # Allows cd-ing to directories within $HOME/projects or $HOME without needing to specify the full path.
@@ -111,17 +112,22 @@ if status is-interactive
     set -g fish_key_bindings fish_vi_key_bindings
 
     #   ──────────────────────── Source FZF integration ────────────────────────
-    #   Sources the FZF integration script, which provides enhanced command history
-    #   searching and file finding capabilities.
-    if test -f "$__fish_config_dir/integrations/fzf.fish"
-        source "$__fish_config_dir/integrations/fzf.fish"
-    end
-
-    #   ─────────────────── Remove fzf bindings when fzf is absent ─────────────
-    #   conf.d/fzf.fish is managed by Fisher and may be restored on fisher update,
-    #   so this is the reliable place to prevent fzf key bindings from being set
-    #   on machines where fzf is not installed.
-    if not type -q fzf
+    #   Prefer fzf's own fish integration (fzf --fish, available since fzf 0.48)
+    #   which is always version-matched to the installed binary. Fall back to our
+    #   bundled integrations/fzf.fish for older builds.
+    #   Run `fzf-update` to install/upgrade fzf from git HEAD.
+    if type -q fzf
+        set -l _fzf_minor (fzf --version | string match -r '^\d+\.(\d+)')[2]
+        if test -n "$_fzf_minor" -a "$_fzf_minor" -ge 48
+            fzf --fish | source
+        else
+            test -f "$__fish_config_dir/integrations/fzf.fish"
+                and source "$__fish_config_dir/integrations/fzf.fish"
+        end
+    else
+        #   conf.d/fzf.fish is managed by Fisher and may be restored on fisher
+        #   update, so this is the reliable place to strip its bindings when
+        #   fzf is not installed.
         if functions -q _fzf_uninstall_bindings
             _fzf_uninstall_bindings
         end
