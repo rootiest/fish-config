@@ -93,6 +93,45 @@ function _fish_deps_update
             continue
         end
 
+        # fish: prefer build from source via git + cargo; fall back to PM
+        if test "$special" = git-cargo-fish
+            if type -q cargo; and type -q uv
+                echo "Updating $bin..."
+                set -l _tmpdir (mktemp -d)
+                set -l _build_ok 0
+                git clone https://github.com/fish-shell/fish-shell "$_tmpdir"
+                and begin
+                    set -l _tag (git -C "$_tmpdir" for-each-ref refs/tags/ --format '%(refname:short)' --sort=version:refname | tail -1)
+                    test -n "$_tag"; and git -C "$_tmpdir" checkout "$_tag"
+                    true
+                end
+                and pushd "$_tmpdir"
+                and uv run --no-managed-python cargo install --path .
+                and set _build_ok 1
+                popd 2>/dev/null
+                rm -rf "$_tmpdir"
+                if test $_build_ok -eq 1
+                    set updated_any 1
+                    set_color yellow
+                    echo "  Fish updated — restart your shell to use the new version."
+                    set_color normal
+                end
+            else if test -n "$pm_pkg"; and test -n "$pm"
+                echo "Updating $bin (cargo/uv unavailable, using system PM)..."
+                _fish_deps_pm_upgrade $pm_pkg
+                set updated_any 1
+                set_color yellow
+                echo "  Fish updated — restart your shell to use the new version."
+                set_color normal
+            else
+                set_color yellow
+                echo "  fish: cannot update — install cargo and uv to build from source"
+                set_color normal
+            end
+            set i (math $i + 1)
+            continue
+        end
+
         # curl-installer tools (starship etc.): re-run install script, which upgrades in place
         if test "$special" = curl-installer
             if test "$bin" = starship
@@ -109,11 +148,6 @@ function _fish_deps_update
             echo "Updating $bin..."
             cargo install --force $cargo_crate
             set updated_any 1
-            if test "$bin" = fish
-                set_color yellow
-                echo "  Fish updated — restart your shell to use the new version."
-                set_color normal
-            end
             set i (math $i + 1)
             continue
         end

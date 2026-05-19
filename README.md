@@ -254,7 +254,10 @@ rm -f file.txt  # Falls through to standard rm -f
 | `fzf-update` | Install or upgrade fzf from git HEAD into `~/.fzf` (guarantees the latest build) |
 | `check_fish_deps` | Legacy alias — delegates to `fish-deps status` |
 
-Install method priority: **cargo** (for Rust tools, gets latest crate) → **system PM** (paru/apt/brew/etc.) → **git clone** (fzf) → **curl installer** (starship, fisher) → **pipx** (Python tools). When multiple methods are available for a tool, you are prompted to choose.
+Install method priority: **git+cargo source build** (fish) → **cargo** (other Rust tools, gets latest crate) → **system PM** (paru/apt/brew/etc.) → **git clone** (fzf) → **curl installer** (starship, fisher) → **pipx** (Python tools). When multiple methods are available for a tool, you are prompted to choose.
+
+> [!NOTE]
+> Upgrading Fish from source requires **cargo** and **[uv](https://docs.astral.sh/uv/)**. If either is missing, `fish-deps install`/`update` will fall back to the system package manager instead.
 
 ### Docker
 
@@ -502,11 +505,7 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 
 > [!WARNING]
 > Fish **4.0 or newer is required.** This config uses `test` syntax and other constructs that are incompatible with Fish 3.x. Older versions will produce errors on startup.
-> If you are on an older Fish, you can upgrade via cargo (Fish 4.x is a Rust rewrite published to crates.io):
-> ```
-> cargo install fish
-> ```
-> Or run `fish-deps update` once cargo is available — it will upgrade Fish via cargo automatically.
+> If you are on an older Fish, run `fish-deps install` or `fish-deps update` — it will build and install the latest Fish from source using git + cargo (requires cargo and uv).
 
 ### Recommended
 

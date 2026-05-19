@@ -47,6 +47,18 @@ function _fish_deps_install
 
             # Preferred special methods — listed before system PM so they are the default
             switch $special
+                case git-cargo-fish
+                    if type -q cargo; and type -q uv
+                        set -a methods special-git-cargo-fish
+                        set -a method_labels "build from source (git + cargo)"
+                    else
+                        set_color brblack
+                        set -l _need
+                        type -q cargo; or set -a _need cargo
+                        type -q uv; or set -a _need uv
+                        echo "  note: "(string join " and " $_need)" not found — install them first to build fish from source"
+                        set_color normal
+                    end
                 case rustup-installer
                     set -a methods special-rustup
                     set -a method_labels "rustup installer (curl | sh)"
@@ -194,6 +206,21 @@ function _fish_deps_install
                     and makepkg -si --noconfirm
                     and popd
                     rm -rf $_build_dir
+                case special-git-cargo-fish
+                    set -l _tmpdir (mktemp -d)
+                    set -l _build_ok 0
+                    git clone https://github.com/fish-shell/fish-shell "$_tmpdir"
+                    and begin
+                        set -l _tag (git -C "$_tmpdir" for-each-ref refs/tags/ --format '%(refname:short)' --sort=version:refname | tail -1)
+                        test -n "$_tag"; and git -C "$_tmpdir" checkout "$_tag"
+                        true
+                    end
+                    and pushd "$_tmpdir"
+                    and uv run --no-managed-python cargo install --path .
+                    and set _build_ok 1
+                    popd 2>/dev/null
+                    rm -rf "$_tmpdir"
+                    test $_build_ok -eq 1
                 case special-pipx
                     pipx install $bin
                 case special-pip

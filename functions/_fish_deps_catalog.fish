@@ -10,7 +10,8 @@
 #   _fdc_cargo   — cargo crate name, or "" if not on crates.io
 #   _fdc_pm      — system PM package name, or "" if not in repos
 #   _fdc_special — special install key: rustup-installer | fisher-bootstrap |
-#                  fzf-update | paru-build | pipx | curl-installer | "" (none)
+#                  fzf-update | paru-build | pipx | curl-installer |
+#                  git-cargo-fish | "" (none)
 #
 # cargo is listed second so it is installed before Rust tools that depend on it.
 function _fish_deps_catalog
@@ -25,7 +26,7 @@ function _fish_deps_catalog
         rec rec rec rec rec rec rec rec rec rec rec rec rec rec
 
     set -g _fdc_cargo \
-        fish "" "" starship "" zoxide "" "" \
+        "" "" "" starship "" zoxide "" "" \
         "" "" \
         eza lsd bat "" du-dust "" "" "" ripgrep "" "" trashy "" ""
 
@@ -35,7 +36,7 @@ function _fish_deps_catalog
         eza lsd bat btop dust duf prettyping most ripgrep lazygit lazydocker trash kitty wezterm
 
     set -g _fdc_special \
-        "" rustup-installer fisher-bootstrap curl-installer fzf-update "" "" paru-build \
+        git-cargo-fish rustup-installer fisher-bootstrap curl-installer fzf-update "" "" paru-build \
         wakatime-binary "" \
         "" "" "" "" "" "" "" "" "" "" curl-lazydocker "" "" ""
 end
