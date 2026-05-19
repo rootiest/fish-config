@@ -71,8 +71,7 @@ function _fish_deps_install
             end
 
             # Prompt: install this dep?
-            set_color cyan; echo -n "Install $bin? "; set_color normal
-            read -l -P "[Y/n] " _reply
+            read -l -P (set_color cyan)"Install $bin?"(set_color normal)" [Y/n] " _reply
             if test "$_reply" = n; or test "$_reply" = N
                 set i (math $i + 1)
                 continue
