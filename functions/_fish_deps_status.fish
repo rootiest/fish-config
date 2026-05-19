@@ -5,13 +5,17 @@
 function _fish_deps_status
     _fish_deps_catalog
 
-    function __fds_print_dep --argument-names bin
+    function __fds_print_dep --argument-names bin tier
         if type -q $bin
-            set_color green; echo -n "   "; set_color normal
+            set_color green; echo -n " ✓ "; set_color normal
             echo -n "$bin "
             set_color brblack; echo "(Found at "(type -p $bin)")"; set_color normal
+        else if test "$tier" = rec
+            set_color yellow; echo -n " ⚠ "; set_color normal
+            echo -n "$bin "
+            set_color brblack; echo "(Not installed)"; set_color normal
         else
-            set_color red; echo -n "   "; set_color normal
+            set_color red; echo -n " ✗ "; set_color normal
             echo -n "$bin "
             set_color brblack; echo "(Not installed)"; set_color normal
         end
@@ -24,7 +28,7 @@ function _fish_deps_status
         set -l i 1
         for bin in $_fdc_bins
             if test "$_fdc_tiers[$i]" = $tier
-                __fds_print_dep $bin
+                __fds_print_dep $bin $tier
             end
             set i (math $i + 1)
         end
