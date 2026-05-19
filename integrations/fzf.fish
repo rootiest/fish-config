@@ -213,10 +213,13 @@ function fzf_key_bindings
       end
 
       # Prepend the options to allow user customizations
+      # wrap-word requires the same newer fzf as bg-transform; fall back to plain wrap
+      set -l _fzf_wrap_opt wrap
+      test "$_fzf_transform_action" = bg-transform; and set _fzf_wrap_opt wrap-word
       set -p -- FZF_DEFAULT_OPTS \
         '--bind="focus,resize:'$_fzf_transform_action':if test \\"$FZF_COLUMNS\\" -gt 100 -a \\\\( \\"$FZF_SELECT_COUNT\\" -gt 0 -o \\\\( -z \\"$FZF_WRAP\\" -a (string length -- {}) -gt (math $FZF_COLUMNS - 4) \\\\) -o (string collect -- {2..} | fish_indent | count) -gt 1 \\\\); echo show-preview; else echo hide-preview; end"' \
         '--preview="string collect -- (test \\"$FZF_SELECT_COUNT\\" -gt 0; and string collect -- {+2..}) \\"\\n# \\"'$date_cmd' {2..} | fish_indent --ansi"' \
-        '--preview-window="right,50%,wrap-word,follow,info,hidden"'
+        '--preview-window="right,50%,'$_fzf_wrap_opt',follow,info,hidden"'
     end
 
     set -lx FZF_DEFAULT_OPTS_FILE
