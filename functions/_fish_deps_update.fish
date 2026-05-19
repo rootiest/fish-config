@@ -28,6 +28,17 @@ function _fish_deps_update
         set -l pm_pkg       $_fdc_pm[$i]
         set -l special      $_fdc_special[$i]
 
+        # cargo: update via rustup
+        if test "$special" = rustup-installer
+            if type -q rustup
+                echo "Updating $bin..."
+                rustup update
+                set updated_any 1
+            end
+            set i (math $i + 1)
+            continue
+        end
+
         # fzf: always use fzf-update (git-based)
         if test "$special" = fzf-update
             echo "Updating $bin..."

@@ -20,25 +20,31 @@ function _fish_deps_install
             set -l methods
             set -l method_labels
 
-            # Cargo first — preferred for Rust tools; gets the latest crate version
+            # Cargo — preferred for Rust tools; gets the latest crate version
             if test -n "$cargo_crate"
                 if type -q cargo
                     set -a methods cargo
                     set -a method_labels "cargo ($cargo_crate)"
                 else
                     set_color brblack
-                    echo "  note: cargo not found — install rustup for the latest $bin"
+                    echo "  note: cargo not found — install cargo first for the latest $bin"
                     set_color normal
                 end
             end
 
-            # System PM — after cargo so cargo is always the default when available
+            # rustup installer — listed before system PM so it is the default for cargo itself
+            if test "$special" = rustup-installer
+                set -a methods special-rustup
+                set -a method_labels "rustup installer (curl | sh)"
+            end
+
+            # System PM — after cargo/rustup so those are always the default when available
             if test -n "$pm_pkg"; and test -n "$pm"
                 set -a methods pm
                 set -a method_labels "$pm ($pm_pkg)"
             end
 
-            # Special methods
+            # Remaining special methods
             switch $special
                 case fzf-update
                     set -a methods special-fzf
@@ -108,6 +114,8 @@ function _fish_deps_install
                     cargo install $cargo_crate
                 case pm
                     _fish_deps_pm_install $pm_pkg
+                case special-rustup
+                    curl https://sh.rustup.rs -sSf | sh
                 case special-fzf
                     fzf-update
                 case special-fisher
