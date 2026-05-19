@@ -257,7 +257,7 @@ rm -f file.txt  # Falls through to standard rm -f
 Install method priority: **git+cargo source build** (fish) → **cargo** (other Rust tools, gets latest crate) → **system PM** (paru/apt/brew/etc.) → **git clone** (fzf) → **curl installer** (starship, fisher) → **pipx** (Python tools). When multiple methods are available for a tool, you are prompted to choose.
 
 > [!NOTE]
-> Upgrading Fish from source requires **cargo** and **[uv](https://docs.astral.sh/uv/)**. If either is missing, `fish-deps install`/`update` will fall back to the system package manager instead.
+> Upgrading Fish from source requires **cargo** and **[uv](https://docs.astral.sh/uv/)**. Both are managed dependencies — `fish-deps install` will offer to install them before attempting the Fish build. If both are unavailable, `fish-deps update` falls back to the system package manager.
 
 ### Docker
 
@@ -496,6 +496,8 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 
 | Tool | Version | Purpose |
 |---|---|---|
+| [uv](https://docs.astral.sh/uv/) | any | Python runner (needed to build Fish from source) |
+| [Rust / cargo](https://www.rust-lang.org/tools/install) | any | Installs Rust-based tools; required to build Fish |
 | [Fish](https://fishshell.com/) | **≥ 4.0** | Shell |
 | [Fisher](https://github.com/jorgebucaran/fisher) | any | Plugin manager |
 | [Starship](https://starship.rs/) | any | Prompt |
@@ -505,7 +507,7 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 
 > [!WARNING]
 > Fish **4.0 or newer is required.** This config uses `test` syntax and other constructs that are incompatible with Fish 3.x. Older versions will produce errors on startup.
-> If you are on an older Fish, run `fish-deps install` or `fish-deps update` — it will build and install the latest Fish from source using git + cargo (requires cargo and uv).
+> Run `fish-deps install` or `fish-deps update` to upgrade — it will install `uv` and `cargo` automatically if missing, then build the latest Fish from source.
 
 ### Recommended
 

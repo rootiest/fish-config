@@ -93,6 +93,15 @@ function _fish_deps_update
             continue
         end
 
+        # uv: use built-in self-updater
+        if test "$special" = curl-uv
+            echo "Updating $bin..."
+            uv self update
+            set updated_any 1
+            set i (math $i + 1)
+            continue
+        end
+
         # fish: prefer build from source via git + cargo; fall back to PM
         if test "$special" = git-cargo-fish
             if type -q cargo; and type -q uv

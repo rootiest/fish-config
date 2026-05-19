@@ -47,6 +47,9 @@ function _fish_deps_install
 
             # Preferred special methods — listed before system PM so they are the default
             switch $special
+                case curl-uv
+                    set -a methods special-uv
+                    set -a method_labels "curl installer (official script)"
                 case git-cargo-fish
                     if type -q cargo; and type -q uv
                         set -a methods special-git-cargo-fish
@@ -206,6 +209,20 @@ function _fish_deps_install
                     and makepkg -si --noconfirm
                     and popd
                     rm -rf $_build_dir
+                case special-uv
+                    curl -LsSf https://astral.sh/uv/install.sh | sh
+                    # Add uv to PATH for the rest of this session
+                    for _d in "$HOME/.local/bin" "$HOME/.cargo/bin"
+                        if test -d "$_d"
+                            fish_add_path "$_d"
+                            break
+                        end
+                    end
+                    if not type -q uv
+                        set_color yellow
+                        echo "  uv not yet in PATH — restart your shell if subsequent installs fail."
+                        set_color normal
+                    end
                 case special-git-cargo-fish
                     set -l _tmpdir (mktemp -d)
                     set -l _build_ok 0

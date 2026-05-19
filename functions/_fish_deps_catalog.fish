@@ -11,32 +11,32 @@
 #   _fdc_pm      — system PM package name, or "" if not in repos
 #   _fdc_special — special install key: rustup-installer | fisher-bootstrap |
 #                  fzf-update | paru-build | pipx | curl-installer |
-#                  git-cargo-fish | "" (none)
+#                  git-cargo-fish | curl-uv | "" (none)
 #
-# cargo is listed second so it is installed before Rust tools that depend on it.
+# uv and cargo are listed first so both are available before fish and other Rust tools.
 function _fish_deps_catalog
     set -g _fdc_bins \
-        fish cargo fisher starship fzf zoxide direnv paru \
+        uv cargo fish fisher starship fzf zoxide direnv paru \
         wakatime tailscale \
         eza lsd bat btop dust duf prettyping most rg lazygit lazydocker trash kitty wezterm
 
     set -g _fdc_tiers \
-        req req req req req req req rec \
+        req req req req req req req req rec \
         int int \
         rec rec rec rec rec rec rec rec rec rec rec rec rec rec
 
     set -g _fdc_cargo \
-        "" "" "" starship "" zoxide "" "" \
+        "" "" "" "" starship "" zoxide "" "" \
         "" "" \
         eza lsd bat "" du-dust "" "" "" ripgrep "" "" trashy "" ""
 
     set -g _fdc_pm \
-        fish cargo "" starship fzf zoxide direnv "" \
+        uv cargo fish "" starship fzf zoxide direnv "" \
         wakatime tailscale \
         eza lsd bat btop dust duf prettyping most ripgrep lazygit lazydocker trash kitty wezterm
 
     set -g _fdc_special \
-        git-cargo-fish rustup-installer fisher-bootstrap curl-installer fzf-update "" "" paru-build \
+        curl-uv rustup-installer git-cargo-fish fisher-bootstrap curl-installer fzf-update "" "" paru-build \
         wakatime-binary "" \
         "" "" "" "" "" "" "" "" "" "" curl-lazydocker "" "" ""
 end
