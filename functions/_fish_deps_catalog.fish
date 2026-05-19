@@ -25,7 +25,7 @@ function _fish_deps_catalog
         rec rec rec rec rec rec rec rec rec rec rec rec rec rec
 
     set -g _fdc_cargo \
-        "" "" "" starship "" zoxide "" "" \
+        fish "" "" starship "" zoxide "" "" \
         "" "" \
         eza lsd bat "" du-dust "" "" "" ripgrep "" "" trash-cli "" ""
 

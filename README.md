@@ -502,6 +502,11 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 
 > [!WARNING]
 > Fish **4.0 or newer is required.** This config uses `test` syntax and other constructs that are incompatible with Fish 3.x. Older versions will produce errors on startup.
+> If you are on an older Fish, you can upgrade via cargo (Fish 4.x is a Rust rewrite published to crates.io):
+> ```
+> cargo install fish
+> ```
+> Or run `fish-deps update` once cargo is available — it will upgrade Fish via cargo automatically.
 
 ### Recommended
 

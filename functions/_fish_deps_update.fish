@@ -75,6 +75,11 @@ function _fish_deps_update
             echo "Updating $bin..."
             cargo install --force $cargo_crate
             set updated_any 1
+            if test "$bin" = fish
+                set_color yellow
+                echo "  Fish updated — restart your shell to use the new version."
+                set_color normal
+            end
             set i (math $i + 1)
             continue
         end
