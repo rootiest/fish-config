@@ -49,6 +49,16 @@ function _fish_deps_install
                 case curl-installer
                     set -a methods special-curl
                     set -a method_labels "curl installer"
+                case paru-build
+                    # Only offered on Arch-based systems where pacman is present
+                    if type -q yay
+                        set -a methods special-yay-paru
+                        set -a method_labels "yay -S paru"
+                    end
+                    if type -q pacman
+                        set -a methods special-paru
+                        set -a method_labels "build from AUR (makepkg)"
+                    end
                 case pipx
                     if type -q pipx
                         set -a methods special-pipx
@@ -107,6 +117,15 @@ function _fish_deps_install
                     if test "$bin" = starship
                         curl -sS https://starship.rs/install.sh | sh
                     end
+                case special-yay-paru
+                    yay -S --noconfirm paru
+                case special-paru
+                    set -l _build_dir (mktemp -d)
+                    git clone https://aur.archlinux.org/paru.git $_build_dir
+                    and pushd $_build_dir
+                    and makepkg -si --noconfirm
+                    and popd
+                    rm -rf $_build_dir
                 case special-pipx
                     pipx install $bin
                 case special-pip

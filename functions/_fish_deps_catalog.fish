@@ -33,7 +33,7 @@ function _fish_deps_catalog
         eza lsd bat btop dust duf prettyping most ripgrep lazygit lazydocker trash kitty wezterm
 
     set -g _fdc_special \
-        "" fisher-bootstrap curl-installer fzf-update "" "" "" \
+        "" fisher-bootstrap curl-installer fzf-update "" "" paru-build \
         pipx "" \
         "" "" "" "" "" "" "" "" "" "" "" "" "" ""
 end
