@@ -117,6 +117,16 @@ if status is-interactive
         source "$__fish_config_dir/integrations/fzf.fish"
     end
 
+    #   ─────────────────── Remove fzf bindings when fzf is absent ─────────────
+    #   conf.d/fzf.fish is managed by Fisher and may be restored on fisher update,
+    #   so this is the reliable place to prevent fzf key bindings from being set
+    #   on machines where fzf is not installed.
+    if not type -q fzf
+        if functions -q _fzf_uninstall_bindings
+            _fzf_uninstall_bindings
+        end
+    end
+
     #   ──────────────────────────────── DirENV ────────────────────────────────
     # Tool to handle automatic environment loading in directories and their children
     # Use when children need to load venv as well.
