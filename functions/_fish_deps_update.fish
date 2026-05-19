@@ -19,7 +19,7 @@ function _fish_deps_update
     set -l i 1
     for bin in $_fdc_bins
         # Skip fisher itself (handled above) and tools that aren't installed
-        if test "$bin" = fisher -o not (type -q $bin)
+        if test "$bin" = fisher; or not type -q $bin
             set i (math $i + 1)
             continue
         end
@@ -60,7 +60,7 @@ function _fish_deps_update
         end
 
         # Cargo: prefer for Rust tools
-        if test -n "$cargo_crate" -a (type -q cargo)
+        if test -n "$cargo_crate"; and type -q cargo
             echo "Updating $bin..."
             cargo install --force $cargo_crate
             set updated_any 1
@@ -69,7 +69,7 @@ function _fish_deps_update
         end
 
         # System PM fallback
-        if test -n "$pm_pkg" -a -n "$pm"
+        if test -n "$pm_pkg"; and test -n "$pm"
             echo "Updating $bin..."
             _fish_deps_pm_upgrade $pm_pkg
             set updated_any 1

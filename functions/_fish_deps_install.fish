@@ -21,13 +21,13 @@ function _fish_deps_install
             set -l method_labels
 
             # Cargo — only if cargo is present and the tool has a crate
-            if test -n "$cargo_crate" -a (type -q cargo)
+            if test -n "$cargo_crate"; and type -q cargo
                 set -a methods cargo
                 set -a method_labels "cargo ($cargo_crate)"
             end
 
             # System PM — only if a PM is detected and the tool is in repos
-            if test -n "$pm_pkg" -a -n "$pm"
+            if test -n "$pm_pkg"; and test -n "$pm"
                 set -a methods pm
                 set -a method_labels "$pm ($pm_pkg)"
             end
@@ -44,7 +44,6 @@ function _fish_deps_install
                     set -a methods special-curl
                     set -a method_labels "curl installer"
                 case paru-build
-                    # Only useful on Arch; skip if pacman not present
                     if type -q yay
                         set -a methods special-yay-paru
                         set -a method_labels "yay -S paru"
@@ -74,7 +73,7 @@ function _fish_deps_install
             # Prompt: install this dep?
             set_color cyan; echo -n "Install $bin? "; set_color normal
             read -l -P "[Y/n] " _reply
-            if test "$_reply" = n -o "$_reply" = N
+            if test "$_reply" = n; or test "$_reply" = N
                 set i (math $i + 1)
                 continue
             end
@@ -89,7 +88,7 @@ function _fish_deps_install
                     set m (math $m + 1)
                 end
                 read -l -P "  Choose [1-"(count $methods)"] (default 1): " _choice
-                if test -n "$_choice" -a "$_choice" -ge 1 -a "$_choice" -le (count $methods) 2>/dev/null
+                if test -n "$_choice"; and test "$_choice" -ge 1; and test "$_choice" -le (count $methods)
                     set chosen_method $methods[$_choice]
                 end
             end
@@ -106,7 +105,6 @@ function _fish_deps_install
                     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
                     fisher update
                 case special-curl
-                    # Currently used for starship
                     if test "$bin" = starship
                         curl -sS https://starship.rs/install.sh | sh
                     end
