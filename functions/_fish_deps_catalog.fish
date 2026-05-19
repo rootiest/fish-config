@@ -10,7 +10,7 @@
 #   _fdc_cargo   — cargo crate name, or "" if not on crates.io
 #   _fdc_pm      — system PM package name, or "" if not in repos
 #   _fdc_special — special install key: fisher-bootstrap | fzf-update |
-#                  paru-build | pipx | curl-installer | "" (none)
+#                  pipx | curl-installer | "" (none)
 function _fish_deps_catalog
     set -g _fdc_bins \
         fish fisher starship fzf zoxide direnv paru \
@@ -28,12 +28,12 @@ function _fish_deps_catalog
         eza lsd bat "" du-dust "" "" "" ripgrep "" "" trash-cli "" ""
 
     set -g _fdc_pm \
-        fish "" starship fzf zoxide direnv paru \
+        fish "" starship fzf zoxide direnv "" \
         wakatime tailscale \
         eza lsd bat btop dust duf prettyping most ripgrep lazygit lazydocker trash kitty wezterm
 
     set -g _fdc_special \
-        "" fisher-bootstrap curl-installer fzf-update "" "" paru-build \
+        "" fisher-bootstrap curl-installer fzf-update "" "" "" \
         pipx "" \
         "" "" "" "" "" "" "" "" "" "" "" "" "" ""
 end

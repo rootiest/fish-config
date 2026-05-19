@@ -20,13 +20,19 @@ function _fish_deps_install
             set -l methods
             set -l method_labels
 
-            # Cargo — only if cargo is present and the tool has a crate
-            if test -n "$cargo_crate"; and type -q cargo
-                set -a methods cargo
-                set -a method_labels "cargo ($cargo_crate)"
+            # Cargo first — preferred for Rust tools; gets the latest crate version
+            if test -n "$cargo_crate"
+                if type -q cargo
+                    set -a methods cargo
+                    set -a method_labels "cargo ($cargo_crate)"
+                else
+                    set_color brblack
+                    echo "  note: cargo not found — install rustup for the latest $bin"
+                    set_color normal
+                end
             end
 
-            # System PM — only if a PM is detected and the tool is in repos
+            # System PM — after cargo so cargo is always the default when available
             if test -n "$pm_pkg"; and test -n "$pm"
                 set -a methods pm
                 set -a method_labels "$pm ($pm_pkg)"
@@ -43,15 +49,6 @@ function _fish_deps_install
                 case curl-installer
                     set -a methods special-curl
                     set -a method_labels "curl installer"
-                case paru-build
-                    if type -q yay
-                        set -a methods special-yay-paru
-                        set -a method_labels "yay -S paru"
-                    end
-                    if type -q pacman
-                        set -a methods special-paru
-                        set -a method_labels "build from AUR (makepkg)"
-                    end
                 case pipx
                     if type -q pipx
                         set -a methods special-pipx
@@ -83,13 +80,16 @@ function _fish_deps_install
                 echo "  Available methods:"
                 set -l m 1
                 for lbl in $method_labels
-                    echo "    $m) $lbl"
+                    set_color brblack; echo -n "    $m) "; set_color normal
+                    echo $lbl
                     set m (math $m + 1)
                 end
-                read -l -P "  Choose [1-"(count $methods)"] (default 1): " _choice
+                read -l -P "  Choose [1-"(count $methods)"] (default 1 = $method_labels[1]): " _choice
                 if test -n "$_choice"; and test "$_choice" -ge 1; and test "$_choice" -le (count $methods)
                     set chosen_method $methods[$_choice]
                 end
+            else
+                set_color brblack; echo "  Installing via $method_labels[1]"; set_color normal
             end
 
             # Execute chosen method
@@ -107,15 +107,6 @@ function _fish_deps_install
                     if test "$bin" = starship
                         curl -sS https://starship.rs/install.sh | sh
                     end
-                case special-yay-paru
-                    yay -S --noconfirm paru
-                case special-paru
-                    set -l _build_dir (mktemp -d)
-                    git clone https://aur.archlinux.org/paru.git $_build_dir
-                    and pushd $_build_dir
-                    and makepkg -si --noconfirm
-                    and popd
-                    rm -rf $_build_dir
                 case special-pipx
                     pipx install $bin
                 case special-pip
