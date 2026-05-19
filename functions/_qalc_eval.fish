@@ -3,6 +3,8 @@
 
 # Returns the result of a qalc calculation
 function _qalc_eval
+    type -q qalc || return 1
+
     # Get the current command line buffer
     set -l cmd (commandline)
 

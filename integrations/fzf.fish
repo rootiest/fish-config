@@ -206,7 +206,7 @@ function fzf_key_bindings
 
       # Prepend the options to allow user customizations
       set -p -- FZF_DEFAULT_OPTS \
-        '--bind="focus,resize:bg-transform:if test \\"$FZF_COLUMNS\\" -gt 100 -a \\\\( \\"$FZF_SELECT_COUNT\\" -gt 0 -o \\\\( -z \\"$FZF_WRAP\\" -a (string length -- {}) -gt (math $FZF_COLUMNS - 4) \\\\) -o (string collect -- {2..} | fish_indent | count) -gt 1 \\\\); echo show-preview; else echo hide-preview; end"' \
+        '--bind="focus,resize:transform:if test \\"$FZF_COLUMNS\\" -gt 100 -a \\\\( \\"$FZF_SELECT_COUNT\\" -gt 0 -o \\\\( -z \\"$FZF_WRAP\\" -a (string length -- {}) -gt (math $FZF_COLUMNS - 4) \\\\) -o (string collect -- {2..} | fish_indent | count) -gt 1 \\\\); echo show-preview; else echo hide-preview; end"' \
         '--preview="string collect -- (test \\"$FZF_SELECT_COUNT\\" -gt 0; and string collect -- {+2..}) \\"\\n# \\"'$date_cmd' {2..} | fish_indent --ansi"' \
         '--preview-window="right,50%,wrap-word,follow,info,hidden"'
     end

@@ -52,7 +52,7 @@ function fish_user_key_bindings
     bind ctrl-g __insert_previous_path_head
     bind ctrl-f __interactive_history_sub
     bind ctrl-alt-u _replace_command_token
-    bind ctrl-alt-= _qalc_eval
+    type -q qalc && bind ctrl-alt-= _qalc_eval
     bind ctrl-enter _smart_execute
 
     # Set bindings for all Vi modes:
@@ -61,7 +61,7 @@ function fish_user_key_bindings
         bind --mode $mode ctrl-g __insert_previous_path_head
         bind --mode $mode ctrl-f __interactive_history_sub
         bind --mode $mode ctrl-alt-u _replace_command_token
-        bind --mode $mode ctrl-alt-= _qalc_eval
+        type -q qalc && bind --mode $mode ctrl-alt-= _qalc_eval
         bind --mode $mode ctrl-enter _smart_execute
     end
 end
