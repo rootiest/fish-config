@@ -74,6 +74,7 @@ fish_add_path -mg --move $CARGO_HOME/bin
 fish_add_path $BUN_INSTALL/bin
 fish_add_path $XDG_DATA_HOME/npm-global/bin
 fish_add_path $HOME/.lmstudio/bin
+fish_add_path $HOME/.resend/bin
 
 #   ───────────────────────── CDPATH projects dir ──────────────────────────
 # Allows cd-ing to directories within $HOME/projects or $HOME without needing to specify the full path.
