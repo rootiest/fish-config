@@ -241,6 +241,21 @@ rm -f file.txt  # Falls through to standard rm -f
 | `upgrade` | Full system upgrade: `paru -Syu --noconfirm` |
 | `cleanup` | Log and remove orphaned packages |
 
+### Dependency Management
+
+`fish-deps` is a unified command for checking, installing, and updating all tools this config depends on.
+
+| Command | Description |
+|---|---|
+| `fish-deps` / `fish-deps status` | Show installed/missing status for all deps, grouped by tier |
+| `fish-deps install` | Interactively install each missing dep (prompts per-dep, prompts method when multiple exist) |
+| `fish-deps update` | Update all installed deps using their preferred install method |
+| `fish-deps sync` | Install missing deps then update installed ones |
+| `fzf-update` | Install or upgrade fzf from git HEAD into `~/.fzf` (guarantees the latest build) |
+| `check_fish_deps` | Legacy alias — delegates to `fish-deps status` |
+
+Install method priority: **cargo** (for Rust tools, gets latest crate) → **system PM** (paru/apt/brew/etc.) → **git clone** (fzf) → **curl installer** (starship, fisher) → **pipx** (Python tools). When multiple methods are available for a tool, you are prompted to choose.
+
 ### Docker
 
 | Function | Description |

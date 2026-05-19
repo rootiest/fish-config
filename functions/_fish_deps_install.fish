@@ -1,0 +1,135 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Interactively install missing deps.
+# For each missing dep: prompts yes/no, then prompts install method when multiple exist.
+function _fish_deps_install
+    _fish_deps_catalog
+
+    set -l pm (_fish_deps_detect_pm)
+    set -l installed_any 0
+
+    set -l i 1
+    for bin in $_fdc_bins
+        if not type -q $bin
+            set -l cargo_crate  $_fdc_cargo[$i]
+            set -l pm_pkg       $_fdc_pm[$i]
+            set -l special      $_fdc_special[$i]
+
+            # Build list of available install methods
+            set -l methods
+            set -l method_labels
+
+            # Cargo — only if cargo is present and the tool has a crate
+            if test -n "$cargo_crate" -a (type -q cargo)
+                set -a methods cargo
+                set -a method_labels "cargo ($cargo_crate)"
+            end
+
+            # System PM — only if a PM is detected and the tool is in repos
+            if test -n "$pm_pkg" -a -n "$pm"
+                set -a methods pm
+                set -a method_labels "$pm ($pm_pkg)"
+            end
+
+            # Special methods
+            switch $special
+                case fzf-update
+                    set -a methods special-fzf
+                    set -a method_labels "git clone (~/.fzf)"
+                case fisher-bootstrap
+                    set -a methods special-fisher
+                    set -a method_labels "curl bootstrap (fisher)"
+                case curl-installer
+                    set -a methods special-curl
+                    set -a method_labels "curl installer"
+                case paru-build
+                    # Only useful on Arch; skip if pacman not present
+                    if type -q pacman
+                        set -a methods special-paru
+                        set -a method_labels "build from AUR (paru)"
+                    end
+                case pipx
+                    if type -q pipx
+                        set -a methods special-pipx
+                        set -a method_labels "pipx ($bin)"
+                    else if type -q pip
+                        set -a methods special-pip
+                        set -a method_labels "pip install --user ($bin)"
+                    end
+            end
+
+            if test (count $methods) -eq 0
+                set_color yellow
+                echo "  $bin: no install method available on this system — skipping"
+                set_color normal
+                set i (math $i + 1)
+                continue
+            end
+
+            # Prompt: install this dep?
+            set_color cyan; echo -n "Install $bin? "; set_color normal
+            read -l -P "[Y/n] " _reply
+            if test "$_reply" = n -o "$_reply" = N
+                set i (math $i + 1)
+                continue
+            end
+
+            # Choose install method
+            set -l chosen_method $methods[1]
+            if test (count $methods) -gt 1
+                echo "  Available methods:"
+                set -l m 1
+                for lbl in $method_labels
+                    echo "    $m) $lbl"
+                    set m (math $m + 1)
+                end
+                read -l -P "  Choose [1-"(count $methods)"] (default 1): " _choice
+                if test -n "$_choice" -a "$_choice" -ge 1 -a "$_choice" -le (count $methods) 2>/dev/null
+                    set chosen_method $methods[$_choice]
+                end
+            end
+
+            # Execute chosen method
+            switch $chosen_method
+                case cargo
+                    cargo install $cargo_crate
+                case pm
+                    _fish_deps_pm_install $pm_pkg
+                case special-fzf
+                    fzf-update
+                case special-fisher
+                    curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+                    fisher update
+                case special-curl
+                    # Currently used for starship
+                    if test "$bin" = starship
+                        curl -sS https://starship.rs/install.sh | sh
+                    end
+                case special-paru
+                    set -l _build_dir (mktemp -d)
+                    git clone https://aur.archlinux.org/paru.git $_build_dir
+                    and pushd $_build_dir
+                    and makepkg -si --noconfirm
+                    and popd
+                    rm -rf $_build_dir
+                case special-pipx
+                    pipx install $bin
+                case special-pip
+                    pip install --user $bin
+            end
+
+            if test $status -eq 0
+                set installed_any 1
+                set_color green; echo "  $bin installed."; set_color normal
+            else
+                set_color red; echo "  $bin install failed."; set_color normal
+            end
+        end
+        set i (math $i + 1)
+    end
+
+    if test $installed_any -eq 0
+        echo "Nothing to install."
+    end
+end
