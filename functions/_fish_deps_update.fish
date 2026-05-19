@@ -48,6 +48,40 @@ function _fish_deps_update
             continue
         end
 
+        # lazydocker: re-run the official install/update script
+        if test "$special" = curl-lazydocker
+            echo "Updating $bin..."
+            curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+            set updated_any 1
+            set i (math $i + 1)
+            continue
+        end
+
+        # wakatime: re-download the binary from github releases
+        if test "$special" = wakatime-binary
+            echo "Updating $bin..."
+            set -l _arch (uname -m)
+            switch $_arch
+                case x86_64;  set _arch amd64
+                case aarch64 arm64; set _arch arm64
+                case armv7l;  set _arch arm
+                case '*';     set _arch amd64
+            end
+            set -l _zip "wakatime-cli-linux-$_arch.zip"
+            set -l _bin_src "wakatime-cli-linux-$_arch"
+            set -l _wt_bin "$HOME/.config/wakatime/wakatime"
+            set -l _tmpdir (mktemp -d)
+            curl -L "https://github.com/wakatime/wakatime-cli/releases/latest/download/$_zip" \
+                -o "$_tmpdir/$_zip"
+            and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
+            and cp "$_tmpdir/$_bin_src" "$_wt_bin"
+            and chmod +x "$_wt_bin"
+            rm -rf "$_tmpdir"
+            and set updated_any 1
+            set i (math $i + 1)
+            continue
+        end
+
         # pipx tools
         if test "$special" = pipx
             if type -q pipx

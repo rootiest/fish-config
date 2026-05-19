@@ -36,8 +36,8 @@ function _fish_deps_catalog
 
     set -g _fdc_special \
         "" rustup-installer fisher-bootstrap curl-installer fzf-update "" "" paru-build \
-        pipx "" \
-        "" "" "" "" "" "" "" "" "" "" "" "" "" ""
+        wakatime-binary "" \
+        "" "" "" "" "" "" "" "" "" "" curl-lazydocker "" "" ""
 end
 
 # Returns the index (1-based) of $argv[1] in the catalog, or "" if not found.

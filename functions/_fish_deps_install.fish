@@ -32,19 +32,26 @@ function _fish_deps_install
                 end
             end
 
-            # rustup installer — listed before system PM so it is the default for cargo itself
-            if test "$special" = rustup-installer
-                set -a methods special-rustup
-                set -a method_labels "rustup installer (curl | sh)"
+            # Preferred special methods — listed before system PM so they are the default
+            switch $special
+                case rustup-installer
+                    set -a methods special-rustup
+                    set -a method_labels "rustup installer (curl | sh)"
+                case curl-lazydocker
+                    set -a methods special-lazydocker
+                    set -a method_labels "curl installer (official script)"
+                case wakatime-binary
+                    set -a methods special-wakatime
+                    set -a method_labels "binary download (github releases)"
             end
 
-            # System PM — after cargo/rustup so those are always the default when available
+            # System PM — after cargo and preferred specials
             if test -n "$pm_pkg"; and test -n "$pm"
                 set -a methods pm
                 set -a method_labels "$pm ($pm_pkg)"
             end
 
-            # Remaining special methods
+            # Supplemental special methods (fallbacks, Arch-only, etc.)
             switch $special
                 case fzf-update
                     set -a methods special-fzf
@@ -129,6 +136,33 @@ function _fish_deps_install
                         echo "  cargo not yet in PATH — restart your shell if subsequent installs fail."
                         set_color normal
                     end
+                case special-lazydocker
+                    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+                case special-wakatime
+                    set -l _arch (uname -m)
+                    switch $_arch
+                        case x86_64
+                            set _arch amd64
+                        case aarch64 arm64
+                            set _arch arm64
+                        case armv7l
+                            set _arch arm
+                        case '*'
+                            set _arch amd64
+                    end
+                    set -l _zip "wakatime-cli-linux-$_arch.zip"
+                    set -l _bin_src "wakatime-cli-linux-$_arch"
+                    set -l _wt_dir "$HOME/.config/wakatime"
+                    set -l _wt_bin "$_wt_dir/wakatime"
+                    set -l _tmpdir (mktemp -d)
+                    curl -L "https://github.com/wakatime/wakatime-cli/releases/latest/download/$_zip" \
+                        -o "$_tmpdir/$_zip"
+                    and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
+                    and mkdir -p "$_wt_dir" "$HOME/.local/bin"
+                    and cp "$_tmpdir/$_bin_src" "$_wt_bin"
+                    and chmod +x "$_wt_bin"
+                    and ln -sf "$_wt_bin" "$HOME/.local/bin/wakatime"
+                    rm -rf "$_tmpdir"
                 case special-fzf
                     fzf-update
                 case special-fisher
