@@ -241,6 +241,24 @@ rm -f file.txt  # Falls through to standard rm -f
 | `upgrade` | Full system upgrade: `paru -Syu --noconfirm` |
 | `cleanup` | Log and remove orphaned packages |
 
+### Dependency Management
+
+`fish-deps` is a unified command for checking, installing, and updating all tools this config depends on.
+
+| Command | Description |
+|---|---|
+| `fish-deps` / `fish-deps status` | Show installed/missing status for all deps, grouped by tier |
+| `fish-deps install` | Interactively install each missing dep (prompts per-dep, prompts method when multiple exist) |
+| `fish-deps update` | Update all installed deps using their preferred install method |
+| `fish-deps sync` | Install missing deps then update installed ones |
+| `fzf-update` | Install or upgrade fzf from git HEAD into `~/.fzf` (guarantees the latest build) |
+| `check_fish_deps` | Legacy alias — delegates to `fish-deps status` |
+
+Install method priority: **git+cargo source build** (fish) → **cargo** (other Rust tools, gets latest crate) → **system PM** (paru/apt/brew/etc.) → **git clone** (fzf) → **curl installer** (starship, fisher) → **pipx** (Python tools). When multiple methods are available for a tool, you are prompted to choose.
+
+> [!NOTE]
+> Upgrading Fish from source requires **cargo** and **[uv](https://docs.astral.sh/uv/)**. Both are managed dependencies — `fish-deps install` will offer to install them before attempting the Fish build. If both are unavailable, `fish-deps update` falls back to the system package manager.
+
 ### Docker
 
 | Function | Description |
@@ -476,20 +494,27 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 
 ### Required
 
-| Tool | Purpose |
-|---|---|
-| [Fish](https://fishshell.com/) | Shell |
-| [Fisher](https://github.com/jorgebucaran/fisher) | Plugin manager |
-| [Starship](https://starship.rs/) | Prompt |
-| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder |
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | Smart directory jumper |
-| [direnv](https://direnv.net/) | Per-directory env loading |
-| [paru](https://github.com/Morganamilo/paru) | AUR helper |
+| Tool | Version | Purpose |
+|---|---|---|
+| [uv](https://docs.astral.sh/uv/) | any | Python runner (needed to build Fish from source) |
+| [Rust / cargo](https://www.rust-lang.org/tools/install) | any | Installs Rust-based tools; required to build Fish |
+| [Fish](https://fishshell.com/) | **≥ 4.0** | Shell |
+| [Fisher](https://github.com/jorgebucaran/fisher) | any | Plugin manager |
+| [Starship](https://starship.rs/) | any | Prompt |
+| [fzf](https://github.com/junegunn/fzf) | any | Fuzzy finder |
+| [zoxide](https://github.com/ajeetdsouza/zoxide) | any | Smart directory jumper |
+| [direnv](https://direnv.net/) | any | Per-directory env loading |
+
+> [!WARNING]
+> Fish **4.0 or newer is required.** This config uses `test` syntax and other constructs that are incompatible with Fish 3.x. Older versions will produce errors on startup.
+> Run `fish-deps install` or `fish-deps update` to upgrade — it will install `uv` and `cargo` automatically if missing, then build the latest Fish from source.
 
 ### Recommended
 
 | Tool | Replaces |
 |---|---|
+| [Rust / cargo](https://www.rust-lang.org/tools/install) | Build tool for Rust-based CLI replacements below |
+| [paru](https://github.com/Morganamilo/paru) / [yay](https://github.com/Jguer/yay) | AUR helper (Arch only) |
 | [eza](https://github.com/eza-community/eza) | `ls` (preferred) |
 | [lsd](https://github.com/lsd-rs/lsd) | `ls` (fallback) |
 | [bat](https://github.com/sharkdp/bat) | `cat` |

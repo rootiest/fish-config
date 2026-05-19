@@ -3,16 +3,23 @@
 
 # Interactively search and remove an installed package using fzf
 function parur --description 'Interactively search and remove an installed package using fzf'
-    # 1. Use command substitution to get the package list from fzf
+    set -l aur ""
+    if type -q paru
+        set aur paru
+    else if type -q yay
+        set aur yay
+    else
+        echo "No AUR helper found (install paru or yay)" >&2
+        return 1
+    end
+
     set -l pkg_list (
         pacman -Qqs \
         | fzf --preview 'pacman -Qi {}' --multi
     )
 
-    # 2. Check if a package was selected.
     if test (count $pkg_list) -gt 0
-        # 3. Pass the selected packages directly to paru -R
-        paru -R $pkg_list
+        $aur -R $pkg_list
     else
         echo "No packages selected for removal."
     end

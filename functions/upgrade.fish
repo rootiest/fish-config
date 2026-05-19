@@ -1,9 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Function for upgrading the system with paru.
-# This runs `paru` with the `-Syu` flags to sync, refresh, and upgrade all
-# packages, and adds `--no-confirm` to bypass the confirmation prompt.
-function upgrade --wraps='paru' --description 'packages, and adds `--no-confirm` to bypass the confirmation prompt.'
-    paru -Syu --noconfirm
+function upgrade --description 'Full system upgrade via paru or yay'
+    set -l aur ""
+    if type -q paru
+        set aur paru
+    else if type -q yay
+        set aur yay
+    else
+        echo "No AUR helper found (install paru or yay)" >&2
+        return 1
+    end
+    $aur -Syu --noconfirm
 end
