@@ -101,7 +101,7 @@ function _fish_deps_install
                     set m (math $m + 1)
                 end
                 read -l -P "  Choose [1-"(count $methods)"] (default 1 = $method_labels[1]): " _choice
-                if test -n "$_choice"; and test "$_choice" -ge 1; and test "$_choice" -le (count $methods)
+                if string match -qr '^\d+$' "$_choice"; and test "$_choice" -ge 1; and test "$_choice" -le (count $methods)
                     set chosen_method $methods[$_choice]
                 end
             else
