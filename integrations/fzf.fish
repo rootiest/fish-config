@@ -191,15 +191,19 @@ function fzf_key_bindings
     set -l -- total_lines (count $command_line)
     set -l -- fzf_query (string escape -- $command_line[$current_line])
 
-    # preview-wrap-sign requires newer fzf; omit it on older builds
+    # These options require newer fzf; omit them on older builds
     set -l _fzf_preview_wrap_sign ''
-    test "$_fzf_transform_action" = bg-transform; and set _fzf_preview_wrap_sign ' --preview-wrap-sign="↳ "'
+    set -l _fzf_toggle_raw ''
+    if test "$_fzf_transform_action" = bg-transform
+      set _fzf_preview_wrap_sign ' --preview-wrap-sign="↳ "'
+      set _fzf_toggle_raw ,alt-r:toggle-raw
+    end
 
     set -lx -- FZF_DEFAULT_OPTS (__fzf_defaults '' \
       '--nth=2..,.. --scheme=history --multi --no-multi-line --no-wrap --wrap-sign="\t\t\t↳ "'$_fzf_preview_wrap_sign \
       '--bind=\'shift-delete:execute-silent(for i in (string split0 -- <{+f}); eval builtin history delete --exact --case-sensitive -- (string escape -n -- $i | string replace -r "^\d*\\\\\\t" ""); end)+reload(eval $FZF_DEFAULT_COMMAND)\'' \
       '--bind="alt-enter:become(string join0 -- (string collect -- {+2..} | fish_indent -i))"' \
-      "--bind=ctrl-r:toggle-sort,alt-r:toggle-raw --highlight-line $FZF_CTRL_R_OPTS" \
+      "--bind=ctrl-r:toggle-sort$_fzf_toggle_raw --highlight-line $FZF_CTRL_R_OPTS" \
       '--accept-nth=2.. --delimiter="\t" --tabstop=4 --read0 --print0 --with-shell='(status fish-path)\\ -c)
 
     # Add dynamic preview options if preview command isn't already set by user
