@@ -110,7 +110,7 @@ function _fish_deps_update
                 set -l _build_ok 0
                 git clone https://github.com/fish-shell/fish-shell "$_tmpdir"
                 and begin
-                    set -l _tag (git -C "$_tmpdir" for-each-ref refs/tags/ --format '%(refname:short)' --sort=version:refname | tail -1)
+                    set -l _tag (git -C "$_tmpdir" tag --list 'fish-*' --sort=version:refname | tail -1)
                     test -n "$_tag"; and git -C "$_tmpdir" checkout "$_tag"
                     true
                 end
@@ -145,7 +145,7 @@ function _fish_deps_update
         if test "$special" = curl-installer
             if test "$bin" = starship
                 echo "Updating $bin..."
-                curl -sS https://starship.rs/install.sh | sh -- --yes
+                curl -sS https://starship.rs/install.sh | sh -s -- --yes
                 set updated_any 1
             end
             set i (math $i + 1)
