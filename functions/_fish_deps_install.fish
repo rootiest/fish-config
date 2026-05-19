@@ -11,7 +11,20 @@ function _fish_deps_install
 
     set -l i 1
     for bin in $_fdc_bins
+        # Determine if this dep needs attention: missing, or fish < 4.0
+        set -l needs_install 0
+        set -l upgrade_label Install
         if not type -q $bin
+            set needs_install 1
+        else if test "$bin" = fish
+            set -l _major (fish --version 2>&1 | string match -r 'version (\d+)')[2]
+            if test -n "$_major"; and test "$_major" -lt 4
+                set needs_install 1
+                set upgrade_label "Upgrade"
+            end
+        end
+
+        if test $needs_install -eq 1
             set -l cargo_crate  $_fdc_cargo[$i]
             set -l pm_pkg       $_fdc_pm[$i]
             set -l special      $_fdc_special[$i]
@@ -90,8 +103,8 @@ function _fish_deps_install
                 continue
             end
 
-            # Prompt: install this dep?
-            read -l -P (set_color cyan)"Install $bin?"(set_color normal)" [Y/n] " _reply
+            # Prompt: install/upgrade this dep?
+            read -l -P (set_color cyan)"$upgrade_label $bin?"(set_color normal)" [Y/n] " _reply
             if test "$_reply" = n; or test "$_reply" = N
                 set i (math $i + 1)
                 continue
@@ -112,7 +125,7 @@ function _fish_deps_install
                     set chosen_method $methods[$_choice]
                 end
             else
-                set_color brblack; echo "  Installing via $method_labels[1]"; set_color normal
+                set_color brblack; echo "  "(string lower $upgrade_label)"ing via $method_labels[1]"; set_color normal
             end
 
             # Execute chosen method
@@ -189,9 +202,14 @@ function _fish_deps_install
 
             if test $status -eq 0
                 set installed_any 1
-                set_color green; echo "  $bin installed."; set_color normal
+                set_color green; echo "  $bin "(string lower $upgrade_label)"ed."; set_color normal
+                if test "$bin" = fish
+                    set_color yellow
+                    echo "  Fish upgraded — restart your shell to use the new version."
+                    set_color normal
+                end
             else
-                set_color red; echo "  $bin install failed."; set_color normal
+                set_color red; echo "  $bin "(string lower $upgrade_label)" failed."; set_color normal
             end
         end
         set i (math $i + 1)

@@ -7,6 +7,17 @@ function _fish_deps_status
 
     function __fds_print_dep --argument-names bin tier
         if type -q $bin
+            # Special version check: fish < 4.0 is functionally incompatible
+            if test "$bin" = fish
+                set -l _major (fish --version 2>&1 | string match -r 'version (\d+)')[2]
+                if test -n "$_major"; and test "$_major" -lt 4
+                    set -l _ver (fish --version 2>&1 | string replace 'fish, ' '')
+                    set_color yellow; echo -n " ⚠ "; set_color normal
+                    echo -n "$bin "
+                    set_color brblack; echo "($_ver — upgrade to 4.0+ required)"; set_color normal
+                    return
+                end
+            end
             set_color green; echo -n " ✓ "; set_color normal
             echo -n "$bin "
             set_color brblack; echo "(Found at "(type -p $bin)")"; set_color normal
