@@ -491,19 +491,23 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 
 ### Required
 
-| Tool | Purpose |
-|---|---|
-| [Fish](https://fishshell.com/) | Shell |
-| [Fisher](https://github.com/jorgebucaran/fisher) | Plugin manager |
-| [Starship](https://starship.rs/) | Prompt |
-| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder |
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | Smart directory jumper |
-| [direnv](https://direnv.net/) | Per-directory env loading |
+| Tool | Version | Purpose |
+|---|---|---|
+| [Fish](https://fishshell.com/) | **≥ 4.0** | Shell |
+| [Fisher](https://github.com/jorgebucaran/fisher) | any | Plugin manager |
+| [Starship](https://starship.rs/) | any | Prompt |
+| [fzf](https://github.com/junegunn/fzf) | any | Fuzzy finder |
+| [zoxide](https://github.com/ajeetdsouza/zoxide) | any | Smart directory jumper |
+| [direnv](https://direnv.net/) | any | Per-directory env loading |
+
+> [!WARNING]
+> Fish **4.0 or newer is required.** This config uses `test` syntax and other constructs that are incompatible with Fish 3.x. Older versions will produce errors on startup.
 
 ### Recommended
 
 | Tool | Replaces |
 |---|---|
+| [Rust / cargo](https://www.rust-lang.org/tools/install) | Build tool for Rust-based CLI replacements below |
 | [paru](https://github.com/Morganamilo/paru) / [yay](https://github.com/Jguer/yay) | AUR helper (Arch only) |
 | [eza](https://github.com/eza-community/eza) | `ls` (preferred) |
 | [lsd](https://github.com/lsd-rs/lsd) | `ls` (fallback) |
