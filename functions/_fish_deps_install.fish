@@ -116,6 +116,19 @@ function _fish_deps_install
                     _fish_deps_pm_install $pm_pkg
                 case special-rustup
                     curl https://sh.rustup.rs -sSf | sh
+                    # Add cargo to PATH for the rest of this session without restarting.
+                    # Try CARGO_HOME first (set in config.fish), then the rustup default.
+                    for _d in "$CARGO_HOME/bin" "$HOME/.cargo/bin"
+                        if test -d "$_d"
+                            fish_add_path "$_d"
+                            break
+                        end
+                    end
+                    if not type -q cargo
+                        set_color yellow
+                        echo "  cargo not yet in PATH — restart your shell if subsequent installs fail."
+                        set_color normal
+                    end
                 case special-fzf
                     fzf-update
                 case special-fisher
