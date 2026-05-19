@@ -31,6 +31,14 @@ function fzf_key_bindings
     return 1
   end
 
+  # bg-transform runs the preview toggle in a background thread (non-blocking).
+  # It was added after fzf 0.60; fall back to the synchronous transform on older builds.
+  set -l _fzf_ver (fzf --version | string match -r '^(\d+)\.(\d+)')
+  set -l _fzf_transform_action transform
+  if test -n "$_fzf_ver[3]"; and test "$_fzf_ver[3]" -ge 62
+    set _fzf_transform_action bg-transform
+  end
+
 #----BEGIN INCLUDE common.fish
 # NOTE: Do not directly edit this section, which is copied from "common.fish".
 # To modify it, one can edit "common.fish" and run "./update.sh" to apply
@@ -177,17 +185,25 @@ function fzf_key_bindings
     commandline -f repaint
   end
 
-  function fzf-history-widget -d "Show command history"
+  function fzf-history-widget --inherit-variable _fzf_transform_action -d "Show command history"
     set -l -- command_line (commandline)
     set -l -- current_line (commandline -L)
     set -l -- total_lines (count $command_line)
     set -l -- fzf_query (string escape -- $command_line[$current_line])
 
+    # These options require newer fzf; omit them on older builds
+    set -l _fzf_preview_wrap_sign ''
+    set -l _fzf_toggle_raw ''
+    if test "$_fzf_transform_action" = bg-transform
+      set _fzf_preview_wrap_sign ' --preview-wrap-sign="↳ "'
+      set _fzf_toggle_raw ,alt-r:toggle-raw
+    end
+
     set -lx -- FZF_DEFAULT_OPTS (__fzf_defaults '' \
-      '--nth=2..,.. --scheme=history --multi --no-multi-line --no-wrap --wrap-sign="\t\t\t↳ " --preview-wrap-sign="↳ "' \
+      '--nth=2..,.. --scheme=history --multi --no-multi-line --no-wrap --wrap-sign="\t\t\t↳ "'$_fzf_preview_wrap_sign \
       '--bind=\'shift-delete:execute-silent(for i in (string split0 -- <{+f}); eval builtin history delete --exact --case-sensitive -- (string escape -n -- $i | string replace -r "^\d*\\\\\\t" ""); end)+reload(eval $FZF_DEFAULT_COMMAND)\'' \
       '--bind="alt-enter:become(string join0 -- (string collect -- {+2..} | fish_indent -i))"' \
-      "--bind=ctrl-r:toggle-sort,alt-r:toggle-raw --highlight-line $FZF_CTRL_R_OPTS" \
+      "--bind=ctrl-r:toggle-sort$_fzf_toggle_raw --highlight-line $FZF_CTRL_R_OPTS" \
       '--accept-nth=2.. --delimiter="\t" --tabstop=4 --read0 --print0 --with-shell='(status fish-path)\\ -c)
 
     # Add dynamic preview options if preview command isn't already set by user
@@ -205,10 +221,13 @@ function fzf_key_bindings
       end
 
       # Prepend the options to allow user customizations
+      # wrap-word requires the same newer fzf as bg-transform; fall back to plain wrap
+      set -l _fzf_wrap_opt wrap
+      test "$_fzf_transform_action" = bg-transform; and set _fzf_wrap_opt wrap-word
       set -p -- FZF_DEFAULT_OPTS \
-        '--bind="focus,resize:bg-transform:if test \\"$FZF_COLUMNS\\" -gt 100 -a \\\\( \\"$FZF_SELECT_COUNT\\" -gt 0 -o \\\\( -z \\"$FZF_WRAP\\" -a (string length -- {}) -gt (math $FZF_COLUMNS - 4) \\\\) -o (string collect -- {2..} | fish_indent | count) -gt 1 \\\\); echo show-preview; else echo hide-preview; end"' \
+        '--bind="focus,resize:'$_fzf_transform_action':if test \\"$FZF_COLUMNS\\" -gt 100 -a \\\\( \\"$FZF_SELECT_COUNT\\" -gt 0 -o \\\\( -z \\"$FZF_WRAP\\" -a (string length -- {}) -gt (math $FZF_COLUMNS - 4) \\\\) -o (string collect -- {2..} | fish_indent | count) -gt 1 \\\\); echo show-preview; else echo hide-preview; end"' \
         '--preview="string collect -- (test \\"$FZF_SELECT_COUNT\\" -gt 0; and string collect -- {+2..}) \\"\\n# \\"'$date_cmd' {2..} | fish_indent --ansi"' \
-        '--preview-window="right,50%,wrap-word,follow,info,hidden"'
+        '--preview-window="right,50%,'$_fzf_wrap_opt',follow,info,hidden"'
     end
 
     set -lx FZF_DEFAULT_OPTS_FILE

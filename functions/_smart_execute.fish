@@ -15,8 +15,8 @@ function _smart_execute --description 'Execute different functions based on the 
     # 2. Dispatch based on buffer content
     switch "$cmd"
         case '*='
-            # If it ends in =, run qalc
-            _qalc_eval
+            # If it ends in =, run qalc; fall back to normal execute if qalc is absent
+            _qalc_eval; or commandline -f execute
 
 #       case 'g *'
 #           # EXAMPLE FUTURE EXTENSION
