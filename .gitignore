@@ -29,13 +29,13 @@ OLD/
 *_old
 
 # AI Session IDs
-.claude_session
-.gemini_session
-.remember/
+.claud*
+.gemin*
+.antigrav*
+.remember
 
 # Auto-managed by fish; contains machine-local state and universal vars
 fish_variables
-.claude
 
 # Personal testing/temporary files
 [Tt][Mm][Pp]/
