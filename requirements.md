@@ -87,7 +87,8 @@ Non-standard applications required by this fish shell configuration.
 | `wakatime` | Developer time tracking | Initialized in `wakatime.fish` |
 | `bd` / `beads` | Lightweight issue tracker | `bd-pull.fish`, abbreviations |
 | `lazybeads` | Terminal UI for beads | Abbreviation target |
-| `antigravity` | Custom launcher tool | `antigravity.fish`, abbreviations |
+| `agy` | antigravity-cli AI assistant | `antigravity.fish` wrapper, abbreviations |
+| `antigravity-ide` | antigravity-ide editor | `antigravity-ide.fish` wrapper, abbreviations |
 
 ## Container Tools
 

@@ -8,7 +8,7 @@ set -l input (cat)
 
 # 2. Extract session_id using Python
 set -l sid (echo $input | python3 -c "import sys,json; print(json.load(sys.stdin).get('session_id', ''))")
-set -l session_file ".gemini_session"
+set -l session_file ".antigravity_session"
 
 if test -n "$sid"
     # 3. Save the session ID locally
@@ -25,7 +25,7 @@ if test -n "$sid"
     end
 
     # 5. Update universal variable for cross-terminal access
-    set -U LAST_GEMINI_SESSION "$sid"
+    set -U LAST_ANTIGRAVITY_SESSION "$sid"
 end
 
 # MANDATORY: Every hook must output valid JSON or an empty object

@@ -15,7 +15,7 @@ abbr -a neovim nvim
 abbr -a cdnv 'cd ~/.config/nvim # Neovim Config'
 abbr -a cdnvn 'cd ~/.config/nvim;nvim'
 # VSCode
-abbr -a v antigravity
+abbr -a v antigravity-ide
 # Kate
 abbr -a k kate
 # WezTerm SSH
