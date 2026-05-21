@@ -350,6 +350,7 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 |---|---|
 | `upgrade` | System upgrade via paru |
 | `zellij` | Zellij with `--theme catppuccin-mocha` |
+| `scrub` | Recursively purge OS/editor/compiler garbage from CWD; `-a` aggressive mode adds logs, `node_modules`, IDE dirs; `-d` dry-run preview; requires `fd` |
 | `antigravity` | Wrapper for `agy` (antigravity-cli) that suppresses a noisy warning |
 | `antigravity-ide` | Wrapper for `antigravity-ide` binary that suppresses a noisy warning |
 | `bash` | Drop into bash (raw Fish session via `rawfish`) |
