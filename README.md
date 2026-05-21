@@ -329,9 +329,9 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | Function | Description |
 |---|---|
 | `claude-resume` | Resume Claude Code session from `.claude_session` in CWD |
-| `gemini-resume` | Resume Gemini CLI session from `.gemini_session` in CWD |
-| `code-resume` | Smart resume — tries Claude then Gemini, falls back to picker |
-| `superpowers [on\|off]` | Enable/disable the Superpowers extension for Claude and Gemini |
+| `antigravity-resume` | Resume antigravity-cli session from `.antigravity_session` in CWD |
+| `code-resume` | Smart resume — tries Claude then antigravity-cli, falls back to picker |
+| `superpowers [on\|off]` | Enable/disable the Superpowers extension for Claude and antigravity-cli |
 | `claude-docs` | Ask Claude to sync `README.md` with recent session changes |
 | `claude-pr` | Create a branch, commit, push, and open a PR via Claude |
 
@@ -350,7 +350,8 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 |---|---|
 | `upgrade` | System upgrade via paru |
 | `zellij` | Zellij with `--theme catppuccin-mocha` |
-| `antigravity` | Wrapper that suppresses a noisy deprecation warning |
+| `antigravity` | Wrapper for `agy` (antigravity-cli) that suppresses a noisy warning |
+| `antigravity-ide` | Wrapper for `antigravity-ide` binary that suppresses a noisy warning |
 | `bash` | Drop into bash (raw Fish session via `rawfish`) |
 
 ---
@@ -379,7 +380,7 @@ These abbreviations replicate Bash's bang-style history expansions. They expand 
 | `n`, `nv` | `nvim` |
 | `e` | `edit` |
 | `se` | `sudoedit` |
-| `v` | `antigravity` (VSCode-equivalent) |
+| `v` | `antigravity-ide` (VSCode-equivalent) |
 | `k` | `kate` |
 
 ### Listing

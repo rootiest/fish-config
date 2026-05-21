@@ -7,10 +7,10 @@ function code-resume --description 'Execute code-resume'
         set -l sid (cat .claude_session)
         echo "Resuming Claude session: $sid"
         claude --resume $sid
-    else if test -f .gemini_session
-        set -l sid (cat .gemini_session)
-        echo "Resuming Gemini session: $sid"
-        gemini --resume $sid
+    else if test -f .antigravity_session
+        set -l sid (cat .antigravity_session)
+        echo "Resuming antigravity-cli session: $sid"
+        agy --resume $sid
     else
         echo "No local AI session found. Opening picker..."
         claude --resume # Default to Claude picker
