@@ -76,7 +76,6 @@ Managed via [Fisher](https://github.com/jorgebucaran/fisher):
 | `jorgebucaran/autopair.fish` | Auto-close brackets, quotes, and other pairs |
 | `jorgebucaran/replay.fish` | Run bash commands in fish without losing state |
 | `nickeb96/puffer-fish` | Expand `...` to `../..`, `!!` to last command, etc. |
-| `mattmc3/magic-enter.fish` | Smart Enter: runs `ls` / `git status` on blank line |
 | `jorgebucaran/spark.fish` | Sparkline bar charts in the terminal |
 
 Fisher and all listed plugins are installed automatically by the bootstrap script in `config.fish` upon launching the shell for the first time.
@@ -231,6 +230,7 @@ rm -f file.txt  # Falls through to standard rm -f
 | `git-clean --force` | Same but force-deletes unmerged orphaned branches |
 | `clone` | `clone-in-kitty` wrapper |
 | `gitui` | Fast terminal Git UI |
+| `gi` | Generate and append `.gitignore` patterns from gitignore.io; `gi` (no args) appends boilerplate then prompts interactively; `gi <targets>` appends named patterns; `gi -s <targets>` prints to stdout; `gi -l` lists all targets |
 
 ### Package Management (Arch / paru)
 
@@ -412,6 +412,7 @@ These abbreviations replicate Bash's bang-style history expansions. They expand 
 |---|---|
 | `g` | `git` |
 | `lg` | `lazygit` |
+| `gitig` / `git-ignore` | `gi` |
 
 ### Chezmoi
 
@@ -597,6 +598,9 @@ Use this file for paths and variables that are specific to one machine — thing
 
 # CDPATH — directories searched by cd
 set -gx CDPATH . /home/youruser/projects /home/youruser
+
+# Path to your shared .gitignore boilerplate (used by `gi -b` / `gi` default)
+set -gx GITIGNORE_BOILERPLATE ~/.config/git/gitignore_boilerplate
 
 ### SSH ###
 # Quick shortcuts to your own servers
