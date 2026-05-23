@@ -1,6 +1,3 @@
-# Copyright (C) 2026 Rootiest
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 function fisher --argument-names cmd --description "A plugin manager for Fish"
     set --query fisher_path || set --local fisher_path $__fish_config_dir
     set --local fisher_version 4.4.8
