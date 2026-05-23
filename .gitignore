@@ -76,5 +76,14 @@
 
 # ──────────────────────────────────────────────────────────────
 
-# Auto-managed by fish; contains machine-local state and universal vars
+# id: gi-patterns-a62e4f6489ac26edaabdfc550334800a
+# Created by https://www.toptal.com/developers/gitignore/api/fish
+# Edit at https://www.toptal.com/developers/gitignore?templates=fish
+
+### Fish ###
+fishd.*
+fish_history
 fish_variables
+config.local.fish
+
+# End of https://www.toptal.com/developers/gitignore/api/fish
