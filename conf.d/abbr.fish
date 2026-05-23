@@ -69,6 +69,8 @@ abbr -a e edit
 abbr -a se sudoedit
 # Git
 abbr -a g git
+abbr -a gitig gi
+abbr -a git-ignore gi
 # Antigravity
 abbr -a ag antigravity
 abbr -a ag. antigravity .
