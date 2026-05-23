@@ -1,45 +1,80 @@
 # GitIgnore for Fish-config
 
-### Fish ###
-fishd.*
-fish_history
-fish_variables
-config.local.fish
-
-### Linux ###
+# id: gitig-boilerplate-7f0528027e23f210196ae4583c408e5b
+#   ╭──────────────────────────────────────────────────────────╮
+#   │              GitIgnore Boilerplate Template              │
+#   ╰──────────────────────────────────────────────────────────╯
+#
+#   ──────────────────── OS-Generated Files ────────────────────
+# automatic backup files created by some editors (e.g., Vim, Emacs)
 *~
 
-# temporary files which can be created if a process still has a handle open of a deleted file
+# temporary files created if a process still has a handle to a deleted file
 .fuse_hidden*
 
 # KDE directory preferences
 .directory
 
+# MacOS junk
+.DS_Store
+
 # Linux trash folder which might appear on any partition or disk
 .Trash-*
 
-# .nfs files are created when an open file is removed but is still being accessed
+# files created when an open file is removed but is still being accessed
 .nfs*
 
-# Debug Files/Folders
-OLD/
-*.OLD
-*.DISABLE
-*.DISABLED
-*_old
+#   ─────────────────── Debug/Temporary/Testing ────────────────
+# Matches OLD / .OLD
+[Oo][Ll][Dd]/
+.[Oo][Ll][Dd]/
 
-# AI Session IDs
-.claud*
-.gemin*
-.antigrav*
-.remember
+# Matches DISABLE / .DISABLE
+[Dd][Ii][Ss][Aa][Bb][Ll][Ee]/
+.[Dd][Ii][Ss][Aa][Bb][Ll][Ee]/
+
+# Matches DISABLED / .DISABLED
+[Dd][Ii][Ss][Aa][Bb][Ll][Ee][Dd]/
+.[Dd][Ii][Ss][Aa][Bb][Ll][Ee][Dd]/
+
+# Matches DEBUG / .DEBUG
+[Dd][Ee][Bb][Uu][Gg]/
+.[Dd][Ee][Bb][Uu][Gg]/
+
+# Matches TMP / .TMP
+[Tt][Mm][Pp]/
+.[Tt][Mm][Pp]/
+
+# Matches TEMP / .TEMP
+[Tt][Ee][Mm][Pp]/
+.[Tt][Ee][Mm][Pp]/
+
+# Matches TEMPORARY / .TEMPORARY
+[Tt][Ee][Mm][Pp][Oo][Rr][Aa][Rr][Yy]/
+.[Tt][Ee][Mm][Pp][Oo][Rr][Aa][Rr][Yy]/
+
+# Matches TESTING / .TESTING
+[Tt][Ee][Ss][Tt][Ii][Nn][Gg]/
+.[Tt][Ee][Ss][Tt][Ii][Nn][Gg]/
+
+#   ─────────────────── AI Sessions and Rules ──────────────────
+# Matches CLAUDE.md, .claud*, etc.
+[Cc][Ll][Aa][Uu][Dd][Ee].[Mm][Dd]
+.[Cc][Ll][Aa][Uu][Dd]*
+
+# Matches GEMINI.md, .gemin*, etc.
+[Gg][Ee][Mm][Ii][Nn][Ii].[Mm][Dd]
+.[Gg][Ee][Mm][Ii][Nn]*
+
+# Matches ANTIGRAVITY.md, .antigrav*, etc.
+[Aa][nN][Tt][Ii][Gg][Rr][Aa][Vv][Ii][Tt][Yy].[Mm][Dd]
+.[Aa][Nn][Tt][Ii][Gg][Rr][Aa][Vv]*
+
+# Matches AGENTS.md, .remember, etc.
+[Aa][Gg][Ee][Nn][Tt][Ss].[Mm][Dd]
+.[Rr][Ee][Mm][Ee][Mm][Bb][Ee][Rr]
+
+# ──────────────────────────────────────────────────────────────
 
 # Auto-managed by fish; contains machine-local state and universal vars
 fish_variables
-
-# Personal testing/temporary files
-[Tt][Mm][Pp]/
-[Tt][Ee][Mm][Pp]/
-[Tt][Ee][Mm][Pp][Oo][Rr][Aa][Rr][Yy]/
-[Tt][Ee][Ss][Tt][Ii][Nn][Gg]/
-[Dd][Ee][Bb][Uu][Gg]/
