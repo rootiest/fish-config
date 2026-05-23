@@ -89,30 +89,27 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         if not set -q GITIGNORE_BOILERPLATE
             set_color red --bold
             echo "Error:" (set_color normal)"\$GITIGNORE_BOILERPLATE environment variable is not defined" >&2
-            return 1
-        end
-        if not test -f "$GITIGNORE_BOILERPLATE"
+        else if not test -f "$GITIGNORE_BOILERPLATE"
             set_color red --bold
             echo "Error:" (set_color normal)"Boilerplate file not found at '$GITIGNORE_BOILERPLATE'" >&2
-            return 1
-        end
-
-        set -l template_hash ""
-        if command -q md5sum
-            set template_hash (md5sum "$GITIGNORE_BOILERPLATE" | string split ' ')[1]
-        else if command -q md5
-            set template_hash (md5 -q "$GITIGNORE_BOILERPLATE")
-        end
-
-        set -l sig "# id: gitig-boilerplate-$template_hash"
-
-        if test -f "$gitignore_path"; and grep -qF "$sig" "$gitignore_path"
-            set_color yellow --bold
-            echo "Notice:" (set_color normal)"Boilerplate already present in "(set_color cyan)"$readable_path"(set_color normal)"."
         else
-            printf "\n%s\n" "$sig" >>"$gitignore_path"
-            cat "$GITIGNORE_BOILERPLATE" >>"$gitignore_path"
-            echo (set_color green)"✔"(set_color normal)" Appended boilerplate to "(set_color cyan)"$readable_path"(set_color normal)
+            set -l template_hash ""
+            if command -q md5sum
+                set template_hash (md5sum "$GITIGNORE_BOILERPLATE" | string split ' ')[1]
+            else if command -q md5
+                set template_hash (md5 -q "$GITIGNORE_BOILERPLATE")
+            end
+
+            set -l sig "# id: gitig-boilerplate-$template_hash"
+
+            if test -f "$gitignore_path"; and grep -qF "$sig" "$gitignore_path"
+                set_color yellow --bold
+                echo "Notice:" (set_color normal)"Boilerplate already present in "(set_color cyan)"$readable_path"(set_color normal)"."
+            else
+                printf "\n%s\n" "$sig" >>"$gitignore_path"
+                cat "$GITIGNORE_BOILERPLATE" >>"$gitignore_path"
+                echo (set_color green)"✔"(set_color normal)" Appended boilerplate to "(set_color cyan)"$readable_path"(set_color normal)
+            end
         end
     end
 
@@ -132,6 +129,8 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
                 end
                 __gi_append_dedup "$content" "$pattern" "$gitignore_path" "$readable_path"
             end
+        else
+            echo (set_color brblack)"No patterns selected. Skipping API fetch."(set_color normal)
         end
         return 0
     end
