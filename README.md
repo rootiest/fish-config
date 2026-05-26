@@ -303,6 +303,7 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `screensleep` | Turn off the display via KDE PowerDevil |
 | `wake-lock <cmd>` | Run a command with `systemd-inhibit` to prevent sleep |
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
+| `sudo-toggle` | Toggle sudo password bypass — writes/clears a `NOPASSWD` rule in `/etc/sudoers.d/nofail-toggle` |
 | `tmux-clean` | Kill all detached tmux sessions |
 | `limine-edit` | Safely edit and re-verify Limine bootloader configuration |
 | `sbver` | Verify bootloader signing status for Secure Boot |
