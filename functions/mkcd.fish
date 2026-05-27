@@ -1,0 +1,49 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+function mkcd --description 'Create a directory (with parents) and cd into it'
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd  (set_color --bold white)
+    set -l c_arg  (set_color cyan)
+    set -l c_flag (set_color yellow)
+    set -l c_ok   (set_color green)
+    set -l c_warn (set_color yellow)
+    set -l c_err  (set_color red)
+    set -l c_dim  (set_color brblack)
+    set -l c_rst  (set_color normal)
+
+    if contains -- -h $argv; or contains -- --help $argv; or test (count $argv) -eq 0
+        echo "$c_head""Usage:$c_rst $c_cmd""mkcd$c_rst $c_arg""<dir>$c_rst"
+        echo
+        echo "  Create $c_arg""<dir>$c_rst (including missing parents) and cd into it."
+        echo
+        echo "$c_head""Arguments:$c_rst"
+        echo "  $c_arg""<dir>$c_rst   Directory to create and enter"
+        echo
+        echo "$c_head""Flags:$c_rst"
+        echo "  $c_flag-h$c_rst, $c_flag--help$c_rst   Show this help message"
+        echo
+        echo "$c_head""Examples:$c_rst"
+        echo "  $c_cmd""mkcd$c_rst $c_arg~/projects/myapp$c_rst"
+        echo "  $c_cmd""mkcd$c_rst $c_arg~/projects/myapp$c_rst""$c_dim""; git init$c_rst"
+        return 0
+    end
+
+    set -l dir $argv[1]
+
+    set -l is_new 0
+    if not test -d $dir
+        set is_new 1
+        command mkdir -p $dir
+        or return $status
+    end
+
+    cd $dir
+    or return $status
+
+    if test $is_new -eq 1
+        echo "$c_ok""✔$c_rst  Created and entered $c_arg$dir$c_rst"
+    else
+        echo "$c_warn""→$c_rst  $c_arg$dir$c_rst already exists — entered"
+    end
+end

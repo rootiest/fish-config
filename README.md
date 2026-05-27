@@ -211,6 +211,7 @@ rm -f file.txt  # Falls through to standard rm -f
 
 | Function | Description |
 |---|---|
+| `mkcd <dir>` | Create directory (including missing parents) and `cd` into it |
 | `ls` | `eza` — long listing, all files, icons, color, hyperlinks |
 | `lss` | `eza` — size-sorted long listing with gradient color scale |
 | `lsr` | `eza` — reversed time-sorted oneline listing |
