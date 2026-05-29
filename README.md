@@ -49,6 +49,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── fzf.fish          # FZF key binding initialization
 │   ├── tailscale.fish    # Tailscale CLI completions
 │   ├── theme.fish        # Theme syntax highlighting colors
+│   ├── tricks.fish       # PATH additions, bang-bang helpers, history/backup utilities
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases
 ├── functions/            # Custom functions (one per file)
@@ -184,6 +185,7 @@ These functions wrap modern alternatives with graceful fallbacks to standard too
 | `ssh` | `ssh` | `kitten ssh` when inside Kitty |
 | `du` | `du` | `duf` (disks) / `dust` (directories) — auto-detected by argument |
 | `mkdir` | `mkdir` | Always passes `-p` in interactive mode |
+| `copy` | `cp` | Strips trailing `/` from a source directory before `cp -r`; falls through to `cp` for all other cases |
 
 #### `du` — Smart Disk Usage
 
@@ -344,6 +346,7 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `ffetch` | Run fastfetch with `~/.fastfetch.jsonc` if present |
 | `cffetch` | Clear screen then run fastfetch |
 | `hist` | FZF history search — selected command is placed in the prompt and copied to clipboard |
+| `history` | Built-in `history` override — prepends `YYYY-MM-DD HH:MM:SS` timestamps to every entry |
 | `qr <text>` | Generate a terminal QR code |
 
 ### Miscellaneous
@@ -355,6 +358,7 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `scrub` | Recursively purge OS/editor/compiler garbage from CWD; `-a` aggressive mode adds logs, `node_modules`, IDE dirs; `-d` dry-run preview; requires `fd` |
 | `antigravity` | Wrapper for `agy` (antigravity-cli) that suppresses a noisy warning |
 | `antigravity-ide` | Wrapper for `antigravity-ide` binary that suppresses a noisy warning |
+| `backup <file>` | Copy `<file>` to `<file>.bak` |
 | `bash` | Drop into bash (raw Fish session via `rawfish`) |
 
 ---
