@@ -49,7 +49,8 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── fzf.fish          # FZF key binding initialization
 │   ├── tailscale.fish    # Tailscale CLI completions
 │   ├── theme.fish        # Theme syntax highlighting colors
-│   ├── tricks.fish       # PATH additions, bang-bang helpers, history/backup utilities
+│   ├── done.fish          # Done plugin (desktop notifications for long commands)
+│   ├── tricks.fish       # PATH, bang-bang helpers, bat man pages, system aliases, history/backup utilities
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases
 ├── functions/            # Custom functions (one per file)
@@ -136,6 +137,24 @@ Every shell command is reported to WakaTime for time-tracking. Disable by settin
 ### Tailscale
 
 Full tab completion for the `tailscale` CLI is provided via `conf.d/tailscale.fish`.
+
+### bat Man Pages
+
+When `bat` is installed, man pages are automatically rendered through it for syntax highlighting. `MANPAGER` and `MANROFFOPT` are set in `conf.d/tricks.fish`:
+
+```fish
+set -gx MANROFFOPT -c
+set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
+```
+
+### Done Notifications
+
+Desktop notifications for long-running commands via [franciscolourenco/done](https://github.com/franciscolourenco/done). A notification fires when a command takes longer than 10 seconds and the terminal window is not focused.
+
+| Variable | Value | Description |
+|---|---|---|
+| `__done_min_cmd_duration` | `10000` ms | Minimum duration before a notification is sent |
+| `__done_notification_urgency_level` | `low` | Desktop notification urgency |
 
 ---
 
@@ -307,6 +326,8 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `wake-lock <cmd>` | Run a command with `systemd-inhibit` to prevent sleep |
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
 | `sudo-toggle` | Toggle sudo password bypass — writes/clears a `NOPASSWD` rule in `/etc/sudoers.d/nofail-toggle` |
+| `psmem` | List all processes sorted by memory usage (descending) |
+| `psmem10` | Top 10 processes by memory usage |
 | `tmux-clean` | Kill all detached tmux sessions |
 | `limine-edit` | Safely edit and re-verify Limine bootloader configuration |
 | `sbver` | Verify bootloader signing status for Secure Boot |
@@ -360,6 +381,60 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `antigravity-ide` | Wrapper for `antigravity-ide` binary that suppresses a noisy warning |
 | `backup <file>` | Copy `<file>` to `<file>.bak` |
 | `bash` | Drop into bash (raw Fish session via `rawfish`) |
+
+### Shell Aliases
+
+These aliases are defined in `conf.d/tricks.fish` via `alias` (which creates Fish functions). They are active in all interactive sessions.
+
+#### Navigation
+
+| Alias | Expands To |
+|---|---|
+| `..` | `cd ..` |
+| `...` | `cd ../..` |
+| `....` | `cd ../../..` |
+| `.....` | `cd ../../../..` |
+| `......` | `cd ../../../../..` |
+
+#### Color Overrides
+
+Force color output for common tools:
+
+| Alias | Command |
+|---|---|
+| `grep` | `grep --color=auto` |
+| `fgrep` | `fgrep --color=auto` |
+| `egrep` | `egrep --color=auto` |
+| `dir` | `dir --color=auto` |
+| `vdir` | `vdir --color=auto` |
+
+#### Safety Wrappers
+
+These aliases add `-i` (interactive confirmation) to destructive commands:
+
+| Alias | Command |
+|---|---|
+| `cp` | `cp -i` |
+| `mv` | `mv -i` |
+| `rm` | `rm -i` |
+
+> [!NOTE]
+> The `rm` alias applies only when no custom `rm` function from `functions/rm.fish` takes precedence. The trash-aware `rm` wrapper in `functions/rm.fish` is the primary handler for interactive sessions.
+
+#### Archives & Networking
+
+| Alias | Command | Description |
+|---|---|---|
+| `tarnow` | `tar -acf` | Create a compressed archive (auto-detects format from extension) |
+| `untar` | `tar -zxvf` | Extract a gzip-compressed archive |
+| `wget` | `wget -c` | Resume interrupted downloads by default |
+| `tb` | `nc termbin.com 9999` | Pipe content to [termbin.com](https://termbin.com) for quick sharing |
+
+#### System Logs
+
+| Alias | Command | Description |
+|---|---|---|
+| `jctl` | `journalctl -p 3 -xb` | Show priority-3 (error) journal entries from the current boot |
 
 ---
 

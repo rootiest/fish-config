@@ -8,6 +8,9 @@
 #   ──────────────────────── Source CachyOS configs ────────────────────────
 if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
     source /usr/share/cachyos-fish-config/cachyos-config.fish
+    # Source our tricks over the cachyOS config
+    test -f "$__fish_config_dir/conf.d/tricks.fish"
+    and source "$__fish_config_dir/conf.d/tricks.fish"
     # CachyOS defines aliases for ls/lt/cleanup that shadow our function files.
     # Erase them and immediately source our versions.
     for _fname in ls lt cleanup
