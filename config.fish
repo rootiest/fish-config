@@ -14,6 +14,10 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
         functions --erase $_fname
         source "$__fish_config_dir/functions/$_fname.fish"
     end
+    # CachyOS defines a broken copy command.
+    # Override it with our working function.
+    test -f "$__fish_config_dir/functions/copy.fish"
+    and source "$__fish_config_dir/functions/copy.fish"
 end
 set --erase _fname
 
@@ -122,15 +126,13 @@ if status is-interactive
             fzf --fish | source
         else
             test -f "$__fish_config_dir/integrations/fzf.fish"
-                and source "$__fish_config_dir/integrations/fzf.fish"
+            and source "$__fish_config_dir/integrations/fzf.fish"
         end
     else
         #   conf.d/fzf.fish is managed by Fisher and may be restored on fisher
         #   update, so this is the reliable place to strip its bindings when
         #   fzf is not installed.
-        if functions -q _fzf_uninstall_bindings
-            _fzf_uninstall_bindings
-        end
+        functions -q _fzf_uninstall_bindings; and _fzf_uninstall_bindings
     end
 
     #   ──────────────────────────────── DirENV ────────────────────────────────
@@ -139,9 +141,7 @@ if status is-interactive
     #
     # The Auto-Venv script above will ignore directories with a
     # .envrc file (direnv configuration) to prevent conflicts.
-    if type -q direnv
-        direnv hook fish | source
-    end
+    type -q direnv; and direnv hook fish | source
 
     #   Helps ensure that Claude Code's terminal output is clean and doesn't have flickering issues.
     set -gx CLAUDE_CODE_NO_FLICKER 1
@@ -150,11 +150,7 @@ if status is-interactive
     #   Initializes the Starship prompt, which provides a highly customizable and informative command prompt.
     #   This is wrapped in a check to ensure that it only runs if Starship is installed,
     #   preventing errors if it's not available.
-    if type -q starship
-        # STARSHIP_START
-        starship init fish | source
-        # STARSHIP_END
-    end
+    type -q starship; and starship init fish | source
 
     #   ╭────────────────────────────── OVERRIDES ─────────────────────────────╮
     #   |       Run these last so they can override any previous settings.     |
@@ -169,9 +165,7 @@ if status is-interactive
     #   committed to version control.
     #   This allows you to keep things like API keys, database credentials,
     #   and other secrets out of your main config files and safely ignored by git.
-    if test -f "$dot_fish/secrets.fish"
-        source "$dot_fish/secrets.fish"
-    end
+    test -f "$dot_fish/secrets.fish"; and source "$dot_fish/secrets.fish"
 
     #   ─────────────────────── Source machine-local config ────────────────────
     #   Sources a local.fish file if it exists, which can be used for machine-specific
@@ -179,9 +173,7 @@ if status is-interactive
     #   This allows you to have different settings on different machines without affecting
     #   your main config or secrets files. For example, you might want different PATH additions,
     #   aliases, or environment variables on your work laptop vs. your home desktop.
-    if test -f "$dot_fish/local.fish"
-        source "$dot_fish/local.fish"
-    end
+    test -f "$dot_fish/local.fish"; and source "$dot_fish/local.fish"
     #    ╭──────────────────────────── END OVERRIDES ──────────────────────────╮
     #    |                        End of override section.                     |
     #    ╰──────────────────────────── END OVERRIDES ──────────────────────────╯
