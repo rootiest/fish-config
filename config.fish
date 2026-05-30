@@ -70,6 +70,24 @@ set -gx SUDO_EDITOR $EDITOR
 #   Helps ensure that GPG can prompt for passphrases correctly when invoked from the terminal.
 set -gx GPG_TTY (tty)
 
+#   ────────────────────────── Scrollback History ──────────────────────────
+#   Directory where scrollback history is saved into log files.
+set -gx SCROLLBACK_HISTORY_DIR "$HOME/.terminal_history"
+#   Maximum number of scrollback history files to keep
+set -gx SCROLLBACK_HISTORY_MAX_FILES 100
+# Wire up a clean exit function that won't fire on background subshells
+if status is-interactive
+    function exit --description 'Safe interactive exit'
+        # If the smart_exit file exists in our function path, invoke it explicitly
+        if functions -q smart_exit
+            smart_exit $argv
+        else
+            # Absolute fallback to protect shell mechanics
+            builtin exit $argv
+        end
+    end
+end
+
 #   ──────────────────────────── PATH variables ────────────────────────────
 #   Adds common user bin directories to the PATH. The -mg --move option for cargo ensures that
 #   the cargo bin directory is moved to the end of the PATH, which can help avoid conflicts

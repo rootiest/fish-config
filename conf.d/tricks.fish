@@ -96,7 +96,6 @@ alias egrep='egrep --color=auto'
 # Safety aliases (Confirmation before overwriting/deleting)
 alias cp="cp -i"
 alias mv="mv -i"
-alias rm="rm -i"
 
 # Archives and networking short-hands
 alias tarnow='tar -acf '

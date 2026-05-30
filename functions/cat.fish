@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Use bat for files and ls for directories when using cat
-function cat --wraps='bat' --description 'Use bat for files and ls for directories'
+function cat --wraps='bat' --description 'Use bat for files, ls for directories, and raw cat for ANSI logs'
     # If no arguments are provided, cat usually waits for stdin. 
     # We'll maintain that behavior by skipping the directory check if $argv is empty.
     if set -q argv[1]
@@ -10,6 +10,16 @@ function cat --wraps='bat' --description 'Use bat for files and ls for directori
             # If it's a directory, run your custom ls function
             ls $argv
             return
+        end
+
+        # NEW: Check if the target file lives in your scrollback snapshot directory OR 
+        # contains raw terminal ANSI color escape sequences.
+        if test -f $argv[1]
+            if string match -q "$SCROLLBACK_HISTORY_DIR/*" $argv[1]
+                or string match -qr '\e\[[0-9;]*m' (head -n 5 $argv[1] 2>/dev/null)
+                command cat $argv
+                return
+            end
         end
     end
 

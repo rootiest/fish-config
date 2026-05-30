@@ -156,6 +156,21 @@ Desktop notifications for long-running commands via [franciscolourenco/done](htt
 | `__done_min_cmd_duration` | `10000` ms | Minimum duration before a notification is sent |
 | `__done_notification_urgency_level` | `low` | Desktop notification urgency |
 
+### Scrollback History
+
+When running inside Kitty, closing a shell session with `exit` automatically saves a timestamped scrollback snapshot to `SCROLLBACK_HISTORY_DIR` (default: `~/.terminal_history`). Snapshots are named `scrollback_YYYY-MM-DD_HH-MM-SS.log` and the oldest files are pruned automatically once the count exceeds `SCROLLBACK_HISTORY_MAX_FILES`.
+
+Use `exit --no-log` (or `exit -n`) to close without saving.
+
+The `cat` function detects files inside `SCROLLBACK_HISTORY_DIR` (and any file containing raw ANSI escape sequences) and pipes them through `command cat` instead of `bat`, preserving color output.
+
+Both variables can be overridden in `local.fish`:
+
+| Variable | Default | Description |
+|---|---|---|
+| `SCROLLBACK_HISTORY_DIR` | `~/.terminal_history` | Directory where scrollback snapshots are written |
+| `SCROLLBACK_HISTORY_MAX_FILES` | `100` | Maximum number of snapshots to keep before pruning |
+
 ---
 
 ## Key Bindings
@@ -196,7 +211,7 @@ These functions wrap modern alternatives with graceful fallbacks to standard too
 | Function | Replaces | Tool |
 |---|---|---|
 | `ls` | `ls` | `eza` (falls back to `lsd`, then system `ls`) |
-| `cat` | `cat` | `bat` (plain, no pager) |
+| `cat` | `cat` | `bat` (plain, no pager); falls back to `command cat` for ANSI log files and scrollback snapshots |
 | `less` | `less` | `most` |
 | `ping` | `ping` | `prettyping --nolegend` |
 | `top` | `top` | `btop` |
@@ -326,6 +341,7 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `wake-lock <cmd>` | Run a command with `systemd-inhibit` to prevent sleep |
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
 | `sudo-toggle` | Toggle sudo password bypass — writes/clears a `NOPASSWD` rule in `/etc/sudoers.d/nofail-toggle` |
+| `smart_exit` | Captures Kitty terminal scrollback to a timestamped log on exit; `--no-log` skips capture; auto-prunes oldest logs when count exceeds `SCROLLBACK_HISTORY_MAX_FILES` |
 | `psmem` | List all processes sorted by memory usage (descending) |
 | `psmem10` | Top 10 processes by memory usage |
 | `tmux-clean` | Kill all detached tmux sessions |
@@ -416,10 +432,6 @@ These aliases add `-i` (interactive confirmation) to destructive commands:
 |---|---|
 | `cp` | `cp -i` |
 | `mv` | `mv -i` |
-| `rm` | `rm -i` |
-
-> [!NOTE]
-> The `rm` alias applies only when no custom `rm` function from `functions/rm.fish` takes precedence. The trash-aware `rm` wrapper in `functions/rm.fish` is the primary handler for interactive sessions.
 
 #### Archives & Networking
 
