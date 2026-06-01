@@ -5,10 +5,8 @@
 function view --wraps='nvim -R' --description 'alias view=nvim -R'
     if type -q nvim
         nvim -R $argv
-    else if type -q less
-        less $argv
     else
-        command cat $argv
+        less $argv
     end
         
 end

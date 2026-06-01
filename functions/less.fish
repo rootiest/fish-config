@@ -1,11 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# alias less=most
-function less --wraps='most' --description 'alias less=most'
-    if which most >/dev/null 2>&1
-        most $argv
-    else
+function less --wraps='ov' --description 'Pager wrapper: $PAGER → ov → less → more → cat'
+    if set -q PAGER; and command -q $PAGER
+        command $PAGER $argv
+    else if command -q ov
+        command ov $argv
+    else if command -q less
         command less $argv
+    else if command -q more
+        command more $argv
+    else
+        command cat $argv
     end
 end

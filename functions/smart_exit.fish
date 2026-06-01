@@ -42,7 +42,10 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
             # we check if it contains the phrase "exit" to match 'exit -n' or 'exit --help'.
             if string match -qr exit "$_"
                 if not string match -qr '^(nvim|vim|vi|nano|emacs|tmux)$' "$active_tui"
+                    # Capture the log via the shell
                     kitty @ get-text --match id:$KITTY_WINDOW_ID --extent all --ansi | sed 's/^\[38;2;[0-9;]*m//g' >$filename 2>/dev/null
+                    # Broadcast a window variable flag telling Kitty the log is handled
+                    kitty @ set-user-vars "logged_by_shell=true" 2>/dev/null
                 end
             end
         end

@@ -51,6 +51,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── theme.fish        # Theme syntax highlighting colors
 │   ├── done.fish          # Done plugin (desktop notifications for long commands)
 │   ├── tricks.fish       # PATH, bang-bang helpers, bat man pages, system aliases, history/backup utilities
+│   ├── paru-wrapper.fish # Auto-generates ~/.local/bin/paru logging wrapper on first run
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases
 ├── functions/            # Custom functions (one per file)
@@ -138,6 +139,20 @@ Every shell command is reported to WakaTime for time-tracking. Disable by settin
 
 Full tab completion for the `tailscale` CLI is provided via `conf.d/tailscale.fish`.
 
+### Pager
+
+`$PAGER` is set in `config.fish` to `ov` when available, falling back to `less`. This ensures any application that honours `$PAGER` (git, man, etc.) uses the configured pager automatically.
+
+The `less` wrapper function implements a full pager hierarchy, so anything that calls `less` directly also benefits:
+
+```
+$PAGER → ov → less → more → cat
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `PAGER` | `ov` (if installed), else `less` | System-wide pager used by `less`, `logs`, and any tool that honours `$PAGER` |
+
 ### bat Man Pages
 
 When `bat` is installed, man pages are automatically rendered through it for syntax highlighting. `MANPAGER` and `MANROFFOPT` are set in `conf.d/tricks.fish`:
@@ -212,7 +227,7 @@ These functions wrap modern alternatives with graceful fallbacks to standard too
 |---|---|---|
 | `ls` | `ls` | `eza` (falls back to `lsd`, then system `ls`) |
 | `cat` | `cat` | `bat` (plain, no pager); falls back to `command cat` for ANSI log files and scrollback snapshots |
-| `less` | `less` | `most` |
+| `less` | `less` | `ov` (modern pager); falls back to `less` → `more` → `cat` |
 | `ping` | `ping` | `prettyping --nolegend` |
 | `top` | `top` | `btop` |
 | `rg` | `rg` | ripgrep with `--hyperlink-format=kitty` |
@@ -342,6 +357,7 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
 | `sudo-toggle` | Toggle sudo password bypass — writes/clears a `NOPASSWD` rule in `/etc/sudoers.d/nofail-toggle` |
 | `smart_exit` | Captures Kitty terminal scrollback to a timestamped log on exit; `--no-log` skips capture; auto-prunes oldest logs when count exceeds `SCROLLBACK_HISTORY_MAX_FILES` |
+| `logs` | Browse terminal log files (scrollback and paru) interactively with fzf; `Enter` opens in `$PAGER`, `Ctrl-E` opens in `$EDITOR`; `-c <category>` filters to `scrollback` or `paru` |
 | `psmem` | List all processes sorted by memory usage (descending) |
 | `psmem10` | Top 10 processes by memory usage |
 | `tmux-clean` | Kill all detached tmux sessions |
@@ -369,6 +385,7 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 
 | Function | Description |
 |---|---|
+| `claude` | Wrapper for `claude` that always injects `--remote-control` (skips if already present) |
 | `claude-resume` | Resume Claude Code session from `.claude_session` in CWD |
 | `antigravity-resume` | Resume antigravity-cli session from `.antigravity_session` in CWD |
 | `code-resume` | Smart resume — tries Claude then antigravity-cli, falls back to picker |
@@ -618,7 +635,7 @@ Named context shortcuts (e.g. `dcr`, `dck`) live in `~/.config/.user-dots/fish/l
 | [dust](https://github.com/bootandy/dust) | `du` (directories) |
 | [duf](https://github.com/muesli/duf) | `du` (disks) |
 | [prettyping](https://github.com/denilsonsa/prettyping) | `ping` |
-| [most](https://www.jedsoft.org/most/) | `less` |
+| [ov](https://github.com/noborus/ov) | `less` / `$PAGER` |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | `grep` |
 | [lazygit](https://github.com/jesseduffield/lazygit) | git TUI |
 | [lazydocker](https://github.com/jesseduffield/lazydocker) | Docker TUI |

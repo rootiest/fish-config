@@ -51,7 +51,12 @@ set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
 set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
 
 #   ───────────────────── Misc Configuration variables ─────────────────────
-set -gx LESS -R # Ensures colors render correctly in less pager
+#   ─────────────────────────── Pager variables ────────────────────────────
+if type -q ov
+    set -gx PAGER ov
+else if type -q less
+    set -gx PAGER less
+end
 
 #   ─────────────────────────── Editor variables ───────────────────────────
 #   Set Editor variables with fallback to vi if nvim isn't available. This ensures that

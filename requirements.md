@@ -101,7 +101,7 @@ Non-standard applications required by this fish shell configuration.
 
 | Tool | Description | Notes |
 |------|-------------|-------|
-| `most` | Advanced pager | Wraps `less` |
+| `ov` | Modern pager | Sets `$PAGER`; wraps `less` with hierarchy fallback |
 | `prettyping` | Pretty `ping` wrapper | Wraps `ping` |
 | `sudo-rs` | Rust rewrite of sudo | Wraps `sudo` |
 
