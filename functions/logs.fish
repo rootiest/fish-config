@@ -18,11 +18,12 @@ function logs --description 'Browse terminal log files interactively with fzf'
         echo ""
         echo "Options:"
         echo "  "$c_primary"-h, --help"$c_reset"       Show this help"
-        echo "  "$c_primary"-c, --category"$c_reset"   Limit to one category: scrollback, paru"
+        echo "  "$c_primary"-c, --category"$c_reset"   Limit to one category: scrollback, paru, yay"
         echo ""
         echo "Keys in fzf:"
         echo "  "$c_primary"Enter"$c_reset"     Open in \$PAGER"
         echo "  "$c_primary"Ctrl-E"$c_reset"    Open in \$EDITOR"
+        echo "  "$c_primary"Ctrl-D"$c_reset"    Delete selected log"
         echo "  "$c_primary"Ctrl-C"$c_reset"    Quit"
         return 0
     end
@@ -35,6 +36,11 @@ function logs --description 'Browse terminal log files interactively with fzf'
     set -l legacy_dir "$HOME/.terminal_history"
     if test -d $legacy_dir; and not contains $legacy_dir $scan_dirs
         set -a scan_dirs $legacy_dir
+    end
+
+    # Strip junk scrollback logs before building the file list
+    for dir in $scan_dirs
+        _scrollback_prune_junk $dir
     end
 
     # Collect entries: "SORTKEY|FILEPATH|CATEGORY"
@@ -78,26 +84,83 @@ function logs --description 'Browse terminal log files interactively with fzf'
                 set label (printf '\033[36m[scrollback]\033[0m')
             case paru
                 set label (printf '\033[32m[paru      ]\033[0m')
+            case yay
+                set label (printf '\033[33m[yay       ]\033[0m')
         end
 
         set -a fzf_lines (printf '%s\t%s %s  %s' $parts[2] $date $time $label)
     end
 
-    set -l selected (printf '%s\n' $fzf_lines | fzf \
+    set -l tmpfile (mktemp)
+    set -l helpfile (mktemp)
+    set -l togglescript (mktemp)
+    set -l deletescript (mktemp)
+    set -l helpflag "$tmpfile.help"
+    printf '%s\n' $fzf_lines > $tmpfile
+    printf 'Terminal Logs — Key Bindings\n\n  Enter     View selected log in pager\n  Ctrl-E    Edit selected log in editor\n  Ctrl-D    Delete selected log\n  Ctrl-C    Quit\n  ?         Toggle this help\n\nFiltering:\n  Type to fuzzy-filter by date or category\n  Use -c flag to limit: scrollback, paru, yay' > $helpfile
+    # Help toggle script — avoids nested parens inside transform()
+    printf '#!/bin/sh\nif test -f %s; then\n  rm -f %s\n  printf "change-preview(command cat {1})"\nelse\n  touch %s\n  printf "change-preview(command cat %s)"\nfi\n' \
+        $helpflag $helpflag $helpflag $helpfile > $togglescript
+    chmod +x $togglescript
+    # Delete confirmation script — avoids nested parens inside execute(), and ensures
+    # tmpfile is updated before +reload fires (execute is synchronous, execute-silent is not)
+    printf '%s\n' \
+        '#!/bin/sh' \
+        'FILE="$1"' \
+        'printf "Delete %s? [Y/n] " "$(basename "$FILE")"' \
+        'read confirm' \
+        'case "$confirm" in [nN]) exit 0 ;; esac' \
+        "fish -c \"rm \$FILE\"" \
+        "grep -vF \"\$FILE\" $tmpfile > $tmpfile.new" \
+        "mv $tmpfile.new $tmpfile" \
+        > $deletescript
+    chmod +x $deletescript
+
+    set -l selected (command cat $tmpfile | fzf \
         --ansi \
         --delimiter '\t' \
         --with-nth 2 \
         --preview 'command cat {1}' \
         --preview-window 'right:60%:wrap' \
         --prompt 'Terminal Logs -> ' \
-        --header 'Enter: View  Ctrl-E: Edit  Ctrl-C: Quit  (type to filter by date or category)' \
-        --bind "ctrl-e:execute($editor {1})")
+        --header '?: Help  Enter: View  Ctrl-E: Edit  Ctrl-D: Delete  Ctrl-C: Quit' \
+        --bind "ctrl-e:execute($editor {1})" \
+        --bind "ctrl-d:execute($deletescript {1})+reload(command cat $tmpfile)" \
+        --bind "?:transform($togglescript)")
+
+    rm -f $tmpfile $tmpfile.new $helpfile $helpflag $togglescript $deletescript
 
     test -n "$selected" || return 0
 
     set -l file (echo $selected | cut -f1)
     test -f $file || return 1
-    if command -q $PAGER
+
+    set -l base (basename $file)
+
+    # 1. Maintain base multi-color parsing highlights
+    set -l paru_flags -M "^\s*:: .*,upgrading \S+,downloading\.\.\.,\(\s*\d+/\d+\),(Total.*Size:|Net Upgrade Size:|\s*Package \(\d+\))"
+
+    set -l use_ov 0
+    if command -q ov
+        if not set -q PAGER; or test "$PAGER" = ov
+            set use_ov 1
+        end
+    end
+
+    if test $use_ov -eq 1
+        if string match -qr '^(paru|yay)' $base
+            set -l section_regex '^\s*Package \(\d+\)|^\s*:: (Proceed|Retrieving|Running pre-transaction|Processing package changes|Running post-transaction|Looking for .* upgrades\.\.\.)|^\s*==>'
+            set paru_flags $paru_flags --section-delimiter $section_regex --section-header -c
+            command ov $paru_flags $file
+        else if string match -qr '^scrollback' $base
+            # OSC 133;A (prompt start) appears on its own invisible line immediately before
+            # the rendered prompt. --section-header-num 2 captures both that blank marker
+            # line and the actual prompt line as the sticky header, making the prompt visible.
+            command ov --section-delimiter '\x1b\]133;A' --section-header --section-header-num 1 $file
+        else
+            command ov $file
+        end
+    else if set -q PAGER; and command -q $PAGER
         command cat $file | command $PAGER
     else
         command cat $file
