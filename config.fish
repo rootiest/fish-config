@@ -172,12 +172,6 @@ if status is-interactive
     #   Helps ensure that Claude Code's terminal output is clean and doesn't have flickering issues.
     set -gx CLAUDE_CODE_NO_FLICKER 1
 
-    #   ─────────────────────────── Starship prompt ────────────────────────────
-    #   Initializes the Starship prompt, which provides a highly customizable and informative command prompt.
-    #   This is wrapped in a check to ensure that it only runs if Starship is installed,
-    #   preventing errors if it's not available.
-    type -q starship; and starship init fish | source
-
     #   ╭────────────────────────────── OVERRIDES ─────────────────────────────╮
     #   |       Run these last so they can override any previous settings.     |
     #   |    This is useful for machine-specific behavior or configurations.   |
@@ -204,3 +198,8 @@ if status is-interactive
     #    |                        End of override section.                     |
     #    ╰──────────────────────────── END OVERRIDES ──────────────────────────╯
 end
+
+# Tools like starship, zoxide, etc. append init lines below this point via their
+# setup commands. We manage all integrations through conf.d/ instead, so we
+# return here to prevent injected lines from conflicting with that setup.
+return

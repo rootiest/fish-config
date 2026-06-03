@@ -50,7 +50,10 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
             end
         end
 
-        # 4. Automatic Pruning Logic
+        # 4. Prune junk logs before counting toward the max
+        _scrollback_prune_junk $snapshot_dir
+
+        # 5. Automatic Pruning Logic
         set -l current_logs $snapshot_dir/scrollback_*.log
         if test -f "$current_logs[1]"
             set -l total_files (count $current_logs)

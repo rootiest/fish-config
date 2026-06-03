@@ -52,6 +52,8 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── done.fish          # Done plugin (desktop notifications for long commands)
 │   ├── tricks.fish       # PATH, bang-bang helpers, bat man pages, system aliases, history/backup utilities
 │   ├── paru-wrapper.fish # Auto-generates ~/.local/bin/paru logging wrapper on first run
+│   ├── yay-wrapper.fish  # Auto-generates ~/.local/bin/yay logging wrapper on first run
+│   ├── starship.fish     # fish_prompt with OSC 133;A/B shell-integration markers
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases
 ├── functions/            # Custom functions (one per file)
@@ -89,7 +91,9 @@ Fisher and all listed plugins are installed automatically by the bootstrap scrip
 
 ### Starship
 
-The primary prompt is [Starship](https://starship.rs/), initialized in `config.fish`. Configure it via `~/.config/starship.toml`.
+The primary prompt is [Starship](https://starship.rs/), managed via `conf.d/starship.fish`. Configure it via `~/.config/starship.toml`.
+
+`conf.d/starship.fish` defines a `fish_prompt` wrapper that only activates when `starship` is in `PATH`. It emits OSC 133;A (prompt start) immediately before Starship renders and OSC 133;B (input start) immediately after, placing both markers on the prompt line itself rather than on the blank line above it. This enables `ov` to use them as sticky section headers when browsing scrollback logs. Without Starship, fish's built-in prompt already handles these markers correctly with no wrapper needed.
 
 ### FZF
 
@@ -174,6 +178,10 @@ Desktop notifications for long-running commands via [franciscolourenco/done](htt
 ### Scrollback History
 
 When running inside Kitty, closing a shell session with `exit` automatically saves a timestamped scrollback snapshot to `SCROLLBACK_HISTORY_DIR` (default: `~/.terminal_history`). Snapshots are named `scrollback_YYYY-MM-DD_HH-MM-SS.log` and the oldest files are pruned automatically once the count exceeds `SCROLLBACK_HISTORY_MAX_FILES`.
+
+The `paru` and `yay` wrappers (auto-generated in `~/.local/bin/` by `conf.d/paru-wrapper.fish` and `conf.d/yay-wrapper.fish`) tee all AUR helper output to timestamped log files (`paru_YYYY-MM-DD_HH-MM-SS.log` / `yay_YYYY-MM-DD_HH-MM-SS.log`) in the same directory.
+
+Before pruning to the max-files limit — and before displaying the log browser — junk logs are automatically removed by `_scrollback_prune_junk`: empty files, files with only a single meaningful line (e.g. bare `[exited]` captures), and Kitty tab-rename prompt captures are all silently discarded.
 
 Use `exit --no-log` (or `exit -n`) to close without saving.
 
@@ -284,7 +292,7 @@ rm -f file.txt  # Falls through to standard rm -f
 | `gitui` | Fast terminal Git UI |
 | `gi` | Generate and append `.gitignore` patterns from gitignore.io; `gi` (no args) appends boilerplate then prompts interactively; `gi <targets>` appends named patterns; `gi -s <targets>` prints to stdout; `gi -l` lists all targets |
 
-### Package Management (Arch / paru)
+### Package Management (Arch / paru / yay)
 
 | Function | Description |
 |---|---|
@@ -292,6 +300,8 @@ rm -f file.txt  # Falls through to standard rm -f
 | `search <query>` | Search/install interactively: `paru <query>` |
 | `upgrade` | Full system upgrade: `paru -Syu --noconfirm` |
 | `cleanup` | Log and remove orphaned packages |
+
+`conf.d/paru-wrapper.fish` and `conf.d/yay-wrapper.fish` auto-generate thin wrapper scripts at `~/.local/bin/paru` and `~/.local/bin/yay` on first shell start (when the respective AUR helper is installed). These wrappers tee all output to timestamped log files in `SCROLLBACK_HISTORY_DIR` and prune old logs to stay under `SCROLLBACK_HISTORY_MAX_FILES`.
 
 ### Dependency Management
 
@@ -356,8 +366,8 @@ Install method priority: **git+cargo source build** (fish) → **cargo** (other 
 | `wake-lock <cmd>` | Run a command with `systemd-inhibit` to prevent sleep |
 | `swapstat` | Colorized zRAM compression ratio, swappiness, and swap priority report |
 | `sudo-toggle` | Toggle sudo password bypass — writes/clears a `NOPASSWD` rule in `/etc/sudoers.d/nofail-toggle` |
-| `smart_exit` | Captures Kitty terminal scrollback to a timestamped log on exit; `--no-log` skips capture; auto-prunes oldest logs when count exceeds `SCROLLBACK_HISTORY_MAX_FILES` |
-| `logs` | Browse terminal log files (scrollback and paru) interactively with fzf; `Enter` opens in `$PAGER`, `Ctrl-E` opens in `$EDITOR`; `-c <category>` filters to `scrollback` or `paru` |
+| `smart_exit` | Captures Kitty terminal scrollback to a timestamped log on exit; `--no-log` skips capture; runs `_scrollback_prune_junk` then auto-prunes oldest logs when count exceeds `SCROLLBACK_HISTORY_MAX_FILES` |
+| `logs` | Browse scrollback, paru, and yay log files interactively with fzf; `Enter` opens in `$PAGER`, `Ctrl-E` opens in `$EDITOR`, `Ctrl-D` deletes (with Y/n confirm), `?` toggles a keybind help overlay; `-c <category>` filters to `scrollback`, `paru`, or `yay`; paru/yay logs open in `ov` with syntax highlights and sticky section headers; scrollback logs open in `ov` with per-command sticky prompt headers via OSC 133;A markers |
 | `psmem` | List all processes sorted by memory usage (descending) |
 | `psmem10` | Top 10 processes by memory usage |
 | `tmux-clean` | Kill all detached tmux sessions |
@@ -664,6 +674,9 @@ git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
 Then open a new Fish shell — Fisher and all plugins will be installed automatically on first launch, and the Catppuccin Mocha theme will be applied.
 
 A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are sourced from `~/.config/.user-dots/fish/secrets.fish` and excluded from version control.
+
+> [!IMPORTANT]
+> `config.fish` ends with a bare `return` statement. This intentionally prevents any lines appended **after** that point from executing. Many tools (starship, zoxide, mise, etc.) offer a setup command that appends an `init | source` line to your `config.fish` — those lines will silently have no effect here. All integrations are managed through `conf.d/` files instead. If you add a new tool and its shell integration appears to do nothing, check whether it appended an init line to the bottom of `config.fish` and create a `conf.d/<tool>.fish` file for it instead.
 
 ---
 ## Personalization
