@@ -241,7 +241,7 @@ These functions wrap modern alternatives with graceful fallbacks to standard too
 | `rg` | `rg` | ripgrep with `--hyperlink-format=kitty` |
 | `ssh` | `ssh` | `kitten ssh` when inside Kitty |
 | `du` | `du` | `duf` (disks) / `dust` (directories) — auto-detected by argument |
-| `mkdir` | `mkdir` | Always passes `-p` in interactive mode |
+| `mkdir` | `mkdir` | Always passes `-p` in interactive mode; reports created directories as `Created directory: ~/path/` (falls back silently when flags like `-m` are present) |
 | `copy` | `cp` | Strips trailing `/` from a source directory before `cp -r`; falls through to `cp` for all other cases |
 
 #### `du` — Smart Disk Usage
@@ -270,8 +270,8 @@ rm -f file.txt  # Falls through to standard rm -f
 
 | Function | Description |
 |---|---|
-| `mkcd <dir>` | Create directory (including missing parents) and `cd` into it |
-| `poke <file>...` | `touch` with automatic parent directory creation; prints a colored notice when new directories are created |
+| `mkcd <dir> [-s]` | Create directory (including missing parents) and `cd` into it; shows a tree of newly-created dirs by default; `-s`/`--silent` suppresses the tree |
+| `poke <file>...` | `touch` with automatic parent directory creation; shows a tree of newly-created dirs |
 | `ls` | `eza` — long listing, all files, icons, color, hyperlinks |
 | `lss` | `eza` — size-sorted long listing with gradient color scale |
 | `lsr` | `eza` — reversed time-sorted oneline listing |
