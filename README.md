@@ -676,7 +676,7 @@ Then open a new Fish shell — Fisher and all plugins will be installed automati
 A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are sourced from `~/.config/.user-dots/fish/secrets.fish` and excluded from version control.
 
 > [!IMPORTANT]
-> `config.fish` ends with a bare `return` statement. This intentionally prevents any lines appended **after** that point from executing. Many tools (starship, zoxide, mise, etc.) offer a setup command that appends an `init | source` line to your `config.fish` — those lines will silently have no effect here. All integrations are managed through `conf.d/` files instead. If you add a new tool and its shell integration appears to do nothing, check whether it appended an init line to the bottom of `config.fish` and create a `conf.d/<tool>.fish` file for it instead.
+> `config.fish` contains two `return` sentinel guards. One sits at the end of the `if status is-interactive` block and one sits at the very end of the file. Together they prevent any lines appended **after** either point from executing. Many tools (starship, zoxide, mise, etc.) offer a setup command that appends an `init | source` line to your `config.fish` — those lines will silently have no effect here. All integrations are managed through `conf.d/` files instead. If you add a new tool and its shell integration appears to do nothing, check whether it appended an init line to the bottom of `config.fish` and create a `conf.d/<tool>.fish` file for it instead.
 
 ---
 ## Personalization

@@ -153,10 +153,14 @@ function logs --description 'Browse terminal log files interactively with fzf'
             set paru_flags $paru_flags --section-delimiter $section_regex --section-header -c
             command ov $paru_flags $file
         else if string match -qr '^scrollback' $base
-            # OSC 133;A (prompt start) appears on its own invisible line immediately before
-            # the rendered prompt. --section-header-num 2 captures both that blank marker
-            # line and the actual prompt line as the sticky header, making the prompt visible.
-            command ov --section-delimiter '\x1b\]133;A' --section-header --section-header-num 1 $file
+            # Write a minimal ov config to a temp file so the section header
+            # is displayed without ov's default slateblue background, preserving
+            # the original ANSI colors of the starship prompt.
+            set -l ov_cfg (mktemp --suffix .yaml)
+            printf 'Mode:\n  scrollback:\n    Style:\n      SectionLine:\n        Background: ""\n        Foreground: ""\n' > $ov_cfg
+            command ov --config $ov_cfg --view-mode scrollback \
+                --section-delimiter '\x1b\]133;A' --section-header --section-header-num 1 $file
+            rm -f $ov_cfg
         else
             command ov $file
         end
