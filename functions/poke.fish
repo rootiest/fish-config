@@ -8,10 +8,7 @@ function poke --description 'touch with automatic parent directory creation'
     end
     for _path in $argv
         set -l _dir (dirname $_path)
-        if not test -d $_dir
-            mkdir -p $_dir
-            and echo (set_color --bold cyan)"Created: "(set_color cyan)"$_dir"(set_color normal)
-        end
+        _fish_mkdir_p --tree $_dir
         touch $_path
     end
 end
