@@ -49,7 +49,7 @@ function _fish_mkdir_p --description 'mkdir -p with configurable verbose output'
     end
 
     # Tree mode: dimmed existing anchor, then cyan new dirs.
-    echo (set_color --bold cyan)"Created:"(set_color normal)
+    echo (set_color --bold cyan)"Created missing directories:"(set_color normal)
     set -l anchor (string replace -- "$HOME" "~" $cursor)"/"
     echo (set_color brblack)" $anchor"(set_color normal)
     set -l i 1
