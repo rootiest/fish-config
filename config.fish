@@ -194,12 +194,28 @@ if status is-interactive
     #   your main config or secrets files. For example, you might want different PATH additions,
     #   aliases, or environment variables on your work laptop vs. your home desktop.
     test -f "$dot_fish/local.fish"; and source "$dot_fish/local.fish"
+    #
     #    ╭──────────────────────────── END OVERRIDES ──────────────────────────╮
     #    |                        End of override section.                     |
     #    ╰──────────────────────────── END OVERRIDES ──────────────────────────╯
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Tools like starship, zoxide, etc. append init lines below this point via their
+    # setup commands. We manage all integrations through conf.d/ instead, so we
+    # return here to prevent injected lines from conflicting with that setup.
+    #
+    # This catches injections within the interactive block and
+    # prevents them from conflicting with our conf.d/ setup.
+    return # <-- Do not remove this line.
+    # ─────────────────────────────────────────────────────────────────────────
 end
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Tools like starship, zoxide, etc. append init lines below this point via their
 # setup commands. We manage all integrations through conf.d/ instead, so we
 # return here to prevent injected lines from conflicting with that setup.
-return
+#
+# This catches injections outside the interactive block and
+# prevents them from conflicting with our conf.d/ setup.
+return # <-- Do not remove this line.
+# ─────────────────────────────────────────────────────────────────────────────
