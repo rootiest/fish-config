@@ -22,6 +22,7 @@ function mkcd --description 'Create a directory (with parents) and cd into it'
         echo
         echo "$c_head""Flags:$c_rst"
         echo "  $c_flag-h$c_rst, $c_flag--help$c_rst   Show this help message"
+        echo "  $c_flag-s$c_rst, $c_flag--silent$c_rst  Suppress directory creation output"
         echo
         echo "$c_head""Examples:$c_rst"
         echo "  $c_cmd""mkcd$c_rst $c_arg~/projects/myapp$c_rst"
@@ -29,13 +30,23 @@ function mkcd --description 'Create a directory (with parents) and cd into it'
         return 0
     end
 
-    set -l dir $argv[1]
+    set -l silent 0
+    set -l dir
+    for _arg in $argv
+        switch $_arg
+            case -s --silent
+                set silent 1
+            case '*'
+                set dir $_arg
+        end
+    end
 
     set -l is_new 0
-    if not test -d $dir
-        set is_new 1
-        command mkdir -p $dir
-        or return $status
+    test -d $dir; or set is_new 1
+    if test $silent -eq 1
+        _fish_mkdir_p --silent $dir; or return $status
+    else
+        _fish_mkdir_p --tree $dir; or return $status
     end
 
     cd $dir
