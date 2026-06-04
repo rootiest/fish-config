@@ -271,6 +271,7 @@ rm -f file.txt  # Falls through to standard rm -f
 | Function | Description |
 |---|---|
 | `mkcd <dir>` | Create directory (including missing parents) and `cd` into it |
+| `poke <file>...` | `touch` with automatic parent directory creation; prints a colored notice when new directories are created |
 | `ls` | `eza` — long listing, all files, icons, color, hyperlinks |
 | `lss` | `eza` — size-sorted long listing with gradient color scale |
 | `lsr` | `eza` — reversed time-sorted oneline listing |

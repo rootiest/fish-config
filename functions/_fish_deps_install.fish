@@ -100,6 +100,15 @@ function _fish_deps_install
                         set -a methods special-paru
                         set -a method_labels "build from AUR (makepkg)"
                     end
+                case yay-build
+                    if type -q paru
+                        set -a methods special-paru-yay
+                        set -a method_labels "paru -S yay"
+                    end
+                    if type -q pacman
+                        set -a methods special-yay
+                        set -a method_labels "build from AUR (makepkg)"
+                    end
                 case pipx
                     if type -q pipx
                         set -a methods special-pipx
@@ -202,6 +211,15 @@ function _fish_deps_install
                     end
                 case special-yay-paru
                     yay -S --noconfirm paru
+                case special-paru-yay
+                    paru -S --noconfirm yay
+                case special-yay
+                    set -l _build_dir (mktemp -d)
+                    git clone https://aur.archlinux.org/yay.git $_build_dir
+                    and pushd $_build_dir
+                    and makepkg -si --noconfirm
+                    and popd
+                    rm -rf $_build_dir
                 case special-paru
                     set -l _build_dir (mktemp -d)
                     git clone https://aur.archlinux.org/paru.git $_build_dir

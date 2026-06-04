@@ -28,6 +28,21 @@ function _fish_deps_update
         set -l pm_pkg       $_fdc_pm[$i]
         set -l special      $_fdc_special[$i]
 
+        # yay: update via paru if available, else system PM
+        if test "$special" = yay-build
+            if type -q paru
+                echo "Updating $bin..."
+                paru -S --noconfirm yay
+                set updated_any 1
+            else if test -n "$pm_pkg"; and test -n "$pm"
+                echo "Updating $bin..."
+                _fish_deps_pm_upgrade $pm_pkg
+                set updated_any 1
+            end
+            set i (math $i + 1)
+            continue
+        end
+
         # cargo: update via rustup
         if test "$special" = rustup-installer
             if type -q rustup

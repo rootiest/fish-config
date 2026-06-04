@@ -11,16 +11,12 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
     # Source our tricks over the cachyOS config
     test -f "$__fish_config_dir/conf.d/tricks.fish"
     and source "$__fish_config_dir/conf.d/tricks.fish"
-    # CachyOS defines aliases for ls/lt/cleanup that shadow our function files.
-    # Erase them and immediately source our versions.
-    for _fname in ls lt cleanup
+    # Erase CachyOS aliases/functions that shadow our versions, then
+    # re-source our versions since functions --erase removes autoload entries.
+    for _fname in ls lt cleanup copy
         functions --erase $_fname
         source "$__fish_config_dir/functions/$_fname.fish"
     end
-    # CachyOS defines a broken copy command.
-    # Override it with our working function.
-    test -f "$__fish_config_dir/functions/copy.fish"
-    and source "$__fish_config_dir/functions/copy.fish"
 end
 set --erase _fname
 
@@ -50,7 +46,6 @@ set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
 set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
 set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
 
-#   ───────────────────── Misc Configuration variables ─────────────────────
 #   ─────────────────────────── Pager variables ────────────────────────────
 if type -q ov
     set -gx PAGER ov
@@ -133,7 +128,7 @@ if not type -q fisher
     set --erase _fisher_reply
 end
 
-#   ─────────────────────── visual/interactive setup ───────────────────────
+#   ─────────────────────── Visual/Interactive setup ───────────────────────
 # Run only if we're in an interactive session (not a script or non-interactive shell)
 if status is-interactive
     #   ────────────────────────────── Key bindings ────────────────────────────
@@ -173,8 +168,8 @@ if status is-interactive
     set -gx CLAUDE_CODE_NO_FLICKER 1
 
     #   ╭────────────────────────────── OVERRIDES ─────────────────────────────╮
-    #   |       Run these last so they can override any previous settings.     |
-    #   |    This is useful for machine-specific behavior or configurations.   |
+    #   │        Run these last so they can override any previous settings.    │
+    #   │    This is useful for machine-specific behavior or configurations.   │
     #   ╰────────────────────────────── OVERRIDES ─────────────────────────────╯
     #
     # Define user-dots path variable for a more legible secrets/local config.
@@ -196,26 +191,18 @@ if status is-interactive
     test -f "$dot_fish/local.fish"; and source "$dot_fish/local.fish"
     #
     #    ╭──────────────────────────── END OVERRIDES ──────────────────────────╮
-    #    |                        End of override section.                     |
+    #    │                        End of override section.                     │
     #    ╰──────────────────────────── END OVERRIDES ──────────────────────────╯
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # Tools like starship, zoxide, etc. append init lines below this point via their
-    # setup commands. We manage all integrations through conf.d/ instead, so we
-    # return here to prevent injected lines from conflicting with that setup.
-    #
-    # This catches injections within the interactive block and
-    # prevents them from conflicting with our conf.d/ setup.
-    return # <-- Do not remove this line.
-    # ─────────────────────────────────────────────────────────────────────────
 end
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Tools like starship, zoxide, etc. append init lines below this point via their
-# setup commands. We manage all integrations through conf.d/ instead, so we
-# return here to prevent injected lines from conflicting with that setup.
-#
-# This catches injections outside the interactive block and
-# prevents them from conflicting with our conf.d/ setup.
 return # <-- Do not remove this line.
-# ─────────────────────────────────────────────────────────────────────────────
+#  ╭──────────────────────────────── !!!NOTE!!! ───────────────────────────────╮
+#  │    Tools like starship, zoxide, etc. append init lines below this point   │
+#  │     via their setup commands. We manage these integrations through        │
+#  │  conf.d/ instead, so we return here to prevent duplicate or conflicting   │
+#  │                         inits from being executed.                        │
+#  │                                                                           │
+#  │            If a tool's shell integration appears to do nothing,           │
+#  │         check whether its setup command appended an init line here,       │
+#  │ then create a conf.d/<tool>.fish instead and place the init in that file. │
+#  ╰───────────────────────────────────────────────────────────────────────────╯
