@@ -222,6 +222,7 @@ Beyond standard shell and FZF bindings, these custom interactive shortcuts are a
 | `Ctrl+Alt+U` | Replace Command Token | Strips the first token (the command) from the current line. **If the line is empty**, it pulls the previous command and strips its first token, placing the cursor at the start for a quick replacement (e.g., changing `mkdir` to `cd` while keeping the paths). |
 | `Ctrl+Alt+=` | Inline Qalculate! Evaluation | Passes the current command-line buffer to `qalc` (Qalculate!) and prints the result, then clears the buffer. Allows rapid-fire math without leaving the shell — type `150 * 1.08`, press `Ctrl+Alt+=`, and see `162` immediately. |
 | `Ctrl+Enter` | Smart Execute | Context-aware Enter key. Empty buffer → standard Enter. Buffer ending with `=` → evaluates it as a math expression via `qalc` (same as `Ctrl+Alt+=`). Any other content → executes the command normally. |
+| `@@` | FZF Inline Picker | Opens an interactive `fzf` session and injects the selected item directly at the cursor position in the current command line. Useful for inserting file paths, branch names, or any fzf-searchable content mid-command. |
 
 ---
 
