@@ -92,15 +92,16 @@ end
 #   Adds common user bin directories to the PATH. The -mg --move option for cargo ensures that
 #   the cargo bin directory is moved to the end of the PATH, which can help avoid conflicts
 #   with system-installed Rust tools while still allowing user-installed cargo binaries to be found.
-fish_add_path $HOME/.local/bin
-fish_add_path $HOME/Applications
-fish_add_path $HOME/scripts
-fish_add_path -mg --move $CARGO_HOME/bin
-fish_add_path $BUN_INSTALL/bin
-fish_add_path $XDG_DATA_HOME/npm-global/bin
-fish_add_path $HOME/.lmstudio/bin
-fish_add_path $HOME/.resend/bin
-fish_add_path $HOME/.fzf/bin
+fish_add_path $HOME/.local/bin               # Standard user-local executables (XDG spec)
+fish_add_path $HOME/.local/share/../bin      # Alternative/legacy path for local user binaries
+fish_add_path $HOME/Applications             # User-installed applications and standalone apps
+fish_add_path $HOME/scripts                  # Custom personal shell scripts and automation
+fish_add_path -mga $CARGO_HOME/bin           # Rust binaries and tools installed via Cargo
+fish_add_path $BUN_INSTALL/bin               # Bun runtime executables and globally installed packages
+fish_add_path $XDG_DATA_HOME/npm-global/bin  # Global Node.js/npm packages (XDG compliant location)
+fish_add_path $HOME/.lmstudio/bin            # LM Studio CLI tools for local LLM management
+fish_add_path $HOME/.resend/bin              # Resend email service CLI tools
+fish_add_path $HOME/.fzf/bin                 # Fuzzy Finder (fzf) core binary and helper scripts
 
 #   ───────────────────────── CDPATH projects dir ──────────────────────────
 # Allows cd-ing to directories within $HOME/projects or $HOME without needing to specify the full path.
