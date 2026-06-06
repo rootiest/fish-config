@@ -17,9 +17,15 @@ end
 fish_add_path ~/.local/bin
 fish_add_path ~/Applications/depot_tools
 
-# Expose user-local man pages (e.g. fish-config.1 symlinked from docs/)
+# Expose user-local man pages and keep fish-config.1 symlink current
 if not contains ~/.local/share/man $MANPATH
     set -gx MANPATH ~/.local/share/man $MANPATH
+end
+set -l _man1 ~/.local/share/man/man1
+set -l _src ~/.config/fish/docs/fish-config.1
+if test -f $_src; and not test -L $_man1/fish-config.1
+    mkdir -p $_man1
+    ln -sf $_src $_man1/fish-config.1
 end
 
 # Format man pages using bat (only if bat is installed)

@@ -321,13 +321,13 @@ The viewer falls back through: **ov** (syntax highlight + section navigation) �
 
 Examples: `config_help keybindings` · `config_help pkg` · `config_help fish-deps` · `config_help abbreviations`
 
-You can also read the documentation as a standard man page:
+You can also read the documentation as a standard man page — the symlink and `MANPATH` are set up automatically on shell start:
 
 ```fish
 man fish-config
 ```
 
-This works once `~/.local/share/man` is on your `MANPATH` (added automatically by `conf.d/tricks.fish`) and `~/.local/share/man/man1/fish-config.1` is symlinked to `docs/fish-config.1`. The man page itself is auto-generated from `docs/fish-config.md` by the CI pipeline on every push to `main`.
+The man page is auto-generated from `docs/fish-config.md` by the CI pipeline on every push to `main`.
 
 > **Note:** `fish-config` (hyphen) is this configuration's man page. `fish_config` (underscore) is fish's built-in browser-based configuration tool — a completely separate command. Don't mix them up.
 

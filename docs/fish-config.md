@@ -1231,15 +1231,15 @@ navigation.
 
     bat --language=markdown --paging=always ~/.config/fish/docs/fish-config.md
 
-## As a man page (if compiled)
+## As a man page
 
-    man -l ~/.config/fish/docs/fish-config.1
-
-If ~/.local/share/man is on your MANPATH (set automatically by
-conf.d/tricks.fish) and ~/.local/share/man/man1/fish-config.1 is
-symlinked to docs/fish-config.1, you can also use:
+The symlink and MANPATH are configured automatically on shell start:
 
     man fish-config
+
+Or read the compiled file directly:
+
+    man -l ~/.config/fish/docs/fish-config.1
 
 NOTE: fish-config (hyphen) is this config's man page. fish_config
 (underscore) is fish's built-in browser-based configuration tool —
