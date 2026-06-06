@@ -17,6 +17,11 @@ end
 fish_add_path ~/.local/bin
 fish_add_path ~/Applications/depot_tools
 
+# Expose user-local man pages (e.g. fish-config.1 symlinked from docs/)
+if not contains ~/.local/share/man $MANPATH
+    set -gx MANPATH ~/.local/share/man $MANPATH
+end
+
 # Format man pages using bat (only if bat is installed)
 if type -q bat
     set -gx MANROFFOPT -c
