@@ -1,8 +1,23 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Install a package via the system PM.
-# Usage: _fish_deps_pm_install <pkg>
+# SYNOPSIS
+#   _fish_deps_pm_install <pkg>
+#
+# DESCRIPTION
+#   Installs a single package via the detected system package manager, running
+#   with sudo where required. Supports paru, yay, pacman, apt, brew, pkg, dnf,
+#   and yum.
+#
+# ARGUMENTS
+#   pkg  The package name to install
+#
+# RETURNS
+#   0  Package installed successfully
+#   1  No supported package manager found
+#
+# EXAMPLE
+#   _fish_deps_pm_install ripgrep
 function _fish_deps_pm_install --argument-names pkg
     set -l pm (_fish_deps_detect_pm)
     if test -z "$pm"

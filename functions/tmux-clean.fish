@@ -1,7 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Kill all tmux sessions except the current one
+# SYNOPSIS
+#   tmux-clean
+#
+# DESCRIPTION
+#   Kills all detached (unattached) tmux sessions, leaving any currently
+#   attached sessions running.
+#
+# EXAMPLE
+#   tmux-clean
 function tmux-clean --description 'Kill all tmux sessions except the current one'
     # Get a list of all session names that are NOT currently attached
     set sessions (tmux list-sessions -F '#{session_name} #{session_attached}' | string match -rv ' 1$' | string split -f1 ' ')

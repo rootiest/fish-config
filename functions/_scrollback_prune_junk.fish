@@ -1,6 +1,20 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# SYNOPSIS
+#   _scrollback_prune_junk [dir]
+#
+# DESCRIPTION
+#   Removes low-value log files from the scrollback history directory:
+#   empty files, files with at most one meaningful line, and Kitty
+#   tab-rename prompt captures. Called by smart_exit.fish on session end.
+#
+# ARGUMENTS
+#   dir  Directory to prune (defaults to $SCROLLBACK_HISTORY_DIR or
+#        ~/.terminal_history)
+#
+# EXAMPLE
+#   _scrollback_prune_junk ~/.terminal_history
 function _scrollback_prune_junk --description 'Remove empty, trivial, and Kitty UI noise logs'
     set -l dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
     if set -q argv[1]

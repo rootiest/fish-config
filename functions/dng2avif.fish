@@ -1,7 +1,27 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Convert DNG raw to 10-bit HDR AVIF
+# SYNOPSIS
+#   dng2avif [-h] [-i <file>] [-o <file>] [-q <n>] [-s <n>] [input.dng]
+#
+# DESCRIPTION
+#   Converts a DNG raw image to a 10-bit HDR AVIF using a three-step pipeline:
+#   develop with ImageMagick, encode with ffmpeg+avifenc, sync metadata with
+#   exiftool. Requires magick, ffmpeg, avifenc, and exiftool.
+#
+# ARGUMENTS
+#   -i, --input FILE    Input DNG file
+#   -o, --output FILE   Output AVIF file (defaults to input basename)
+#   -q, --quality N     Encoding quality 0-100 (default: 92)
+#   -s, --speed N       Encoder speed 0-10 (default: 3, 0 = slowest)
+#   -h, --help          Show help message
+#
+# RETURNS
+#   0  Conversion complete
+#   1  File not found, missing dependency, or encode step failed
+#
+# EXAMPLE
+#   dng2avif photo.dng
 function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
     set -l options (fish_opt -s h -l help)
     set -a options (fish_opt -s i -l input -r)

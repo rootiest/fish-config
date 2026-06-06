@@ -1,7 +1,27 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Run a command in a new terminal split
+# SYNOPSIS
+#   split [-h | -v] [command...]
+#
+# DESCRIPTION
+#   Opens a new pane split in Kitty or WezTerm, optionally running a
+#   command in it. Defaults to a horizontal (bottom) split. The new pane
+#   inherits the current working directory.
+#
+# ARGUMENTS
+#   -h, --horizontal  Open a horizontal split (default)
+#   -v, --vertical    Open a vertical split
+#   command...        Command to run in the new pane; opens a bare fish
+#                     shell if omitted
+#
+# RETURNS
+#   0  Pane opened successfully
+#   1  Not running inside Kitty or WezTerm
+#
+# EXAMPLE
+#   split
+#   split -v nvim README.md
 function split --description 'Run a command in a new terminal split'
     set -l is_kitty 0
     set -l is_wezterm 0

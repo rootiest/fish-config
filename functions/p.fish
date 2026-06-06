@@ -1,7 +1,24 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Put from clipboard
+# SYNOPSIS
+#   p [args...]
+#
+# DESCRIPTION
+#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
+#   falls back to xclip on X11. Supports -h/--help for usage info.
+#
+# ARGUMENTS
+#   -h, --help  Show usage help
+#   args...     Arguments forwarded to the clipboard tool
+#
+# RETURNS
+#   0  Clipboard contents printed successfully
+#   1  No supported clipboard tool found
+#
+# EXAMPLE
+#   p | grep foo
+#   p > file.txt
 function p --description 'Put from clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv

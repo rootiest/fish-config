@@ -1,7 +1,21 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# prettyping with default nolegend
+# SYNOPSIS
+#   ping [args...]
+#
+# DESCRIPTION
+#   Wraps prettyping with --nolegend by default for a cleaner display.
+#   Pass --legend to show the legend. Falls back to system ping if
+#   prettyping is not installed.
+#
+# ARGUMENTS
+#   --legend  Show the prettyping legend (overrides default --nolegend)
+#   args...   Arguments forwarded to prettyping or system ping
+#
+# EXAMPLE
+#   ping google.com
+#   ping --legend google.com
 function ping --description 'prettyping with default nolegend'
     if command -q prettyping
         # Check if the user specifically asked for the legend

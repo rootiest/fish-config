@@ -1,8 +1,17 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Removes the first token from the command line and places the cursor at the position for replacement.
-# If the command starts with 'sudo', preserves 'sudo' and removes the next token instead.
+# SYNOPSIS
+#   _replace_command_token
+#
+# DESCRIPTION
+#   Removes the first command token from the commandline buffer and
+#   positions the cursor for immediate replacement. If the command starts
+#   with sudo, preserves sudo and removes the token after it instead.
+#   Intended to be bound to a key in key_bindings.fish.
+#
+# EXAMPLE
+#   bind \cx _replace_command_token
 function _replace_command_token --description 'Remove first command token (or first after sudo) and place cursor for replacement'
     set -l cmd (commandline)
 

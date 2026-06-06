@@ -1,7 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Search fish history and put it in the prompt
+# SYNOPSIS
+#   hist
+#
+# DESCRIPTION
+#   Searches fish history interactively using fzf, inserts the selected command
+#   into the command line, and copies it to the clipboard via wl-copy.
+#
+# EXAMPLE
+#   hist
 function hist --description 'Search fish history and put it in the prompt'
     set -l selected (history | fzf --reverse --height 40% --with-nth 3..)
 

@@ -1,6 +1,26 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# SYNOPSIS
+#   mkcd [-s | --silent] <dir>
+#
+# DESCRIPTION
+#   Creates a directory (including any missing parent directories) and
+#   immediately changes into it. Prints a tree of created directories by
+#   default, or suppresses output with -s. Delegates creation to
+#   _fish_mkdir_p.
+#
+# ARGUMENTS
+#   -h, --help    Show usage help
+#   -s, --silent  Suppress directory creation output
+#   <dir>         Directory to create and enter
+#
+# RETURNS
+#   0  Directory created (or already existed) and entered successfully
+#   1  Directory creation or cd failed
+#
+# EXAMPLE
+#   mkcd ~/projects/myapp
 function mkcd --description 'Create a directory (with parents) and cd into it'
     set -l c_head (set_color --bold cyan)
     set -l c_cmd  (set_color --bold white)

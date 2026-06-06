@@ -6,24 +6,23 @@
 #
 # DESCRIPTION
 #   Evaluates a given variable's value to determine its truthiness or falsiness.
-#   It safely dereferences the variable name and performs case-insensitive matching.
+#   Safely dereferences the variable name and performs case-insensitive matching.
+#   Pass the variable name (without $), not its value.
 #
 # ARGUMENTS
-#   variable_name  The name of the variable to check (e.g., __fish_config_strict_mode)
-#                  Do NOT pass the value directly (do not use the $ prefix).
+#   variable_name  Name of the variable to check (without $ prefix)
 #
 # RETURNS
-#   0  True    (Opt-In)  : Matches 1, true, yes, on, y
-#   1  False   (Opt-Out) : Matches 0, false, no, off, n
-#   2  Empty             : Variable is unset or contains an empty string
-#   3  Garbage           : Variable contains an unrecognized value
+#   0  True (opt-in): value matches 1, true, yes, on, or y
+#   1  False (opt-out): value matches 0, false, no, off, or n
+#   2  Empty: variable is unset or empty
+#   3  Garbage: value is unrecognized
 #
 # EXAMPLE
 #   __fish_variable_check __fish_config_strict_mode
 #   if test $status -eq 0
 #       echo "Strict mode enabled!"
 #   end
-#
 function __fish_variable_check --description "Check if a variable is set to a truthy or falsy value."
     set -l var_name $argv[1]
 

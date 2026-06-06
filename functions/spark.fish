@@ -1,7 +1,24 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Sparklines
+# SYNOPSIS
+#   spark [--min=<n>] [--max=<n>] [numbers...]
+#
+# DESCRIPTION
+#   Renders a Unicode sparkline bar chart for a sequence of numbers.
+#   Reads numbers from arguments or from stdin if none are provided.
+#   Optional --min and --max clamp the scale range.
+#
+# ARGUMENTS
+#   --min=<n>   Minimum value for scale (default: list minimum)
+#   --max=<n>   Maximum value for scale (default: list maximum)
+#   numbers...  Space-separated numbers to chart; reads stdin if omitted
+#   -v, --version  Print version
+#   -h, --help     Show usage help
+#
+# EXAMPLE
+#   spark 1 1 2 5 14 42
+#   seq 64 | sort --random-sort | spark
 function spark --description 'Sparklines'
     argparse --ignore-unknown --name=spark v/version h/help m/min= M/max= -- $argv || return
 

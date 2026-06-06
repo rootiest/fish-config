@@ -1,7 +1,20 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Execute claude-resume
+# SYNOPSIS
+#   claude-resume
+#
+# DESCRIPTION
+#   Resumes a Claude Code session using the ID saved in .claude_session in the
+#   current directory. Falls back to the interactive session picker if no file
+#   exists.
+#
+# RETURNS
+#   0  Session resumed or interactive picker opened
+#   1  Required binaries (claude or save_claude_session) are not found
+#
+# EXAMPLE
+#   claude-resume
 function claude-resume --description 'Execute claude-resume'
     if not type -q claude
         echo "Error: The 'claude' command is not installed or not in PATH." >&2

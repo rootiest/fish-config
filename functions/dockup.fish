@@ -1,7 +1,23 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Pull and restart docker compose containers
+# SYNOPSIS
+#   dockup [-h] [directory]
+#
+# DESCRIPTION
+#   Pulls the latest Docker images and restarts all services in a Docker Compose
+#   project, then prunes dangling images. Accepts an optional target directory.
+#
+# ARGUMENTS
+#   -h, --help   Show help message
+#   directory    Path to the compose project (defaults to current directory)
+#
+# RETURNS
+#   0  Services updated and running
+#   1  Directory not found or no docker-compose.yml present
+#
+# EXAMPLE
+#   dockup ~/myapp
 function dockup --description 'Pull and restart docker compose containers'
     # Define colors
     set -l clr_error (set_color red)

@@ -1,7 +1,22 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Run joplin CLI without Node deprecation warnings
+# SYNOPSIS
+#   joplin [args...]
+#
+# DESCRIPTION
+#   Runs the Joplin CLI with Node deprecation warnings suppressed via
+#   NODE_OPTIONS=--no-deprecation.
+#
+# ARGUMENTS
+#   args...  Arguments forwarded to the joplin command
+#
+# RETURNS
+#   0  Joplin ran successfully
+#   1  joplin binary not found in PATH
+#
+# EXAMPLE
+#   joplin ls
 function joplin --description 'Run Joplin CLI without Node deprecation warnings'
     set -l joplin_path (command -v joplin)
     if test -n "$joplin_path"

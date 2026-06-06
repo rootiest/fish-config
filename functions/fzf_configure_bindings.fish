@@ -1,8 +1,30 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Always installs bindings for insert and default mode for simplicity and b/c it has almost no side-effect
-# https://gitter.im/fish-shell/fish-shell?at=60a55915ee77a74d685fa6b1
+# SYNOPSIS
+#   fzf_configure_bindings [--directory=<key>] [--git_log=<key>] [--git_status=<key>]
+#                          [--history=<key>] [--processes=<key>] [--variables=<key>] [-h]
+#
+# DESCRIPTION
+#   Installs key bindings for fzf.fish in both insert and default vi modes.
+#   Each binding can be overridden with a custom key or disabled by passing an
+#   empty string. Only runs in interactive mode.
+#
+# ARGUMENTS
+#   --directory=key   Override the directory search binding (default: Ctrl-Alt-F)
+#   --git_log=key     Override the git log search binding (default: Ctrl-Alt-L)
+#   --git_status=key  Override the git status binding (default: Ctrl-Alt-S)
+#   --history=key     Override the history search binding (default: Ctrl-R)
+#   --processes=key   Override the processes search binding (default: Ctrl-Alt-P)
+#   --variables=key   Override the variables search binding (default: Ctrl-V)
+#   -h, --help        Show help message
+#
+# RETURNS
+#   0  Bindings installed or help shown
+#   22 Invalid option or positional argument provided
+#
+# EXAMPLE
+#   fzf_configure_bindings --history=ctrl-h
 function fzf_configure_bindings --description "Installs the default key bindings for fzf.fish with user overrides passed as options."
     # no need to install bindings if not in interactive mode or running tests
     status is-interactive || test "$CI" = true; or return

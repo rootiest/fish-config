@@ -1,7 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Execute fish_right_prompt
+# SYNOPSIS
+#   fish_right_prompt
+#
+# DESCRIPTION
+#   Renders the right-side prompt showing the active Docker context (in blue,
+#   when non-default) and the current timestamp.
+#
+# EXAMPLE
+#   # Rendered automatically by Fish shell; not called directly.
 function fish_right_prompt --description 'Execute fish_right_prompt'
     # 1. Docker Context in Blue
     set -l docker_ctx (docker context show 2>/dev/null)

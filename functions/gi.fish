@@ -1,7 +1,29 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Generate .gitignore files using the gitignore.io API
+# SYNOPSIS
+#   gi [-h] [-b] [-p] [-s] [targets...]
+#
+# DESCRIPTION
+#   Generates .gitignore content by querying the gitignore.io API. Appends
+#   results to the repository's .gitignore with MD5-based deduplication, or
+#   prints to stdout with -s. Supports boilerplate and interactive prompt modes.
+#
+# ARGUMENTS
+#   -h, --help         Show help message
+#   -d, --description  Show the function description
+#   -l, --list         List all supported targets from the API
+#   -b, --boilerplate  Append boilerplate from $GITIGNORE_BOILERPLATE
+#   -p, --prompt       Prompt for patterns to append
+#   -s, --stdout       Print API output to stdout instead of .gitignore
+#   targets            Comma-separated list of language/tool names
+#
+# RETURNS
+#   0  Patterns appended or printed
+#   1  Not in a git repository or API fetch failed
+#
+# EXAMPLE
+#   gi python,venv
 function gi --description 'Generate .gitignore files using the gitignore.io API'
     argparse h/help d/description l/list b/boilerplate p/prompt s/stdout -- $argv
     or return 1
@@ -163,8 +185,21 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
     end
 end
 
-# Append API content to .gitignore with MD5-based deduplication.
-# Args: content, label, gitignore_path, readable_path
+# SYNOPSIS
+#   __gi_append_dedup <content> <label> <gitignore_path> <readable_path>
+#
+# DESCRIPTION
+#   Appends gitignore content to a .gitignore file using MD5-based deduplication.
+#   Skips the append if an identical content block is already present.
+#
+# ARGUMENTS
+#   content         The gitignore pattern content to append
+#   label           Human-readable label for the pattern set
+#   gitignore_path  Absolute path to the .gitignore file
+#   readable_path   Home-abbreviated path shown in output messages
+#
+# EXAMPLE
+#   __gi_append_dedup "$content" "python" "$root/.gitignore" "~/.gitignore"
 function __gi_append_dedup
     set -l content $argv[1]
     set -l label $argv[2]

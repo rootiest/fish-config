@@ -1,7 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Execute code-resume
+# SYNOPSIS
+#   code-resume
+#
+# DESCRIPTION
+#   Resumes the most recent AI coding session in the current directory. Prefers
+#   Claude Code (.claude_session), then Antigravity (.antigravity_session),
+#   falling back to the Claude interactive session picker.
+#
+# EXAMPLE
+#   code-resume
 function code-resume --description 'Execute code-resume'
     if test -f .claude_session
         set -l sid (cat .claude_session)

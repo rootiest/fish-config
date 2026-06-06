@@ -1,7 +1,22 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# spawn window in kitty or wezterm
+# SYNOPSIS
+#   spwin [args...]
+#
+# DESCRIPTION
+#   Spawns a new terminal OS window in Kitty (via spawn-window.sh if
+#   present, otherwise kitty @ launch) or WezTerm (via wezterm cli spawn).
+#
+# ARGUMENTS
+#   args...  Arguments forwarded to the spawn command
+#
+# RETURNS
+#   0  Window opened successfully
+#   1  Not running inside Kitty or WezTerm
+#
+# EXAMPLE
+#   spwin
 function spwin --wraps='~/.config/kitty/spawn-window.sh' --description 'spawn window in kitty or wezterm'
     if test "$TERM" = xterm-kitty
         if test -x ~/.config/kitty/spawn-window.sh

@@ -1,18 +1,23 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Function to run a command in the background, detached from the terminal.
-# This prevents the command from being terminated when the terminal is closed.
-# All output (stdout and stderr) is discarded.
+# SYNOPSIS
+#   bkg <command> [args...]
 #
-# Usage:
-#   bkg <command> [arguments...]
+# DESCRIPTION
+#   Launches a command in the background, fully detached from the terminal
+#   using nohup. All stdout and stderr output is discarded.
 #
-# Example:
+# ARGUMENTS
+#   command  The command to run detached
+#   args...  Additional arguments for the command
+#
+# RETURNS
+#   0  Command launched successfully
+#   1  No command provided
+#
+# EXAMPLE
 #   bkg firefox
-#   bkg code .
-#
-# Execute bkg
 function bkg --description 'Execute bkg'
     # Check if a command was provided as an argument.
     if test -z "$argv[1]"

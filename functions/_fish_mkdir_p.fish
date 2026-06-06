@@ -1,14 +1,25 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# mkdir -p with configurable output.
+# SYNOPSIS
+#   _fish_mkdir_p [--path|--tree|--silent] <dir>
 #
-# Flags:
-#   --path / -p   (default) Print "Created: ~/full/path/" on one line
-#   --tree / -t             Tree view: dimmed existing anchor + cyan new dirs
-#   --silent / -s           No output
+# DESCRIPTION
+#   Creates a directory and all missing parents, then reports what was created.
+#   Output mode is configurable: path (default), tree, or silent.
 #
-# Usage: _fish_mkdir_p [--path|--tree|--silent] <dir>
+# ARGUMENTS
+#   -p, --path    Print a single "Created: ~/path/" line (default)
+#   -t, --tree    Show a tree view of the newly created hierarchy
+#   -s, --silent  Suppress all output
+#   dir           The directory path to create
+#
+# RETURNS
+#   0  Directory created or already exists
+#   1  No target directory specified or mkdir failed
+#
+# EXAMPLE
+#   _fish_mkdir_p --tree ~/projects/new/subdir
 function _fish_mkdir_p --description 'mkdir -p with configurable verbose output'
     set -l mode path
     set -l target

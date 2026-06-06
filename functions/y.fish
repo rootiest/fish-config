@@ -1,7 +1,22 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Yank to clipboard
+# SYNOPSIS
+#   y [text...]
+#
+# DESCRIPTION
+#   Copies text to the system clipboard using wl-copy (Wayland) or xclip (X11).
+#   Reads from stdin when no arguments are given.
+#
+# ARGUMENTS
+#   text  Text to copy; reads from stdin if omitted
+#
+# RETURNS
+#   0  Text copied to clipboard
+#   1  No clipboard provider found
+#
+# EXAMPLE
+#   y "hello world"
 function y --description 'Yank to clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv
@@ -36,7 +51,17 @@ function y --description 'Yank to clipboard'
     end
 end
 
-# Alias cb=y
+# SYNOPSIS
+#   cb [text...]
+#
+# DESCRIPTION
+#   Alias for y — copies text to the system clipboard.
+#
+# ARGUMENTS
+#   text  Text to copy; reads from stdin if omitted
+#
+# EXAMPLE
+#   ls | cb
 function cb --wraps='y' --description 'Alias cb=y'
     y $argv
 end

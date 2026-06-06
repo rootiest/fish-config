@@ -1,7 +1,24 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Function to capture colorized scrollback before exiting, with pruning and safe overrides
+# SYNOPSIS
+#   smart_exit [-h] [-n]
+#
+# DESCRIPTION
+#   Closes the shell session, capturing and archiving the terminal scrollback
+#   log before exit (Kitty only). Automatically prunes junk and excess log
+#   files according to $SCROLLBACK_HISTORY_MAX_FILES.
+#
+# ARGUMENTS
+#   -h, --help    Show help message
+#   -n, --no-log  Exit without saving a scrollback log
+#
+# RETURNS
+#   0  Shell session exited
+#   1  Argument parsing failed
+#
+# EXAMPLE
+#   smart_exit --no-log
 function smart_exit --description 'Capture colorized scrollback before exiting, with pruning and safe overrides'
     set -l options h/help n/no-log
     argparse $options -- $argv
