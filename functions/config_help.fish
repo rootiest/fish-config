@@ -8,7 +8,11 @@
 #   Opens the offline fish shell configuration manual in the best available
 #   pager. Falls back through ov -> bat -> man -> less -> cat.
 #   If a section keyword is provided, the pager opens at the first heading
-#   that matches the keyword (case-insensitive).
+#   that matches the keyword. Lookup order: docs/fish-config.index (exact
+#   keyword aliases), then a normalized heading scan as fallback.
+#   When jumping to a section the file is sliced from that line onwards so
+#   ov never has to search through section-header lines (which --section-header
+#   pins and hides from pattern matching).
 #
 # ARGUMENTS
 #   section  Optional keyword to jump to a matching section heading
@@ -24,6 +28,7 @@
 #   config_help fish-deps
 function config_help --description 'Open the offline fish shell configuration manual'
     set -l doc_file "$__fish_config_dir/docs/fish-config.md"
+    set -l idx_file "$__fish_config_dir/docs/fish-config.index"
     set -l man_file "$__fish_config_dir/docs/fish-config.1"
 
     if not test -f "$doc_file"
@@ -34,11 +39,47 @@ function config_help --description 'Open the offline fish shell configuration ma
     end
 
     # ── Resolve section start line ───────────────────────────────
+    # 1. Look up keyword in fish-config.index (keyword → exact heading text).
+    # 2. Fall back to normalized scan of heading lines if not in index.
+    # 3. Resolve start_line via grep -F on the heading text (immune to line
+    #    number drift — only breaks if the heading itself is renamed).
     set -l start_line 1
     if test -n "$argv[1]"
-        set -l found (grep -n -im 1 "^#\+.*$argv[1]" "$doc_file" | cut -d: -f1)
-        if test -n "$found"
-            set start_line $found
+        set -l norm_kw (string lower -- $argv[1] | string replace -ra '[^a-z0-9]' '')
+        set -l found_text ""
+
+        # ── Index lookup ─────────────────────────────────────────
+        if test -f "$idx_file"
+            while read -l idxline
+                string match -qr '^[[:space:]]*(#|$)' -- $idxline; and continue
+                set -l kv (string split -m 1 '=' -- $idxline)
+                test (count $kv) -lt 2; and continue
+                set -l k (string lower -- $kv[1] | string replace -ra '[^a-z0-9]' '')
+                if test "$k" = "$norm_kw"
+                    set found_text $kv[2]
+                    break
+                end
+            end < "$idx_file"
+        end
+
+        # ── Normalized scan fallback ─────────────────────────────
+        if test -z "$found_text"
+            for entry in (grep -n "^#" "$doc_file")
+                set -l parts (string split -m 1 ':' -- $entry)
+                set -l text $parts[2]
+                set -l norm_text (string lower -- $text | string replace -ra '[^a-z0-9]' '')
+                if string match -q "*$norm_kw*" $norm_text
+                    set found_text $text
+                    break
+                end
+            end
+        end
+
+        if test -n "$found_text"
+            set -l lnum (grep -Fn "$found_text" "$doc_file" | cut -d: -f1 | head -1)
+            if test -n "$lnum"
+                set start_line $lnum
+            end
         else
             set_color yellow
             echo "note: no section matching '$argv[1]' — opening at top" >&2
@@ -47,23 +88,46 @@ function config_help --description 'Open the offline fish shell configuration ma
     end
 
     # ── Viewer fallback chain ────────────────────────────────────
-    if type -q ov
-        ov --syntax --syntax-name markdown \
-           --section-delimiter "^#" \
-           --section-header \
-           +"$start_line" "$doc_file"
+    # When jumping to a section, slice the file from start_line so ov
+    # opens with that section at the top without needing --pattern.
+    # --pattern on section-delimiter lines is unreliable: --section-header
+    # pins those lines as sticky headers, removing them from search scope.
+    # Section nav: Space (next), ^ (previous), Alt+u (section list sidebar).
+    if type -q ov; and type -q bat
+        set -l ov_args \
+            --section-delimiter "^#" \
+            --section-header
+        if test $start_line -gt 1
+            bat --color=always --style=plain --language=markdown "$doc_file" \
+                | tail -n +$start_line \
+                | ov $ov_args
+        else
+            bat --color=always --style=plain --language=markdown "$doc_file" \
+                | ov $ov_args
+        end
 
+    # ov alone: section navigation on raw Markdown; no code highlighting.
+    else if type -q ov
+        set -l ov_args \
+            --section-delimiter "^#" \
+            --section-header
+        if test $start_line -gt 1
+            tail -n +$start_line "$doc_file" | ov $ov_args
+        else
+            ov $ov_args "$doc_file"
+        end
+
+    # bat alone: syntax highlighting with built-in paging; no line jump.
     else if type -q bat
         if test $start_line -gt 1
-            # bat can't jump to a line in paging mode; show a hint instead
             set_color brblack
-            echo "note: bat pager active — use / to search for your section" >&2
+            echo "note: bat pager — use / to search for your section" >&2
             set_color normal
         end
         bat --language=markdown --paging=always "$doc_file"
 
+    # Pre-compiled man page (generated by CI after merge).
     else if test -f "$man_file"
-        # Pre-compiled man page as a pager-independent fallback
         man -l "$man_file"
 
     else if type -q less

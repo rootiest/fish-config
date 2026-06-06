@@ -1216,7 +1216,16 @@ calls fisher update as its first step.
     config_help
 
 ov renders the Markdown with syntax highlighting and section-based
-navigation. Use , and . to jump between sections. Press / to search.
+navigation.
+
+    Space       next section
+    ^           previous section
+    Alt+u       toggle section list sidebar
+    /           search forward
+    n / N       next / previous search match
+    g           go to line number
+    j           interactive jump target (line, %, or 'section')
+    q           quit
 
 ## With bat
 
