@@ -1606,6 +1606,21 @@ bat --language=markdown --paging=always \[ti]/.config/fish/docs/fish-config.md
 man -l \[ti]/.config/fish/docs/fish-config.1
 \f[R]
 .fi
+.PP
+If \[ti]/.local/share/man is on your MANPATH (set automatically by
+conf.d/tricks.fish) and \[ti]/.local/share/man/man1/fish-config.1 is
+symlinked to docs/fish-config.1, you can also use:
+.IP
+.nf
+\f[C]
+man fish-config
+\f[R]
+.fi
+.PP
+NOTE: fish-config (hyphen) is this config\[cq]s man page.
+fish_config (underscore) is fish\[cq]s built-in browser-based
+configuration tool \[em] a completely separate command.
+Do not mix them up.
 .SS Jumping to a section
 .IP
 .nf
