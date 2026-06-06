@@ -1235,6 +1235,16 @@ navigation.
 
     man -l ~/.config/fish/docs/fish-config.1
 
+If ~/.local/share/man is on your MANPATH (set automatically by
+conf.d/tricks.fish) and ~/.local/share/man/man1/fish-config.1 is
+symlinked to docs/fish-config.1, you can also use:
+
+    man fish-config
+
+NOTE: fish-config (hyphen) is this config's man page. fish_config
+(underscore) is fish's built-in browser-based configuration tool —
+a completely separate command. Do not mix them up.
+
 ## Jumping to a section
 
     config_help keybindings
