@@ -294,13 +294,13 @@ rm -f file.txt  # Falls through to standard rm -f
 | `gitui` | Fast terminal Git UI |
 | `gi` | Generate and append `.gitignore` patterns from gitignore.io; `gi` (no args) appends boilerplate then prompts interactively; `gi <targets>` appends named patterns; `gi -s <targets>` prints to stdout; `gi -l` lists all targets |
 
-### Package Management (Arch / paru / yay)
+### Package Management
 
 | Function | Description |
 |---|---|
-| `pkg <name>...` | Toggle package: installs if missing, removes (`-Rns`) if installed; `-i` force-install, `-u` force-uninstall |
-| `search <query>` | Search/install interactively: `paru <query>` |
-| `upgrade` | Full system upgrade: `paru -Syu --noconfirm` |
+| `pkg <name>...` | Toggle package: installs if missing, removes if present; `-i` force-install, `-u` force-uninstall. Auto-detects the system package manager (paru, yay, pacman, apt, dnf, zypper, yum, brew, pkg) |
+| `search <query>` | Search/install interactively: `paru <query>` (Arch only) |
+| `upgrade` | Full system upgrade: `paru -Syu --noconfirm` (Arch only) |
 | `cleanup` | Log and remove orphaned packages |
 
 `conf.d/paru-wrapper.fish` and `conf.d/yay-wrapper.fish` auto-generate thin wrapper scripts at `~/.local/bin/paru` and `~/.local/bin/yay` on first shell start (when the respective AUR helper is installed). These wrappers tee all output to timestamped log files in `SCROLLBACK_HISTORY_DIR` and prune old logs to stay under `SCROLLBACK_HISTORY_MAX_FILES`.

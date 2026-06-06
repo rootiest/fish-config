@@ -5,8 +5,10 @@
 #   pkg [-h] [-i|-u] <package> [package...]
 #
 # DESCRIPTION
-#   Installs or removes Arch Linux packages via paru or yay. In auto mode
-#   (no flag), detects whether each package is installed and toggles it.
+#   Installs or removes packages using the system's available package manager.
+#   Supports paru, yay, pacman, apt, dnf, zypper, yum, brew, and pkg.
+#   In auto mode (no flag), detects whether each package is installed and
+#   toggles it — installing if absent, removing if present.
 #
 # ARGUMENTS
 #   -h, --help       Show help message
@@ -16,20 +18,18 @@
 #
 # RETURNS
 #   0  Operation completed
-#   1  No AUR helper found, unknown flag, or package operation failed
+#   1  No supported package manager found, unknown flag, or package operation failed
 #
 # EXAMPLE
 #   pkg firefox
-function pkg --description 'Install or remove packages via paru or yay'
-    # ── AUR helper detection ─────────────────────────────────────
-    set -l aur ""
-    if type -q paru
-        set aur paru
-    else if type -q yay
-        set aur yay
-    else
+#   pkg -i ripgrep fd-find
+#   pkg -u cowsay
+function pkg --description 'Install or remove packages via the system package manager'
+    # ── Package manager detection ────────────────────────────────
+    set -l pm (_fish_deps_detect_pm)
+    if test -z "$pm"
         set_color red
-        echo "error: no AUR helper found (install paru or yay)" >&2
+        echo "error: no supported package manager found" >&2
         set_color normal
         return 1
     end
@@ -44,24 +44,21 @@ function pkg --description 'Install or remove packages via paru or yay'
     set -l c_dim (set_color brblack)
     set -l c_reset (set_color normal)
 
-    # ── Help ─────────────────────────────────────────────────────
-    function _pkg_help
-        echo "$c_head""Usage:$c_reset $c_cmd""pkg$c_reset " \
-            "$c_flag""[-h] [-i] [-u]$c_reset $c_dim""<package>...$c_reset"
-        echo
-        echo "  Install or remove Arch packages via paru/yay."
-        echo
-        echo "$c_head""Flags:$c_reset"
-        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       " \
-            "Show this help message"
-        echo "  $c_flag-i$c_reset, $c_flag--install$c_reset    " \
-            "Force install"
-        echo "  $c_flag-u$c_reset, $c_flag--uninstall$c_reset  " \
-            "Force uninstall"
-        echo
-        echo "$c_head""Auto mode (no flag):$c_reset"
-        echo "  Checks if each package is installed and installs" \
-            "or removes accordingly."
+    # ── Installed-check helper ───────────────────────────────────
+    # Uses only its own arguments — safe to define as an inner function.
+    function __pkg_is_installed --argument-names _pm _pkg
+        switch $_pm
+            case paru yay pacman
+                pacman -Qi $_pkg &>/dev/null
+            case apt
+                dpkg -s $_pkg &>/dev/null
+            case dnf zypper yum
+                rpm -q $_pkg &>/dev/null
+            case brew
+                brew list $_pkg &>/dev/null
+            case pkg
+                pkg info $_pkg &>/dev/null
+        end
     end
 
     # ── Argument parsing ─────────────────────────────────────────
@@ -74,7 +71,7 @@ function pkg --description 'Install or remove packages via paru or yay'
                 echo "$c_head""Usage:$c_reset $c_cmd""pkg$c_reset " \
                     "$c_flag""[-h] [-i] [-u]$c_reset $c_dim""<package>...$c_reset"
                 echo
-                echo "  Install or remove Arch packages via paru/yay."
+                echo "  Install or remove packages via $pm."
                 echo
                 echo "$c_head""Flags:$c_reset"
                 echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       " \
@@ -87,15 +84,17 @@ function pkg --description 'Install or remove packages via paru or yay'
                 echo "$c_head""Auto mode (no flag):$c_reset"
                 echo "  Checks if each package is installed and installs" \
                     "or removes accordingly."
+                functions -e __pkg_is_installed
                 return 0
             case -i --install
                 set mode install
             case -u --uninstall
                 set mode uninstall
             case --
-                # stop flag parsing (remaining args handled above)
+                # stop flag parsing
             case '-*'
                 echo "$c_err""error:$c_reset unknown flag $c_flag$arg$c_reset" >&2
+                functions -e __pkg_is_installed
                 return 1
             case '*'
                 set packages $packages $arg
@@ -103,42 +102,142 @@ function pkg --description 'Install or remove packages via paru or yay'
     end
 
     if test (count $packages) -eq 0
-        _pkg_help
+        echo "$c_head""Usage:$c_reset $c_cmd""pkg$c_reset " \
+            "$c_flag""[-h] [-i] [-u]$c_reset $c_dim""<package>...$c_reset"
+        echo
+        echo "  Install or remove packages via $pm."
+        echo
+        echo "$c_head""Flags:$c_reset"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       " \
+            "Show this help message"
+        echo "  $c_flag-i$c_reset, $c_flag--install$c_reset    " \
+            "Force install"
+        echo "  $c_flag-u$c_reset, $c_flag--uninstall$c_reset  " \
+            "Force uninstall"
+        echo
+        echo "$c_head""Auto mode (no flag):$c_reset"
+        echo "  Checks if each package is installed and installs" \
+            "or removes accordingly."
+        functions -e __pkg_is_installed
         return 0
     end
 
-    # ── Dispatch ─────────────────────────────────────────────────
+    # ── Mode dispatch ────────────────────────────────────────────
     switch $mode
         case install
             echo "$c_ok""→ Installing:$c_reset $packages"
-            $aur -S $packages
+            switch $pm
+                case paru yay
+                    $pm -S $packages
+                case pacman
+                    sudo pacman -S $packages
+                case apt
+                    sudo apt install -y $packages
+                case dnf
+                    sudo dnf install -y $packages
+                case zypper
+                    sudo zypper install -y $packages
+                case brew
+                    brew install $packages
+                case pkg
+                    sudo pkg install -y $packages
+                case yum
+                    sudo yum install -y $packages
+            end
 
         case uninstall
             echo "$c_warn""→ Removing:$c_reset $packages"
-            $aur -Rns $packages
+            switch $pm
+                case paru yay
+                    $pm -Rns $packages
+                case pacman
+                    sudo pacman -Rns $packages
+                case apt
+                    sudo apt remove -y $packages
+                case dnf
+                    sudo dnf remove -y $packages
+                case zypper
+                    sudo zypper remove -y $packages
+                case brew
+                    brew uninstall $packages
+                case pkg
+                    sudo pkg delete -y $packages
+                case yum
+                    sudo yum remove -y $packages
+            end
 
         case auto
             set -l to_install
             set -l to_remove
 
-            for pkg in $packages
-                if pacman -Qi $pkg &>/dev/null
-                    set to_remove $to_remove $pkg
+            for p in $packages
+                if __pkg_is_installed $pm $p
+                    set to_remove $to_remove $p
                 else
-                    set to_install $to_install $pkg
+                    set to_install $to_install $p
                 end
             end
 
             if test (count $to_install) -gt 0
                 echo "$c_ok""→ Installing:$c_reset $to_install"
-                $aur -S $to_install
-                or return $status
+                switch $pm
+                    case paru yay
+                        $pm -S $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case pacman
+                        sudo pacman -S $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case apt
+                        sudo apt install -y $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case dnf
+                        sudo dnf install -y $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case zypper
+                        sudo zypper install -y $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case brew
+                        brew install $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case pkg
+                        sudo pkg install -y $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case yum
+                        sudo yum install -y $to_install
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                end
             end
 
             if test (count $to_remove) -gt 0
                 echo "$c_warn""→ Removing:$c_reset $to_remove"
-                $aur -Rns $to_remove
-                or return $status
+                switch $pm
+                    case paru yay
+                        $pm -Rns $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case pacman
+                        sudo pacman -Rns $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case apt
+                        sudo apt remove -y $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case dnf
+                        sudo dnf remove -y $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case zypper
+                        sudo zypper remove -y $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case brew
+                        brew uninstall $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case pkg
+                        sudo pkg delete -y $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                    case yum
+                        sudo yum remove -y $to_remove
+                        or begin; functions -e __pkg_is_installed; return $status; end
+                end
             end
     end
+
+    functions -e __pkg_is_installed
 end
