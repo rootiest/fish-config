@@ -305,6 +305,19 @@ rm -f file.txt  # Falls through to standard rm -f
 
 `conf.d/paru-wrapper.fish` and `conf.d/yay-wrapper.fish` auto-generate thin wrapper scripts at `~/.local/bin/paru` and `~/.local/bin/yay` on first shell start (when the respective AUR helper is installed). These wrappers tee all output to timestamped log files in `SCROLLBACK_HISTORY_DIR` and prune old logs to stay under `SCROLLBACK_HISTORY_MAX_FILES`.
 
+### Offline Documentation
+
+A curated offline reference manual is available at `docs/fish-config.md`. It covers every function, keybinding, abbreviation, and configuration variable, written for terminal readability (no hyperlinks or GitHub-specific callouts).
+
+| Command | Description |
+|---|---|
+| `config_help` | Open the offline manual in the best available pager |
+| `config_help <keyword>` | Jump directly to a section matching the keyword |
+
+The viewer falls back through: **ov** (syntax highlight + section navigation) → **bat** (syntax highlight) → **man -l** (pre-compiled man page) → **less** → **cat**.
+
+Examples: `config_help keybindings` · `config_help pkg` · `config_help fish-deps` · `config_help abbreviations`
+
 ### Dependency Management
 
 `fish-deps` is a unified command for checking, installing, and updating all tools this config depends on.
