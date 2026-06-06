@@ -1599,21 +1599,21 @@ q           quit
 bat --language=markdown --paging=always \[ti]/.config/fish/docs/fish-config.md
 \f[R]
 .fi
-.SS As a man page (if compiled)
-.IP
-.nf
-\f[C]
-man -l \[ti]/.config/fish/docs/fish-config.1
-\f[R]
-.fi
+.SS As a man page
 .PP
-If \[ti]/.local/share/man is on your MANPATH (set automatically by
-conf.d/tricks.fish) and \[ti]/.local/share/man/man1/fish-config.1 is
-symlinked to docs/fish-config.1, you can also use:
+The symlink and MANPATH are configured automatically on shell start:
 .IP
 .nf
 \f[C]
 man fish-config
+\f[R]
+.fi
+.PP
+Or read the compiled file directly:
+.IP
+.nf
+\f[C]
+man -l \[ti]/.config/fish/docs/fish-config.1
 \f[R]
 .fi
 .PP
