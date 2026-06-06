@@ -32,41 +32,54 @@
 function config_help --description 'Open the offline fish shell configuration manual'
     # ── --help / -h ──────────────────────────────────────────────
     if contains -- --help $argv; or contains -- -h $argv
-        echo "config_help — view the offline fish shell configuration manual"
+        set_color --bold
+        echo config_help
+        set_color normal
+        echo " — view the offline fish shell configuration manual"
         echo ""
-        echo "USAGE"
-        echo "  config_help [section]"
-        echo "  config_help --help"
+        set_color --bold brblue
+        echo USAGE
+        set_color normal
+        echo "  config_help "(set_color yellow)"[section]"(set_color normal)
+        echo "  config_help "(set_color yellow)"--help"(set_color normal)
         echo ""
-        echo "ARGUMENTS"
-        echo "  section   Optional keyword to jump to a matching section heading."
+        set_color --bold brblue
+        echo ARGUMENTS
+        set_color normal
+        echo "  "(set_color yellow)"section"(set_color normal)"   Optional keyword to jump to a matching section heading."
         echo "            Searches docs/fish-config.index for aliases first, then"
         echo "            falls back to a normalized (case- and punctuation-insensitive)"
         echo "            scan of heading lines."
         echo ""
-        echo "EXAMPLES"
-        echo "  config_help                  open at top"
-        echo "  config_help keybindings      jump to Key Bindings section"
-        echo "  config_help pkg              jump to the pkg function entry"
-        echo "  config_help fish-deps        jump to fish-deps"
-        echo "  config_help abbreviations    jump to Abbreviations section"
+        set_color --bold brblue
+        echo EXAMPLES
+        set_color normal
+        echo "  "(set_color green)"config_help"(set_color normal)"                  open at top"
+        echo "  "(set_color green)"config_help keybindings"(set_color normal)"      jump to Key Bindings section"
+        echo "  "(set_color green)"config_help pkg"(set_color normal)"              jump to the pkg function entry"
+        echo "  "(set_color green)"config_help fish-deps"(set_color normal)"        jump to fish-deps"
+        echo "  "(set_color green)"config_help abbreviations"(set_color normal)"    jump to Abbreviations section"
         echo ""
+        set_color --bold brblue
         echo "NAVIGATION (ov pager)"
-        echo "  Space       next section"
-        echo "  ^           previous section"
-        echo "  Alt+u       toggle section list sidebar"
-        echo "  /           search forward"
-        echo "  n / N       next / previous search match"
-        echo "  g           go to line number"
-        echo "  q           quit"
+        set_color normal
+        echo "  "(set_color cyan)"Space"(set_color normal)"       next section"
+        echo "  "(set_color cyan)"^"(set_color normal)"           previous section"
+        echo "  "(set_color cyan)"Alt+u"(set_color normal)"       toggle section list sidebar"
+        echo "  "(set_color cyan)"/"(set_color normal)"           search forward"
+        echo "  "(set_color cyan)"n"(set_color normal)" / "(set_color cyan)"N"(set_color normal)"       next / previous search match"
+        echo "  "(set_color cyan)"g"(set_color normal)"           go to line number"
+        echo "  "(set_color cyan)"q"(set_color normal)"           quit"
         echo ""
+        set_color --bold brblue
         echo "PAGER FALLBACK CHAIN"
-        echo "  1. ov + bat   section nav + syntax highlighting  (best)"
-        echo "  2. ov alone   section nav, raw Markdown"
-        echo "  3. bat alone  syntax highlighting, use / to search"
-        echo "  4. man -l     pre-compiled man page (if available)"
-        echo "  5. less       plain text with line-jump"
-        echo "  6. cat        plain output"
+        set_color normal
+        echo "  "(set_color brblack)"1."(set_color normal)" ov + bat   section nav + syntax highlighting  "(set_color brblack)"(best)"(set_color normal)
+        echo "  "(set_color brblack)"2."(set_color normal)" ov alone   section nav, raw Markdown"
+        echo "  "(set_color brblack)"3."(set_color normal)" bat alone  syntax highlighting, use / to search"
+        echo "  "(set_color brblack)"4."(set_color normal)" man -l     pre-compiled man page (if available)"
+        echo "  "(set_color brblack)"5."(set_color normal)" less       plain text with line-jump"
+        echo "  "(set_color brblack)"6."(set_color normal)" cat        plain output"
         return 0
     end
 
@@ -102,7 +115,7 @@ function config_help --description 'Open the offline fish shell configuration ma
                     set found_text $kv[2]
                     break
                 end
-            end < "$idx_file"
+            end <"$idx_file"
         end
 
         # ── Normalized scan fallback ─────────────────────────────
@@ -134,7 +147,7 @@ function config_help --description 'Open the offline fish shell configuration ma
     # Prepended to the ov input stream and pinned via --header 1 so it
     # remains visible at the top of the screen at all times.
     set -l nav_hint \
-        " \033[2m[ Space=next section  ^=prev  Alt+u=sections  /=search  q=quit ]\033[0m"
+        " \033[2mNAVIGATION: [ Space=next section  ^=prev  Alt+u=sections  /=search  q=quit ]\033[0m"
 
     # ── Viewer fallback chain ────────────────────────────────────
     # When jumping to a section, slice the file from start_line so ov
@@ -159,7 +172,7 @@ function config_help --description 'Open the offline fish shell configuration ma
             end | ov $ov_args
         end
 
-    # ov alone: section navigation on raw Markdown; no code highlighting.
+        # ov alone: section navigation on raw Markdown; no code highlighting.
     else if type -q ov
         set -l ov_args \
             --header 1 \
@@ -177,7 +190,7 @@ function config_help --description 'Open the offline fish shell configuration ma
             end | ov $ov_args
         end
 
-    # bat alone: syntax highlighting with built-in paging; no line jump.
+        # bat alone: syntax highlighting with built-in paging; no line jump.
     else if type -q bat
         if test $start_line -gt 1
             set_color brblack
@@ -186,7 +199,7 @@ function config_help --description 'Open the offline fish shell configuration ma
         end
         bat --language=markdown --paging=always "$doc_file"
 
-    # Pre-compiled man page (generated by CI after merge).
+        # Pre-compiled man page (generated by CI after merge).
     else if test -f "$man_file"
         man -l "$man_file"
 
