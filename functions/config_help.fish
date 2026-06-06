@@ -3,6 +3,7 @@
 
 # SYNOPSIS
 #   config_help [section]
+#   config_help --help
 #
 # DESCRIPTION
 #   Opens the offline fish shell configuration manual in the best available
@@ -10,15 +11,16 @@
 #   If a section keyword is provided, the pager opens at the first heading
 #   that matches the keyword. Lookup order: docs/fish-config.index (exact
 #   keyword aliases), then a normalized heading scan as fallback.
-#   When jumping to a section the file is sliced from that line onwards so
-#   ov never has to search through section-header lines (which --section-header
-#   pins and hides from pattern matching).
+#   When opened with ov a sticky navigation hint is shown at the top of the
+#   screen. Pass --help or -h to print usage and navigation key reference.
 #
 # ARGUMENTS
-#   section  Optional keyword to jump to a matching section heading
+#   section   Optional keyword to jump to a matching section heading
+#   --help    Print usage and navigation reference, then exit
+#   -h        Alias for --help
 #
 # RETURNS
-#   0  Manual displayed
+#   0  Manual displayed (or --help printed)
 #   1  Documentation file not found
 #
 # EXAMPLE
@@ -26,7 +28,48 @@
 #   config_help keybindings
 #   config_help pkg
 #   config_help fish-deps
+#   config_help --help
 function config_help --description 'Open the offline fish shell configuration manual'
+    # ── --help / -h ──────────────────────────────────────────────
+    if contains -- --help $argv; or contains -- -h $argv
+        echo "config_help — view the offline fish shell configuration manual"
+        echo ""
+        echo "USAGE"
+        echo "  config_help [section]"
+        echo "  config_help --help"
+        echo ""
+        echo "ARGUMENTS"
+        echo "  section   Optional keyword to jump to a matching section heading."
+        echo "            Searches docs/fish-config.index for aliases first, then"
+        echo "            falls back to a normalized (case- and punctuation-insensitive)"
+        echo "            scan of heading lines."
+        echo ""
+        echo "EXAMPLES"
+        echo "  config_help                  open at top"
+        echo "  config_help keybindings      jump to Key Bindings section"
+        echo "  config_help pkg              jump to the pkg function entry"
+        echo "  config_help fish-deps        jump to fish-deps"
+        echo "  config_help abbreviations    jump to Abbreviations section"
+        echo ""
+        echo "NAVIGATION (ov pager)"
+        echo "  Space       next section"
+        echo "  ^           previous section"
+        echo "  Alt+u       toggle section list sidebar"
+        echo "  /           search forward"
+        echo "  n / N       next / previous search match"
+        echo "  g           go to line number"
+        echo "  q           quit"
+        echo ""
+        echo "PAGER FALLBACK CHAIN"
+        echo "  1. ov + bat   section nav + syntax highlighting  (best)"
+        echo "  2. ov alone   section nav, raw Markdown"
+        echo "  3. bat alone  syntax highlighting, use / to search"
+        echo "  4. man -l     pre-compiled man page (if available)"
+        echo "  5. less       plain text with line-jump"
+        echo "  6. cat        plain output"
+        return 0
+    end
+
     set -l doc_file "$__fish_config_dir/docs/fish-config.md"
     set -l idx_file "$__fish_config_dir/docs/fish-config.index"
     set -l man_file "$__fish_config_dir/docs/fish-config.1"
@@ -87,34 +130,51 @@ function config_help --description 'Open the offline fish shell configuration ma
         end
     end
 
+    # ── Navigation hint line ─────────────────────────────────────
+    # Prepended to the ov input stream and pinned via --header 1 so it
+    # remains visible at the top of the screen at all times.
+    set -l nav_hint \
+        " \033[2m[ Space=next section  ^=prev  Alt+u=sections  /=search  q=quit ]\033[0m"
+
     # ── Viewer fallback chain ────────────────────────────────────
     # When jumping to a section, slice the file from start_line so ov
     # opens with that section at the top without needing --pattern.
-    # --pattern on section-delimiter lines is unreliable: --section-header
-    # pins those lines as sticky headers, removing them from search scope.
-    # Section nav: Space (next), ^ (previous), Alt+u (section list sidebar).
+    # (--section-header pins delimiter lines as sticky headers, removing
+    # them from pattern-search scope — tail-slice sidesteps this entirely.)
     if type -q ov; and type -q bat
         set -l ov_args \
+            --header 1 \
             --section-delimiter "^#" \
             --section-header
         if test $start_line -gt 1
-            bat --color=always --style=plain --language=markdown "$doc_file" \
-                | tail -n +$start_line \
-                | ov $ov_args
+            begin
+                printf "$nav_hint\n"
+                bat --color=always --style=plain --language=markdown "$doc_file" \
+                    | tail -n +$start_line
+            end | ov $ov_args
         else
-            bat --color=always --style=plain --language=markdown "$doc_file" \
-                | ov $ov_args
+            begin
+                printf "$nav_hint\n"
+                bat --color=always --style=plain --language=markdown "$doc_file"
+            end | ov $ov_args
         end
 
     # ov alone: section navigation on raw Markdown; no code highlighting.
     else if type -q ov
         set -l ov_args \
+            --header 1 \
             --section-delimiter "^#" \
             --section-header
         if test $start_line -gt 1
-            tail -n +$start_line "$doc_file" | ov $ov_args
+            begin
+                printf "$nav_hint\n"
+                tail -n +$start_line "$doc_file"
+            end | ov $ov_args
         else
-            ov $ov_args "$doc_file"
+            begin
+                printf "$nav_hint\n"
+                cat "$doc_file"
+            end | ov $ov_args
         end
 
     # bat alone: syntax highlighting with built-in paging; no line jump.
