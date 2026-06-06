@@ -1,0 +1,176 @@
+# Fish Config Help Index
+# Format: keyword=exact heading text as it appears in fish-config.md
+# Multiple keywords may map to the same heading.
+# Update this file whenever headings are added, removed, or renamed.
+# config_help uses this for fast exact lookups; unknown keywords fall back
+# to a normalized heading scan automatically.
+
+# ── Top-level ─────────────────────────────────────────────────
+name=# NAME
+synopsis=# SYNOPSIS
+description=# DESCRIPTION
+toc=# TABLE OF CONTENTS
+contents=# TABLE OF CONTENTS
+
+# ── Section 1: Configuration Variables ───────────────────────
+variables=# 1. CONFIGURATION VARIABLES
+config=# 1. CONFIGURATION VARIABLES
+xdg=## Environment Directories (XDG)
+toolhomes=## Tool Homes (XDG-compliant)
+editor=## Editor and Pager
+pager=## Editor and Pager
+scrollback=## Scrollback History
+
+# ── Section 2: PATH ───────────────────────────────────────────
+path=# 2. PATH SETUP
+
+# ── Section 3: Key Bindings ───────────────────────────────────
+keybindings=# 3. KEY BINDINGS
+bindings=# 3. KEY BINDINGS
+key-bindings=# 3. KEY BINDINGS
+keys=# 3. KEY BINDINGS
+fzf-bindings=## FZF Bindings (from fzf --fish integration)
+fzf=## FZF Bindings (from fzf --fish integration)
+
+# ── Section 4: Abbreviations ──────────────────────────────────
+abbreviations=# 4. ABBREVIATIONS
+abbr=# 4. ABBREVIATIONS
+abbrs=# 4. ABBREVIATIONS
+editors-abbr=## 4.1 Editors
+nav=## 4.2 Navigation and Listing
+navigation=## 4.2 Navigation and Listing
+listing=## 4.2 Navigation and Listing
+git-abbr=## 4.3 Git
+terminal=## 4.4 Terminal Windows, Tabs, and Panes
+panes=## 4.4 Terminal Windows, Tabs, and Panes
+windows=## 4.4 Terminal Windows, Tabs, and Panes
+tabs=## 4.4 Terminal Windows, Tabs, and Panes
+chezmoi=## 4.5 Chezmoi
+docker=## 4.6 Docker
+systemctl=## 4.7 Systemctl
+systemd=## 4.7 Systemctl
+ai-abbr=## 4.8 AI Assistants
+history=## 4.9 History Expansion
+misc-abbr=## 4.10 Miscellaneous
+
+# ── Section 5: Functions ──────────────────────────────────────
+functions=# 5. FUNCTIONS REFERENCE
+files=## 5.1 File and Directory
+cat=### cat
+copy=### copy
+du=### du
+dusize=### dusize
+ls=### ls
+lsr=### lsr
+lss=### lss
+lstree=### lstree
+lt=### lt
+ltr=### ltr
+lx=### lx
+mkdir=### mkdir
+mkcd=### mkcd
+poke=### poke
+rm=### rm
+scrub=### scrub
+nav-fns=## 5.2 Navigation
+cdi=### cdi
+clone=### clone
+clonet=### clonet
+editors=## 5.3 Editors and Viewers
+edit=### edit
+fc=### fc
+less=### less
+rawfish=### rawfish
+view=### view
+git=## 5.4 Git and Version Control
+branch=### branch
+gi=### gi
+gitignore=### gi
+git-clean=### git-clean
+gitup=### gitup
+gitui=### gitui
+hist=### hist
+pkg=### pkg
+package=### pkg
+package-manager=## 5.5 Package Management
+packages=## 5.5 Package Management
+search=### search
+upgrade=### upgrade
+cleanup=### cleanup
+parur=### parur
+deps=## 5.6 Dependency Management
+fish-deps=### fish-deps
+check-deps=### check_fish_deps
+system=## 5.7 System and Monitoring
+top=### top
+swapstat=### swapstat
+sbver=### sbver
+ports=### ports
+screensleep=### screensleep
+lock=### lock
+sudo-toggle=### sudo-toggle
+limine=### limine-edit
+terminal-mgmt=## 5.8 Terminal Management
+tab=### tab
+split=### split
+spwin=### spwin
+detach=### detach
+bkg=### bkg
+ssh=### ssh
+clipboard=## 5.9 Clipboard
+copy-fn=### y
+paste=### paste
+network=## 5.10 Network
+gip=### gip
+ping=### ping
+qr=### qr
+logging=## 5.11 Pager and Logging
+logs=### logs
+smart-exit=### smart_exit
+ai=## 5.12 AI and Developer Tools
+antigravity=### antigravity
+claude=### claude-resume
+claude-docs=### claude-docs
+claude-pr=### claude-pr
+code-resume=### code-resume
+superpowers=### superpowers
+media=## 5.13 Media and Utilities
+dng2avif=### dng2avif
+spark=### spark
+miscfns=## 5.14 Miscellaneous
+bash=### bash
+cheat=### cheat
+dockup=### dockup
+joplin=### joplin
+replay=### replay
+tmux=### tmux-clean
+wake-lock=### wake-lock
+zellij=### zellij
+
+# ── Section 6: Dependency Catalog ────────────────────────────
+catalog=# 6. DEPENDENCY CATALOG
+deps-catalog=# 6. DEPENDENCY CATALOG
+required=## Required
+integrations=## Integrations
+recommended=## Recommended
+install-methods=## Install Methods
+
+# ── Section 7: Customization ──────────────────────────────────
+customization=# 7. CUSTOMIZATION
+customize=# 7. CUSTOMIZATION
+local=## Machine-local Configuration
+secrets=## Secrets and API Keys
+overrides=## Overriding Configuration Variables
+universal=## Fish Universal Variables
+
+# ── Section 8: Fisher Plugins ─────────────────────────────────
+plugins=# 8. FISHER PLUGINS
+fisher=# 8. FISHER PLUGINS
+
+# ── Section 9: Viewing This Manual ───────────────────────────
+viewing=# 9. VIEWING THIS MANUAL
+manual=# 9. VIEWING THIS MANUAL
+ov=## With ov (recommended)
+man-page=## As a man page (if compiled)
+manpage=## As a man page (if compiled)
+jump=## Jumping to a section

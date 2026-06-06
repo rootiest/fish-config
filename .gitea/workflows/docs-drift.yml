@@ -1,0 +1,45 @@
+name: Offline docs drift reminder
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'README.md'
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check whether offline doc changed in same push
+        id: drift
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q '^docs/fish-config\.md$'; then
+            echo "synced=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "synced=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open drift reminder issue
+        if: steps.drift.outputs.synced == 'false'
+        uses: actions/gitea-issue-create@v1
+        with:
+          token: ${{ secrets.GITEA_TOKEN }}
+          title: "docs: README updated — review docs/fish-config.md for drift"
+          body: |
+            README.md was modified in commit ${{ github.sha }} but
+            `docs/fish-config.md` (the offline manual) was not updated in
+            the same push.
+
+            Please review the README diff and update the offline documentation
+            if any functions, keybindings, abbreviations, or configuration
+            options were added, removed, or changed.
+
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+          labels: documentation
