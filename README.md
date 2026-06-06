@@ -56,6 +56,9 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── starship.fish     # fish_prompt with OSC 133;A/B shell-integration markers
 │   ├── wakatime.fish     # WakaTime shell hook
 │   └── zoxide.fish       # Zoxide z/zi aliases
+├── docs/                 # Offline documentation
+│   ├── fish-config.md    # Primary offline reference manual (terminal-readable)
+│   └── fish-config.index # Section index for config_help navigation
 ├── functions/            # Custom functions (one per file)
 ├── completions/          # Custom tab completions
 ├── integrations/         # Integration scripts
