@@ -1,7 +1,24 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Sync main, prune remotes, and delete orphaned branches
+# SYNOPSIS
+#   git-clean [-h] [-f]
+#
+# DESCRIPTION
+#   Fetches and prunes the remote, updates the current branch, and deletes
+#   local branches whose tracking remote has been deleted. Automatically moves
+#   to main if currently on an orphaned branch.
+#
+# ARGUMENTS
+#   -h, --help   Show help message
+#   -f, --force  Force-delete unmerged orphaned branches (git branch -D)
+#
+# RETURNS
+#   0  Cleanup complete
+#   1  Argument parsing failed
+#
+# EXAMPLE
+#   git-clean --force
 function git-clean --description 'Sync main, prune remotes, and delete orphaned branches'
     set -l options h/help f/force
     argparse $options -- $argv

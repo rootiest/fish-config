@@ -1,7 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Print colored installed/missing status for all deps, grouped by tier.
+# SYNOPSIS
+#   _fish_deps_status
+#
+# DESCRIPTION
+#   Prints a colored installed/missing status report for all managed fish shell
+#   dependencies, grouped by tier (required, integrations, recommended).
+#
+# EXAMPLE
+#   _fish_deps_status
 function _fish_deps_status
     _fish_deps_catalog
 

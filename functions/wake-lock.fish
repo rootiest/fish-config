@@ -1,7 +1,23 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Run a command while inhibiting system sleep
+# SYNOPSIS
+#   wake-lock <command> [args...]
+#
+# DESCRIPTION
+#   Runs a command under systemd-inhibit to prevent the system from idling
+#   or sleeping for the duration of the command.
+#
+# ARGUMENTS
+#   command  Command to run with sleep inhibition active
+#   args...  Arguments forwarded to the command
+#
+# RETURNS
+#   0  Command ran and completed
+#   1  No command provided
+#
+# EXAMPLE
+#   wake-lock rsync -avz src/ dest/
 function wake-lock --description 'Run a command while inhibiting system sleep'
     if test (count $argv) -eq 0
         echo "Usage: wake-lock [command] [args...]"

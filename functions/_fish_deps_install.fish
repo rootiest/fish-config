@@ -1,8 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Interactively install missing deps.
-# For each missing dep: prompts yes/no, then prompts install method when multiple exist.
+# SYNOPSIS
+#   _fish_deps_install
+#
+# DESCRIPTION
+#   Interactively installs each missing fish shell dependency from the catalog.
+#   For each missing entry, prompts yes/no and the preferred install method
+#   when multiple options are available.
+#
+# EXAMPLE
+#   _fish_deps_install
 function _fish_deps_install
     _fish_deps_catalog
 

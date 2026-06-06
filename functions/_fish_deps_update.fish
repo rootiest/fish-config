@@ -1,8 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Update all installed deps using their known install method.
-# Priority: cargo > system PM > special (fzf-update, fisher, pipx).
+# SYNOPSIS
+#   _fish_deps_update
+#
+# DESCRIPTION
+#   Updates all currently installed fish shell dependencies using their
+#   preferred method. Priority order: cargo, then system PM, then special
+#   installers (fzf-update, fisher, pipx). Always updates fisher plugins first.
+#
+# EXAMPLE
+#   _fish_deps_update
 function _fish_deps_update
     _fish_deps_catalog
 

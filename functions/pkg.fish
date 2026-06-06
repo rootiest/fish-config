@@ -1,6 +1,25 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# SYNOPSIS
+#   pkg [-h] [-i|-u] <package> [package...]
+#
+# DESCRIPTION
+#   Installs or removes Arch Linux packages via paru or yay. In auto mode
+#   (no flag), detects whether each package is installed and toggles it.
+#
+# ARGUMENTS
+#   -h, --help       Show help message
+#   -i, --install    Force install mode
+#   -u, --uninstall  Force uninstall mode
+#   package          One or more package names to install or remove
+#
+# RETURNS
+#   0  Operation completed
+#   1  No AUR helper found, unknown flag, or package operation failed
+#
+# EXAMPLE
+#   pkg firefox
 function pkg --description 'Install or remove packages via paru or yay'
     # ── AUR helper detection ─────────────────────────────────────
     set -l aur ""

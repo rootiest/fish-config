@@ -1,6 +1,17 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# SYNOPSIS
+#   __auto_source_fallback_venv
+#
+# DESCRIPTION
+#   Event handler that auto-activates a .venv Python virtual environment when
+#   entering a directory. Deactivates when leaving the project tree. Skipped
+#   when direnv is already managing the directory.
+#
+# EXAMPLE
+#   # Triggered automatically on directory change; not called directly.
+#   cd ~/myproject  # activates .venv if present
 function __auto_source_fallback_venv --on-variable PWD
     status --is-command-substitution; and return
     

@@ -1,7 +1,23 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Pull new Gitea issues into local Beads and link them
+# SYNOPSIS
+#   bd-pull <owner/repo>
+#
+# DESCRIPTION
+#   Fetches unlinked issues from a Gitea repository, creates corresponding local
+#   Beads entries, and updates the Gitea issue titles to include the new Bead IDs.
+#   Requires $GITEA_TOKEN and $GITEA_URL to be set.
+#
+# ARGUMENTS
+#   owner/repo  The repository path in owner/name format
+#
+# RETURNS
+#   0  Issues linked and synced (or no unlinked issues found)
+#   1  Missing required argument or environment variables
+#
+# EXAMPLE
+#   bd-pull myuser/myproject
 function bd-pull --description 'Pull new Gitea issues into local Beads and link them'
     if not set -q argv[1]; echo "Need repo owner/name"; return 1; end
     if not set -q GITEA_TOKEN; echo "\$GITEA_TOKEN not set"; return 1; end

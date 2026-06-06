@@ -3,6 +3,21 @@
 # Adapted from icezyclon/zoxide.fish (MIT)
 # Heavily customized for Fish 4.x compatibility and performance
 
+# SYNOPSIS
+#   _zoxide_z_complete [comp] [desc]
+#
+# DESCRIPTION
+#   Tab-completion handler for z/cd that merges standard filesystem completions
+#   (CWD, CDPATH) with zoxide frecency results. Called automatically by Fish
+#   during tab completion; not invoked directly.
+#
+# ARGUMENTS
+#   comp  Currently completing token (read from commandline if omitted)
+#   desc  Unused description argument
+#
+# EXAMPLE
+#   # Fired automatically during tab completion.
+#   z my<TAB>
 function _zoxide_z_complete -d "Complete directory first or zoxide queries otherwise" --argument-names comp desc
     # comp is the currently completing token
     if not set -q comp[1]
@@ -35,6 +50,22 @@ function _zoxide_z_complete -d "Complete directory first or zoxide queries other
     end
 end
 
+# SYNOPSIS
+#   _zoxide_equals_first_token <check>
+#
+# DESCRIPTION
+#   Tests whether the first non-switch token on the commandline equals the
+#   given string. Used internally to guard zoxide completion sources.
+#
+# ARGUMENTS
+#   check  The string to compare against the first non-switch token
+#
+# RETURNS
+#   0  First token equals check
+#   1  No token or token does not match
+#
+# EXAMPLE
+#   _zoxide_equals_first_token z
 function _zoxide_equals_first_token -a check -d "Test if first non-switch token equals given one"
     set -l tokens (commandline -co)
     set -e tokens[1]

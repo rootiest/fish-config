@@ -23,7 +23,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Placeholder for a future implementation of a "fast" function
+# SYNOPSIS
+#   fast
+#
+# DESCRIPTION
+#   Displays a styled message indicating that the fast command is unavailable
+#   and suggests using fast-cli instead.
+#
+# EXAMPLE
+#   fast
 function fast --description 'Placeholder for future fast utility'
     # ANSI Escape Codes (Standard 16-color palette)
     set -l bold "\e[1m"

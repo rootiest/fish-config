@@ -1,7 +1,19 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Use bat for files and ls for directories when using cat
+# SYNOPSIS
+#   cat [args...]
+#
+# DESCRIPTION
+#   Enhanced cat replacement that uses bat for file display, runs ls when given
+#   a directory, falls back to raw cat for ANSI-colored log files, and finally
+#   falls back to standard cat if bat is not installed.
+#
+# ARGUMENTS
+#   args...  Files or directories to display
+#
+# EXAMPLE
+#   cat README.md
 function cat --wraps='bat' --description 'Use bat for files, ls for directories, and raw cat for ANSI logs'
     # If no arguments are provided, cat usually waits for stdin. 
     # We'll maintain that behavior by skipping the directory check if $argv is empty.

@@ -1,7 +1,18 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# alias ffetch=fastfetch
+# SYNOPSIS
+#   ffetch [args...]
+#
+# DESCRIPTION
+#   Alias for fastfetch that loads a custom config from ~/.fastfetch.jsonc when
+#   present. Falls back to neofetch if fastfetch is not installed.
+#
+# ARGUMENTS
+#   args...  Arguments forwarded to fastfetch or neofetch
+#
+# EXAMPLE
+#   ffetch
 function ffetch --wraps='fastfetch' --description 'alias ffetch=fastfetch'
     if which fastfetch >/dev/null 2>&1
         if ls ~/.fastfetch.jsonc >/dev/null 2>&1

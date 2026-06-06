@@ -1,7 +1,23 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Spawn a new tab in the current terminal
+# SYNOPSIS
+#   tab [args...]
+#
+# DESCRIPTION
+#   Opens a new tab in Kitty, WezTerm, or Konsole using the current
+#   working directory (or $cdto if set). Arguments are forwarded to the
+#   terminal's tab-open command.
+#
+# ARGUMENTS
+#   args...  Arguments forwarded to the terminal's launch command
+#
+# RETURNS
+#   0  Tab opened successfully
+#   1  No supported terminal found
+#
+# EXAMPLE
+#   tab
 function tab --description 'Spawn a new tab in the current terminal'
     set -l dir "$cdto"
     if test -z "$dir"

@@ -1,7 +1,18 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# bash switches to bash shell
+# SYNOPSIS
+#   bash [args...]
+#
+# DESCRIPTION
+#   Switches the current shell session to bash, loading config from the XDG
+#   config directory. Resets $SHELL back to fish on exit.
+#
+# ARGUMENTS
+#   args...  Arguments passed through to the bash command
+#
+# EXAMPLE
+#   bash
 function bash --wraps='bash' --description 'bash switches to bash shell'
     set SHELL $(which bash) # Set shell to bash
     command bash --rcfile "$XDG_CONFIG_HOME/bash/bashrc" $argv # Run bash

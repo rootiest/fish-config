@@ -1,19 +1,17 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Populates parallel arrays describing every managed dependency.
-# Callers must invoke this function before accessing _fdc_* arrays.
+# SYNOPSIS
+#   _fish_deps_catalog
 #
-# Array layout (same index across all sets):
-#   _fdc_bins    — binary name (what `type -q` checks)
-#   _fdc_tiers   — req | int | rec
-#   _fdc_cargo   — cargo crate name, or "" if not on crates.io
-#   _fdc_pm      — system PM package name, or "" if not in repos
-#   _fdc_special — special install key: rustup-installer | fisher-bootstrap |
-#                  fzf-update | paru-build | pipx | curl-installer |
-#                  git-cargo-fish | curl-uv | "" (none)
+# DESCRIPTION
+#   Populates parallel global arrays (_fdc_bins, _fdc_tiers, _fdc_cargo,
+#   _fdc_pm, _fdc_special) describing every managed shell dependency.
+#   Must be called before accessing any _fdc_* array.
 #
-# uv and cargo are listed first so both are available before fish and other Rust tools.
+# EXAMPLE
+#   _fish_deps_catalog
+#   echo $_fdc_bins
 function _fish_deps_catalog
     set -g _fdc_bins \
         uv cargo fish fisher starship fzf zoxide direnv paru yay \
@@ -41,7 +39,22 @@ function _fish_deps_catalog
         "" "" "" "" "" "" "" "" "" "" curl-lazydocker "" "" ""
 end
 
-# Returns the index (1-based) of $argv[1] in the catalog, or "" if not found.
+# SYNOPSIS
+#   _fish_deps_catalog_idx <bin>
+#
+# DESCRIPTION
+#   Returns the 1-based index of a binary name in the _fdc_bins catalog array,
+#   or an empty string if the binary is not found.
+#
+# ARGUMENTS
+#   bin  The binary name to look up in the catalog
+#
+# RETURNS
+#   0  Index printed to stdout
+#   1  Binary not found (empty output)
+#
+# EXAMPLE
+#   _fish_deps_catalog_idx fzf
 function _fish_deps_catalog_idx --argument-names bin
     _fish_deps_catalog
     set -l i 1

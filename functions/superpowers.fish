@@ -1,7 +1,27 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Toggle superpowers extension for antigravity-cli and Claude
+# SYNOPSIS
+#   superpowers [on|off] [-g]
+#
+# DESCRIPTION
+#   Enables or disables the superpowers plugin for both antigravity-cli
+#   (workspace scope) and Claude (project scope). Use -g/--global to apply
+#   at the user scope instead of workspace/project.
+#
+# ARGUMENTS
+#   on            Enable superpowers for both tools
+#   off           Disable superpowers for both tools
+#   -g, --global  Apply at user/global scope instead of workspace/project
+#   -h, --help    Show usage help
+#
+# RETURNS
+#   0  Mode applied successfully
+#   1  No on/off mode specified
+#
+# EXAMPLE
+#   superpowers on
+#   superpowers off -g
 function superpowers --description 'Toggle superpowers extension for antigravity-cli and Claude'
     set -l scope_agy workspace
     set -l scope_claude project

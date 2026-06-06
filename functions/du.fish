@@ -1,7 +1,22 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Execute du
+# SYNOPSIS
+#   du [--disk|--dir|--dua] [args...]
+#
+# DESCRIPTION
+#   Smart disk-usage wrapper that routes to duf (disk overview), dust (directory
+#   tree), or dua based on context or explicit flags. Falls back to system du
+#   when the preferred tool is not installed.
+#
+# ARGUMENTS
+#   --disk   Force duf for disk-level overview
+#   --dir    Force dust for directory-level breakdown
+#   --dua    Force dua interactive mode
+#   args...  Files/directories or flags forwarded to the selected tool
+#
+# EXAMPLE
+#   du ~/Downloads
 function du --description 'Execute du'
     set cmd ""
     set args

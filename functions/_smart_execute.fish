@@ -1,7 +1,17 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Executes different functions based on the command line content
+# SYNOPSIS
+#   _smart_execute
+#
+# DESCRIPTION
+#   Bound to Enter, dispatches based on the current commandline buffer.
+#   Buffers ending in = are evaluated as qalc expressions via _qalc_eval.
+#   Empty buffers and all other input fall through to normal execution.
+#   Intended to be bound to a key in key_bindings.fish.
+#
+# EXAMPLE
+#   bind \r _smart_execute
 function _smart_execute --description 'Execute different functions based on the command line content'
     # Get the current command line buffer
     set -l cmd (commandline)

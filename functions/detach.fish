@@ -1,7 +1,25 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Execute detach
+# SYNOPSIS
+#   detach [-h] [--version] <command> [args...]
+#
+# DESCRIPTION
+#   Runs a command in the background using nohup, fully detached from the
+#   terminal with all output discarded.
+#
+# ARGUMENTS
+#   -h, --help   Show help message
+#   --version    Show version information
+#   command      The command to run detached
+#   args...      Additional arguments for the command
+#
+# RETURNS
+#   0  Command launched or help/version shown
+#   1  No command provided or unknown option
+#
+# EXAMPLE
+#   detach rsync -a ./data remote:/backup/
 function detach --description 'Execute detach'
     set -l show_help 0
     set -l args

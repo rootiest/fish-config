@@ -1,7 +1,19 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Interactively search and remove an installed package using fzf
+# SYNOPSIS
+#   parur
+#
+# DESCRIPTION
+#   Presents an fzf picker of all installed packages (via pacman -Qqs) with
+#   pacman -Qi previews, then removes the selected packages using paru or yay.
+#
+# RETURNS
+#   0  Packages removed or none selected
+#   1  No AUR helper (paru or yay) found
+#
+# EXAMPLE
+#   parur
 function parur --description 'Interactively search and remove an installed package using fzf'
     set -l aur ""
     if type -q paru

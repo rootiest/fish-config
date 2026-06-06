@@ -1,7 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Log orphans to ~/.removed_orphans and remove them
+# SYNOPSIS
+#   cleanup
+#
+# DESCRIPTION
+#   Identifies and removes Arch Linux orphan packages using pacman. Logs
+#   package names and versions to ~/.removed_orphans before removal.
+#
+# EXAMPLE
+#   cleanup
 function cleanup --description 'Log orphans to ~/.removed_orphans and remove them'
     set -l orphans (pacman -Qtdq)
     if test -n "$orphans"

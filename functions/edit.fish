@@ -1,7 +1,18 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# alias edit=nvim
+# SYNOPSIS
+#   edit [args...]
+#
+# DESCRIPTION
+#   Opens files in nvim, falling back to $EDITOR, nano, or vi if nvim is not
+#   installed.
+#
+# ARGUMENTS
+#   args...  Files and options forwarded to the editor
+#
+# EXAMPLE
+#   edit ~/.config/fish/config.fish
 function edit --wraps='nvim' --description 'alias edit=nvim'
     if type -q nvim
         nvim $argv

@@ -1,6 +1,23 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# SYNOPSIS
+#   logs [-h] [-c <category>]
+#
+# DESCRIPTION
+#   Interactively browses terminal log files (scrollback, paru, yay) sorted
+#   newest-first using fzf. Supports viewing in $PAGER, editing, and deletion.
+#
+# ARGUMENTS
+#   -h, --help           Show help message
+#   -c, --category cat   Filter to one category: scrollback, paru, or yay
+#
+# RETURNS
+#   0  File viewed or no file selected
+#   1  No log files found
+#
+# EXAMPLE
+#   logs -c paru
 function logs --description 'Browse terminal log files interactively with fzf'
     set -l options h/help c/category=
     argparse $options -- $argv

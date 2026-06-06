@@ -1,19 +1,25 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-###############################################################################
-# Purpose: Verifies Secure Boot status of EFI binaries using 'sbctl'.
-# 
-# Behavior: 
-#   - Filters out 'invalid PE header' noise from sbctl output.
-#   - Parsers output to count successfully signed vs. unsigned images.
-#   - Color-codes output: Green for verified (✓), Red for failed (✗).
-#   - Provides a final summary of the system's signature status.
+# SYNOPSIS
+#   sbver [--brief]
 #
-# Arguments:
-#   --brief : Suppresses individual file status and only shows the final summary.
-###############################################################################
-
+# DESCRIPTION
+#   Verifies Secure Boot signatures on all EFI binaries tracked by sbctl,
+#   filtering out "invalid PE header" noise. Color-codes each file as
+#   verified (green ✓) or unsigned (red ✗) and prints a final summary
+#   count.
+#
+# ARGUMENTS
+#   --brief  Suppress per-file output; show only the final summary
+#
+# RETURNS
+#   0  All binaries verified (or summary shown)
+#   1  sbctl is not installed
+#
+# EXAMPLE
+#   sbver
+#   sbver --brief
 function sbver --description 'Verifies Secure Boot status of EFI binaries using sbctl'
   if not type -q sbctl
     echo "Error: 'sbctl' is not installed."

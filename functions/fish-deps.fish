@@ -1,6 +1,25 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# SYNOPSIS
+#   fish-deps [status|install|update|sync]
+#
+# DESCRIPTION
+#   Manages fish shell dependencies by dispatching to subcommand handlers.
+#   Defaults to status when no subcommand is given.
+#
+# ARGUMENTS
+#   status   Report installed/missing deps (default)
+#   install  Install missing deps interactively
+#   update   Update all installed deps
+#   sync     Install missing deps, then update all
+#
+# RETURNS
+#   0  Subcommand completed
+#   1  Unknown subcommand
+#
+# EXAMPLE
+#   fish-deps sync
 function fish-deps --description 'Manage fish shell dependencies'
     set -l subcmd $argv[1]
 
@@ -27,6 +46,14 @@ function fish-deps --description 'Manage fish shell dependencies'
     end
 end
 
+# SYNOPSIS
+#   __fish_deps_help
+#
+# DESCRIPTION
+#   Prints usage and subcommand reference for the fish-deps command to stdout.
+#
+# EXAMPLE
+#   __fish_deps_help
 function __fish_deps_help
     set_color cyan; echo "fish-deps — manage fish shell dependencies"; set_color normal
     echo ""

@@ -1,7 +1,18 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Substitutes text in the command line using the ^old^new pattern from the previous command
+# SYNOPSIS
+#   __substitute_typo
+#
+# DESCRIPTION
+#   Reads the commandline buffer and applies ^old^new substitution against
+#   the most recent history entry, replacing the buffer with the expanded
+#   result. If the buffer does not match the ^old^new pattern, inserts a
+#   literal caret character instead. Intended to be bound to ^ in
+#   key_bindings.fish.
+#
+# EXAMPLE
+#   bind ^ __substitute_typo
 function __substitute_typo
     set -l cursor_pos (commandline -C)
     set -l cmd (commandline)

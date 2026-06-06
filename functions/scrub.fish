@@ -1,6 +1,29 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# SYNOPSIS
+#   scrub [-a] [-d] [-h]
+#
+# DESCRIPTION
+#   Recursively finds and removes OS metadata, editor artifacts, compiler
+#   garbage, and dev caches from the current directory using fd. Routes
+#   deletions through the custom rm function, trashy, trash-cli, or system
+#   rm -rf in that priority order. Aggressive mode adds node_modules, logs,
+#   IDE directories, and AI tool artifacts.
+#
+# ARGUMENTS
+#   -a, --aggressive  Also purge node_modules, *.log, .idea, AI artifacts
+#   -d, --dry-run     Show targets without deleting
+#   -h, --help        Show usage help
+#
+# RETURNS
+#   0  Sweep completed (or dry run shown)
+#   1  fd not found, or unknown argument provided
+#
+# EXAMPLE
+#   scrub
+#   scrub -a
+#   scrub -d
 function scrub --description 'Recursively purge OS, editor, and compiler garbage files/folders from the current directory'
     # Define the base garbage patterns (matches files and directory names)
     set -l garbage_patterns \

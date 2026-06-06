@@ -1,7 +1,24 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Run Bash commands replaying changes in Fish
+# SYNOPSIS
+#   replay <commands>
+#
+# DESCRIPTION
+#   Runs the given commands in Bash and replays any resulting environment
+#   variable, alias, and directory changes back into the current Fish
+#   session. Useful for sourcing Bash-only scripts.
+#
+# ARGUMENTS
+#   commands  Bash command string to execute and replay
+#
+# RETURNS
+#   0  Commands ran successfully and changes were replayed
+#   1  Bash command exited with a non-zero status
+#
+# EXAMPLE
+#   replay "source ~/.bashrc"
+#   replay "export FOO=bar"
 function replay --description 'Run Bash commands replaying changes in Fish'
     switch "$argv"
         case -v --version

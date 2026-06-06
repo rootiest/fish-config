@@ -1,7 +1,31 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# Ultimate rm: trash, list, empty, and secure-erase
+# SYNOPSIS
+#   rm [-e [options] | -S | args...]
+#
+# DESCRIPTION
+#   Enhanced rm that routes deletions through trash when safe. With no
+#   arguments, lists current trash contents. -e/--empty empties the trash
+#   (with optional trash-empty sub-arguments). -S/--secure permanently
+#   deletes via rm -rf and triggers fstrim. Plain paths and -r/-R are sent
+#   to trash put; any other flags fall back to system rm.
+#
+# ARGUMENTS
+#   (none)              List current trash contents
+#   -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
+#   -S, --secure        Permanently delete targets and run fstrim
+#   -r, -R, --recursive Forwarded to trash put alongside path arguments
+#   args...             Files or paths to trash or remove
+#
+# RETURNS
+#   0  Operation succeeded
+#   1  trash put failed or file not found
+#
+# EXAMPLE
+#   rm file.txt
+#   rm -e
+#   rm -S sensitive_key.pem
 function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
     # 1. No arguments: Show the Trash contents (Quick view)
     if not set -q argv[1]

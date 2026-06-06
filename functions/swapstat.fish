@@ -1,7 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# View colorized zRAM and swappiness status
+# SYNOPSIS
+#   swapstat
+#
+# DESCRIPTION
+#   Displays a colorized memory report showing kernel swappiness,
+#   zRAM compression ratio, zRAM device details (via zramctl), and
+#   active swap priority (via swapon).
+#
+# EXAMPLE
+#   swapstat
 function swapstat --description 'View colorized zRAM and swappiness status'
     set -l swappiness (sysctl -n vm.swappiness)
     set -l zdata (zramctl --bytes --noheadings --output DATA,TOTAL /dev/zram0 2>/dev/null)
