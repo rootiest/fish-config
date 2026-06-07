@@ -49,7 +49,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── fzf.fish          # FZF key binding initialization
 │   ├── tailscale.fish    # Tailscale CLI completions
 │   ├── theme.fish        # Theme syntax highlighting colors
-│   ├── done.fish          # Done plugin (desktop notifications for long commands)
+│   ├── done.fish         # Done plugin (desktop notifications for long commands)
 │   ├── tricks.fish       # PATH, bang-bang helpers, bat man pages, system aliases, history/backup utilities
 │   ├── first_run.fish    # One-time initialization: Fisher bootstrap, theme, welcome message
 │   ├── paru-wrapper.fish # Auto-generates ~/.local/bin/paru logging wrapper on first run
