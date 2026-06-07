@@ -12,15 +12,18 @@ fish-config - personal fish shell configuration for Fish 4.x with modern CLI too
 
 # SYNOPSIS
 
-    config_help [SECTION]
+    help config [SECTION]
 
 Open this manual in the best available pager. Optionally jump to a section
 by keyword:
 
-    config_help keybindings
-    config_help pkg
-    config_help abbreviations
-    config_help logs
+    help config keybindings
+    help config pkg
+    help config abbreviations
+    help config logs
+
+The `help config` syntax integrates with fish's built-in help command.
+The underlying `config-help` function is also available directly.
 
 # DESCRIPTION
 
@@ -1213,7 +1216,7 @@ calls fisher update as its first step.
 
 ## With ov (recommended)
 
-    config_help
+    help config
 
 ov renders the Markdown with syntax highlighting and section-based
 navigation.
@@ -1247,10 +1250,10 @@ a completely separate command. Do not mix them up.
 
 ## Jumping to a section
 
-    config_help keybindings
-    config_help abbreviations
-    config_help pkg
-    config_help logs
-    config_help fish-deps
+    help config keybindings
+    help config abbreviations
+    help config pkg
+    help config logs
+    help config fish-deps
 
 The keyword is matched case-insensitively against section headings.
