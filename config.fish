@@ -115,19 +115,7 @@ fish_add_path $HOME/.fzf/bin                 # Fuzzy Finder (fzf) core binary an
 set -gx CDPATH . $HOME/projects $HOME
 
 #   ──────────────────────────── Bootstrap Fisher ──────────────────────────
-if not type -q fisher
-    echo "Fisher plugin manager not found."
-    read -l -P "Install Fisher and plugins now? [Y/n] " _fisher_reply
-    if test -z "$_fisher_reply" -o "$_fisher_reply" = Y -o "$_fisher_reply" = y
-        echo "Installing Fisher..."
-        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-        fisher update
-        fish_config theme choose "Catppuccin Mocha"
-    else
-        echo "Skipping Fisher install. Some features may be unavailable."
-    end
-    set --erase _fisher_reply
-end
+#   Fisher is bootstrapped automatically on first run via conf.d/first_run.fish
 
 #   ─────────────────────── Visual/Interactive setup ───────────────────────
 # Run only if we're in an interactive session (not a script or non-interactive shell)
