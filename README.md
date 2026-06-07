@@ -1,6 +1,9 @@
 # Fish Shell Configuration
 
-A feature-rich Fish shell configuration for CachyOS (Arch Linux), built around a Catppuccin Mocha aesthetic with a curated set of modern CLI tool integrations, smart shell functions, and a heavily customized abbreviation system for keyboard-driven workflows.
+A feature-rich Fish shell configuration for CachyOS (Arch Linux),
+built around a Catppuccin Mocha aesthetic with a curated set of modern
+CLI tool integrations, smart shell functions, and a heavily customized
+abbreviation system for keyboard-driven workflows.
 
 ## Table of Contents
 
