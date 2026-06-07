@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   config_help [section]
-#   config_help --help
+#   config-help [section]
+#   config-help --help
 #
 # DESCRIPTION
 #   Opens the offline fish shell configuration manual in the best available
@@ -24,24 +24,24 @@
 #   1  Documentation file not found
 #
 # EXAMPLE
-#   config_help
-#   config_help keybindings
-#   config_help pkg
-#   config_help fish-deps
-#   config_help --help
-function config_help --description 'Open the offline fish shell configuration manual'
+#   config-help
+#   config-help keybindings
+#   config-help pkg
+#   config-help fish-deps
+#   config-help --help
+function config-help --description 'Open the offline fish shell configuration manual'
     # ── --help / -h ──────────────────────────────────────────────
     if contains -- --help $argv; or contains -- -h $argv
         set_color --bold
-        echo config_help
+        echo config-help
         set_color normal
         echo " — view the offline fish shell configuration manual"
         echo ""
         set_color --bold brblue
         echo USAGE
         set_color normal
-        echo "  config_help "(set_color yellow)"[section]"(set_color normal)
-        echo "  config_help "(set_color yellow)"--help"(set_color normal)
+        echo "  config-help "(set_color yellow)"[section]"(set_color normal)
+        echo "  config-help "(set_color yellow)"--help"(set_color normal)
         echo ""
         set_color --bold brblue
         echo ARGUMENTS
@@ -54,11 +54,11 @@ function config_help --description 'Open the offline fish shell configuration ma
         set_color --bold brblue
         echo EXAMPLES
         set_color normal
-        echo "  "(set_color green)"config_help"(set_color normal)"                  open at top"
-        echo "  "(set_color green)"config_help keybindings"(set_color normal)"      jump to Key Bindings section"
-        echo "  "(set_color green)"config_help pkg"(set_color normal)"              jump to the pkg function entry"
-        echo "  "(set_color green)"config_help fish-deps"(set_color normal)"        jump to fish-deps"
-        echo "  "(set_color green)"config_help abbreviations"(set_color normal)"    jump to Abbreviations section"
+        echo "  "(set_color green)"config-help"(set_color normal)"                  open at top"
+        echo "  "(set_color green)"config-help keybindings"(set_color normal)"      jump to Key Bindings section"
+        echo "  "(set_color green)"config-help pkg"(set_color normal)"              jump to the pkg function entry"
+        echo "  "(set_color green)"config-help fish-deps"(set_color normal)"        jump to fish-deps"
+        echo "  "(set_color green)"config-help abbreviations"(set_color normal)"    jump to Abbreviations section"
         echo ""
         set_color --bold brblue
         echo "NAVIGATION (ov pager)"

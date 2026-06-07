@@ -2,7 +2,7 @@
 # Format: keyword=exact heading text as it appears in fish-config.md
 # Multiple keywords may map to the same heading.
 # Update this file whenever headings are added, removed, or renamed.
-# config_help uses this for fast exact lookups; unknown keywords fall back
+# config-help uses this for fast exact lookups; unknown keywords fall back
 # to a normalized heading scan automatically.
 
 # ── Top-level ─────────────────────────────────────────────────

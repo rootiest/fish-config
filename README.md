@@ -58,7 +58,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   └── zoxide.fish       # Zoxide z/zi aliases
 ├── docs/                 # Offline documentation
 │   ├── fish-config.md    # Primary offline reference manual (terminal-readable)
-│   └── fish-config.index # Section index for config_help navigation
+│   └── fish-config.index # Section index for `help config` navigation
 ├── functions/            # Custom functions (one per file)
 ├── completions/          # Custom tab completions
 ├── integrations/         # Integration scripts
@@ -314,12 +314,14 @@ A curated offline reference manual is available at `docs/fish-config.md`. It cov
 
 | Command | Description |
 |---|---|
-| `config_help` | Open the offline manual in the best available pager |
-| `config_help <keyword>` | Jump directly to a section matching the keyword |
+| `help config` | Open the offline manual in the best available pager |
+| `help config <keyword>` | Jump directly to a section matching the keyword |
 
 The viewer falls back through: **ov** (syntax highlight + section navigation) → **bat** (syntax highlight) → **man -l** (pre-compiled man page) → **less** → **cat**.
 
-Examples: `config_help keybindings` · `config_help pkg` · `config_help fish-deps` · `config_help abbreviations`
+Examples: `help config keybindings` · `help config pkg` · `help config fish-deps` · `help config abbreviations`
+
+> **Tip:** `help config` is the preferred way to access offline docs — it integrates naturally with fish's built-in `help` command. The underlying `config-help` function is still available directly if needed.
 
 You can also read the documentation as a standard man page — the symlink and `MANPATH` are set up automatically on shell start:
 
