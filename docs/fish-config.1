@@ -1553,8 +1553,23 @@ Do not commit fish_variables.
    *   *   *   *   *
 .SH 8. FISHER PLUGINS
 .PP
-Fisher is bootstrapped automatically on first shell start if not
-present.
+Fisher is bootstrapped automatically on the \f[B]first interactive
+session\f[R] via \f[V]conf.d/first_run.fish\f[R].
+This also applies the Catppuccin Mocha theme and prints a one-time
+welcome message.
+Subsequent sessions skip all first-run logic with zero overhead.
+.PP
+To re-trigger first-run initialization (e.g., after a fresh install or
+for testing), run:
+.IP
+.nf
+\f[C]
+set -Ue __fish_config_first_run_complete
+\f[R]
+.fi
+.PP
+Then open a new shell.
+.PP
 The plugin list is maintained in fish_plugins at the config root.
 .IP
 .nf
