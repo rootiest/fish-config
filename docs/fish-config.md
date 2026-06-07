@@ -1196,7 +1196,18 @@ fish_variables.
 
 # 8. FISHER PLUGINS
 
-Fisher is bootstrapped automatically on first shell start if not present.
+Fisher is bootstrapped automatically on the **first interactive session** via
+`conf.d/first_run.fish`. This also applies the Catppuccin Mocha theme and
+prints a one-time welcome message. Subsequent sessions skip all first-run
+logic with zero overhead.
+
+To re-trigger first-run initialization (e.g., after a fresh install or for
+testing), run:
+
+    set -Ue __fish_config_first_run_complete
+
+Then open a new shell.
+
 The plugin list is maintained in fish_plugins at the config root.
 
     jorgebucaran/fisher           Plugin manager itself
