@@ -24,7 +24,7 @@ CLI tool integration
 .IP
 .nf
 \f[C]
-config_help [SECTION]
+help config [SECTION]
 \f[R]
 .fi
 .PP
@@ -33,12 +33,17 @@ Optionally jump to a section by keyword:
 .IP
 .nf
 \f[C]
-config_help keybindings
-config_help pkg
-config_help abbreviations
-config_help logs
+help config keybindings
+help config pkg
+help config abbreviations
+help config logs
 \f[R]
 .fi
+.PP
+The \f[V]help config\f[R] syntax integrates with fish\[cq]s built-in
+help command.
+The underlying \f[V]config-help\f[R] function is also available
+directly.
 .SH DESCRIPTION
 .PP
 A production-grade Fish shell configuration targeting Fish 4.x.
@@ -1573,7 +1578,7 @@ Run \f[V]fisher update\f[R] to update all plugins, or
 .IP
 .nf
 \f[C]
-config_help
+help config
 \f[R]
 .fi
 .PP
@@ -1625,11 +1630,11 @@ Do not mix them up.
 .IP
 .nf
 \f[C]
-config_help keybindings
-config_help abbreviations
-config_help pkg
-config_help logs
-config_help fish-deps
+help config keybindings
+help config abbreviations
+help config pkg
+help config logs
+help config fish-deps
 \f[R]
 .fi
 .PP
