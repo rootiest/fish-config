@@ -51,6 +51,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 │   ├── theme.fish        # Theme syntax highlighting colors
 │   ├── done.fish          # Done plugin (desktop notifications for long commands)
 │   ├── tricks.fish       # PATH, bang-bang helpers, bat man pages, system aliases, history/backup utilities
+│   ├── first_run.fish    # One-time initialization: Fisher bootstrap, theme, welcome message
 │   ├── paru-wrapper.fish # Auto-generates ~/.local/bin/paru logging wrapper on first run
 │   ├── yay-wrapper.fish  # Auto-generates ~/.local/bin/yay logging wrapper on first run
 │   ├── starship.fish     # fish_prompt with OSC 133;A/B shell-integration markers
@@ -86,7 +87,15 @@ Managed via [Fisher](https://github.com/jorgebucaran/fisher):
 | `nickeb96/puffer-fish` | Expand `...` to `../..`, `!!` to last command, etc. |
 | `jorgebucaran/spark.fish` | Sparkline bar charts in the terminal |
 
-Fisher and all listed plugins are installed automatically by the bootstrap script in `config.fish` upon launching the shell for the first time.
+Fisher and all listed plugins are installed automatically by `conf.d/first_run.fish` on the first interactive session. This also applies the Catppuccin Mocha theme and prints a one-time welcome message. Subsequent launches are unaffected.
+
+To re-trigger first-run initialization (e.g., after a fresh clone):
+
+```fish
+set -Ue __fish_config_first_run_complete
+```
+
+Then open a new shell.
 
 ---
 
