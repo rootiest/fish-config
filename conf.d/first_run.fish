@@ -25,7 +25,7 @@ set -U __fish_config_first_run_complete 1
 #   ──────────────────────────── Welcome message ───────────────────────────
 echo ""
 echo "  Welcome to your fish shell configuration!"
-echo "  Run 'config-help' for offline documentation."
+echo "  Run 'help config' for offline documentation."
 echo "  Run 'fish-deps'   to check and install dependencies."
 echo ""
 
