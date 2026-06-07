@@ -33,8 +33,10 @@ echo ""
 if not type -q fisher
     echo "  [first-run] Installing Fisher plugin manager..."
     if curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-        and fisher update 2>/dev/null
-        echo "  [first-run] Fisher installed and plugins loaded."
+        echo "  [first-run] Fisher installed."
+        if not fisher update 2>/dev/null
+            echo "  [first-run] Plugin sync failed — run 'fisher update' manually." >&2
+        end
     else
         echo "  [first-run] Fisher install failed — run 'fisher update' manually." >&2
     end
@@ -42,4 +44,6 @@ end
 
 #   ───────────────────────────── Apply theme ──────────────────────────────
 # Catppuccin Mocha theme ships with this config in themes/; it is always available.
-fish_config theme choose "Catppuccin Mocha" 2>/dev/null
+if not fish_config theme choose "Catppuccin Mocha" 2>/dev/null
+    echo "  [first-run] Could not apply Catppuccin Mocha theme — set manually with 'fish_config theme choose'." >&2
+end
