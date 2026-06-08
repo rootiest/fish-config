@@ -143,4 +143,46 @@ These are implemented as keybinding helpers, but can also be typed:
     bsh         bd show
     lb          lazybeads
 
+## 4.11 Shell Aliases
+
+These aliases are defined in conf.d/tricks.fish via alias (which creates Fish
+functions). They are active in all interactive sessions.
+
+### Navigation
+
+    ..      cd ..
+    ...     cd ../..
+    ....    cd ../../..
+    .....   cd ../../../..
+    ......  cd ../../../../..
+
+### Color Overrides
+
+Force color output for common tools:
+
+    grep    grep --color=auto
+    fgrep   fgrep --color=auto
+    egrep   egrep --color=auto
+    dir     dir --color=auto
+    vdir    vdir --color=auto
+
+### Safety Wrappers
+
+Add -i (interactive confirmation) to destructive commands:
+
+    cp      cp -i
+    mv      mv -i
+
+### Archives and Networking
+
+    tarnow  tar -acf              Create compressed archive (auto-detects format)
+    untar   tar -zxvf             Extract a gzip-compressed archive
+    wget    wget -c               Resume interrupted downloads by default
+    tb      nc termbin.com 9999   Pipe content to termbin.com for quick sharing
+
+### System Logs
+
+    jctl    journalctl -p 3 -xb   Show priority-3 (error) journal entries
+                                    from the current boot
+
 ---

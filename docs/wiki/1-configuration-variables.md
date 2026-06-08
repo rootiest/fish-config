@@ -48,4 +48,69 @@ automatically on exit. Use `logs` to browse them interactively.
     CLAUDE_CODE_NO_FLICKER  1    — suppress terminal flicker in Claude Code
     CDPATH               . ~/projects ~
 
+## Pager Hierarchy
+
+$PAGER is set to ov when available, falling back to less. The less wrapper
+function extends this into a full chain so anything that calls less directly
+also benefits:
+
+    $PAGER → ov → less → more → cat
+
+When bat is installed, man pages are rendered with syntax highlighting:
+
+    MANROFFOPT   -c
+    MANPAGER     sh -c 'col -bx | bat -l man -p'
+
+## Integrations
+
+### Zoxide
+
+cd, z, and cdi/zi are all mapped to zoxide-backed navigation. Tab completions
+for cd and z blend standard directory entries (CWD and CDPATH) with frecency
+results so both familiar and frequently-visited paths appear in one list.
+
+### DirEnv
+
+Automatically loads .envrc files on directory change. Takes priority over
+the auto-venv logic — if a directory is managed by direnv, the auto-venv
+activation is skipped entirely.
+
+### Auto Python Venv
+
+When entering a directory that contains a .venv/, the virtualenv is activated
+automatically and deactivated when you leave the project tree.
+
+### WakaTime
+
+Every shell command is reported to WakaTime for time-tracking. Set
+FISH_WAKATIME_DISABLED=1 to disable without removing the plugin.
+
+### Tailscale
+
+Full tab completion for the tailscale CLI is provided via conf.d/tailscale.fish.
+
+### Done Notifications
+
+Desktop notifications fire when a command takes longer than 10 seconds and
+the terminal window is not focused. Configured via fish universal variables:
+
+    __done_min_cmd_duration          10000 ms
+    __done_notification_urgency_level  low
+
+### Scrollback History
+
+When running inside Kitty, closing a shell session via exit saves a timestamped
+scrollback snapshot to SCROLLBACK_HISTORY_DIR. Files are named:
+
+    scrollback_YYYY-MM-DD_HH-MM-SS.log
+
+The paru and yay wrappers (auto-generated in ~/.local/bin/) tee all output to:
+
+    paru_YYYY-MM-DD_HH-MM-SS.log
+    yay_YYYY-MM-DD_HH-MM-SS.log
+
+Before pruning, _scrollback_prune_junk silently removes empty files, files
+with only a single meaningful line (e.g. bare [exited] captures), and Kitty
+tab-rename prompt captures. Use exit --no-log (or exit -n) to skip capture.
+
 ---

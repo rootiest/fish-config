@@ -40,10 +40,13 @@ are active in Insert, Normal, and Visual modes unless noted.
                     line to open an fzf picker and insert a selection
                     at the cursor position.
 
-## FZF Bindings (from fzf --fish integration)
+## FZF Bindings (from PatrickF1/fzf.fish)
 
-    Ctrl+R          Search shell history with fzf
-    Ctrl+T          Insert a file path from fzf
-    Alt+C           cd into a directory chosen with fzf
+    Ctrl+R          Search command history
+    Ctrl+Alt+F      Search git-tracked files
+    Ctrl+Alt+L      Search git log
+    Ctrl+Alt+S      Search git status
+    Ctrl+V          Search shell variables
+    Ctrl+Alt+P      Search running processes
 
 ---

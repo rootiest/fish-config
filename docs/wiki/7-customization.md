@@ -37,4 +37,37 @@ Some settings (fzf colors, theme) are stored in fish_variables via
 `set -U`. These are machine-local and git-ignored. Do not commit
 fish_variables.
 
+## Prompt and Theme
+
+### Starship
+
+The primary prompt is Starship, initialized by conf.d/starship.fish.
+Configure it via ~/.config/starship.toml.
+
+conf.d/starship.fish defines a fish_prompt wrapper that only activates when
+starship is in PATH. It emits OSC 133;A (prompt start) immediately before
+Starship renders and OSC 133;B (input start) immediately after, placing both
+markers on the prompt line itself. This allows ov to use them as sticky
+section headers when browsing scrollback logs. Without Starship, fish's
+built-in prompt handles these markers automatically.
+
+### FZF
+
+FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in
+integrations/fzf.fish. The colors applied:
+
+    Background:   #1E1E2E (base)    #313244 (surface0)
+    Foreground:   #CDD6F4 (text)
+    Highlights:   #F38BA8 (red)     #CBA6F7 (mauve)    #B4BEFE (lavender)
+
+To customize, override FZF_DEFAULT_OPTS in local.fish.
+
+### Catppuccin Mocha Syntax Highlighting
+
+The catppuccin/fish plugin applies syntax highlight colors on first run.
+Colors are stored in fish_variables (universal). To switch variants, install
+a different theme from the themes/ directory:
+
+    fish_config theme save "Catppuccin Latte"
+
 ---
