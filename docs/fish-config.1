@@ -1326,6 +1326,57 @@ echo \[dq]3 7 2 9 1\[dq] | spark
 .PP
    *   *   *   *   *
 .SS 5.14 Miscellaneous
+.SS config-help
+.IP
+.nf
+\f[C]
+Synopsis:  config-help [SECTION]
+           config-help --html
+           config-help --man
+           config-help -h | --help
+
+Opens the offline fish shell configuration manual. Without flags, opens
+the Markdown source in the best available pager (ov > bat > man > less >
+cat). If SECTION is given, jumps to the first heading matching that
+keyword (case-insensitive; checks fish-config.index aliases first).
+
+Flags:
+  --html / -w   Open docs/html/index.html in the default browser.
+                Detects the browser via xdg-mime x-scheme-handler/https,
+                then known binaries, then xdg-open as last resort.
+                Respects $fish_help_browser and $BROWSER.
+  --man  / -m   Open docs/fish-config.1 via man -l directly.
+  --help / -h   Print usage and navigation key reference.
+
+config-help keybindings
+config-help pkg
+config-help --html
+config-help --man
+\f[R]
+.fi
+.SS config-update
+.IP
+.nf
+\f[C]
+Synopsis:  config-update [-h] [-n] [-f]
+
+Pulls the latest fish configuration from the upstream repository
+(https://git.rootiest.dev/rootiest/fish-config.git) into \[ti]/.config/fish.
+The remote URL is hard-coded, so this works on fresh clones with no git
+remote configured. All git output is suppressed; colored messages report
+fetch and merge status. After a successful pull, run \[ga]exec fish\[ga] to
+reload.
+
+Flags:
+  --dry-run / -n   Fetch and show available commits without applying them.
+  --force  / -f    Stash local changes, pull, then restore the stash.
+  --help   / -h    Show usage.
+
+config-update
+config-update --dry-run
+config-update --force
+\f[R]
+.fi
 .SS bash
 .IP
 .nf
@@ -1620,8 +1671,17 @@ bat --language=markdown --paging=always \[ti]/.config/fish/docs/fish-config.md
 \f[R]
 .fi
 .SS As a man page
+.IP
+.nf
+\f[C]
+config-help --man
+\f[R]
+.fi
 .PP
-The symlink and MANPATH are configured automatically on shell start:
+Opens the compiled docs/fish-config.1 directly via man -l, bypassing the
+pager fallback chain.
+The symlink and MANPATH are also configured automatically on shell start
+for the standard invocation:
 .IP
 .nf
 \f[C]
@@ -1629,18 +1689,24 @@ man fish-config
 \f[R]
 .fi
 .PP
-Or read the compiled file directly:
-.IP
-.nf
-\f[C]
-man -l \[ti]/.config/fish/docs/fish-config.1
-\f[R]
-.fi
-.PP
 NOTE: fish-config (hyphen) is this config\[cq]s man page.
 fish_config (underscore) is fish\[cq]s built-in browser-based
 configuration tool \[em] a completely separate command.
 Do not mix them up.
+.SS In the browser (HTML)
+.IP
+.nf
+\f[C]
+config-help --html
+\f[R]
+.fi
+.PP
+Opens docs/html/index.html in the default web browser.
+Browser detection queries the system\[cq]s x-scheme-handler/https MIME
+entry (via xdg-mime) to find the real browser binary, then falls back
+through known browser binaries (firefox, chromium, vivaldi, etc.), and
+finally xdg-open as a last resort.
+Set $fish_help_browser or $BROWSER to override.
 .SS Jumping to a section
 .IP
 .nf
