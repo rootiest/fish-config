@@ -41,8 +41,6 @@ The configuration is split across:
 
 ---
 
----
-
 ## Table of Contents
 
 - [1. Configuration Variables](1-configuration-variables.md)
@@ -54,3 +52,5 @@ The configuration is split across:
 - [7. Customization](7-customization.md)
 - [8. Fisher Plugins](8-fisher-plugins.md)
 - [9. Viewing This Manual](9-viewing-this-manual.md)
+- [10. Installation](10-installation.md)
+- [11. Personalization](11-personalization.md)

@@ -1,6 +1,6 @@
 # 9. VIEWING THIS MANUAL
 
-**Sections:** [Index](index.md) | [1. Configuration Variables](1-configuration-variables.md) | [2. Path Setup](2-path-setup.md) | [3. Key Bindings](3-key-bindings.md) | [4. Abbreviations](4-abbreviations.md) | [5. Functions Reference](5-functions-reference.md) | [6. Dependency Catalog](6-dependency-catalog.md) | [7. Customization](7-customization.md) | [8. Fisher Plugins](8-fisher-plugins.md) | **9. Viewing This Manual**
+**Sections:** [Index](index.md) | [1. Configuration Variables](1-configuration-variables.md) | [2. Path Setup](2-path-setup.md) | [3. Key Bindings](3-key-bindings.md) | [4. Abbreviations](4-abbreviations.md) | [5. Functions Reference](5-functions-reference.md) | [6. Dependency Catalog](6-dependency-catalog.md) | [7. Customization](7-customization.md) | [8. Fisher Plugins](8-fisher-plugins.md) | **9. Viewing This Manual** | [10. Installation](10-installation.md) | [11. Personalization](11-personalization.md)
 
 ---
 
@@ -66,3 +66,5 @@ push to main that changes docs/fish-config.md.
     help config fish-deps
 
 The keyword is matched case-insensitively against section headings.
+
+---

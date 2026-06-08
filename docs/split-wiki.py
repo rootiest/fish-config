@@ -92,7 +92,9 @@ def main() -> None:
             numbered_sections.append(s)
 
     # ── Write index.md ──────────────────────────────────────────────────────
-    intro_body = "\n\n".join(intro_parts)
+    intro_body = "\n\n".join(intro_parts).rstrip()
+    # Strip any trailing thematic break that the source adds before the ToC.
+    intro_body = re.sub(r"\n+---\s*$", "", intro_body)
     toc = build_full_toc(numbered_sections)
     index_content = f"# Fish Shell Configuration\n\n{intro_body}\n\n---\n\n{toc}\n"
     (out_dir / "index.md").write_text(index_content)
