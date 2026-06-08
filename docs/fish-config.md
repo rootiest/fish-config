@@ -1323,3 +1323,4 @@ last resort. Set $fish_help_browser or $BROWSER to override.
     help config fish-deps
 
 The keyword is matched case-insensitively against section headings.
+
