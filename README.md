@@ -322,30 +322,16 @@ rm -f file.txt  # Falls through to standard rm -f
 
 ### Offline Documentation
 
-A curated offline reference manual is available at `docs/fish-config.md`. It covers every function, keybinding, abbreviation, and configuration variable, written for terminal readability (no hyperlinks or GitHub-specific callouts).
+Full documentation lives in [`docs/wiki/`](docs/wiki/index.md) — a multi-page Markdown wiki auto-generated from the single source file `docs/fish-config.md` on every push to `main`.
 
 | Command | Description |
 |---|---|
-| `help config` | Open the offline manual in the best available pager |
+| `help config` | Open the terminal manual in the best available pager |
 | `help config <keyword>` | Jump directly to a section matching the keyword |
 | `config-help --html` | Open the pre-built HTML docs in the default browser |
 | `config-help --man` | Open the compiled man page via `man -l` |
 
-The pager viewer falls back through: **ov** (syntax highlight + section navigation) → **bat** (syntax highlight) → **man -l** (pre-compiled man page) → **less** → **cat**.
-
-Examples: `help config keybindings` · `help config pkg` · `help config fish-deps` · `help config abbreviations`
-
-> **Tip:** `help config` is the preferred way to access offline docs — it integrates naturally with fish's built-in `help` command. The underlying `config-help` function is still available directly if needed.
-
-The `--html` flag opens `docs/html/index.html` in your default browser. It detects the correct browser by querying the system's `https://` scheme handler (via `xdg-mime`), falling back through known browser binaries, then `xdg-open` as a last resort. Set `$fish_help_browser` or `$BROWSER` to override.
-
-You can also read the documentation as a standard man page — the symlink and `MANPATH` are set up automatically on shell start:
-
-```fish
-man fish-config
-```
-
-The man page is auto-generated from `docs/fish-config.md` by the CI pipeline on every push to `main`.
+The pager falls back through: **ov** → **bat** → **man -l** → **less** → **cat**.
 
 > **Note:** `fish-config` (hyphen) is this configuration's man page. `fish_config` (underscore) is fish's built-in browser-based configuration tool — a completely separate command. Don't mix them up.
 
