@@ -25,7 +25,9 @@ jobs:
 
       - name: Generate chunked HTML docs
         run: |
-          pandoc -f gfm -t chunkedhtml --split-level=1 --toc -V toc=true \
+          rm -rf docs/html/
+          pandoc -f gfm -t chunkedhtml --split-level=1 --toc \
+                 --include-in-header docs/html-style.html \
                  docs/fish-config.md \
                  -o docs/html/
 
