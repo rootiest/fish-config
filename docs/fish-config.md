@@ -1022,6 +1022,51 @@ These are implemented as keybinding helpers, but can also be typed:
 
 ## 5.14 Miscellaneous
 
+### config-help
+
+    Synopsis:  config-help [SECTION]
+               config-help --html
+               config-help --man
+               config-help -h | --help
+
+    Opens the offline fish shell configuration manual. Without flags, opens
+    the Markdown source in the best available pager (ov > bat > man > less >
+    cat). If SECTION is given, jumps to the first heading matching that
+    keyword (case-insensitive; checks fish-config.index aliases first).
+
+    Flags:
+      --html / -w   Open docs/html/index.html in the default browser.
+                    Detects the browser via xdg-mime x-scheme-handler/https,
+                    then known binaries, then xdg-open as last resort.
+                    Respects $fish_help_browser and $BROWSER.
+      --man  / -m   Open docs/fish-config.1 via man -l directly.
+      --help / -h   Print usage and navigation key reference.
+
+    config-help keybindings
+    config-help pkg
+    config-help --html
+    config-help --man
+
+### config-update
+
+    Synopsis:  config-update [-h] [-n] [-f]
+
+    Pulls the latest fish configuration from the upstream repository
+    (https://git.rootiest.dev/rootiest/fish-config.git) into ~/.config/fish.
+    The remote URL is hard-coded, so this works on fresh clones with no git
+    remote configured. All git output is suppressed; colored messages report
+    fetch and merge status. After a successful pull, run `exec fish` to
+    reload.
+
+    Flags:
+      --dry-run / -n   Fetch and show available commits without applying them.
+      --force  / -f    Stash local changes, pull, then restore the stash.
+      --help   / -h    Show usage.
+
+    config-update
+    config-update --dry-run
+    config-update --force
+
 ### bash
 
     Synopsis:  bash [args...]
@@ -1247,17 +1292,27 @@ navigation.
 
 ## As a man page
 
-The symlink and MANPATH are configured automatically on shell start:
+    config-help --man
+
+Opens the compiled docs/fish-config.1 directly via man -l, bypassing
+the pager fallback chain. The symlink and MANPATH are also configured
+automatically on shell start for the standard invocation:
 
     man fish-config
-
-Or read the compiled file directly:
-
-    man -l ~/.config/fish/docs/fish-config.1
 
 NOTE: fish-config (hyphen) is this config's man page. fish_config
 (underscore) is fish's built-in browser-based configuration tool —
 a completely separate command. Do not mix them up.
+
+## In the browser (HTML)
+
+    config-help --html
+
+Opens docs/html/index.html in the default web browser. Browser detection
+queries the system's x-scheme-handler/https MIME entry (via xdg-mime) to
+find the real browser binary, then falls back through known browser
+binaries (firefox, chromium, vivaldi, etc.), and finally xdg-open as a
+last resort. Set $fish_help_browser or $BROWSER to override.
 
 ## Jumping to a section
 

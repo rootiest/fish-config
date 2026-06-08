@@ -328,12 +328,16 @@ A curated offline reference manual is available at `docs/fish-config.md`. It cov
 |---|---|
 | `help config` | Open the offline manual in the best available pager |
 | `help config <keyword>` | Jump directly to a section matching the keyword |
+| `config-help --html` | Open the pre-built HTML docs in the default browser |
+| `config-help --man` | Open the compiled man page via `man -l` |
 
-The viewer falls back through: **ov** (syntax highlight + section navigation) → **bat** (syntax highlight) → **man -l** (pre-compiled man page) → **less** → **cat**.
+The pager viewer falls back through: **ov** (syntax highlight + section navigation) → **bat** (syntax highlight) → **man -l** (pre-compiled man page) → **less** → **cat**.
 
 Examples: `help config keybindings` · `help config pkg` · `help config fish-deps` · `help config abbreviations`
 
 > **Tip:** `help config` is the preferred way to access offline docs — it integrates naturally with fish's built-in `help` command. The underlying `config-help` function is still available directly if needed.
+
+The `--html` flag opens `docs/html/index.html` in your default browser. It detects the correct browser by querying the system's `https://` scheme handler (via `xdg-mime`), falling back through known browser binaries, then `xdg-open` as a last resort. Set `$fish_help_browser` or `$BROWSER` to override.
 
 You can also read the documentation as a standard man page — the symlink and `MANPATH` are set up automatically on shell start:
 
@@ -344,6 +348,18 @@ man fish-config
 The man page is auto-generated from `docs/fish-config.md` by the CI pipeline on every push to `main`.
 
 > **Note:** `fish-config` (hyphen) is this configuration's man page. `fish_config` (underscore) is fish's built-in browser-based configuration tool — a completely separate command. Don't mix them up.
+
+### Updating the Config
+
+Pull the latest changes from the upstream repository without needing a configured git remote:
+
+| Command | Description |
+|---|---|
+| `config-update` | Fetch and apply the latest commits from upstream |
+| `config-update --dry-run` | Preview available changes without applying them |
+| `config-update --force` | Stash local changes, pull, then restore the stash |
+
+The remote URL (`https://git.rootiest.dev/rootiest/fish-config.git`) is hard-coded, so `config-update` works even on a fresh clone with no `origin` set. All git output is suppressed; colored status messages report what changed. After a successful pull, reload the shell with `exec fish`.
 
 ### Dependency Management
 
