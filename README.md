@@ -33,10 +33,11 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 
 ## Documentation
 
-Full documentation lives in [`docs/wiki/`](docs/wiki/index.md) — a multi-page Markdown wiki
-auto-generated from the single source file `docs/fish-config.md` on every push to `main`.
-It covers configuration variables, key bindings, abbreviations, all functions, the dependency
-catalog, customization, and more.
+### [📖 Full Documentation Wiki](docs/wiki/index.md)
+
+A multi-page Markdown wiki auto-generated from the single source file `docs/fish-config.md`
+on every push to `main`. It covers configuration variables, key bindings, abbreviations,
+all functions, the dependency catalog, customization, and more.
 
 To browse the docs from the terminal:
 
