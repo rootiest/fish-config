@@ -1003,44 +1003,85 @@ spark 1 1 2 5 14 42
 echo &quot;3 7 2 9 1&quot; | spark</code></pre>
 <hr />
 <h2 data-number="9.14" id="514-miscellaneous">5.14 Miscellaneous</h2>
-<h3 data-number="9.14.1" id="bash">bash</h3>
+<h3 data-number="9.14.1" id="config-help">config-help</h3>
+<pre><code>Synopsis:  config-help [SECTION]
+           config-help --html
+           config-help --man
+           config-help -h | --help
+
+Opens the offline fish shell configuration manual. Without flags, opens
+the Markdown source in the best available pager (ov &gt; bat &gt; man &gt; less &gt;
+cat). If SECTION is given, jumps to the first heading matching that
+keyword (case-insensitive; checks fish-config.index aliases first).
+
+Flags:
+  --html / -w   Open docs/html/index.html in the default browser.
+                Detects the browser via xdg-mime x-scheme-handler/https,
+                then known binaries, then xdg-open as last resort.
+                Respects $fish_help_browser and $BROWSER.
+  --man  / -m   Open docs/fish-config.1 via man -l directly.
+  --help / -h   Print usage and navigation key reference.
+
+config-help keybindings
+config-help pkg
+config-help --html
+config-help --man</code></pre>
+<h3 data-number="9.14.2" id="config-update">config-update</h3>
+<pre><code>Synopsis:  config-update [-h] [-n] [-f]
+
+Pulls the latest fish configuration from the upstream repository
+(https://git.rootiest.dev/rootiest/fish-config.git) into ~/.config/fish.
+The remote URL is hard-coded, so this works on fresh clones with no git
+remote configured. All git output is suppressed; colored messages report
+fetch and merge status. After a successful pull, run `exec fish` to
+reload.
+
+Flags:
+  --dry-run / -n   Fetch and show available commits without applying them.
+  --force  / -f    Stash local changes, pull, then restore the stash.
+  --help   / -h    Show usage.
+
+config-update
+config-update --dry-run
+config-update --force</code></pre>
+<h3 data-number="9.14.3" id="bash">bash</h3>
 <pre><code>Synopsis:  bash [args...]
 Switches to bash, with XDG config applied. On exit, $SHELL is reset
 back to fish.</code></pre>
-<h3 data-number="9.14.2" id="bd-pull">bd-pull</h3>
+<h3 data-number="9.14.4" id="bd-pull">bd-pull</h3>
 <pre><code>Synopsis:  bd-pull &lt;owner/repo&gt;
 Fetches unlinked Gitea issues and creates local Beads entries, updating
 issue titles with the assigned Beads IDs.
 Requires $GITEA_TOKEN and $GITEA_URL to be set.
 
 bd-pull rootiest/fish-config</code></pre>
-<h3 data-number="9.14.3" id="cheat">cheat</h3>
+<h3 data-number="9.14.5" id="cheat">cheat</h3>
 <pre><code>Synopsis:  cheat &lt;topic&gt; [args...]
 Displays a colorized cheatsheet using cheat -c, falls back to tldr,
 then man.
 
 cheat tar
 cheat git</code></pre>
-<h3 data-number="9.14.4" id="cffetch--ffetch">cffetch / ffetch</h3>
+<h3 data-number="9.14.6" id="cffetch--ffetch">cffetch / ffetch</h3>
 <pre><code>Synopsis:  cffetch [args...]  /  ffetch [args...]
 Clears the screen and displays system information via fastfetch with
 the custom config at ~/.fastfetch.jsonc. Falls back to neofetch.</code></pre>
-<h3 data-number="9.14.5" id="dockup">dockup</h3>
+<h3 data-number="9.14.7" id="dockup">dockup</h3>
 <pre><code>Synopsis:  dockup [-h] [directory]
 Pulls latest Docker images, restarts services in the given Docker
 Compose project, and prunes dangling images.
 
 dockup ~/myapp</code></pre>
-<h3 data-number="9.14.6" id="joplin">joplin</h3>
+<h3 data-number="9.14.8" id="joplin">joplin</h3>
 <pre><code>Synopsis:  joplin [args...]
 Runs the Joplin CLI with Node.js deprecation warnings suppressed.
 
 joplin ls</code></pre>
-<h3 data-number="9.14.7" id="ld-1">ld</h3>
+<h3 data-number="9.14.9" id="ld-1">ld</h3>
 <pre><code>Synopsis:  ld
 Launches lazydocker targeting the currently active Docker context,
 detected via docker context inspect.</code></pre>
-<h3 data-number="9.14.8" id="replay">replay</h3>
+<h3 data-number="9.14.10" id="replay">replay</h3>
 <pre><code>Synopsis:  replay &lt;commands&gt;
 Runs Bash commands and replays any resulting changes to environment
 variables, aliases, and the working directory back into the current
@@ -1048,17 +1089,17 @@ Fish session. Useful for sourcing Bash scripts.
 
 replay &quot;source ~/.bashrc&quot;
 replay &quot;export FOO=bar&quot;</code></pre>
-<h3 data-number="9.14.9" id="tmux-clean">tmux-clean</h3>
+<h3 data-number="9.14.11" id="tmux-clean">tmux-clean</h3>
 <pre><code>Synopsis:  tmux-clean
 Kills all detached (unattached) tmux sessions, leaving attached ones
 running.</code></pre>
-<h3 data-number="9.14.10" id="wake-lock">wake-lock</h3>
+<h3 data-number="9.14.12" id="wake-lock">wake-lock</h3>
 <pre><code>Synopsis:  wake-lock &lt;command&gt; [args...]
 Runs a command under systemd-inhibit, preventing the system from going
 idle or sleeping until the command completes.
 
 wake-lock rsync -avz src/ dest/</code></pre>
-<h3 data-number="9.14.11" id="zellij">zellij</h3>
+<h3 data-number="9.14.13" id="zellij">zellij</h3>
 <pre><code>Synopsis:  zellij [args...]
 Launches zellij with the Catppuccin Mocha theme applied.</code></pre>
 <hr />

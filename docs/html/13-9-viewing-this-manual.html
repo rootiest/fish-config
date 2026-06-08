@@ -505,15 +505,24 @@ q           quit</code></pre>
 <h2 data-number="13.2" id="with-bat">With bat</h2>
 <pre><code>bat --language=markdown --paging=always ~/.config/fish/docs/fish-config.md</code></pre>
 <h2 data-number="13.3" id="as-a-man-page">As a man page</h2>
-<p>The symlink and MANPATH are configured automatically on shell
-start:</p>
+<pre><code>config-help --man</code></pre>
+<p>Opens the compiled docs/fish-config.1 directly via man -l, bypassing
+the pager fallback chain. The symlink and MANPATH are also configured
+automatically on shell start for the standard invocation:</p>
 <pre><code>man fish-config</code></pre>
-<p>Or read the compiled file directly:</p>
-<pre><code>man -l ~/.config/fish/docs/fish-config.1</code></pre>
 <p>NOTE: fish-config (hyphen) is this config's man page. fish_config
 (underscore) is fish's built-in browser-based configuration tool — a
 completely separate command. Do not mix them up.</p>
-<h2 data-number="13.4" id="jumping-to-a-section">Jumping to a
+<h2 data-number="13.4" id="in-the-browser-html">In the browser
+(HTML)</h2>
+<pre><code>config-help --html</code></pre>
+<p>Opens docs/html/index.html in the default web browser. Browser
+detection queries the system's x-scheme-handler/https MIME entry (via
+xdg-mime) to find the real browser binary, then falls back through known
+browser binaries (firefox, chromium, vivaldi, etc.), and finally
+xdg-open as a last resort. Set $fish_help_browser or $BROWSER to
+override.</p>
+<h2 data-number="13.5" id="jumping-to-a-section">Jumping to a
 section</h2>
 <pre><code>help config keybindings
 help config abbreviations
