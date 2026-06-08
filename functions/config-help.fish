@@ -3,6 +3,8 @@
 
 # SYNOPSIS
 #   config-help [section]
+#   config-help --html
+#   config-help --man
 #   config-help --help
 #
 # DESCRIPTION
@@ -12,24 +14,127 @@
 #   that matches the keyword. Lookup order: docs/fish-config.index (exact
 #   keyword aliases), then a normalized heading scan as fallback.
 #   When opened with ov a sticky navigation hint is shown at the top of the
-#   screen. Pass --help or -h to print usage and navigation key reference.
+#   screen. Pass --html / -w to open the pre-built HTML version in the
+#   default browser via xdg-open. Pass --man / -m to open the compiled
+#   man page directly via man -l. Pass --help or -h for usage reference.
 #
 # ARGUMENTS
-#   section   Optional keyword to jump to a matching section heading
-#   --help    Print usage and navigation reference, then exit
-#   -h        Alias for --help
+#   section     Optional keyword to jump to a matching section heading
+#   -w, --html  Open the offline HTML docs in the default browser
+#   -m, --man   Open the compiled man page via man -l
+#   -h, --help  Print usage and navigation reference, then exit
 #
 # RETURNS
 #   0  Manual displayed (or --help printed)
-#   1  Documentation file not found
+#   1  Documentation file not found, or required tool not available
 #
 # EXAMPLE
 #   config-help
 #   config-help keybindings
 #   config-help pkg
 #   config-help fish-deps
+#   config-help --html
+#   config-help --man
 #   config-help --help
 function config-help --description 'Open the offline fish shell configuration manual'
+    # ── --html / -w ──────────────────────────────────────────────
+    if contains -- --html $argv; or contains -- -w $argv
+        set -l html_file "$__fish_config_dir/docs/html/index.html"
+        if not test -f "$html_file"
+            set_color red
+            echo "error: HTML docs not found at $html_file" >&2
+            set_color normal
+            return 1
+        end
+
+        set -l page_url "file://$html_file"
+
+        # Browser detection — mirrors fish's help.fish priority order but
+        # resolves actual browser binaries before falling back to xdg-open.
+        # xdg-open dispatches on the file's MIME type (text/html), which can
+        # be associated with non-browser apps (e.g. ebook readers). Using a
+        # real browser binary directly with a file:// URI avoids that lookup.
+        set -l graphical_browsers \
+            firefox firefox-esr chromium chromium-browser google-chrome \
+            brave-browser vivaldi vivaldi-stable epiphany falkon qutebrowser \
+            opera x-www-browser htmlview
+
+        set -l browser $fish_help_browser
+
+        if not set -q browser[1]
+            if set -q BROWSER
+                echo $BROWSER | read -at browser
+                if not type -q $browser[1]
+                    set_color red
+                    echo "error: \$BROWSER '$browser[1]' is not a valid command" >&2
+                    set_color normal
+                    return 1
+                end
+            else
+                # Resolve the https scheme handler from xdg-mime and use its
+                # binary directly — most reliable on modern Linux desktops.
+                if type -q xdg-mime
+                    set -l desk (xdg-mime query default x-scheme-handler/https 2>/dev/null)
+                    if test -n "$desk"
+                        set -l candidate (string replace -r '\.desktop$' '' -- $desk)
+                        if type -q $candidate
+                            set browser $candidate
+                        end
+                    end
+                end
+
+                # Fall back to trying known browser binaries in order.
+                if not set -q browser[1]
+                    for b in $graphical_browsers
+                        if type -q -f $b
+                            set browser $b
+                            break
+                        end
+                    end
+                end
+
+                # Last resort: xdg-open (may hit wrong app for local files).
+                if not set -q browser[1]; and type -q xdg-open
+                    set browser xdg-open
+                end
+            end
+        end
+
+        if not set -q browser[1]
+            set_color red
+            echo "error: could not find a web browser — set \$fish_help_browser or \$BROWSER" >&2
+            set_color normal
+            return 1
+        end
+
+        set_color green
+        echo "Opening HTML docs in $browser[1]…"
+        set_color normal
+
+        # Background the browser so it doesn't block the terminal.
+        sh -c '("$@") &' -- $browser $page_url
+        return 0
+    end
+
+    # ── --man / -m ───────────────────────────────────────────────
+    if contains -- --man $argv; or contains -- -m $argv
+        set -l man_file "$__fish_config_dir/docs/fish-config.1"
+        if not test -f "$man_file"
+            set_color red
+            echo "error: man page not found at $man_file" >&2
+            set_color normal
+            return 1
+        end
+        if not type -q man
+            set_color red
+            echo "error: man not found — cannot open man page" >&2
+            set_color normal
+            return 1
+        end
+        man -l "$man_file"
+        return 0
+    end
+
     # ── --help / -h ──────────────────────────────────────────────
     if contains -- --help $argv; or contains -- -h $argv
         set_color --bold
@@ -41,15 +146,19 @@ function config-help --description 'Open the offline fish shell configuration ma
         echo USAGE
         set_color normal
         echo "  config-help "(set_color yellow)"[section]"(set_color normal)
+        echo "  config-help "(set_color yellow)"--html"(set_color normal)
+        echo "  config-help "(set_color yellow)"--man"(set_color normal)
         echo "  config-help "(set_color yellow)"--help"(set_color normal)
         echo ""
         set_color --bold brblue
         echo ARGUMENTS
         set_color normal
-        echo "  "(set_color yellow)"section"(set_color normal)"   Optional keyword to jump to a matching section heading."
-        echo "            Searches docs/fish-config.index for aliases first, then"
-        echo "            falls back to a normalized (case- and punctuation-insensitive)"
-        echo "            scan of heading lines."
+        echo "  "(set_color yellow)"section"(set_color normal)"      Optional keyword to jump to a matching section heading."
+        echo "               Searches docs/fish-config.index for aliases first, then"
+        echo "               falls back to a normalized (case- and punctuation-insensitive)"
+        echo "               scan of heading lines."
+        echo "  "(set_color yellow)"-w, --html"(set_color normal)"   Open the offline HTML docs in the default browser."
+        echo "  "(set_color yellow)"-m, --man"(set_color normal)"    Open the compiled man page via man -l."
         echo ""
         set_color --bold brblue
         echo EXAMPLES
@@ -59,6 +168,8 @@ function config-help --description 'Open the offline fish shell configuration ma
         echo "  "(set_color green)"config-help pkg"(set_color normal)"              jump to the pkg function entry"
         echo "  "(set_color green)"config-help fish-deps"(set_color normal)"        jump to fish-deps"
         echo "  "(set_color green)"config-help abbreviations"(set_color normal)"    jump to Abbreviations section"
+        echo "  "(set_color green)"config-help --html"(set_color normal)"           open HTML docs in browser"
+        echo "  "(set_color green)"config-help --man"(set_color normal)"            open compiled man page"
         echo ""
         set_color --bold brblue
         echo "NAVIGATION (ov pager)"
