@@ -48,6 +48,15 @@ find the real browser binary, then falls back through known browser
 binaries (firefox, chromium, vivaldi, etc.), and finally xdg-open as a
 last resort. Set $fish_help_browser or $BROWSER to override.
 
+## As a wiki
+
+The generated Markdown wiki lives in docs/wiki/. index.md provides the
+project overview and a full table of contents. Each section page has a
+navigation bar at the top linking to every other section.
+
+The wiki is auto-generated from this file by the CI pipeline on every
+push to main that changes docs/fish-config.md.
+
 ## Jumping to a section
 
     help config keybindings
