@@ -606,6 +606,36 @@ bs          bd sync
 bC          bd create --title
 bsh         bd show
 lb          lazybeads</code></pre>
+<h2 data-number="8.11" id="411-shell-aliases">4.11 Shell Aliases</h2>
+<p>These aliases are defined in conf.d/tricks.fish via alias (which
+creates Fish functions). They are active in all interactive
+sessions.</p>
+<h3 data-number="8.11.1" id="navigation">Navigation</h3>
+<pre><code>..      cd ..
+...     cd ../..
+....    cd ../../..
+.....   cd ../../../..
+......  cd ../../../../..</code></pre>
+<h3 data-number="8.11.2" id="color-overrides">Color Overrides</h3>
+<p>Force color output for common tools:</p>
+<pre><code>grep    grep --color=auto
+fgrep   fgrep --color=auto
+egrep   egrep --color=auto
+dir     dir --color=auto
+vdir    vdir --color=auto</code></pre>
+<h3 data-number="8.11.3" id="safety-wrappers">Safety Wrappers</h3>
+<p>Add -i (interactive confirmation) to destructive commands:</p>
+<pre><code>cp      cp -i
+mv      mv -i</code></pre>
+<h3 data-number="8.11.4" id="archives-and-networking">Archives and
+Networking</h3>
+<pre><code>tarnow  tar -acf              Create compressed archive (auto-detects format)
+untar   tar -zxvf             Extract a gzip-compressed archive
+wget    wget -c               Resume interrupted downloads by default
+tb      nc termbin.com 9999   Pipe content to termbin.com for quick sharing</code></pre>
+<h3 data-number="8.11.5" id="system-logs">System Logs</h3>
+<pre><code>jctl    journalctl -p 3 -xb   Show priority-3 (error) journal entries
+                                from the current boot</code></pre>
 <hr />
 </body>
 </html>

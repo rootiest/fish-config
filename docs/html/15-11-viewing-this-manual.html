@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Rootiest" />
-  <title>9. VIEWING THIS MANUAL</title>
+  <title>11. VIEWING THIS MANUAL</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
     span.navlink { flex: 1; }
@@ -483,13 +483,13 @@
 <span class="navlink">
 </span>
 <span class="navlink">
-<span class="navlink-label">Previous:</span> <a href="12-8-fisher-plugins.html" accesskey="p" rel="previous">8. FISHER PLUGINS</a>
+<span class="navlink-label">Previous:</span> <a href="14-10-personalization.html" accesskey="p" rel="previous">10. PERSONALIZATION</a>
 </span>
 </div>
 </nav>
-<h1 data-number="13" id="9-viewing-this-manual">9. VIEWING THIS
+<h1 data-number="15" id="11-viewing-this-manual">11. VIEWING THIS
 MANUAL</h1>
-<h2 data-number="13.1" id="with-ov-recommended">With ov
+<h2 data-number="15.1" id="with-ov-recommended">With ov
 (recommended)</h2>
 <pre><code>help config</code></pre>
 <p>ov renders the Markdown with syntax highlighting and section-based
@@ -502,9 +502,9 @@ n / N       next / previous search match
 g           go to line number
 j           interactive jump target (line, %, or &#39;section&#39;)
 q           quit</code></pre>
-<h2 data-number="13.2" id="with-bat">With bat</h2>
+<h2 data-number="15.2" id="with-bat">With bat</h2>
 <pre><code>bat --language=markdown --paging=always ~/.config/fish/docs/fish-config.md</code></pre>
-<h2 data-number="13.3" id="as-a-man-page">As a man page</h2>
+<h2 data-number="15.3" id="as-a-man-page">As a man page</h2>
 <pre><code>config-help --man</code></pre>
 <p>Opens the compiled docs/fish-config.1 directly via man -l, bypassing
 the pager fallback chain. The symlink and MANPATH are also configured
@@ -513,7 +513,7 @@ automatically on shell start for the standard invocation:</p>
 <p>NOTE: fish-config (hyphen) is this config's man page. fish_config
 (underscore) is fish's built-in browser-based configuration tool — a
 completely separate command. Do not mix them up.</p>
-<h2 data-number="13.4" id="in-the-browser-html">In the browser
+<h2 data-number="15.4" id="in-the-browser-html">In the browser
 (HTML)</h2>
 <pre><code>config-help --html</code></pre>
 <p>Opens docs/html/index.html in the default web browser. Browser
@@ -522,13 +522,13 @@ xdg-mime) to find the real browser binary, then falls back through known
 browser binaries (firefox, chromium, vivaldi, etc.), and finally
 xdg-open as a last resort. Set $fish_help_browser or $BROWSER to
 override.</p>
-<h2 data-number="13.5" id="as-a-wiki">As a wiki</h2>
+<h2 data-number="15.5" id="as-a-wiki">As a wiki</h2>
 <p>The generated Markdown wiki lives in docs/wiki/. index.md provides
 the project overview and a full table of contents. Each section page has
 a navigation bar at the top linking to every other section.</p>
 <p>The wiki is auto-generated from this file by the CI pipeline on every
 push to main that changes docs/fish-config.md.</p>
-<h2 data-number="13.6" id="jumping-to-a-section">Jumping to a
+<h2 data-number="15.6" id="jumping-to-a-section">Jumping to a
 section</h2>
 <pre><code>help config keybindings
 help config abbreviations
