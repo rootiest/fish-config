@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - 'README.md'
+      - "README.md"
 
 jobs:
   remind:
-    runs-on: ubuntu-latest
+    runs-on: racknerd-mini
     steps:
       - name: Checkout
         uses: actions/checkout@v4

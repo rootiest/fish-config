@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - 'docs/fish-config.md'
+      - "docs/fish-config.md"
 
 jobs:
   build-manpage:
-    runs-on: ubuntu-latest
+    runs-on: racknerd-mini
     steps:
       - name: Checkout
         uses: actions/checkout@v4

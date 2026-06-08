@@ -1,0 +1,39 @@
+name: Generate HTML docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/fish-config.md"
+
+jobs:
+  build-html-docs:
+    runs-on: racknerd-mini
+    steps:
+      - name: Checkout
+        env:
+          TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          HOST="${GITHUB_SERVER_URL#*://}"
+          SCHEME="${GITHUB_SERVER_URL%%://*}"
+          git clone --depth=1 --branch "${GITHUB_REF_NAME}" \
+            "${SCHEME}://oauth2:${TOKEN}@${HOST}/${GITHUB_REPOSITORY}.git" .
+
+      - name: Install pandoc
+        run: sudo apt-get update -qq && sudo apt-get install -y pandoc
+
+      - name: Generate chunked HTML docs
+        run: |
+          pandoc -f gfm -t chunkedhtml --split-level=1 --toc -V toc=true \
+                 docs/fish-config.md \
+                 -o docs/html/
+
+      - name: Commit HTML docs
+        run: |
+          git config user.name  "Gitea Actions"
+          git config user.email "actions@gitea"
+          git add docs/html/
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore(docs): regenerate offline HTML docs"
+          git push
