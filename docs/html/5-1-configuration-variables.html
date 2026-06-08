@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Rootiest" />
+  <title>1. CONFIGURATION VARIABLES</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="index.html" accesskey="u" rel="up">FISH-CONFIG</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">FISH-CONFIG</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="6-2-path-setup.html" accesskey="n" rel="next">2. PATH SETUP</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="4-table-of-contents.html" accesskey="p" rel="previous">TABLE OF CONTENTS</a>
+</span>
+</div>
+</nav>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="1-name.html" id="toc-name">NAME</a></li>
+<li><a href="2-synopsis.html" id="toc-synopsis">SYNOPSIS</a></li>
+<li><a href="3-description.html"
+id="toc-description">DESCRIPTION</a></li>
+<li><a href="4-table-of-contents.html" id="toc-table-of-contents">TABLE
+OF CONTENTS</a></li>
+<li><a href="5-1-configuration-variables.html"
+id="toc-1-configuration-variables">1. CONFIGURATION VARIABLES</a>
+<ul>
+<li><a
+href="5-1-configuration-variables.html#environment-directories-xdg"
+id="toc-environment-directories-xdg">Environment Directories
+(XDG)</a></li>
+<li><a href="5-1-configuration-variables.html#tool-homes-xdg-compliant"
+id="toc-tool-homes-xdg-compliant">Tool Homes (XDG-compliant)</a></li>
+<li><a href="5-1-configuration-variables.html#editor-and-pager"
+id="toc-editor-and-pager">Editor and Pager</a></li>
+<li><a href="5-1-configuration-variables.html#scrollback-history"
+id="toc-scrollback-history">Scrollback History</a></li>
+<li><a href="5-1-configuration-variables.html#other"
+id="toc-other">Other</a></li>
+</ul></li>
+<li><a href="6-2-path-setup.html" id="toc-2-path-setup">2. PATH
+SETUP</a></li>
+<li><a href="7-3-key-bindings.html" id="toc-3-key-bindings">3. KEY
+BINDINGS</a>
+<ul>
+<li><a
+href="7-3-key-bindings.html#fzf-bindings-from-fzf---fish-integration"
+id="toc-fzf-bindings-from-fzf---fish-integration">FZF Bindings (from fzf
+--fish integration)</a></li>
+</ul></li>
+<li><a href="8-4-abbreviations.html" id="toc-4-abbreviations">4.
+ABBREVIATIONS</a>
+<ul>
+<li><a href="8-4-abbreviations.html#41-editors" id="toc-41-editors">4.1
+Editors</a></li>
+<li><a href="8-4-abbreviations.html#42-navigation-and-listing"
+id="toc-42-navigation-and-listing">4.2 Navigation and Listing</a></li>
+<li><a href="8-4-abbreviations.html#43-git" id="toc-43-git">4.3
+Git</a></li>
+<li><a href="8-4-abbreviations.html#44-terminal-windows-tabs-and-panes"
+id="toc-44-terminal-windows-tabs-and-panes">4.4 Terminal Windows, Tabs,
+and Panes</a></li>
+<li><a href="8-4-abbreviations.html#45-chezmoi" id="toc-45-chezmoi">4.5
+Chezmoi</a></li>
+<li><a href="8-4-abbreviations.html#46-docker" id="toc-46-docker">4.6
+Docker</a></li>
+<li><a href="8-4-abbreviations.html#47-systemctl"
+id="toc-47-systemctl">4.7 Systemctl</a></li>
+<li><a href="8-4-abbreviations.html#48-ai-assistants"
+id="toc-48-ai-assistants">4.8 AI Assistants</a></li>
+<li><a href="8-4-abbreviations.html#49-history-expansion"
+id="toc-49-history-expansion">4.9 History Expansion</a></li>
+<li><a href="8-4-abbreviations.html#410-miscellaneous"
+id="toc-410-miscellaneous">4.10 Miscellaneous</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html"
+id="toc-5-functions-reference">5. FUNCTIONS REFERENCE</a>
+<ul>
+<li><a href="9-5-functions-reference.html#51-file-and-directory"
+id="toc-51-file-and-directory">5.1 File and Directory</a>
+<ul>
+<li><a href="9-5-functions-reference.html#cat" id="toc-cat">cat</a></li>
+<li><a href="9-5-functions-reference.html#copy"
+id="toc-copy">copy</a></li>
+<li><a href="9-5-functions-reference.html#du" id="toc-du">du</a></li>
+<li><a href="9-5-functions-reference.html#dusize"
+id="toc-dusize">dusize</a></li>
+<li><a href="9-5-functions-reference.html#ld" id="toc-ld">lD</a></li>
+<li><a href="9-5-functions-reference.html#ls" id="toc-ls">ls</a></li>
+<li><a href="9-5-functions-reference.html#lsr" id="toc-lsr">lsr</a></li>
+<li><a href="9-5-functions-reference.html#lss" id="toc-lss">lss</a></li>
+<li><a href="9-5-functions-reference.html#lstree"
+id="toc-lstree">lstree</a></li>
+<li><a href="9-5-functions-reference.html#lt" id="toc-lt">lt</a></li>
+<li><a href="9-5-functions-reference.html#ltr" id="toc-ltr">ltr</a></li>
+<li><a href="9-5-functions-reference.html#lx" id="toc-lx">lx</a></li>
+<li><a href="9-5-functions-reference.html#mkdir"
+id="toc-mkdir">mkdir</a></li>
+<li><a href="9-5-functions-reference.html#mkcd"
+id="toc-mkcd">mkcd</a></li>
+<li><a href="9-5-functions-reference.html#poke"
+id="toc-poke">poke</a></li>
+<li><a href="9-5-functions-reference.html#rm" id="toc-rm">rm</a></li>
+<li><a href="9-5-functions-reference.html#scrub"
+id="toc-scrub">scrub</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#52-navigation"
+id="toc-52-navigation">5.2 Navigation</a>
+<ul>
+<li><a href="9-5-functions-reference.html#cdi" id="toc-cdi">cdi</a></li>
+<li><a href="9-5-functions-reference.html#clone"
+id="toc-clone">clone</a></li>
+<li><a href="9-5-functions-reference.html#clonet"
+id="toc-clonet">clonet</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#53-editors-and-viewers"
+id="toc-53-editors-and-viewers">5.3 Editors and Viewers</a>
+<ul>
+<li><a href="9-5-functions-reference.html#edit"
+id="toc-edit">edit</a></li>
+<li><a href="9-5-functions-reference.html#fc" id="toc-fc">fc</a></li>
+<li><a href="9-5-functions-reference.html#less"
+id="toc-less">less</a></li>
+<li><a href="9-5-functions-reference.html#rawfish"
+id="toc-rawfish">rawfish</a></li>
+<li><a href="9-5-functions-reference.html#view"
+id="toc-view">view</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#54-git-and-version-control"
+id="toc-54-git-and-version-control">5.4 Git and Version Control</a>
+<ul>
+<li><a href="9-5-functions-reference.html#branch"
+id="toc-branch">branch</a></li>
+<li><a href="9-5-functions-reference.html#gi" id="toc-gi">gi</a></li>
+<li><a href="9-5-functions-reference.html#git-clean"
+id="toc-git-clean">git-clean</a></li>
+<li><a href="9-5-functions-reference.html#gitup"
+id="toc-gitup">gitup</a></li>
+<li><a href="9-5-functions-reference.html#gitui"
+id="toc-gitui">gitui</a></li>
+<li><a href="9-5-functions-reference.html#hist"
+id="toc-hist">hist</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#55-package-management"
+id="toc-55-package-management">5.5 Package Management</a>
+<ul>
+<li><a href="9-5-functions-reference.html#pkg" id="toc-pkg">pkg</a></li>
+<li><a href="9-5-functions-reference.html#search"
+id="toc-search">search</a></li>
+<li><a href="9-5-functions-reference.html#upgrade"
+id="toc-upgrade">upgrade</a></li>
+<li><a href="9-5-functions-reference.html#cleanup"
+id="toc-cleanup">cleanup</a></li>
+<li><a href="9-5-functions-reference.html#parur"
+id="toc-parur">parur</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#56-dependency-management"
+id="toc-56-dependency-management">5.6 Dependency Management</a>
+<ul>
+<li><a href="9-5-functions-reference.html#fish-deps"
+id="toc-fish-deps">fish-deps</a></li>
+<li><a href="9-5-functions-reference.html#check_fish_deps"
+id="toc-check_fish_deps">check_fish_deps</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#57-system-and-monitoring"
+id="toc-57-system-and-monitoring">5.7 System and Monitoring</a>
+<ul>
+<li><a href="9-5-functions-reference.html#top" id="toc-top">top</a></li>
+<li><a href="9-5-functions-reference.html#swapstat"
+id="toc-swapstat">swapstat</a></li>
+<li><a href="9-5-functions-reference.html#sbver"
+id="toc-sbver">sbver</a></li>
+<li><a href="9-5-functions-reference.html#ports"
+id="toc-ports">ports</a></li>
+<li><a href="9-5-functions-reference.html#screensleep"
+id="toc-screensleep">screensleep</a></li>
+<li><a href="9-5-functions-reference.html#lock"
+id="toc-lock">lock</a></li>
+<li><a href="9-5-functions-reference.html#sudo-toggle"
+id="toc-sudo-toggle">sudo-toggle</a></li>
+<li><a href="9-5-functions-reference.html#limine-edit"
+id="toc-limine-edit">limine-edit</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#58-terminal-management"
+id="toc-58-terminal-management">5.8 Terminal Management</a>
+<ul>
+<li><a href="9-5-functions-reference.html#tab" id="toc-tab">tab</a></li>
+<li><a href="9-5-functions-reference.html#split"
+id="toc-split">split</a></li>
+<li><a href="9-5-functions-reference.html#spwin"
+id="toc-spwin">spwin</a></li>
+<li><a href="9-5-functions-reference.html#detach"
+id="toc-detach">detach</a></li>
+<li><a href="9-5-functions-reference.html#bkg" id="toc-bkg">bkg</a></li>
+<li><a href="9-5-functions-reference.html#ssh" id="toc-ssh">ssh</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#59-clipboard"
+id="toc-59-clipboard">5.9 Clipboard</a>
+<ul>
+<li><a href="9-5-functions-reference.html#y" id="toc-y">y</a></li>
+<li><a href="9-5-functions-reference.html#p" id="toc-p">p</a></li>
+<li><a href="9-5-functions-reference.html#paste"
+id="toc-paste">paste</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#510-network"
+id="toc-510-network">5.10 Network</a>
+<ul>
+<li><a href="9-5-functions-reference.html#gip" id="toc-gip">gip</a></li>
+<li><a href="9-5-functions-reference.html#gip4"
+id="toc-gip4">gip4</a></li>
+<li><a href="9-5-functions-reference.html#gip6"
+id="toc-gip6">gip6</a></li>
+<li><a href="9-5-functions-reference.html#ping"
+id="toc-ping">ping</a></li>
+<li><a href="9-5-functions-reference.html#qr" id="toc-qr">qr</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#511-pager-and-logging"
+id="toc-511-pager-and-logging">5.11 Pager and Logging</a>
+<ul>
+<li><a href="9-5-functions-reference.html#logs"
+id="toc-logs">logs</a></li>
+<li><a href="9-5-functions-reference.html#smart_exit"
+id="toc-smart_exit">smart_exit</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#512-ai-and-developer-tools"
+id="toc-512-ai-and-developer-tools">5.12 AI and Developer Tools</a>
+<ul>
+<li><a href="9-5-functions-reference.html#antigravity"
+id="toc-antigravity">antigravity</a></li>
+<li><a href="9-5-functions-reference.html#antigravity-ide"
+id="toc-antigravity-ide">antigravity-ide</a></li>
+<li><a href="9-5-functions-reference.html#antigravity-resume"
+id="toc-antigravity-resume">antigravity-resume</a></li>
+<li><a href="9-5-functions-reference.html#claude-resume"
+id="toc-claude-resume">claude-resume</a></li>
+<li><a href="9-5-functions-reference.html#claude-docs"
+id="toc-claude-docs">claude-docs</a></li>
+<li><a href="9-5-functions-reference.html#claude-pr"
+id="toc-claude-pr">claude-pr</a></li>
+<li><a href="9-5-functions-reference.html#code-resume"
+id="toc-code-resume">code-resume</a></li>
+<li><a href="9-5-functions-reference.html#superpowers"
+id="toc-superpowers">superpowers</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#513-media-and-utilities"
+id="toc-513-media-and-utilities">5.13 Media and Utilities</a>
+<ul>
+<li><a href="9-5-functions-reference.html#dng2avif"
+id="toc-dng2avif">dng2avif</a></li>
+<li><a href="9-5-functions-reference.html#steam-dl"
+id="toc-steam-dl">steam-dl</a></li>
+<li><a href="9-5-functions-reference.html#spark"
+id="toc-spark">spark</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#514-miscellaneous"
+id="toc-514-miscellaneous">5.14 Miscellaneous</a>
+<ul>
+<li><a href="9-5-functions-reference.html#bash"
+id="toc-bash">bash</a></li>
+<li><a href="9-5-functions-reference.html#bd-pull"
+id="toc-bd-pull">bd-pull</a></li>
+<li><a href="9-5-functions-reference.html#cheat"
+id="toc-cheat">cheat</a></li>
+<li><a href="9-5-functions-reference.html#cffetch--ffetch"
+id="toc-cffetch--ffetch">cffetch / ffetch</a></li>
+<li><a href="9-5-functions-reference.html#dockup"
+id="toc-dockup">dockup</a></li>
+<li><a href="9-5-functions-reference.html#joplin"
+id="toc-joplin">joplin</a></li>
+<li><a href="9-5-functions-reference.html#ld-1"
+id="toc-ld-1">ld</a></li>
+<li><a href="9-5-functions-reference.html#replay"
+id="toc-replay">replay</a></li>
+<li><a href="9-5-functions-reference.html#tmux-clean"
+id="toc-tmux-clean">tmux-clean</a></li>
+<li><a href="9-5-functions-reference.html#wake-lock"
+id="toc-wake-lock">wake-lock</a></li>
+<li><a href="9-5-functions-reference.html#zellij"
+id="toc-zellij">zellij</a></li>
+</ul></li>
+</ul></li>
+<li><a href="10-6-dependency-catalog.html"
+id="toc-6-dependency-catalog">6. DEPENDENCY CATALOG</a>
+<ul>
+<li><a href="10-6-dependency-catalog.html#required"
+id="toc-required">Required</a></li>
+<li><a href="10-6-dependency-catalog.html#integrations"
+id="toc-integrations">Integrations</a></li>
+<li><a href="10-6-dependency-catalog.html#recommended"
+id="toc-recommended">Recommended</a></li>
+<li><a href="10-6-dependency-catalog.html#install-methods"
+id="toc-install-methods">Install Methods</a></li>
+</ul></li>
+<li><a href="11-7-customization.html" id="toc-7-customization">7.
+CUSTOMIZATION</a>
+<ul>
+<li><a href="11-7-customization.html#machine-local-configuration"
+id="toc-machine-local-configuration">Machine-local
+Configuration</a></li>
+<li><a href="11-7-customization.html#secrets-and-api-keys"
+id="toc-secrets-and-api-keys">Secrets and API Keys</a></li>
+<li><a href="11-7-customization.html#overriding-configuration-variables"
+id="toc-overriding-configuration-variables">Overriding Configuration
+Variables</a></li>
+<li><a href="11-7-customization.html#fish-universal-variables"
+id="toc-fish-universal-variables">Fish Universal Variables</a></li>
+</ul></li>
+<li><a href="12-8-fisher-plugins.html" id="toc-8-fisher-plugins">8.
+FISHER PLUGINS</a></li>
+<li><a href="13-9-viewing-this-manual.html"
+id="toc-9-viewing-this-manual">9. VIEWING THIS MANUAL</a>
+<ul>
+<li><a href="13-9-viewing-this-manual.html#with-ov-recommended"
+id="toc-with-ov-recommended">With ov (recommended)</a></li>
+<li><a href="13-9-viewing-this-manual.html#with-bat"
+id="toc-with-bat">With bat</a></li>
+<li><a href="13-9-viewing-this-manual.html#as-a-man-page"
+id="toc-as-a-man-page">As a man page</a></li>
+<li><a href="13-9-viewing-this-manual.html#jumping-to-a-section"
+id="toc-jumping-to-a-section">Jumping to a section</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 data-number="5" id="1-configuration-variables">1. CONFIGURATION
+VARIABLES</h1>
+<p>These variables are exported from config.fish on every interactive
+session. Override them in ~/.config/.user-dots/fish/local.fish.</p>
+<h2 data-number="5.1" id="environment-directories-xdg">Environment
+Directories (XDG)</h2>
+<pre><code>XDG_CONFIG_HOME    ~/.config
+XDG_CACHE_HOME     ~/.cache
+XDG_DATA_HOME      ~/.local/share
+XDG_STATE_HOME     ~/.local/state</code></pre>
+<p>Tools that respect XDG are directed to these paths rather than
+polluting $HOME.</p>
+<h2 data-number="5.2" id="tool-homes-xdg-compliant">Tool Homes
+(XDG-compliant)</h2>
+<pre><code>CARGO_HOME         $XDG_DATA_HOME/cargo
+RUSTUP_HOME        $XDG_DATA_HOME/rustup
+GOPATH             $XDG_DATA_HOME/go
+BUN_INSTALL        $XDG_DATA_HOME/bun
+NPM_CONFIG_PREFIX  $XDG_DATA_HOME/npm-global
+GNUPGHOME          $XDG_CONFIG_HOME/gnupg
+WAKATIME_HOME      $XDG_CONFIG_HOME/wakatime</code></pre>
+<h2 data-number="5.3" id="editor-and-pager">Editor and Pager</h2>
+<pre><code>EDITOR      nvim (falls back to vi if nvim is absent)
+VISUAL      same as EDITOR
+SUDO_EDITOR same as EDITOR
+PAGER       ov (falls back to less)</code></pre>
+<h2 data-number="5.4" id="scrollback-history">Scrollback History</h2>
+<pre><code>SCROLLBACK_HISTORY_DIR        ~/.terminal_history
+SCROLLBACK_HISTORY_MAX_FILES  100</code></pre>
+<p>Scrollback logs accumulate in SCROLLBACK_HISTORY_DIR as timestamped
+files. When the count exceeds SCROLLBACK_HISTORY_MAX_FILES the oldest
+are pruned automatically on exit. Use <code>logs</code> to browse them
+interactively.</p>
+<h2 data-number="5.5" id="other">Other</h2>
+<pre><code>GPG_TTY              $(tty)  — ensures GPG passphrase prompts work
+CLAUDE_CODE_NO_FLICKER  1    — suppress terminal flicker in Claude Code
+CDPATH               . ~/projects ~</code></pre>
+<hr />
+</body>
+</html>

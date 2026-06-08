@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Rootiest" />
+  <title>5. FUNCTIONS REFERENCE</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="index.html" accesskey="u" rel="up">FISH-CONFIG</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">FISH-CONFIG</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="10-6-dependency-catalog.html" accesskey="n" rel="next">6. DEPENDENCY CATALOG</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="8-4-abbreviations.html" accesskey="p" rel="previous">4. ABBREVIATIONS</a>
+</span>
+</div>
+</nav>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="1-name.html" id="toc-name">NAME</a></li>
+<li><a href="2-synopsis.html" id="toc-synopsis">SYNOPSIS</a></li>
+<li><a href="3-description.html"
+id="toc-description">DESCRIPTION</a></li>
+<li><a href="4-table-of-contents.html" id="toc-table-of-contents">TABLE
+OF CONTENTS</a></li>
+<li><a href="5-1-configuration-variables.html"
+id="toc-1-configuration-variables">1. CONFIGURATION VARIABLES</a>
+<ul>
+<li><a
+href="5-1-configuration-variables.html#environment-directories-xdg"
+id="toc-environment-directories-xdg">Environment Directories
+(XDG)</a></li>
+<li><a href="5-1-configuration-variables.html#tool-homes-xdg-compliant"
+id="toc-tool-homes-xdg-compliant">Tool Homes (XDG-compliant)</a></li>
+<li><a href="5-1-configuration-variables.html#editor-and-pager"
+id="toc-editor-and-pager">Editor and Pager</a></li>
+<li><a href="5-1-configuration-variables.html#scrollback-history"
+id="toc-scrollback-history">Scrollback History</a></li>
+<li><a href="5-1-configuration-variables.html#other"
+id="toc-other">Other</a></li>
+</ul></li>
+<li><a href="6-2-path-setup.html" id="toc-2-path-setup">2. PATH
+SETUP</a></li>
+<li><a href="7-3-key-bindings.html" id="toc-3-key-bindings">3. KEY
+BINDINGS</a>
+<ul>
+<li><a
+href="7-3-key-bindings.html#fzf-bindings-from-fzf---fish-integration"
+id="toc-fzf-bindings-from-fzf---fish-integration">FZF Bindings (from fzf
+--fish integration)</a></li>
+</ul></li>
+<li><a href="8-4-abbreviations.html" id="toc-4-abbreviations">4.
+ABBREVIATIONS</a>
+<ul>
+<li><a href="8-4-abbreviations.html#41-editors" id="toc-41-editors">4.1
+Editors</a></li>
+<li><a href="8-4-abbreviations.html#42-navigation-and-listing"
+id="toc-42-navigation-and-listing">4.2 Navigation and Listing</a></li>
+<li><a href="8-4-abbreviations.html#43-git" id="toc-43-git">4.3
+Git</a></li>
+<li><a href="8-4-abbreviations.html#44-terminal-windows-tabs-and-panes"
+id="toc-44-terminal-windows-tabs-and-panes">4.4 Terminal Windows, Tabs,
+and Panes</a></li>
+<li><a href="8-4-abbreviations.html#45-chezmoi" id="toc-45-chezmoi">4.5
+Chezmoi</a></li>
+<li><a href="8-4-abbreviations.html#46-docker" id="toc-46-docker">4.6
+Docker</a></li>
+<li><a href="8-4-abbreviations.html#47-systemctl"
+id="toc-47-systemctl">4.7 Systemctl</a></li>
+<li><a href="8-4-abbreviations.html#48-ai-assistants"
+id="toc-48-ai-assistants">4.8 AI Assistants</a></li>
+<li><a href="8-4-abbreviations.html#49-history-expansion"
+id="toc-49-history-expansion">4.9 History Expansion</a></li>
+<li><a href="8-4-abbreviations.html#410-miscellaneous"
+id="toc-410-miscellaneous">4.10 Miscellaneous</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html"
+id="toc-5-functions-reference">5. FUNCTIONS REFERENCE</a>
+<ul>
+<li><a href="9-5-functions-reference.html#51-file-and-directory"
+id="toc-51-file-and-directory">5.1 File and Directory</a>
+<ul>
+<li><a href="9-5-functions-reference.html#cat" id="toc-cat">cat</a></li>
+<li><a href="9-5-functions-reference.html#copy"
+id="toc-copy">copy</a></li>
+<li><a href="9-5-functions-reference.html#du" id="toc-du">du</a></li>
+<li><a href="9-5-functions-reference.html#dusize"
+id="toc-dusize">dusize</a></li>
+<li><a href="9-5-functions-reference.html#ld" id="toc-ld">lD</a></li>
+<li><a href="9-5-functions-reference.html#ls" id="toc-ls">ls</a></li>
+<li><a href="9-5-functions-reference.html#lsr" id="toc-lsr">lsr</a></li>
+<li><a href="9-5-functions-reference.html#lss" id="toc-lss">lss</a></li>
+<li><a href="9-5-functions-reference.html#lstree"
+id="toc-lstree">lstree</a></li>
+<li><a href="9-5-functions-reference.html#lt" id="toc-lt">lt</a></li>
+<li><a href="9-5-functions-reference.html#ltr" id="toc-ltr">ltr</a></li>
+<li><a href="9-5-functions-reference.html#lx" id="toc-lx">lx</a></li>
+<li><a href="9-5-functions-reference.html#mkdir"
+id="toc-mkdir">mkdir</a></li>
+<li><a href="9-5-functions-reference.html#mkcd"
+id="toc-mkcd">mkcd</a></li>
+<li><a href="9-5-functions-reference.html#poke"
+id="toc-poke">poke</a></li>
+<li><a href="9-5-functions-reference.html#rm" id="toc-rm">rm</a></li>
+<li><a href="9-5-functions-reference.html#scrub"
+id="toc-scrub">scrub</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#52-navigation"
+id="toc-52-navigation">5.2 Navigation</a>
+<ul>
+<li><a href="9-5-functions-reference.html#cdi" id="toc-cdi">cdi</a></li>
+<li><a href="9-5-functions-reference.html#clone"
+id="toc-clone">clone</a></li>
+<li><a href="9-5-functions-reference.html#clonet"
+id="toc-clonet">clonet</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#53-editors-and-viewers"
+id="toc-53-editors-and-viewers">5.3 Editors and Viewers</a>
+<ul>
+<li><a href="9-5-functions-reference.html#edit"
+id="toc-edit">edit</a></li>
+<li><a href="9-5-functions-reference.html#fc" id="toc-fc">fc</a></li>
+<li><a href="9-5-functions-reference.html#less"
+id="toc-less">less</a></li>
+<li><a href="9-5-functions-reference.html#rawfish"
+id="toc-rawfish">rawfish</a></li>
+<li><a href="9-5-functions-reference.html#view"
+id="toc-view">view</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#54-git-and-version-control"
+id="toc-54-git-and-version-control">5.4 Git and Version Control</a>
+<ul>
+<li><a href="9-5-functions-reference.html#branch"
+id="toc-branch">branch</a></li>
+<li><a href="9-5-functions-reference.html#gi" id="toc-gi">gi</a></li>
+<li><a href="9-5-functions-reference.html#git-clean"
+id="toc-git-clean">git-clean</a></li>
+<li><a href="9-5-functions-reference.html#gitup"
+id="toc-gitup">gitup</a></li>
+<li><a href="9-5-functions-reference.html#gitui"
+id="toc-gitui">gitui</a></li>
+<li><a href="9-5-functions-reference.html#hist"
+id="toc-hist">hist</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#55-package-management"
+id="toc-55-package-management">5.5 Package Management</a>
+<ul>
+<li><a href="9-5-functions-reference.html#pkg" id="toc-pkg">pkg</a></li>
+<li><a href="9-5-functions-reference.html#search"
+id="toc-search">search</a></li>
+<li><a href="9-5-functions-reference.html#upgrade"
+id="toc-upgrade">upgrade</a></li>
+<li><a href="9-5-functions-reference.html#cleanup"
+id="toc-cleanup">cleanup</a></li>
+<li><a href="9-5-functions-reference.html#parur"
+id="toc-parur">parur</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#56-dependency-management"
+id="toc-56-dependency-management">5.6 Dependency Management</a>
+<ul>
+<li><a href="9-5-functions-reference.html#fish-deps"
+id="toc-fish-deps">fish-deps</a></li>
+<li><a href="9-5-functions-reference.html#check_fish_deps"
+id="toc-check_fish_deps">check_fish_deps</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#57-system-and-monitoring"
+id="toc-57-system-and-monitoring">5.7 System and Monitoring</a>
+<ul>
+<li><a href="9-5-functions-reference.html#top" id="toc-top">top</a></li>
+<li><a href="9-5-functions-reference.html#swapstat"
+id="toc-swapstat">swapstat</a></li>
+<li><a href="9-5-functions-reference.html#sbver"
+id="toc-sbver">sbver</a></li>
+<li><a href="9-5-functions-reference.html#ports"
+id="toc-ports">ports</a></li>
+<li><a href="9-5-functions-reference.html#screensleep"
+id="toc-screensleep">screensleep</a></li>
+<li><a href="9-5-functions-reference.html#lock"
+id="toc-lock">lock</a></li>
+<li><a href="9-5-functions-reference.html#sudo-toggle"
+id="toc-sudo-toggle">sudo-toggle</a></li>
+<li><a href="9-5-functions-reference.html#limine-edit"
+id="toc-limine-edit">limine-edit</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#58-terminal-management"
+id="toc-58-terminal-management">5.8 Terminal Management</a>
+<ul>
+<li><a href="9-5-functions-reference.html#tab" id="toc-tab">tab</a></li>
+<li><a href="9-5-functions-reference.html#split"
+id="toc-split">split</a></li>
+<li><a href="9-5-functions-reference.html#spwin"
+id="toc-spwin">spwin</a></li>
+<li><a href="9-5-functions-reference.html#detach"
+id="toc-detach">detach</a></li>
+<li><a href="9-5-functions-reference.html#bkg" id="toc-bkg">bkg</a></li>
+<li><a href="9-5-functions-reference.html#ssh" id="toc-ssh">ssh</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#59-clipboard"
+id="toc-59-clipboard">5.9 Clipboard</a>
+<ul>
+<li><a href="9-5-functions-reference.html#y" id="toc-y">y</a></li>
+<li><a href="9-5-functions-reference.html#p" id="toc-p">p</a></li>
+<li><a href="9-5-functions-reference.html#paste"
+id="toc-paste">paste</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#510-network"
+id="toc-510-network">5.10 Network</a>
+<ul>
+<li><a href="9-5-functions-reference.html#gip" id="toc-gip">gip</a></li>
+<li><a href="9-5-functions-reference.html#gip4"
+id="toc-gip4">gip4</a></li>
+<li><a href="9-5-functions-reference.html#gip6"
+id="toc-gip6">gip6</a></li>
+<li><a href="9-5-functions-reference.html#ping"
+id="toc-ping">ping</a></li>
+<li><a href="9-5-functions-reference.html#qr" id="toc-qr">qr</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#511-pager-and-logging"
+id="toc-511-pager-and-logging">5.11 Pager and Logging</a>
+<ul>
+<li><a href="9-5-functions-reference.html#logs"
+id="toc-logs">logs</a></li>
+<li><a href="9-5-functions-reference.html#smart_exit"
+id="toc-smart_exit">smart_exit</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#512-ai-and-developer-tools"
+id="toc-512-ai-and-developer-tools">5.12 AI and Developer Tools</a>
+<ul>
+<li><a href="9-5-functions-reference.html#antigravity"
+id="toc-antigravity">antigravity</a></li>
+<li><a href="9-5-functions-reference.html#antigravity-ide"
+id="toc-antigravity-ide">antigravity-ide</a></li>
+<li><a href="9-5-functions-reference.html#antigravity-resume"
+id="toc-antigravity-resume">antigravity-resume</a></li>
+<li><a href="9-5-functions-reference.html#claude-resume"
+id="toc-claude-resume">claude-resume</a></li>
+<li><a href="9-5-functions-reference.html#claude-docs"
+id="toc-claude-docs">claude-docs</a></li>
+<li><a href="9-5-functions-reference.html#claude-pr"
+id="toc-claude-pr">claude-pr</a></li>
+<li><a href="9-5-functions-reference.html#code-resume"
+id="toc-code-resume">code-resume</a></li>
+<li><a href="9-5-functions-reference.html#superpowers"
+id="toc-superpowers">superpowers</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#513-media-and-utilities"
+id="toc-513-media-and-utilities">5.13 Media and Utilities</a>
+<ul>
+<li><a href="9-5-functions-reference.html#dng2avif"
+id="toc-dng2avif">dng2avif</a></li>
+<li><a href="9-5-functions-reference.html#steam-dl"
+id="toc-steam-dl">steam-dl</a></li>
+<li><a href="9-5-functions-reference.html#spark"
+id="toc-spark">spark</a></li>
+</ul></li>
+<li><a href="9-5-functions-reference.html#514-miscellaneous"
+id="toc-514-miscellaneous">5.14 Miscellaneous</a>
+<ul>
+<li><a href="9-5-functions-reference.html#bash"
+id="toc-bash">bash</a></li>
+<li><a href="9-5-functions-reference.html#bd-pull"
+id="toc-bd-pull">bd-pull</a></li>
+<li><a href="9-5-functions-reference.html#cheat"
+id="toc-cheat">cheat</a></li>
+<li><a href="9-5-functions-reference.html#cffetch--ffetch"
+id="toc-cffetch--ffetch">cffetch / ffetch</a></li>
+<li><a href="9-5-functions-reference.html#dockup"
+id="toc-dockup">dockup</a></li>
+<li><a href="9-5-functions-reference.html#joplin"
+id="toc-joplin">joplin</a></li>
+<li><a href="9-5-functions-reference.html#ld-1"
+id="toc-ld-1">ld</a></li>
+<li><a href="9-5-functions-reference.html#replay"
+id="toc-replay">replay</a></li>
+<li><a href="9-5-functions-reference.html#tmux-clean"
+id="toc-tmux-clean">tmux-clean</a></li>
+<li><a href="9-5-functions-reference.html#wake-lock"
+id="toc-wake-lock">wake-lock</a></li>
+<li><a href="9-5-functions-reference.html#zellij"
+id="toc-zellij">zellij</a></li>
+</ul></li>
+</ul></li>
+<li><a href="10-6-dependency-catalog.html"
+id="toc-6-dependency-catalog">6. DEPENDENCY CATALOG</a>
+<ul>
+<li><a href="10-6-dependency-catalog.html#required"
+id="toc-required">Required</a></li>
+<li><a href="10-6-dependency-catalog.html#integrations"
+id="toc-integrations">Integrations</a></li>
+<li><a href="10-6-dependency-catalog.html#recommended"
+id="toc-recommended">Recommended</a></li>
+<li><a href="10-6-dependency-catalog.html#install-methods"
+id="toc-install-methods">Install Methods</a></li>
+</ul></li>
+<li><a href="11-7-customization.html" id="toc-7-customization">7.
+CUSTOMIZATION</a>
+<ul>
+<li><a href="11-7-customization.html#machine-local-configuration"
+id="toc-machine-local-configuration">Machine-local
+Configuration</a></li>
+<li><a href="11-7-customization.html#secrets-and-api-keys"
+id="toc-secrets-and-api-keys">Secrets and API Keys</a></li>
+<li><a href="11-7-customization.html#overriding-configuration-variables"
+id="toc-overriding-configuration-variables">Overriding Configuration
+Variables</a></li>
+<li><a href="11-7-customization.html#fish-universal-variables"
+id="toc-fish-universal-variables">Fish Universal Variables</a></li>
+</ul></li>
+<li><a href="12-8-fisher-plugins.html" id="toc-8-fisher-plugins">8.
+FISHER PLUGINS</a></li>
+<li><a href="13-9-viewing-this-manual.html"
+id="toc-9-viewing-this-manual">9. VIEWING THIS MANUAL</a>
+<ul>
+<li><a href="13-9-viewing-this-manual.html#with-ov-recommended"
+id="toc-with-ov-recommended">With ov (recommended)</a></li>
+<li><a href="13-9-viewing-this-manual.html#with-bat"
+id="toc-with-bat">With bat</a></li>
+<li><a href="13-9-viewing-this-manual.html#as-a-man-page"
+id="toc-as-a-man-page">As a man page</a></li>
+<li><a href="13-9-viewing-this-manual.html#jumping-to-a-section"
+id="toc-jumping-to-a-section">Jumping to a section</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 data-number="9" id="5-functions-reference">5. FUNCTIONS
+REFERENCE</h1>
+<h2 data-number="9.1" id="51-file-and-directory">5.1 File and
+Directory</h2>
+<h3 data-number="9.1.1" id="cat">cat</h3>
+<pre><code>Synopsis:  cat [args...]
+Wraps bat for files with syntax highlighting and line numbers.
+Passes directories to ls. Falls back to /usr/bin/cat.
+
+cat README.md
+cat ~/projects/myapp</code></pre>
+<h3 data-number="9.1.2" id="copy">copy</h3>
+<pre><code>Synopsis:  copy &lt;source&gt; &lt;dest&gt;
+Wraps cp, stripping trailing slashes from source directories to
+prevent unintended nesting inside the destination.
+
+copy ./mydir/ ~/backup    # copies mydir INTO backup, not backup/mydir/</code></pre>
+<h3 data-number="9.1.3" id="du">du</h3>
+<pre><code>Synopsis:  du [--disk|--dir|--dua] [args...]
+Smart disk-usage dispatcher:
+  --disk  force duf  (disk-level free/used overview)
+  --dir   force dust (per-directory tree breakdown)
+  --dua   force dua  (fast space analyzer)
+Without flags, routes to the most appropriate tool by context.
+
+du ~/Downloads
+du --disk</code></pre>
+<h3 data-number="9.1.4" id="dusize">dusize</h3>
+<pre><code>Synopsis:  dusize [dir]
+Human-readable disk usage for a directory via du -sh. Defaults to cwd.
+
+dusize ~/Videos</code></pre>
+<h3 data-number="9.1.5" id="ld">lD</h3>
+<pre><code>Synopsis:  lD [args...]
+Lists directories only in long format with icons. Uses eza, falls back
+to lsd, then system ls.
+
+lD ~/projects</code></pre>
+<h3 data-number="9.1.6" id="ls">ls</h3>
+<pre><code>Synopsis:  ls [args...]
+Lists files in long format with icons and hyperlinks. Uses eza, falls
+back to lsd, then system ls.
+
+ls
+ls -a ~/projects</code></pre>
+<h3 data-number="9.1.7" id="lsr">lsr</h3>
+<pre><code>Synopsis:  lsr [args...]
+Lists files sorted by modification time, oldest first. Uses eza.</code></pre>
+<h3 data-number="9.1.8" id="lss">lss</h3>
+<pre><code>Synopsis:  lss [args...]
+Lists files sorted by size with gradient color scaling. Uses eza.</code></pre>
+<h3 data-number="9.1.9" id="lstree">lstree</h3>
+<pre><code>Synopsis:  lstree [args...]
+Full recursive tree view with icons. Uses eza.
+
+lstree ~/projects/myapp</code></pre>
+<h3 data-number="9.1.10" id="lt">lt</h3>
+<pre><code>Synopsis:  lt [args...]
+Tree view limited to depth 2 with icons. Uses eza.
+
+lt ~/projects</code></pre>
+<h3 data-number="9.1.11" id="ltr">ltr</h3>
+<pre><code>Synopsis:  ltr [args...]
+Lists files sorted by modification time, oldest first, long format with
+age-based gradient scaling. Uses eza.</code></pre>
+<h3 data-number="9.1.12" id="lx">lx</h3>
+<pre><code>Synopsis:  lx [args...]
+Lists files sorted by extension, long format. Uses eza.</code></pre>
+<h3 data-number="9.1.13" id="mkdir">mkdir</h3>
+<pre><code>Synopsis:  mkdir [args...]
+Interactive mkdir that prints a tree of created directories.
+Falls back to mkdir -p silently.
+
+mkdir ~/projects/myapp/src</code></pre>
+<h3 data-number="9.1.14" id="mkcd">mkcd</h3>
+<pre><code>Synopsis:  mkcd [-s] &lt;dir&gt;
+Creates a directory (including parents) and cd into it. Prints a tree
+of created dirs by default; -s/--silent suppresses output.
+
+mkcd ~/projects/newapp/src</code></pre>
+<h3 data-number="9.1.15" id="poke">poke</h3>
+<pre><code>Synopsis:  poke &lt;file&gt; [file...]
+Creates files via touch, automatically creating any missing parent
+directories first.
+
+poke ~/projects/new/src/main.fish</code></pre>
+<h3 data-number="9.1.16" id="rm">rm</h3>
+<pre><code>Synopsis:  rm [-e [opts] | -S | args...]
+Safe rm wrapper routing to trash:
+
+  (no args)   List current trash contents
+  -e/--empty  Empty the trash (pass options to trash-empty)
+  -S/--secure Permanently delete via rm -rf + fstrim (irreversible)
+  -r/-R/--recursive  Move to trash
+  &lt;paths&gt;     Move to trash (safe delete)
+
+Falls back to /usr/bin/rm when trash is unavailable.
+
+rm file.txt           # moves to trash
+rm -e                 # empty trash
+rm -S sensitive.pem   # permanent delete</code></pre>
+<h3 data-number="9.1.17" id="scrub">scrub</h3>
+<pre><code>Synopsis:  scrub [-a] [-d] [-h]
+Recursively removes OS metadata, editor artifacts, compiler output,
+and dev caches using fd.
+
+  -a/--aggressive  Also removes node_modules, logs, .cache, IDE dirs,
+                   AI session artifacts
+  -d/--dry-run     Print what would be removed without deleting
+
+scrub
+scrub -a
+scrub -d</code></pre>
+<hr />
+<h2 data-number="9.2" id="52-navigation">5.2 Navigation</h2>
+<h3 data-number="9.2.1" id="cdi">cdi</h3>
+<pre><code>Synopsis:  cdi [query]
+Interactive directory picker combining zoxide frecency with fzf.
+Equivalent to zi.
+
+cdi myproject</code></pre>
+<h3 data-number="9.2.2" id="clone">clone</h3>
+<pre><code>Synopsis:  clone [args...]
+Clone a git repository into a new Kitty window. Kitty-only.
+
+clone https://github.com/user/repo.git</code></pre>
+<h3 data-number="9.2.3" id="clonet">clonet</h3>
+<pre><code>Synopsis:  clonet [args...]
+Clone a git repository into a new Kitty tab. Kitty-only.
+
+clonet https://github.com/user/repo.git</code></pre>
+<hr />
+<h2 data-number="9.3" id="53-editors-and-viewers">5.3 Editors and
+Viewers</h2>
+<h3 data-number="9.3.1" id="edit">edit</h3>
+<pre><code>Synopsis:  edit [args...]
+Opens files in nvim. Falls back to $EDITOR, nano, vi.
+
+edit ~/.config/fish/config.fish</code></pre>
+<h3 data-number="9.3.2" id="fc">fc</h3>
+<pre><code>Synopsis:  fc [command_prefix]
+Edit the last shell command (or one matching a prefix) in $EDITOR,
+then execute the result. Bash-style fc behaviour.
+
+fc
+fc git</code></pre>
+<h3 data-number="9.3.3" id="less">less</h3>
+<pre><code>Synopsis:  less [args...]
+Pager wrapper with fallback chain: $PAGER -&gt; ov -&gt; less -&gt; more -&gt; cat.
+
+less /var/log/syslog</code></pre>
+<h3 data-number="9.3.4" id="rawfish">rawfish</h3>
+<pre><code>Synopsis:  rawfish [args...]
+Launches Fish with NO_TMUX=1, bypassing any tmux auto-attach logic.
+Useful when you need a clean shell without session management.</code></pre>
+<h3 data-number="9.3.5" id="view">view</h3>
+<pre><code>Synopsis:  view [args...]
+Opens files in nvim read-only mode (-R). Falls back to less.
+
+view /etc/fstab</code></pre>
+<hr />
+<h2 data-number="9.4" id="54-git-and-version-control">5.4 Git and
+Version Control</h2>
+<h3 data-number="9.4.1" id="branch">branch</h3>
+<pre><code>Synopsis:  branch &lt;branch_name&gt;
+Switches to a local branch, or creates it if it does not exist.
+
+branch feature/new-ui</code></pre>
+<h3 data-number="9.4.2" id="gi">gi</h3>
+<pre><code>Synopsis:  gi [-h] [-b] [-p] [-s] [-l] [targets...]
+Generates .gitignore content from the gitignore.io API with MD5-based
+deduplication (patterns already present are not re-appended).
+
+  -b/--boilerplate  Append generic boilerplate first
+  -p/--prompt       Prompt interactively for targets
+  -s/--stdout       Print to stdout instead of appending to .gitignore
+  -l/--list         List all available targets
+  targets           Comma-separated or space-separated target names
+
+gi python,venv
+gi -b -p
+gi -s node &gt; .gitignore</code></pre>
+<h3 data-number="9.4.3" id="git-clean">git-clean</h3>
+<pre><code>Synopsis:  git-clean [-f]
+Fetches and prunes the remote, fast-forwards the current branch, then
+deletes local branches whose remote tracking branch has been deleted.
+Switches to main/master automatically if the current branch is orphaned.
+
+  -f/--force  Force-delete unmerged branches too
+
+git-clean
+git-clean --force</code></pre>
+<h3 data-number="9.4.4" id="gitup">gitup</h3>
+<pre><code>Synopsis:  gitup [args...]
+Fetches updates from the remote and shows git status. Extra args are
+forwarded to git fetch.
+
+gitup
+gitup --all</code></pre>
+<h3 data-number="9.4.5" id="gitui">gitui</h3>
+<pre><code>Synopsis:  gitui [args...]
+Launches gitui with the Catppuccin Frappe theme pre-applied.</code></pre>
+<h3 data-number="9.4.6" id="hist">hist</h3>
+<pre><code>Synopsis:  hist
+Searches shell history with fzf, inserts the selection into the command
+line, and copies it to the clipboard via wl-copy.</code></pre>
+<hr />
+<h2 data-number="9.5" id="55-package-management">5.5 Package
+Management</h2>
+<h3 data-number="9.5.1" id="pkg">pkg</h3>
+<pre><code>Synopsis:  pkg [-h] [-i|-u] &lt;package&gt; [package...]
+Installs or removes packages using the detected system package manager.
+Supports: paru, yay, pacman, apt, dnf, zypper, yum, brew, pkg.
+
+  (no flag)    Auto mode: installs missing packages, removes installed ones
+  -i/--install  Force install
+  -u/--uninstall  Force uninstall
+
+pkg firefox             # auto: install if missing, remove if present
+pkg -i ripgrep fd       # force install
+pkg -u cowsay           # force uninstall
+
+The package-installed check uses the correct query for each PM:
+  pacman/paru/yay  pacman -Qi
+  apt              dpkg -s
+  dnf/zypper/yum   rpm -q
+  brew             brew list
+  pkg              pkg info</code></pre>
+<h3 data-number="9.5.2" id="search">search</h3>
+<pre><code>Synopsis:  search [args...]
+Interactive AUR package search and install via paru or yay.
+Arch Linux only.
+
+search neovim</code></pre>
+<h3 data-number="9.5.3" id="upgrade">upgrade</h3>
+<pre><code>Synopsis:  upgrade
+Full system upgrade via paru -Syu --noconfirm or yay -Syu --noconfirm.
+Arch Linux only.</code></pre>
+<h3 data-number="9.5.4" id="cleanup">cleanup</h3>
+<pre><code>Synopsis:  cleanup
+Lists and removes orphan packages via pacman, logging their names to
+~/.removed_orphans. Arch Linux only.</code></pre>
+<h3 data-number="9.5.5" id="parur">parur</h3>
+<pre><code>Synopsis:  parur
+Opens an fzf picker of all installed packages (with pacman -Qi previews),
+then removes the selected packages via paru or yay. Arch Linux only.
+
+parur</code></pre>
+<hr />
+<h2 data-number="9.6" id="56-dependency-management">5.6 Dependency
+Management</h2>
+<h3 data-number="9.6.1" id="fish-deps">fish-deps</h3>
+<pre><code>Synopsis:  fish-deps [status|install|update|sync]
+Unified command for managing all tools this configuration depends on.
+
+  status   (default) Show installed/missing status grouped by tier
+  install  Interactively install each missing dependency
+  update   Update all installed dependencies
+  sync     Install missing deps, then update all
+
+Install method priority (highest to lowest):
+  1. git+cargo source build (fish shell itself)
+  2. cargo (Rust tools — gets latest crate version)
+  3. system PM (paru/apt/brew/etc.)
+  4. git clone (fzf)
+  5. curl installer (starship, fisher, uv)
+  6. pipx (Python tools)
+
+When multiple methods are available you are prompted to choose.
+
+Dependencies are grouped into three tiers:
+
+  Required      uv, cargo, fish, fisher, starship, fzf, zoxide,
+                direnv, paru/yay
+  Integrations  wakatime, tailscale
+  Recommended   eza, lsd, bat, btop, dust, duf, prettyping, ov,
+                ripgrep, lazygit, lazydocker, trash, kitty, wezterm
+
+fish-deps
+fish-deps install
+fish-deps update
+fish-deps sync</code></pre>
+<h3 data-number="9.6.2" id="check_fish_deps">check_fish_deps</h3>
+<pre><code>Synopsis:  check_fish_deps
+Backwards-compatibility alias for `fish-deps status`.</code></pre>
+<hr />
+<h2 data-number="9.7" id="57-system-and-monitoring">5.7 System and
+Monitoring</h2>
+<h3 data-number="9.7.1" id="top">top</h3>
+<pre><code>Synopsis:  top [args...]
+Launches btop as a modern resource monitor. Falls back to system top.</code></pre>
+<h3 data-number="9.7.2" id="swapstat">swapstat</h3>
+<pre><code>Synopsis:  swapstat
+Displays a colorized memory report: kernel swappiness, zRAM compression
+ratio, zRAM device details, and active swap priorities.</code></pre>
+<h3 data-number="9.7.3" id="sbver">sbver</h3>
+<pre><code>Synopsis:  sbver [--brief]
+Verifies Secure Boot signatures on all EFI binaries tracked by sbctl.
+Color-codes results: green checkmark (verified), red X (unsigned).
+Prints a pass/fail summary.
+
+  --brief  Suppress per-file output, show only the summary
+
+sbver
+sbver --brief</code></pre>
+<h3 data-number="9.7.4" id="ports">ports</h3>
+<pre><code>Synopsis:  ports
+Lists active TCP listeners with lsof, showing port/address without
+hostname resolution.</code></pre>
+<h3 data-number="9.7.5" id="screensleep">screensleep</h3>
+<pre><code>Synopsis:  screensleep
+Turns off the display via KDE PowerDevil&#39;s &quot;Turn Off Screen&quot; action,
+invoked through busctl.</code></pre>
+<h3 data-number="9.7.6" id="lock">lock</h3>
+<pre><code>Synopsis:  lock
+Locks the current desktop session using loginctl lock-session.</code></pre>
+<h3 data-number="9.7.7" id="sudo-toggle">sudo-toggle</h3>
+<pre><code>Synopsis:  sudo-toggle
+Toggles the sudo NOPASSWD rule on/off via /etc/sudoers.d/nofail-toggle.
+Useful for automated tasks that would otherwise require password entry.</code></pre>
+<h3 data-number="9.7.8" id="limine-edit">limine-edit</h3>
+<pre><code>Synopsis:  limine-edit
+Opens /boot/limine.conf in sudoedit, then automatically re-enrolls the
+config hash, runs CachyOS boot hooks, and re-signs Secure Boot files.
+Combines the edit and sign steps into a single command.</code></pre>
+<hr />
+<h2 data-number="9.8" id="58-terminal-management">5.8 Terminal
+Management</h2>
+<h3 data-number="9.8.1" id="tab">tab</h3>
+<pre><code>Synopsis:  tab [args...]
+Opens a new tab in Kitty (kitty @ launch --type=tab), WezTerm
+(wezterm cli spawn), or Konsole. Uses current working directory,
+or $cdto if set.
+
+tab</code></pre>
+<h3 data-number="9.8.2" id="split">split</h3>
+<pre><code>Synopsis:  split [-h|-v] [command...]
+Opens a new pane in Kitty or WezTerm, optionally running a command.
+
+  -h/--horizontal  (default) Split below
+  -v/--vertical    Split to the right
+
+split
+split -v nvim README.md</code></pre>
+<h3 data-number="9.8.3" id="spwin">spwin</h3>
+<pre><code>Synopsis:  spwin [args...]
+Spawns a new terminal OS window in Kitty (via spawn-window.sh or
+kitty @ launch --type=os-window) or WezTerm (wezterm cli spawn --new-window).</code></pre>
+<h3 data-number="9.8.4" id="detach">detach</h3>
+<pre><code>Synopsis:  detach [-h] [--version] &lt;command&gt; [args...]
+Runs a command fully detached via nohup with stdout/stderr discarded.
+The command survives the current session.
+
+detach rsync -a ./data remote:/backup/</code></pre>
+<h3 data-number="9.8.5" id="bkg">bkg</h3>
+<pre><code>Synopsis:  bkg &lt;command&gt; [args...]
+Launches a command in the background via nohup with output discarded.
+Simpler than detach; no version flag.
+
+bkg firefox</code></pre>
+<h3 data-number="9.8.6" id="ssh">ssh</h3>
+<pre><code>Synopsis:  ssh [args...]
+In Kitty, wraps ssh with kitten ssh for better terminal integration
+(multiplexing, copy/paste support). Falls back to system ssh elsewhere.
+
+ssh user@host</code></pre>
+<hr />
+<h2 data-number="9.9" id="59-clipboard">5.9 Clipboard</h2>
+<h3 data-number="9.9.1" id="y">y</h3>
+<pre><code>Synopsis:  y [text...]
+Copies text to the clipboard via wl-copy (Wayland) or xclip (X11).
+Reads from stdin if no arguments given.
+
+y &quot;hello world&quot;
+ls | y
+cat file.txt | y</code></pre>
+<h3 data-number="9.9.2" id="p">p</h3>
+<pre><code>Synopsis:  p [args...]
+Outputs clipboard contents to stdout.
+
+p | grep foo
+p &gt; file.txt</code></pre>
+<h3 data-number="9.9.3" id="paste">paste</h3>
+<pre><code>Alias for p. Identical behaviour.</code></pre>
+<hr />
+<h2 data-number="9.10" id="510-network">5.10 Network</h2>
+<h3 data-number="9.10.1" id="gip">gip</h3>
+<pre><code>Synopsis:  gip
+Fetches and prints both the public IPv4 and IPv6 address via
+icanhazip.com.</code></pre>
+<h3 data-number="9.10.2" id="gip4">gip4</h3>
+<pre><code>Synopsis:  gip4
+Fetches and prints the public IPv4 address.</code></pre>
+<h3 data-number="9.10.3" id="gip6">gip6</h3>
+<pre><code>Synopsis:  gip6
+Fetches and prints the public IPv6 address. Returns 1 if IPv6 is
+unavailable.</code></pre>
+<h3 data-number="9.10.4" id="ping">ping</h3>
+<pre><code>Synopsis:  ping [args...]
+Wraps prettyping with --nolegend. Pass --legend to show the legend.
+Falls back to system ping.
+
+ping google.com</code></pre>
+<h3 data-number="9.10.5" id="qr">qr</h3>
+<pre><code>Synopsis:  qr [text...]
+Generates a UTF-8 QR code from text or stdin. Uses qrencode locally;
+falls back to the qrenco.de API.
+
+qr &quot;https://example.com&quot;
+echo &quot;https://example.com&quot; | qr</code></pre>
+<hr />
+<h2 data-number="9.11" id="511-pager-and-logging">5.11 Pager and
+Logging</h2>
+<h3 data-number="9.11.1" id="logs">logs</h3>
+<pre><code>Synopsis:  logs [-c &lt;category&gt;]
+Interactively browses terminal log files sorted newest-first using fzf.
+
+  -c/--category  Filter to: scrollback, paru, or yay
+
+Keybindings inside the fzf browser:
+  Enter    Open in $PAGER
+  Ctrl+E   Open in $EDITOR
+  Ctrl+D   Delete (with confirmation)
+  ?        Toggle keybind help overlay
+
+Paru and yay logs open in ov with syntax highlighting and sticky section
+headers. Scrollback logs open in ov with per-command sticky prompt headers
+based on OSC 133 markers.
+
+logs
+logs -c paru
+logs -c scrollback</code></pre>
+<h3 data-number="9.11.2" id="smart_exit">smart_exit</h3>
+<pre><code>Synopsis:  smart_exit [-n]
+Closes the shell session. In Kitty, captures the terminal scrollback to
+a timestamped log file in $SCROLLBACK_HISTORY_DIR before exiting.
+Automatically prunes the oldest logs when the count exceeds
+$SCROLLBACK_HISTORY_MAX_FILES.
+
+  -n/--no-log  Exit without saving a scrollback log
+
+The exit builtin is wired to smart_exit for interactive sessions.
+Typing exit or Ctrl+D behaves identically to smart_exit.
+
+smart_exit
+smart_exit --no-log</code></pre>
+<hr />
+<h2 data-number="9.12" id="512-ai-and-developer-tools">5.12 AI and
+Developer Tools</h2>
+<h3 data-number="9.12.1" id="antigravity">antigravity</h3>
+<pre><code>Synopsis:  antigravity [args...]
+Runs the agy CLI (Antigravity AI assistant) with noisy deprecation
+warnings filtered from stderr.
+
+antigravity chat</code></pre>
+<h3 data-number="9.12.2" id="antigravity-ide">antigravity-ide</h3>
+<pre><code>Synopsis:  antigravity-ide [args...]
+Runs the antigravity-ide editor with warnings filtered.</code></pre>
+<h3 data-number="9.12.3" id="antigravity-resume">antigravity-resume</h3>
+<pre><code>Synopsis:  antigravity-resume
+Resumes the most recent Antigravity session from the .antigravity_session
+file in the current directory, or opens an interactive fzf picker if no
+session file is found.</code></pre>
+<h3 data-number="9.12.4" id="claude-resume">claude-resume</h3>
+<pre><code>Synopsis:  claude-resume
+Resumes the most recent Claude Code session from the .claude_session
+file in the current directory, or opens an interactive fzf picker.</code></pre>
+<h3 data-number="9.12.5" id="claude-docs">claude-docs</h3>
+<pre><code>Synopsis:  claude-docs
+Invokes Claude Code to analyze recent repository changes and update
+README.md, ensuring all documented features and examples are accurate.</code></pre>
+<h3 data-number="9.12.6" id="claude-pr">claude-pr</h3>
+<pre><code>Synopsis:  claude-pr
+Invokes Claude Code to run the full PR workflow: create branch,
+conventional commit, verification, push, and open a PR with a manual
+verification checklist.</code></pre>
+<h3 data-number="9.12.7" id="code-resume">code-resume</h3>
+<pre><code>Synopsis:  code-resume
+Resumes the most recent AI session (Claude or Antigravity), preferring
+the newest session file found in the current directory.</code></pre>
+<h3 data-number="9.12.8" id="superpowers">superpowers</h3>
+<pre><code>Synopsis:  superpowers [on|off] [-g]
+Enables or disables the Superpowers plugin for Antigravity and Claude
+Code at workspace/project scope (default) or user scope (-g/--global).
+
+superpowers on
+superpowers off -g</code></pre>
+<hr />
+<h2 data-number="9.13" id="513-media-and-utilities">5.13 Media and
+Utilities</h2>
+<h3 data-number="9.13.1" id="dng2avif">dng2avif</h3>
+<pre><code>Synopsis:  dng2avif [-i &lt;file&gt;] [-o &lt;file&gt;] [-q &lt;n&gt;] [-s &lt;n&gt;] [input.dng]
+Converts a DNG raw image to a 10-bit HDR AVIF using an ImageMagick,
+ffmpeg, avifenc pipeline with metadata sync via exiftool.
+
+  -i/--input    Input file (or positional arg)
+  -o/--output   Output file (default: same name, .avif extension)
+  -q/--quality  Quality 0-100 (default 92)
+  -s/--speed    Encoding speed 0-10 (default 3)
+
+dng2avif photo.dng
+dng2avif -q 85 -s 5 -i shot.dng -o out.avif</code></pre>
+<h3 data-number="9.13.2" id="steam-dl">steam-dl</h3>
+<pre><code>Synopsis:  steam-dl
+Launches Steam under systemd-inhibit, preventing the system from going
+idle or sleeping while a download is in progress.</code></pre>
+<h3 data-number="9.13.3" id="spark">spark</h3>
+<pre><code>Synopsis:  spark [--min=&lt;n&gt;] [--max=&lt;n&gt;] [numbers...]
+Renders a Unicode sparkline bar chart for a sequence of numbers.
+Reads from stdin if no numbers are given.
+
+spark 1 1 2 5 14 42
+echo &quot;3 7 2 9 1&quot; | spark</code></pre>
+<hr />
+<h2 data-number="9.14" id="514-miscellaneous">5.14 Miscellaneous</h2>
+<h3 data-number="9.14.1" id="bash">bash</h3>
+<pre><code>Synopsis:  bash [args...]
+Switches to bash, with XDG config applied. On exit, $SHELL is reset
+back to fish.</code></pre>
+<h3 data-number="9.14.2" id="bd-pull">bd-pull</h3>
+<pre><code>Synopsis:  bd-pull &lt;owner/repo&gt;
+Fetches unlinked Gitea issues and creates local Beads entries, updating
+issue titles with the assigned Beads IDs.
+Requires $GITEA_TOKEN and $GITEA_URL to be set.
+
+bd-pull rootiest/fish-config</code></pre>
+<h3 data-number="9.14.3" id="cheat">cheat</h3>
+<pre><code>Synopsis:  cheat &lt;topic&gt; [args...]
+Displays a colorized cheatsheet using cheat -c, falls back to tldr,
+then man.
+
+cheat tar
+cheat git</code></pre>
+<h3 data-number="9.14.4" id="cffetch--ffetch">cffetch / ffetch</h3>
+<pre><code>Synopsis:  cffetch [args...]  /  ffetch [args...]
+Clears the screen and displays system information via fastfetch with
+the custom config at ~/.fastfetch.jsonc. Falls back to neofetch.</code></pre>
+<h3 data-number="9.14.5" id="dockup">dockup</h3>
+<pre><code>Synopsis:  dockup [-h] [directory]
+Pulls latest Docker images, restarts services in the given Docker
+Compose project, and prunes dangling images.
+
+dockup ~/myapp</code></pre>
+<h3 data-number="9.14.6" id="joplin">joplin</h3>
+<pre><code>Synopsis:  joplin [args...]
+Runs the Joplin CLI with Node.js deprecation warnings suppressed.
+
+joplin ls</code></pre>
+<h3 data-number="9.14.7" id="ld-1">ld</h3>
+<pre><code>Synopsis:  ld
+Launches lazydocker targeting the currently active Docker context,
+detected via docker context inspect.</code></pre>
+<h3 data-number="9.14.8" id="replay">replay</h3>
+<pre><code>Synopsis:  replay &lt;commands&gt;
+Runs Bash commands and replays any resulting changes to environment
+variables, aliases, and the working directory back into the current
+Fish session. Useful for sourcing Bash scripts.
+
+replay &quot;source ~/.bashrc&quot;
+replay &quot;export FOO=bar&quot;</code></pre>
+<h3 data-number="9.14.9" id="tmux-clean">tmux-clean</h3>
+<pre><code>Synopsis:  tmux-clean
+Kills all detached (unattached) tmux sessions, leaving attached ones
+running.</code></pre>
+<h3 data-number="9.14.10" id="wake-lock">wake-lock</h3>
+<pre><code>Synopsis:  wake-lock &lt;command&gt; [args...]
+Runs a command under systemd-inhibit, preventing the system from going
+idle or sleeping until the command completes.
+
+wake-lock rsync -avz src/ dest/</code></pre>
+<h3 data-number="9.14.11" id="zellij">zellij</h3>
+<pre><code>Synopsis:  zellij [args...]
+Launches zellij with the Catppuccin Mocha theme applied.</code></pre>
+<hr />
+</body>
+</html>
