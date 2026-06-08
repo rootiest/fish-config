@@ -103,9 +103,9 @@ The configuration is split across:
     6.  Dependency Catalog
     7.  Customization
     8.  Fisher Plugins
-    9.  Viewing This Manual
-    10. Installation
-    11. Personalization
+    9.  Installation
+    10. Personalization
+    11. Viewing This Manual
 
 ---
 
@@ -1432,7 +1432,93 @@ calls fisher update as its first step.
 
 ---
 
-# 9. VIEWING THIS MANUAL
+# 9. INSTALLATION
+
+This configuration is managed as a git repository. To deploy on a new machine:
+
+    mv ~/.config/fish ~/.config/fish.bak   # back up any existing config
+    git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
+
+Then open a new Fish shell. Fisher and all plugins install automatically on
+first launch and the Catppuccin Mocha theme is applied.
+
+## Return Sentinel
+
+config.fish ends with a return sentinel guard. Any lines appended after it by
+a tool's setup command (starship init fish | source, zoxide init fish | source,
+etc.) will have no effect. All integrations are managed via conf.d/ files.
+
+If a new tool's shell integration appears to do nothing, check whether its
+setup command appended an init line below the sentinel and create a dedicated
+conf.d/<tool>.fish instead.
+
+## Updating
+
+Pull the latest changes from the upstream repository without needing a
+configured git remote:
+
+    config-update              Fetch and apply the latest commits from upstream
+    config-update --dry-run    Preview available changes without applying them
+    config-update --force      Stash local changes, pull, then restore the stash
+
+The remote URL (https://git.rootiest.dev/rootiest/fish-config.git) is
+hard-coded, so this works on a fresh clone with no origin configured. All
+git output is suppressed. Run exec fish after a successful update to reload.
+
+---
+
+# 10. PERSONALIZATION
+
+Sensitive credentials and machine-specific settings are kept out of version
+control in a private directory at ~/.config/.user-dots/fish/. Two files are
+sourced automatically by config.fish if they exist:
+
+    ~/.config/.user-dots/fish/
+    ├── secrets.fish   API keys, tokens, passwords, personal identifiers
+    └── local.fish     Machine-specific paths and environment variables
+
+fish_variables (auto-managed by fish) is excluded from this repo via
+.gitignore. Do not commit it.
+
+## secrets.fish
+
+Store anything you would not commit to a public repo: API keys, auth tokens,
+passwords, and personal identifiers.
+
+    set -gx MY_NAME "Your Name"
+    set -gx MY_EMAIL "you@example.com"
+    set -gx GPG_RECIPIENT "you@example.com"
+    set -gx GITHUB_TOKEN ghp_yourTokenHere
+    set -gx OPENAI_API_KEY sk-proj-yourKeyHere
+    set -gx GITEA_TOKEN yourGiteaTokenHere
+    set -gx GITEA_CHOSEN_LOGIN your.gitea.instance
+    set -gx KOPIA_PASSWORD yourKopiaPassword
+
+## local.fish
+
+Store paths and variables specific to one machine — things that would be
+wrong on any other system.
+
+    # CDPATH — directories searched by cd
+    set -gx CDPATH . /home/youruser/projects /home/youruser
+
+    # Path to your shared .gitignore boilerplate
+    set -gx GITIGNORE_BOILERPLATE ~/.config/git/gitignore_boilerplate
+
+    # SSH shortcuts
+    abbr -a sshr 'ssh you@your-server.local'
+    abbr -a sshw 'ssh you@work-server.example.com'
+
+    # Docker context shortcuts
+    abbr -a dcr 'docker context use my-remote-server'
+    abbr -a dcw 'docker context use work-server'
+
+Both files are sourced at the end of config.fish with an existence check so
+the public config works cleanly on any machine without the private repo.
+
+---
+
+# 11. VIEWING THIS MANUAL
 
 ## With ov (recommended)
 
@@ -1496,89 +1582,3 @@ push to main that changes docs/fish-config.md.
     help config fish-deps
 
 The keyword is matched case-insensitively against section headings.
-
----
-
-# 10. INSTALLATION
-
-This configuration is managed as a git repository. To deploy on a new machine:
-
-    mv ~/.config/fish ~/.config/fish.bak   # back up any existing config
-    git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
-
-Then open a new Fish shell. Fisher and all plugins install automatically on
-first launch and the Catppuccin Mocha theme is applied.
-
-## Return Sentinel
-
-config.fish ends with a return sentinel guard. Any lines appended after it by
-a tool's setup command (starship init fish | source, zoxide init fish | source,
-etc.) will have no effect. All integrations are managed via conf.d/ files.
-
-If a new tool's shell integration appears to do nothing, check whether its
-setup command appended an init line below the sentinel and create a dedicated
-conf.d/<tool>.fish instead.
-
-## Updating
-
-Pull the latest changes from the upstream repository without needing a
-configured git remote:
-
-    config-update              Fetch and apply the latest commits from upstream
-    config-update --dry-run    Preview available changes without applying them
-    config-update --force      Stash local changes, pull, then restore the stash
-
-The remote URL (https://git.rootiest.dev/rootiest/fish-config.git) is
-hard-coded, so this works on a fresh clone with no origin configured. All
-git output is suppressed. Run exec fish after a successful update to reload.
-
----
-
-# 11. PERSONALIZATION
-
-Sensitive credentials and machine-specific settings are kept out of version
-control in a private directory at ~/.config/.user-dots/fish/. Two files are
-sourced automatically by config.fish if they exist:
-
-    ~/.config/.user-dots/fish/
-    ├── secrets.fish   API keys, tokens, passwords, personal identifiers
-    └── local.fish     Machine-specific paths and environment variables
-
-fish_variables (auto-managed by fish) is excluded from this repo via
-.gitignore. Do not commit it.
-
-## secrets.fish
-
-Store anything you would not commit to a public repo: API keys, auth tokens,
-passwords, and personal identifiers.
-
-    set -gx MY_NAME "Your Name"
-    set -gx MY_EMAIL "you@example.com"
-    set -gx GPG_RECIPIENT "you@example.com"
-    set -gx GITHUB_TOKEN ghp_yourTokenHere
-    set -gx OPENAI_API_KEY sk-proj-yourKeyHere
-    set -gx GITEA_TOKEN yourGiteaTokenHere
-    set -gx GITEA_CHOSEN_LOGIN your.gitea.instance
-    set -gx KOPIA_PASSWORD yourKopiaPassword
-
-## local.fish
-
-Store paths and variables specific to one machine — things that would be
-wrong on any other system.
-
-    # CDPATH — directories searched by cd
-    set -gx CDPATH . /home/youruser/projects /home/youruser
-
-    # Path to your shared .gitignore boilerplate
-    set -gx GITIGNORE_BOILERPLATE ~/.config/git/gitignore_boilerplate
-
-    # SSH shortcuts
-    abbr -a sshr 'ssh you@your-server.local'
-    abbr -a sshw 'ssh you@work-server.example.com'
-
-    # Docker context shortcuts
-    abbr -a dcr 'docker context use my-remote-server'
-    abbr -a dcw 'docker context use work-server'
-
-Both files are sourced at the end of config.fish with an existence check so
-the public config works cleanly on any machine without the private repo.
