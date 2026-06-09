@@ -113,7 +113,7 @@ function config-help --description 'Open the offline fish shell configuration ma
             set -l anchor (string lower -- $found_text \
                 | string replace -ra '[^a-z0-9 -]' '' \
                 | string replace -ra ' +' '-' \
-                | string replace -ra '-+' '-' \
+                | string replace -ra -- '-+' '-' \
                 | string trim -c '-')
             # 1. Sub-section: path stored as "filename.html#anchor"
             set -l match (grep -o "\"path\":\"[^\"]*#$anchor\"" "$sitemap" | head -1)
