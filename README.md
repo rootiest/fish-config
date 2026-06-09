@@ -46,7 +46,9 @@ To browse the docs from the terminal:
 | `help config` | Open the terminal manual in the best available pager |
 | `help config <keyword>` | Jump directly to a section matching the keyword |
 | `help config --html` | Open the pre-built HTML docs in the default browser |
+| `help config <keyword> --html` | Open HTML docs at the matching section anchor |
 | `help config --man` | Open the compiled man page via `man -l` |
+| `help config <keyword> --man` | Open the man page jumping to the nearest match |
 
 The pager falls back through: **ov** → **bat** → **man -l** → **less** → **cat**.
 

@@ -1157,8 +1157,8 @@ Add -i (interactive confirmation) to destructive commands:
 ### config-help
 
     Synopsis:  config-help [SECTION]
-               config-help --html
-               config-help --man
+               config-help [SECTION] --html
+               config-help [SECTION] --man
                config-help -h | --help
 
     Opens the offline fish shell configuration manual. Without flags, opens
@@ -1168,16 +1168,20 @@ Add -i (interactive confirmation) to destructive commands:
 
     Flags:
       --html / -w   Open docs/html/index.html in the default browser.
+                    If SECTION is given, opens at the matching anchor.
                     Detects the browser via xdg-mime x-scheme-handler/https,
                     then known binaries, then xdg-open as last resort.
                     Respects $fish_help_browser and $BROWSER.
       --man  / -m   Open docs/fish-config.1 via man -l directly.
+                    If SECTION is given, jumps to the nearest match.
       --help / -h   Print usage and navigation key reference.
 
     config-help keybindings
     config-help pkg
     config-help --html
+    config-help pkg --html
     config-help --man
+    config-help pkg --man
 
     Also available as: help config [SECTION] [FLAGS]
 
@@ -1603,10 +1607,12 @@ navigation.
 ## As a man page
 
     help config --man
+    help config pkg --man
 
 Opens the compiled docs/fish-config.1 directly via man -l, bypassing
-the pager fallback chain. The symlink and MANPATH are also configured
-automatically on shell start for the standard invocation:
+the pager fallback chain. If a section keyword is given, the pager opens
+at the nearest matching heading. The symlink and MANPATH are also
+configured automatically on shell start for the standard invocation:
 
     man fish-config
 
@@ -1617,12 +1623,15 @@ a completely separate command. Do not mix them up.
 ## In the browser (HTML)
 
     help config --html
+    help config pkg --html
 
-Opens docs/html/index.html in the default web browser. Browser detection
-queries the system's x-scheme-handler/https MIME entry (via xdg-mime) to
-find the real browser binary, then falls back through known browser
-binaries (firefox, chromium, vivaldi, etc.), and finally xdg-open as a
-last resort. Set $fish_help_browser or $BROWSER to override.
+Opens docs/html/index.html in the default web browser. If a section
+keyword is given, the browser opens directly at the matching anchor
+(resolved via docs/html/sitemap.json). Browser detection queries the
+system's x-scheme-handler/https MIME entry (via xdg-mime) to find the
+real browser binary, then falls back through known browser binaries
+(firefox, chromium, vivaldi, etc.), and finally xdg-open as a last
+resort. Set $fish_help_browser or $BROWSER to override.
 
 ## As a wiki
 

@@ -3,8 +3,8 @@
 
 # SYNOPSIS
 #   config-help [section]
-#   config-help --html
-#   config-help --man
+#   config-help [section] --html
+#   config-help [section] --man
 #   config-help --help
 #
 # DESCRIPTION
@@ -15,8 +15,9 @@
 #   keyword aliases), then a normalized heading scan as fallback.
 #   When opened with ov a sticky navigation hint is shown at the top of the
 #   screen. Pass --html / -w to open the pre-built HTML version in the
-#   default browser via xdg-open. Pass --man / -m to open the compiled
-#   man page directly via man -l. Pass --help or -h for usage reference.
+#   default browser, jumping to the matching section anchor when possible.
+#   Pass --man / -m to open the compiled man page; if a section keyword is
+#   given, the pager opens at the nearest match. Pass --help or -h for usage.
 #
 # ARGUMENTS
 #   section     Optional keyword to jump to a matching section heading
@@ -34,7 +35,9 @@
 #   config-help pkg
 #   config-help fish-deps
 #   config-help --html
+#   config-help keys --html
 #   config-help --man
+#   config-help keys --man
 #   config-help --help
 #
 # NOTES
@@ -42,17 +45,98 @@
 #   registered as a handler in the help wrapper so that syntax works
 #   transparently. Direct `config-help` calls are also valid.
 function config-help --description 'Open the offline fish shell configuration manual'
+    set -l doc_file "$__fish_config_dir/docs/fish-config.md"
+    set -l idx_file "$__fish_config_dir/docs/fish-config.index"
+    set -l man_file "$__fish_config_dir/docs/fish-config.1"
+    set -l html_dir "$__fish_config_dir/docs/html"
+    set -l sitemap  "$html_dir/sitemap.json"
+
+    # ── Extract section keyword (first non-flag argument) ────────
+    set -l section_kw ""
+    for arg in $argv
+        if not string match -q -- '-*' $arg
+            set section_kw $arg
+            break
+        end
+    end
+
+    # ── Resolve section keyword → heading text ───────────────────
+    # Used by --html (anchor lookup), --man (search pattern), and the
+    # pager fallback chain (line number). Runs once, shared by all paths.
+    set -l found_text ""
+    if test -n "$section_kw"
+        set -l norm_kw (string lower -- $section_kw | string replace -ra '[^a-z0-9]' '')
+
+        # 1. Index lookup (keyword aliases)
+        if test -f "$idx_file"
+            while read -l idxline
+                string match -qr '^[[:space:]]*(#|$)' -- $idxline; and continue
+                set -l kv (string split -m 1 '=' -- $idxline)
+                test (count $kv) -lt 2; and continue
+                set -l k (string lower -- $kv[1] | string replace -ra '[^a-z0-9]' '')
+                if test "$k" = "$norm_kw"
+                    set found_text $kv[2]
+                    break
+                end
+            end <"$idx_file"
+        end
+
+        # 2. Normalized heading scan fallback
+        if test -z "$found_text"; and test -f "$doc_file"
+            for entry in (grep -n "^#" "$doc_file")
+                set -l parts (string split -m 1 ':' -- $entry)
+                set -l text $parts[2]
+                set -l norm_text (string lower -- $text | string replace -ra '[^a-z0-9]' '')
+                if string match -q "*$norm_kw*" $norm_text
+                    set found_text $text
+                    break
+                end
+            end
+        end
+    end
+
     # ── --html / -w ──────────────────────────────────────────────
     if contains -- --html $argv; or contains -- -w $argv
-        set -l html_file "$__fish_config_dir/docs/html/index.html"
-        if not test -f "$html_file"
+        if not test -f "$html_dir/index.html"
             set_color red
-            echo "error: HTML docs not found at $html_file" >&2
+            echo "error: HTML docs not found at $html_dir/index.html" >&2
             set_color normal
             return 1
         end
 
-        set -l page_url "file://$html_file"
+        # Default to the index page; resolve a section fragment when possible.
+        set -l html_path "index.html"
+        if test -n "$found_text"; and test -f "$sitemap"
+            # Convert heading text → pandoc anchor ID:
+            # lowercase → strip non-alphanumeric (keep spaces and hyphens)
+            # → spaces to hyphens → collapse runs → strip edge hyphens.
+            set -l anchor (string lower -- $found_text \
+                | string replace -ra '[^a-z0-9 -]' '' \
+                | string replace -ra ' +' '-' \
+                | string replace -ra '-+' '-' \
+                | string trim -c '-')
+            # 1. Sub-section: path stored as "filename.html#anchor"
+            set -l match (grep -o "\"path\":\"[^\"]*#$anchor\"" "$sitemap" | head -1)
+            if test -n "$match"
+                set html_path (string replace -r '"path":"([^"]+)"' '$1' -- $match)
+            else
+                # 2. Top-level section: own page — "id":"anchor"..."path":"filename.html"
+                set -l id_match (grep -o "\"id\":\"$anchor\"[^}]*\"path\":\"[^\"]*\"" "$sitemap" | head -1)
+                if test -n "$id_match"
+                    set html_path (string replace -r '.*"path":"([^"]+)"' '$1' -- $id_match)
+                else
+                    set_color yellow
+                    echo "note: no HTML anchor found for '$section_kw' — opening at top" >&2
+                    set_color normal
+                end
+            end
+        else if test -n "$section_kw"
+            set_color yellow
+            echo "note: no section matching '$section_kw' — opening at top" >&2
+            set_color normal
+        end
+
+        set -l page_url "file://$html_dir/$html_path"
 
         # Browser detection — mirrors fish's help.fish priority order but
         # resolves actual browser binaries before falling back to xdg-open.
@@ -123,7 +207,6 @@ function config-help --description 'Open the offline fish shell configuration ma
 
     # ── --man / -m ───────────────────────────────────────────────
     if contains -- --man $argv; or contains -- -m $argv
-        set -l man_file "$__fish_config_dir/docs/fish-config.1"
         if not test -f "$man_file"
             set_color red
             echo "error: man page not found at $man_file" >&2
@@ -136,7 +219,20 @@ function config-help --description 'Open the offline fish shell configuration ma
             set_color normal
             return 1
         end
-        man -l "$man_file"
+        if test -n "$found_text"
+            # Strip Markdown heading markers to get the bare section name,
+            # then pass it as a less search pattern. MANPAGER is overridden
+            # here because the bat renderer does not support +/pattern jumps.
+            set -l pattern (string replace -ra '^#+ *' '' -- $found_text | string trim)
+            env MANPAGER="less +/$pattern" man -l "$man_file"
+        else if test -n "$section_kw"
+            set_color yellow
+            echo "note: no section matching '$section_kw' — opening at top" >&2
+            set_color normal
+            man -l "$man_file"
+        else
+            man -l "$man_file"
+        end
         return 0
     end
 
@@ -151,8 +247,8 @@ function config-help --description 'Open the offline fish shell configuration ma
         echo USAGE
         set_color normal
         echo "  help config "(set_color yellow)"[section]"(set_color normal)
-        echo "  help config "(set_color yellow)"--html"(set_color normal)
-        echo "  help config "(set_color yellow)"--man"(set_color normal)
+        echo "  help config "(set_color yellow)"[section] --html"(set_color normal)
+        echo "  help config "(set_color yellow)"[section] --man"(set_color normal)
         echo "  help config "(set_color yellow)"--help"(set_color normal)
         echo ""
         set_color --bold brblue
@@ -163,18 +259,22 @@ function config-help --description 'Open the offline fish shell configuration ma
         echo "               falls back to a normalized (case- and punctuation-insensitive)"
         echo "               scan of heading lines."
         echo "  "(set_color yellow)"-w, --html"(set_color normal)"   Open the offline HTML docs in the default browser."
+        echo "               If a section keyword is given, opens at the matching anchor."
         echo "  "(set_color yellow)"-m, --man"(set_color normal)"    Open the compiled man page via man -l."
+        echo "               If a section keyword is given, jumps to the nearest match."
         echo ""
         set_color --bold brblue
         echo EXAMPLES
         set_color normal
-        echo "  "(set_color green)"help config"(set_color normal)"                  open at top"
-        echo "  "(set_color green)"help config keybindings"(set_color normal)"      jump to Key Bindings section"
-        echo "  "(set_color green)"help config pkg"(set_color normal)"              jump to the pkg function entry"
-        echo "  "(set_color green)"help config fish-deps"(set_color normal)"        jump to fish-deps"
-        echo "  "(set_color green)"help config abbreviations"(set_color normal)"    jump to Abbreviations section"
-        echo "  "(set_color green)"help config --html"(set_color normal)"           open HTML docs in browser"
-        echo "  "(set_color green)"help config --man"(set_color normal)"            open compiled man page"
+        echo "  "(set_color green)"help config"(set_color normal)"                       open at top"
+        echo "  "(set_color green)"help config keybindings"(set_color normal)"           jump to Key Bindings section"
+        echo "  "(set_color green)"help config pkg"(set_color normal)"                   jump to the pkg function entry"
+        echo "  "(set_color green)"help config fish-deps"(set_color normal)"             jump to fish-deps"
+        echo "  "(set_color green)"help config abbreviations"(set_color normal)"         jump to Abbreviations section"
+        echo "  "(set_color green)"help config --html"(set_color normal)"                open HTML docs in browser"
+        echo "  "(set_color green)"help config keybindings --html"(set_color normal)"    open HTML at Key Bindings"
+        echo "  "(set_color green)"help config --man"(set_color normal)"                 open compiled man page"
+        echo "  "(set_color green)"help config pkg --man"(set_color normal)"             open man page at pkg section"
         echo ""
         set_color --bold brblue
         echo "NAVIGATION (ov pager)"
@@ -199,10 +299,6 @@ function config-help --description 'Open the offline fish shell configuration ma
         return 0
     end
 
-    set -l doc_file "$__fish_config_dir/docs/fish-config.md"
-    set -l idx_file "$__fish_config_dir/docs/fish-config.index"
-    set -l man_file "$__fish_config_dir/docs/fish-config.1"
-
     if not test -f "$doc_file"
         set_color red
         echo "error: documentation not found at $doc_file" >&2
@@ -210,53 +306,18 @@ function config-help --description 'Open the offline fish shell configuration ma
         return 1
     end
 
-    # ── Resolve section start line ───────────────────────────────
-    # 1. Look up keyword in fish-config.index (keyword → exact heading text).
-    # 2. Fall back to normalized scan of heading lines if not in index.
-    # 3. Resolve start_line via grep -F on the heading text (immune to line
-    #    number drift — only breaks if the heading itself is renamed).
+    # ── Resolve section start line (for pager) ───────────────────
+    # found_text is already resolved above; just need the line number.
     set -l start_line 1
-    if test -n "$argv[1]"
-        set -l norm_kw (string lower -- $argv[1] | string replace -ra '[^a-z0-9]' '')
-        set -l found_text ""
-
-        # ── Index lookup ─────────────────────────────────────────
-        if test -f "$idx_file"
-            while read -l idxline
-                string match -qr '^[[:space:]]*(#|$)' -- $idxline; and continue
-                set -l kv (string split -m 1 '=' -- $idxline)
-                test (count $kv) -lt 2; and continue
-                set -l k (string lower -- $kv[1] | string replace -ra '[^a-z0-9]' '')
-                if test "$k" = "$norm_kw"
-                    set found_text $kv[2]
-                    break
-                end
-            end <"$idx_file"
+    if test -n "$found_text"
+        set -l lnum (grep -Fn "$found_text" "$doc_file" | cut -d: -f1 | head -1)
+        if test -n "$lnum"
+            set start_line $lnum
         end
-
-        # ── Normalized scan fallback ─────────────────────────────
-        if test -z "$found_text"
-            for entry in (grep -n "^#" "$doc_file")
-                set -l parts (string split -m 1 ':' -- $entry)
-                set -l text $parts[2]
-                set -l norm_text (string lower -- $text | string replace -ra '[^a-z0-9]' '')
-                if string match -q "*$norm_kw*" $norm_text
-                    set found_text $text
-                    break
-                end
-            end
-        end
-
-        if test -n "$found_text"
-            set -l lnum (grep -Fn "$found_text" "$doc_file" | cut -d: -f1 | head -1)
-            if test -n "$lnum"
-                set start_line $lnum
-            end
-        else
-            set_color yellow
-            echo "note: no section matching '$argv[1]' — opening at top" >&2
-            set_color normal
-        end
+    else if test -n "$section_kw"
+        set_color yellow
+        echo "note: no section matching '$section_kw' — opening at top" >&2
+        set_color normal
     end
 
     # ── Navigation hint line ─────────────────────────────────────
