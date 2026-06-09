@@ -62,6 +62,16 @@
 opinionated_catalog.md
 docs/superpowers
 
+#   ──────────────── Fisher-Managed Plugin Files ───────────────
+# Fisher writes these into the repo directory on install/update.
+# They are owned by Fisher — do not commit them.
+functions/fisher.fish
+completions/fisher.fish
+conf.d/sponge.fish
+functions/_sponge*.fish
+functions/sponge_*.fish
+!functions/sponge_filter_secrets.fish
+
 #   ─────────────────── AI Sessions and Rules ──────────────────
 # Matches CLAUDE.md, .claud*, etc.
 [Cc][Ll][Aa][Uu][Dd][Ee].[Mm][Dd]

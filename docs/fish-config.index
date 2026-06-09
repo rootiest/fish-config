@@ -29,8 +29,8 @@ keybindings=# 3. KEY BINDINGS
 bindings=# 3. KEY BINDINGS
 key-bindings=# 3. KEY BINDINGS
 keys=# 3. KEY BINDINGS
-fzf-bindings=## FZF Bindings (from fzf --fish integration)
-fzf=## FZF Bindings (from fzf --fish integration)
+fzf-bindings=## FZF Bindings (bundled from PatrickF1/fzf.fish)
+fzf=## FZF Bindings (bundled from PatrickF1/fzf.fish)
 
 # ── Section 4: Abbreviations ──────────────────────────────────
 abbreviations=# 4. ABBREVIATIONS
@@ -166,10 +166,29 @@ universal=## Fish Universal Variables
 # ── Section 8: Fisher Plugins ─────────────────────────────────
 plugins=# 8. FISHER PLUGINS
 fisher=# 8. FISHER PLUGINS
+fisher-managed=## Fisher-Managed Plugins
+sponge=## Fisher-Managed Plugins
+sponge-filtering=## Sponge History Filtering
+history-filtering=## Sponge History Filtering
+privacy=## Sponge History Filtering
+bundled-plugins=## Bundled Plugin Functionality
+fish-plugins-manifest=## fish_plugins Manifest
 
-# ── Section 9: Viewing This Manual ───────────────────────────
-viewing=# 9. VIEWING THIS MANUAL
-manual=# 9. VIEWING THIS MANUAL
+# ── Section 9: Installation ────────────────────────────────────
+installation=# 9. INSTALLATION
+install=# 9. INSTALLATION
+sentinel=## Return Sentinel
+updating=## Updating
+
+# ── Section 10: Personalization ───────────────────────────────
+personalization=# 10. PERSONALIZATION
+personalize=# 10. PERSONALIZATION
+secrets=## secrets.fish
+local-config=## local.fish
+
+# ── Section 11: Viewing This Manual ──────────────────────────
+viewing=# 11. VIEWING THIS MANUAL
+manual=# 11. VIEWING THIS MANUAL
 ov=## With ov (recommended)
 man-page=## As a man page (if compiled)
 manpage=## As a man page (if compiled)
