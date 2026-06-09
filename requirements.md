@@ -116,9 +116,9 @@ Non-standard applications required by this fish shell configuration.
 
 | Tool | Description | Notes |
 |------|-------------|-------|
-| `fisher` | Fish plugin manager | Bootstrapped automatically on first run; only entry in `fish_plugins` |
+| `fisher` | Fish plugin manager | Bootstrapped automatically on first run; manages `sponge` via `fish_plugins` |
+| `meaningful-ooo/sponge` | Remove failed commands from history | Fisher-managed; files are gitignored |
 
-Plugin functionality (Catppuccin theme, FZF bindings, done notifications, autopair, puffer-fish
-expansions) is bundled directly with this config in `functions/`, `conf.d/`, and `themes/`. These are
-customized versions — do not install them via `fisher install`, as doing so would overwrite the
-bundled modifications.
+Other plugin functionality (Catppuccin theme, FZF bindings, done notifications, autopair, puffer-fish
+expansions) is bundled directly with this config in `functions/`, `conf.d/`, and `themes/` as
+customized versions — do not install them via `fisher install`.

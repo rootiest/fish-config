@@ -22,7 +22,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 
 - **Catppuccin Mocha** theming throughout (prompt, FZF, syntax highlighting)
 - **Starship** prompt with VI key bindings
-- **Fisher** plugin manager bootstrapped automatically; plugin functionality (FZF bindings, Catppuccin theme, done notifications, autopair, puffer-fish) bundled directly with the config
+- **Fisher** plugin manager bootstrapped automatically; manages `sponge` (failed-command history filter); FZF bindings, Catppuccin theme, done, autopair, and puffer-fish are bundled directly with the config as customized versions
 - **Smart CLI wrappers** that prefer modern tools (`eza`, `bat`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Auto Python venv** activation on directory change (direnv-aware)
 - **Kitty terminal** deep integration for splits, tabs, and SSH

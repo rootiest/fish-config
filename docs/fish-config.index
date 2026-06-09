@@ -166,6 +166,8 @@ universal=## Fish Universal Variables
 # ── Section 8: Fisher Plugins ─────────────────────────────────
 plugins=# 8. FISHER PLUGINS
 fisher=# 8. FISHER PLUGINS
+fisher-managed=## Fisher-Managed Plugins
+sponge=## Fisher-Managed Plugins
 bundled-plugins=## Bundled Plugin Functionality
 fish-plugins-manifest=## fish_plugins Manifest
 
