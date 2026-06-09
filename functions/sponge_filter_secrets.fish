@@ -35,7 +35,8 @@ function sponge_filter_secrets --argument-names command
         '(?i)(?:TOKEN|PASSWORD|PASSWD|SECRET|API[_-]KEY|PRIVATE[_-]KEY|ACCESS[_-]KEY|AUTH[_-]KEY|CREDENTIAL|KOPIA_PASSWORD)')
 
     for var in $sensitive_vars
-        set -l value $$var
+        # Take only the first element — array vars yield multiple values
+        set -l value $$var[1]
 
         # Skip empty, short, or path-like values — not real credentials
         test (string length -- $value) -gt 8; or continue

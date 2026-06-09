@@ -89,7 +89,9 @@ function __sponge_register_secret_values --on-event fish_prompt
         '(?i)(?:TOKEN|PASSWORD|PASSWD|SECRET|API[_-]KEY|PRIVATE[_-]KEY|ACCESS[_-]KEY|AUTH[_-]KEY|CREDENTIAL|KOPIA_PASSWORD)')
 
     for var in $sensitive_vars
-        set -l value $$var
+        # Take only the first element — array vars yield multiple values which
+        # would make `test (string length ...)` receive too many arguments.
+        set -l value $$var[1]
         # Skip empty, short, or path-like values
         test (string length -- $value) -gt 8; or continue
         string match --quiet --regex '^[/~]' -- $value; and continue
