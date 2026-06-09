@@ -505,23 +505,27 @@ q           quit</code></pre>
 <h2 data-number="15.2" id="with-bat">With bat</h2>
 <pre><code>bat --language=markdown --paging=always ~/.config/fish/docs/fish-config.md</code></pre>
 <h2 data-number="15.3" id="as-a-man-page">As a man page</h2>
-<pre><code>help config --man</code></pre>
+<pre><code>help config --man
+help config pkg --man</code></pre>
 <p>Opens the compiled docs/fish-config.1 directly via man -l, bypassing
-the pager fallback chain. The symlink and MANPATH are also configured
-automatically on shell start for the standard invocation:</p>
+the pager fallback chain. If a section keyword is given, the pager opens
+at the nearest matching heading. The symlink and MANPATH are also
+configured automatically on shell start for the standard invocation:</p>
 <pre><code>man fish-config</code></pre>
 <p>NOTE: fish-config (hyphen) is this config's man page. fish_config
 (underscore) is fish's built-in browser-based configuration tool — a
 completely separate command. Do not mix them up.</p>
 <h2 data-number="15.4" id="in-the-browser-html">In the browser
 (HTML)</h2>
-<pre><code>help config --html</code></pre>
-<p>Opens docs/html/index.html in the default web browser. Browser
-detection queries the system's x-scheme-handler/https MIME entry (via
-xdg-mime) to find the real browser binary, then falls back through known
-browser binaries (firefox, chromium, vivaldi, etc.), and finally
-xdg-open as a last resort. Set $fish_help_browser or $BROWSER to
-override.</p>
+<pre><code>help config --html
+help config pkg --html</code></pre>
+<p>Opens docs/html/index.html in the default web browser. If a section
+keyword is given, the browser opens directly at the matching anchor
+(resolved via docs/html/sitemap.json). Browser detection queries the
+system's x-scheme-handler/https MIME entry (via xdg-mime) to find the
+real browser binary, then falls back through known browser binaries
+(firefox, chromium, vivaldi, etc.), and finally xdg-open as a last
+resort. Set $fish_help_browser or $BROWSER to override.</p>
 <h2 data-number="15.5" id="as-a-wiki">As a wiki</h2>
 <p>The generated Markdown wiki lives in docs/wiki/. index.md provides
 the project overview and a full table of contents. Each section page has

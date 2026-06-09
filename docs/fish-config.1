@@ -1495,8 +1495,8 @@ echo \[dq]3 7 2 9 1\[dq] | spark
 .nf
 \f[C]
 Synopsis:  config-help [SECTION]
-           config-help --html
-           config-help --man
+           config-help [SECTION] --html
+           config-help [SECTION] --man
            config-help -h | --help
 
 Opens the offline fish shell configuration manual. Without flags, opens
@@ -1506,16 +1506,20 @@ keyword (case-insensitive; checks fish-config.index aliases first).
 
 Flags:
   --html / -w   Open docs/html/index.html in the default browser.
+                If SECTION is given, opens at the matching anchor.
                 Detects the browser via xdg-mime x-scheme-handler/https,
                 then known binaries, then xdg-open as last resort.
                 Respects $fish_help_browser and $BROWSER.
   --man  / -m   Open docs/fish-config.1 via man -l directly.
+                If SECTION is given, jumps to the nearest match.
   --help / -h   Print usage and navigation key reference.
 
 config-help keybindings
 config-help pkg
 config-help --html
+config-help pkg --html
 config-help --man
+config-help pkg --man
 
 Also available as: help config [SECTION] [FLAGS]
 \f[R]
@@ -2066,11 +2070,14 @@ bat --language=markdown --paging=always \[ti]/.config/fish/docs/fish-config.md
 .nf
 \f[C]
 help config --man
+help config pkg --man
 \f[R]
 .fi
 .PP
 Opens the compiled docs/fish-config.1 directly via man -l, bypassing the
 pager fallback chain.
+If a section keyword is given, the pager opens at the nearest matching
+heading.
 The symlink and MANPATH are also configured automatically on shell start
 for the standard invocation:
 .IP
@@ -2089,10 +2096,13 @@ Do not mix them up.
 .nf
 \f[C]
 help config --html
+help config pkg --html
 \f[R]
 .fi
 .PP
 Opens docs/html/index.html in the default web browser.
+If a section keyword is given, the browser opens directly at the
+matching anchor (resolved via docs/html/sitemap.json).
 Browser detection queries the system\[cq]s x-scheme-handler/https MIME
 entry (via xdg-mime) to find the real browser binary, then falls back
 through known browser binaries (firefox, chromium, vivaldi, etc.), and

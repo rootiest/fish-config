@@ -27,10 +27,12 @@ navigation.
 ## As a man page
 
     help config --man
+    help config pkg --man
 
 Opens the compiled docs/fish-config.1 directly via man -l, bypassing
-the pager fallback chain. The symlink and MANPATH are also configured
-automatically on shell start for the standard invocation:
+the pager fallback chain. If a section keyword is given, the pager opens
+at the nearest matching heading. The symlink and MANPATH are also
+configured automatically on shell start for the standard invocation:
 
     man fish-config
 
@@ -41,12 +43,15 @@ a completely separate command. Do not mix them up.
 ## In the browser (HTML)
 
     help config --html
+    help config pkg --html
 
-Opens docs/html/index.html in the default web browser. Browser detection
-queries the system's x-scheme-handler/https MIME entry (via xdg-mime) to
-find the real browser binary, then falls back through known browser
-binaries (firefox, chromium, vivaldi, etc.), and finally xdg-open as a
-last resort. Set $fish_help_browser or $BROWSER to override.
+Opens docs/html/index.html in the default web browser. If a section
+keyword is given, the browser opens directly at the matching anchor
+(resolved via docs/html/sitemap.json). Browser detection queries the
+system's x-scheme-handler/https MIME entry (via xdg-mime) to find the
+real browser binary, then falls back through known browser binaries
+(firefox, chromium, vivaldi, etc.), and finally xdg-open as a last
+resort. Set $fish_help_browser or $BROWSER to override.
 
 ## As a wiki
 

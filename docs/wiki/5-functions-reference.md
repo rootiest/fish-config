@@ -683,8 +683,8 @@
 ### config-help
 
     Synopsis:  config-help [SECTION]
-               config-help --html
-               config-help --man
+               config-help [SECTION] --html
+               config-help [SECTION] --man
                config-help -h | --help
 
     Opens the offline fish shell configuration manual. Without flags, opens
@@ -694,16 +694,20 @@
 
     Flags:
       --html / -w   Open docs/html/index.html in the default browser.
+                    If SECTION is given, opens at the matching anchor.
                     Detects the browser via xdg-mime x-scheme-handler/https,
                     then known binaries, then xdg-open as last resort.
                     Respects $fish_help_browser and $BROWSER.
       --man  / -m   Open docs/fish-config.1 via man -l directly.
+                    If SECTION is given, jumps to the nearest match.
       --help / -h   Print usage and navigation key reference.
 
     config-help keybindings
     config-help pkg
     config-help --html
+    config-help pkg --html
     config-help --man
+    config-help pkg --man
 
     Also available as: help config [SECTION] [FLAGS]
 
