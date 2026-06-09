@@ -705,6 +705,8 @@
     config-help --html
     config-help --man
 
+    Also available as: help config [SECTION] [FLAGS]
+
 ### config-update
 
     Synopsis:  config-update [-h] [-n] [-f]
