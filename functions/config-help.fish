@@ -224,7 +224,9 @@ function config-help --description 'Open the offline fish shell configuration ma
             # then pass it as a less search pattern. MANPAGER is overridden
             # here because the bat renderer does not support +/pattern jumps.
             set -l pattern (string replace -ra '^#+ *' '' -- $found_text | string trim)
-            env MANPAGER="less +/$pattern" man -l "$man_file"
+            # Single-quote the +/pattern inside the MANPAGER string so the
+            # shell doesn't word-split headings that contain spaces.
+            env MANPAGER="less '+/$pattern'" man -l "$man_file"
         else if test -n "$section_kw"
             set_color yellow
             echo "note: no section matching '$section_kw' — opening at top" >&2
