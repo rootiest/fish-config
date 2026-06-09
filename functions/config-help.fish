@@ -36,6 +36,11 @@
 #   config-help --html
 #   config-help --man
 #   config-help --help
+#
+# NOTES
+#   The preferred invocation is `help config [...]` — this function is
+#   registered as a handler in the help wrapper so that syntax works
+#   transparently. Direct `config-help` calls are also valid.
 function config-help --description 'Open the offline fish shell configuration manual'
     # ── --html / -w ──────────────────────────────────────────────
     if contains -- --html $argv; or contains -- -w $argv
@@ -138,17 +143,17 @@ function config-help --description 'Open the offline fish shell configuration ma
     # ── --help / -h ──────────────────────────────────────────────
     if contains -- --help $argv; or contains -- -h $argv
         set_color --bold
-        echo config-help
+        echo "help config / config-help"
         set_color normal
         echo " — view the offline fish shell configuration manual"
         echo ""
         set_color --bold brblue
         echo USAGE
         set_color normal
-        echo "  config-help "(set_color yellow)"[section]"(set_color normal)
-        echo "  config-help "(set_color yellow)"--html"(set_color normal)
-        echo "  config-help "(set_color yellow)"--man"(set_color normal)
-        echo "  config-help "(set_color yellow)"--help"(set_color normal)
+        echo "  help config "(set_color yellow)"[section]"(set_color normal)
+        echo "  help config "(set_color yellow)"--html"(set_color normal)
+        echo "  help config "(set_color yellow)"--man"(set_color normal)
+        echo "  help config "(set_color yellow)"--help"(set_color normal)
         echo ""
         set_color --bold brblue
         echo ARGUMENTS
@@ -163,13 +168,13 @@ function config-help --description 'Open the offline fish shell configuration ma
         set_color --bold brblue
         echo EXAMPLES
         set_color normal
-        echo "  "(set_color green)"config-help"(set_color normal)"                  open at top"
-        echo "  "(set_color green)"config-help keybindings"(set_color normal)"      jump to Key Bindings section"
-        echo "  "(set_color green)"config-help pkg"(set_color normal)"              jump to the pkg function entry"
-        echo "  "(set_color green)"config-help fish-deps"(set_color normal)"        jump to fish-deps"
-        echo "  "(set_color green)"config-help abbreviations"(set_color normal)"    jump to Abbreviations section"
-        echo "  "(set_color green)"config-help --html"(set_color normal)"           open HTML docs in browser"
-        echo "  "(set_color green)"config-help --man"(set_color normal)"            open compiled man page"
+        echo "  "(set_color green)"help config"(set_color normal)"                  open at top"
+        echo "  "(set_color green)"help config keybindings"(set_color normal)"      jump to Key Bindings section"
+        echo "  "(set_color green)"help config pkg"(set_color normal)"              jump to the pkg function entry"
+        echo "  "(set_color green)"help config fish-deps"(set_color normal)"        jump to fish-deps"
+        echo "  "(set_color green)"help config abbreviations"(set_color normal)"    jump to Abbreviations section"
+        echo "  "(set_color green)"help config --html"(set_color normal)"           open HTML docs in browser"
+        echo "  "(set_color green)"help config --man"(set_color normal)"            open compiled man page"
         echo ""
         set_color --bold brblue
         echo "NAVIGATION (ov pager)"

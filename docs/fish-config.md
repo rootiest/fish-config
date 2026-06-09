@@ -1179,6 +1179,8 @@ Add -i (interactive confirmation) to destructive commands:
     config-help --html
     config-help --man
 
+    Also available as: help config [SECTION] [FLAGS]
+
 ### config-update
 
     Synopsis:  config-update [-h] [-n] [-f]
@@ -1600,7 +1602,7 @@ navigation.
 
 ## As a man page
 
-    config-help --man
+    help config --man
 
 Opens the compiled docs/fish-config.1 directly via man -l, bypassing
 the pager fallback chain. The symlink and MANPATH are also configured
@@ -1614,7 +1616,7 @@ a completely separate command. Do not mix them up.
 
 ## In the browser (HTML)
 
-    config-help --html
+    help config --html
 
 Opens docs/html/index.html in the default web browser. Browser detection
 queries the system's x-scheme-handler/https MIME entry (via xdg-mime) to
