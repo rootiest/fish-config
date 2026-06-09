@@ -37,8 +37,11 @@ function sponge_filter_secrets --argument-names command
     for var in $sensitive_vars
         # Take only the first element — array vars yield multiple values
         set -l value $$var[1]
+        # Guard before string length: if var is unset, value is an empty list
+        # and string length receives zero arguments, breaking test.
+        set -q value[1]; or continue
 
-        # Skip empty, short, or path-like values — not real credentials
+        # Skip short or path-like values — not real credentials
         test (string length -- $value) -gt 8; or continue
         string match --quiet --regex '^[/~]' -- $value; and continue
 
