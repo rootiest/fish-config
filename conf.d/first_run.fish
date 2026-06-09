@@ -35,7 +35,7 @@ if not type -q fisher
     if curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
         echo "  [first-run] Fisher installed."
         if not fisher update 2>/dev/null
-            echo "  [first-run] Plugin sync failed — run 'fisher update' manually." >&2
+            echo "  [first-run] Fisher update failed — run 'fisher update' manually." >&2
         end
     else
         echo "  [first-run] Fisher install failed — run 'fisher update' manually." >&2

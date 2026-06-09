@@ -279,7 +279,7 @@ are active in Insert, Normal, and Visual modes unless noted.
                     line to open an fzf picker and insert a selection
                     at the cursor position.
 
-## FZF Bindings (from PatrickF1/fzf.fish)
+## FZF Bindings (bundled from PatrickF1/fzf.fish)
 
     Ctrl+R          Search command history
     Ctrl+Alt+F      Search git-tracked files
@@ -1395,9 +1395,9 @@ To customize, override FZF_DEFAULT_OPTS in local.fish.
 
 ### Catppuccin Mocha Syntax Highlighting
 
-The catppuccin/fish plugin applies syntax highlight colors on first run.
-Colors are stored in fish_variables (universal). To switch variants, install
-a different theme from the themes/ directory:
+The Catppuccin Mocha theme ships with this config in themes/ and is applied
+on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
+(universal). To switch variants, install a different theme from themes/:
 
     fish_config theme save "Catppuccin Latte"
 
@@ -1417,18 +1417,33 @@ testing), run:
 
 Then open a new shell.
 
-The plugin list is maintained in fish_plugins at the config root.
+## Bundled Plugin Functionality
+
+Plugin functionality is bundled directly with this config rather than managed
+through Fisher. The bundled versions include customizations for Fish 4.x
+compatibility and improved behavior that differ from their upstream releases.
+Installing them through Fisher would overwrite these customizations.
+
+Bundled components and their upstream origins:
+
+    catppuccin/fish               → themes/ + conf.d/theme.fish
+    PatrickF1/fzf.fish            → functions/_fzf_*.fish + conf.d/fzf.fish
+    franciscolourenco/done        → conf.d/done.fish
+    jorgebucaran/autopair.fish    → functions/_autopair_*.fish + conf.d/autopair.fish
+    nickeb96/puffer-fish          → functions/_puffer_fish_*.fish + conf.d/puffer.fish
+
+Do not run `fisher install` for these — it will overwrite the customized
+versions. To update their behavior, edit the relevant bundled files directly.
+
+## fish_plugins Manifest
+
+The `fish_plugins` file at the config root contains only the Fisher manager
+entry itself:
 
     jorgebucaran/fisher           Plugin manager itself
-    catppuccin/fish               Catppuccin Mocha color theme
-    PatrickF1/fzf.fish            fzf integration for Fish
-    franciscolourenco/done        Desktop notification when long commands finish
-    jorgebucaran/autopair.fish    Auto-pair brackets and quotes
-    meaningful-ooo/sponge         Remove failed commands from history
-    nickeb96/puffer-fish          !! / !$ / ./ expansion
 
-Run `fisher update` to update all plugins, or `fish-deps update` which
-calls fisher update as its first step.
+To update Fisher, run `fisher update` or `fish-deps update` which calls it
+as its first step.
 
 ---
 
@@ -1439,8 +1454,9 @@ This configuration is managed as a git repository. To deploy on a new machine:
     mv ~/.config/fish ~/.config/fish.bak   # back up any existing config
     git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
 
-Then open a new Fish shell. Fisher and all plugins install automatically on
-first launch and the Catppuccin Mocha theme is applied.
+Then open a new Fish shell. Fisher installs automatically on first launch
+and the Catppuccin Mocha theme is applied. All other plugin functionality is
+bundled directly with this config and requires no additional installation.
 
 ## Return Sentinel
 

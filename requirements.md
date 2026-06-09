@@ -116,5 +116,9 @@ Non-standard applications required by this fish shell configuration.
 
 | Tool | Description | Notes |
 |------|-------------|-------|
-| `fisher` | Fish plugin manager | Manages plugins via `fish_plugins` |
-| `catppuccin/fish` | Catppuccin theme for Fish | Listed in `fish_plugins` |
+| `fisher` | Fish plugin manager | Bootstrapped automatically on first run; only entry in `fish_plugins` |
+
+Plugin functionality (Catppuccin theme, FZF bindings, done notifications, autopair, puffer-fish
+expansions) is bundled directly with this config in `functions/`, `conf.d/`, and `themes/`. These are
+customized versions — do not install them via `fisher install`, as doing so would overwrite the
+bundled modifications.

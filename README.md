@@ -22,7 +22,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 
 - **Catppuccin Mocha** theming throughout (prompt, FZF, syntax highlighting)
 - **Starship** prompt with VI key bindings
-- **Fisher** plugin management with FZF key bindings and Catppuccin syntax colors
+- **Fisher** plugin manager bootstrapped automatically; plugin functionality (FZF bindings, Catppuccin theme, done notifications, autopair, puffer-fish) bundled directly with the config
 - **Smart CLI wrappers** that prefer modern tools (`eza`, `bat`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Auto Python venv** activation on directory change (direnv-aware)
 - **Kitty terminal** deep integration for splits, tabs, and SSH
@@ -66,7 +66,7 @@ mv ~/.config/fish ~/.config/fish.bak
 git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
 ```
 
-Then open a new Fish shell — Fisher and all plugins will be installed automatically on first launch, and the Catppuccin Mocha theme will be applied.
+Then open a new Fish shell — Fisher will be installed automatically on first launch and the Catppuccin Mocha theme will be applied. All plugin functionality is bundled directly with this config and requires no additional installation.
 
 A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are sourced from `~/.config/.user-dots/fish/secrets.fish` and excluded from version control.
 
