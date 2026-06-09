@@ -498,17 +498,64 @@ overhead.</p>
 or for testing), run:</p>
 <pre><code>set -Ue __fish_config_first_run_complete</code></pre>
 <p>Then open a new shell.</p>
-<p>The plugin list is maintained in fish_plugins at the config root.</p>
+<h2 data-number="12.1" id="fisher-managed-plugins">Fisher-Managed
+Plugins</h2>
+<p>The following plugins are fully managed by Fisher. Their files are
+installed into the repo directory by Fisher and are listed in
+<code>.gitignore</code> — do not commit them. Fisher installs and
+updates them automatically.</p>
 <pre><code>jorgebucaran/fisher           Plugin manager itself
-catppuccin/fish               Catppuccin Mocha color theme
-PatrickF1/fzf.fish            fzf integration for Fish
-franciscolourenco/done        Desktop notification when long commands finish
-jorgebucaran/autopair.fish    Auto-pair brackets and quotes
-meaningful-ooo/sponge         Remove failed commands from history
-nickeb96/puffer-fish          !! / !$ / ./ expansion</code></pre>
-<p>Run <code>fisher update</code> to update all plugins, or
-<code>fish-deps update</code> which calls fisher update as its first
-step.</p>
+meaningful-ooo/sponge         Remove failed commands from history</code></pre>
+<h2 data-number="12.2" id="sponge-history-filtering">Sponge History
+Filtering</h2>
+<p>Sponge removes failed commands from history and, via
+conf.d/sponge_privacy.fish, also filters privacy-sensitive commands
+through three layers:</p>
+<p>Layer 1 — Static patterns (universal, persistent across sessions):
+Commands matching any of these structural signatures are never
+recorded:</p>
+<pre><code>--password / --token / --passphrase / --api-key flags with values
+Inline env assignments: GITHUB_TOKEN=xxx, MY_API_KEY=abc
+Fish set with sensitive names: set -gx GITHUB_TOKEN xxx
+URLs with embedded credentials: https://user:pass@host
+HTTP Authorization headers: curl -H &quot;Authorization: ...&quot;
+Basic auth flags: curl -u user:pass
+sshpass, docker login -p, openssl -passin/-passout</code></pre>
+<p>Layer 2 — Dynamic secret values (session globals, refreshed each
+login): On the first prompt, after secrets.fish has loaded, the literal
+values of all exported variables whose names suggest credentials (TOKEN,
+PASSWORD, SECRET, API_KEY, etc.) are collected, regex-escaped, and added
+as a session-scoped overlay. Because globals shadow universals in Fish,
+the combined list is what sponge sees. Rotating a token takes effect on
+the next login automatically.</p>
+<p>Layer 3 — Per-command filter (sponge_filter_secrets): Catches
+credentials in variables exported after login, such as tokens sourced
+from a project .env file mid-session.</p>
+<p>To add your own persistent patterns:</p>
+<pre><code>set -U -a sponge_regex_patterns &#39;your-regex-here&#39;</code></pre>
+<h2 data-number="12.3" id="bundled-plugin-functionality">Bundled Plugin
+Functionality</h2>
+<p>The remaining plugin functionality is bundled directly with this
+config rather than managed through Fisher. The bundled versions include
+customizations for Fish 4.x compatibility and improved behavior that
+differ from their upstream releases. Installing them through Fisher
+would overwrite these customizations.</p>
+<p>Bundled components and their upstream origins:</p>
+<pre><code>catppuccin/fish               → themes/ + conf.d/theme.fish
+PatrickF1/fzf.fish            → functions/_fzf_*.fish + conf.d/fzf.fish
+franciscolourenco/done        → conf.d/done.fish
+jorgebucaran/autopair.fish    → functions/_autopair_*.fish + conf.d/autopair.fish
+nickeb96/puffer-fish          → functions/_puffer_fish_*.fish + conf.d/puffer.fish</code></pre>
+<p>Do not run <code>fisher install</code> for these — it will overwrite
+the customized versions. To update their behavior, edit the relevant
+bundled files directly.</p>
+<h2 data-number="12.4" id="fish_plugins-manifest">fish_plugins
+Manifest</h2>
+<p>The <code>fish_plugins</code> file at the config root:</p>
+<pre><code>jorgebucaran/fisher           Plugin manager itself
+meaningful-ooo/sponge         Remove failed commands from history</code></pre>
+<p>To update all Fisher-managed plugins, run <code>fisher update</code>
+or <code>fish-deps update</code> which calls it as its first step.</p>
 <hr />
 </body>
 </html>

@@ -40,7 +40,7 @@ are active in Insert, Normal, and Visual modes unless noted.
                     line to open an fzf picker and insert a selection
                     at the cursor position.
 
-## FZF Bindings (from PatrickF1/fzf.fish)
+## FZF Bindings (bundled from PatrickF1/fzf.fish)
 
     Ctrl+R          Search command history
     Ctrl+Alt+F      Search git-tracked files

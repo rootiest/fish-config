@@ -354,7 +354,7 @@ Ctrl+Enter      Smart execute: runs commands instantly without
                 at the cursor position.
 \f[R]
 .fi
-.SS FZF Bindings (from PatrickF1/fzf.fish)
+.SS FZF Bindings (bundled from PatrickF1/fzf.fish)
 .IP
 .nf
 \f[C]
@@ -1795,10 +1795,10 @@ Highlights:   #F38BA8 (red)     #CBA6F7 (mauve)    #B4BEFE (lavender)
 To customize, override FZF_DEFAULT_OPTS in local.fish.
 .SS Catppuccin Mocha Syntax Highlighting
 .PP
-The catppuccin/fish plugin applies syntax highlight colors on first run.
+The Catppuccin Mocha theme ships with this config in themes/ and is
+applied on first run via \f[V]conf.d/first_run.fish\f[R].
 Colors are stored in fish_variables (universal).
-To switch variants, install a different theme from the themes/
-directory:
+To switch variants, install a different theme from themes/:
 .IP
 .nf
 \f[C]
@@ -1825,23 +1825,96 @@ set -Ue __fish_config_first_run_complete
 .fi
 .PP
 Then open a new shell.
+.SS Fisher-Managed Plugins
 .PP
-The plugin list is maintained in fish_plugins at the config root.
+The following plugins are fully managed by Fisher.
+Their files are installed into the repo directory by Fisher and are
+listed in \f[V].gitignore\f[R] \[em] do not commit them.
+Fisher installs and updates them automatically.
 .IP
 .nf
 \f[C]
 jorgebucaran/fisher           Plugin manager itself
-catppuccin/fish               Catppuccin Mocha color theme
-PatrickF1/fzf.fish            fzf integration for Fish
-franciscolourenco/done        Desktop notification when long commands finish
-jorgebucaran/autopair.fish    Auto-pair brackets and quotes
 meaningful-ooo/sponge         Remove failed commands from history
-nickeb96/puffer-fish          !! / !$ / ./ expansion
+\f[R]
+.fi
+.SS Sponge History Filtering
+.PP
+Sponge removes failed commands from history and, via
+conf.d/sponge_privacy.fish, also filters privacy-sensitive commands
+through three layers:
+.PP
+Layer 1 \[em] Static patterns (universal, persistent across sessions):
+Commands matching any of these structural signatures are never recorded:
+.IP
+.nf
+\f[C]
+--password / --token / --passphrase / --api-key flags with values
+Inline env assignments: GITHUB_TOKEN=xxx, MY_API_KEY=abc
+Fish set with sensitive names: set -gx GITHUB_TOKEN xxx
+URLs with embedded credentials: https://user:pass\[at]host
+HTTP Authorization headers: curl -H \[dq]Authorization: ...\[dq]
+Basic auth flags: curl -u user:pass
+sshpass, docker login -p, openssl -passin/-passout
 \f[R]
 .fi
 .PP
-Run \f[V]fisher update\f[R] to update all plugins, or
-\f[V]fish-deps update\f[R] which calls fisher update as its first step.
+Layer 2 \[em] Dynamic secret values (session globals, refreshed each
+login): On the first prompt, after secrets.fish has loaded, the literal
+values of all exported variables whose names suggest credentials (TOKEN,
+PASSWORD, SECRET, API_KEY, etc.)
+are collected, regex-escaped, and added as a session-scoped overlay.
+Because globals shadow universals in Fish, the combined list is what
+sponge sees.
+Rotating a token takes effect on the next login automatically.
+.PP
+Layer 3 \[em] Per-command filter (sponge_filter_secrets): Catches
+credentials in variables exported after login, such as tokens sourced
+from a project .env file mid-session.
+.PP
+To add your own persistent patterns:
+.IP
+.nf
+\f[C]
+set -U -a sponge_regex_patterns \[aq]your-regex-here\[aq]
+\f[R]
+.fi
+.SS Bundled Plugin Functionality
+.PP
+The remaining plugin functionality is bundled directly with this config
+rather than managed through Fisher.
+The bundled versions include customizations for Fish 4.x compatibility
+and improved behavior that differ from their upstream releases.
+Installing them through Fisher would overwrite these customizations.
+.PP
+Bundled components and their upstream origins:
+.IP
+.nf
+\f[C]
+catppuccin/fish               → themes/ + conf.d/theme.fish
+PatrickF1/fzf.fish            → functions/_fzf_*.fish + conf.d/fzf.fish
+franciscolourenco/done        → conf.d/done.fish
+jorgebucaran/autopair.fish    → functions/_autopair_*.fish + conf.d/autopair.fish
+nickeb96/puffer-fish          → functions/_puffer_fish_*.fish + conf.d/puffer.fish
+\f[R]
+.fi
+.PP
+Do not run \f[V]fisher install\f[R] for these \[em] it will overwrite
+the customized versions.
+To update their behavior, edit the relevant bundled files directly.
+.SS fish_plugins Manifest
+.PP
+The \f[V]fish_plugins\f[R] file at the config root:
+.IP
+.nf
+\f[C]
+jorgebucaran/fisher           Plugin manager itself
+meaningful-ooo/sponge         Remove failed commands from history
+\f[R]
+.fi
+.PP
+To update all Fisher-managed plugins, run \f[V]fisher update\f[R] or
+\f[V]fish-deps update\f[R] which calls it as its first step.
 .PP
    *   *   *   *   *
 .SH 9. INSTALLATION
@@ -1857,8 +1930,10 @@ git clone https://git.rootiest.dev/rootiest/fish-config.git \[ti]/.config/fish
 .fi
 .PP
 Then open a new Fish shell.
-Fisher and all plugins install automatically on first launch and the
-Catppuccin Mocha theme is applied.
+Fisher installs automatically on first launch and the Catppuccin Mocha
+theme is applied.
+All other plugin functionality is bundled directly with this config and
+requires no additional installation.
 .SS Return Sentinel
 .PP
 config.fish ends with a return sentinel guard.

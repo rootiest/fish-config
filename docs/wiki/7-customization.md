@@ -64,9 +64,9 @@ To customize, override FZF_DEFAULT_OPTS in local.fish.
 
 ### Catppuccin Mocha Syntax Highlighting
 
-The catppuccin/fish plugin applies syntax highlight colors on first run.
-Colors are stored in fish_variables (universal). To switch variants, install
-a different theme from the themes/ directory:
+The Catppuccin Mocha theme ships with this config in themes/ and is applied
+on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
+(universal). To switch variants, install a different theme from themes/:
 
     fish_config theme save "Catppuccin Latte"
 
