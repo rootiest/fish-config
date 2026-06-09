@@ -40,7 +40,9 @@ end
 set -l _privacy_patterns
 
 # Common auth flags with values: --password x, --token x, --passphrase x, --api-key x
-set -a _privacy_patterns '--(?:password|passwd|passphrase|token|secret|api[-_]key)(?:\s+|=)\S+'
+# Use \- to avoid the pattern string starting with --, which string match
+# would misinterpret as an unknown option flag.
+set -a _privacy_patterns '\-\-(?:password|passwd|passphrase|token|secret|api[-_]key)(?:\s+|=)\S+'
 
 # Inline env var assignments with sensitive names: GITHUB_TOKEN=xxx, MY_API_KEY=abc
 set -a _privacy_patterns '(?i)\b[A-Z][A-Z0-9_]*(?:PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|PRIVATE_KEY|ACCESS_KEY|AUTH_KEY|CREDENTIAL)[A-Z0-9_]*=\S+'
@@ -65,6 +67,14 @@ set -a _privacy_patterns 'docker\s+login\s.*(?:-p|--password)\s+\S+'
 
 # openssl passphrase arguments: -passin pass:xxx, -passout env:VAR
 set -a _privacy_patterns 'openssl\s.*-pass(?:in|out)\s+\S+'
+
+# Remove any previously stored patterns that begin with -- ; string match
+# passes patterns before its own -- sentinel and would treat them as flags.
+for _i in (seq (count $sponge_regex_patterns) -1 1)
+    if string match --quiet -- '--*' $sponge_regex_patterns[$_i]
+        set -Ue sponge_regex_patterns[$_i]
+    end
+end
 
 # Idempotent registration into universal sponge_regex_patterns
 for _pattern in $_privacy_patterns
