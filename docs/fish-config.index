@@ -168,6 +168,9 @@ plugins=# 8. FISHER PLUGINS
 fisher=# 8. FISHER PLUGINS
 fisher-managed=## Fisher-Managed Plugins
 sponge=## Fisher-Managed Plugins
+sponge-filtering=## Sponge History Filtering
+history-filtering=## Sponge History Filtering
+privacy=## Sponge History Filtering
 bundled-plugins=## Bundled Plugin Functionality
 fish-plugins-manifest=## fish_plugins Manifest
 

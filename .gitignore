@@ -70,6 +70,7 @@ completions/fisher.fish
 conf.d/sponge.fish
 functions/_sponge*.fish
 functions/sponge_*.fish
+!functions/sponge_filter_secrets.fish
 
 #   ─────────────────── AI Sessions and Rules ──────────────────
 # Matches CLAUDE.md, .claud*, etc.
