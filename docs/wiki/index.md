@@ -24,6 +24,7 @@ The configuration is split across:
       starship.fish           fish_prompt with OSC 133 shell-integration markers
       tailscale.fish          Tailscale CLI tab completions
       theme.fish              Catppuccin syntax highlight colors
+      sponge_privacy.fish     Sponge privacy patterns; filters credentials from history
       tricks.fish             PATH, bang-bang helpers, bat man pages, aliases
       wakatime.fish           WakaTime shell hook
       yay-wrapper.fish        Auto-generates ~/.local/bin/yay logging wrapper
