@@ -16,6 +16,12 @@
 # EXAMPLE
 #   mkdir ~/projects/myapp/src
 function mkdir --description 'Execute mkdir'
+    # Opinionated guard (C1): fall back to bare command mkdir when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command mkdir $argv
+        return $status
+    end
+
     if status is-interactive
         # Fall back to command mkdir -p when flags are present (e.g. -m 755)
         for _arg in $argv

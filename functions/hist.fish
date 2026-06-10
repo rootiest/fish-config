@@ -11,6 +11,14 @@
 # EXAMPLE
 #   hist
 function hist --description 'Search fish history and put it in the prompt'
+    # Opinionated guard (C4): integrations disabled
+    if not __fish_config_op_enabled __fish_config_op_integrations
+        set -l c_err (set_color red)
+        set -l c_reset (set_color normal)
+        echo "$c_err"'hist: disabled by __fish_config_op_integrations'"$c_reset" >&2
+        return 1
+    end
+
     set -l selected (history | fzf --reverse --height 40% --with-nth 3..)
 
     if test -n "$selected"

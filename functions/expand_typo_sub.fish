@@ -1,6 +1,9 @@
 # Execute expand_typo_sub
 function expand_typo_sub --description 'Execute expand_typo_sub'
-    # In newer Fish, the matched token is often passed as $argv[1] 
+    # Opinionated guard (C3): no expansion when overrides are disabled.
+    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+
+    # In newer Fish, the matched token is often passed as $argv[1]
     # if the abbr is set up correctly. We'll fallback to commandline just in case.
         set -l last_cmd $history[1]
         set -l current_token $argv[1]

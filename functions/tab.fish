@@ -19,6 +19,14 @@
 # EXAMPLE
 #   tab
 function tab --description 'Spawn a new tab in the current terminal'
+    # Opinionated guard (C4): integrations disabled
+    if not __fish_config_op_enabled __fish_config_op_integrations
+        set -l c_err (set_color red)
+        set -l c_reset (set_color normal)
+        echo "$c_err"'tab: disabled by __fish_config_op_integrations'"$c_reset" >&2
+        return 1
+    end
+
     set -l dir "$cdto"
     if test -z "$dir"
         set dir "$PWD"

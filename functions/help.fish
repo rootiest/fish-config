@@ -66,6 +66,12 @@ end
 
 # --- Wrapper Definition ---
 function help --wraps help --description "Custom wrapper to intercept 'help config'"
+    # Opinionated guard (C1): fall back to the native fish help when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        __original_help $argv
+        return $status
+    end
+
     if test "$argv[1]" = config
         # All arguments after 'config' — including flags (-w/--html, -m/--man,
         # -h/--help) and section keywords — are forwarded to config-help.

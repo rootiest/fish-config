@@ -32,6 +32,31 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
             source "$__fish_config_dir/functions/$_fname.fish"
         end
     end
+
+    # The distro config ships opinionated pieces of its own (it is the origin
+    # of tricks.fish); strip them when the matching category is disabled so
+    # the guards hold on CachyOS systems too.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        for _fname in grep fgrep egrep dir vdir wget
+            functions -q $_fname; and functions --erase $_fname
+        end
+        # Restore fish's stock versions where they exist (erasing alone would
+        # also block autoloading the stock function).
+        for _fname in history ls
+            functions -q $_fname; and functions --erase $_fname
+            test -f $__fish_data_dir/functions/$_fname.fish
+            and source $__fish_data_dir/functions/$_fname.fish
+        end
+    end
+    if not __fish_config_op_enabled __fish_config_op_overrides
+        for _fname in __history_previous_command __history_previous_command_arguments
+            functions -q $_fname; and functions --erase $_fname
+        end
+        bind --erase ! 2>/dev/null
+        bind --erase '$' 2>/dev/null
+        bind -M insert --erase ! 2>/dev/null
+        bind -M insert --erase '$' 2>/dev/null
+    end
 end
 set --erase _fname
 

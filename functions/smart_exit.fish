@@ -20,6 +20,13 @@
 # EXAMPLE
 #   smart_exit --no-log
 function smart_exit --description 'Capture colorized scrollback before exiting, with pruning and safe overrides'
+    # Opinionated guard (C3): exit plainly when overrides are disabled.
+    # This composes with Task #4's __fish_config_enable_logging, which will
+    # gate only the scrollback capture while leaving the exit wrapper active.
+    if not __fish_config_op_enabled __fish_config_op_overrides
+        builtin exit $argv
+    end
+
     set -l options h/help n/no-log
     argparse $options -- $argv
     or return 1

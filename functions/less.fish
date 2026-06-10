@@ -14,6 +14,12 @@
 # EXAMPLE
 #   less /var/log/syslog
 function less --wraps='ov' --description 'Pager wrapper: $PAGER → ov → less → more → cat'
+    # Opinionated guard (C1): fall back to bare command less when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command less $argv
+        return $status
+    end
+
     if set -q PAGER; and command -q $PAGER
         command $PAGER $argv
     else if command -q ov

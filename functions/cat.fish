@@ -15,7 +15,13 @@
 # EXAMPLE
 #   cat README.md
 function cat --wraps='bat' --description 'Use bat for files, ls for directories, and raw cat for ANSI logs'
-    # If no arguments are provided, cat usually waits for stdin. 
+    # Opinionated guard (C1): fall back to bare command cat when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command cat $argv
+        return $status
+    end
+
+    # If no arguments are provided, cat usually waits for stdin.
     # We'll maintain that behavior by skipping the directory check if $argv is empty.
     if set -q argv[1]
         if test -d $argv[1]

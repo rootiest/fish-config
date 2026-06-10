@@ -1,5 +1,8 @@
 # Execute expand_bang_minus_n
 function expand_bang_minus_n --description 'Execute expand_bang_minus_n'
+    # Opinionated guard (C3): no expansion when overrides are disabled.
+    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+
     set -l token $argv[1]
     if test -z "$token"; set token (commandline -t); end
     

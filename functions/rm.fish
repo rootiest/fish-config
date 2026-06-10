@@ -11,6 +11,10 @@
 #   deletes via rm -rf and triggers fstrim. Plain paths and -r/-R are sent
 #   to trash put; any other flags fall back to system rm.
 #
+#   Opinionated component (C1): when disabled via __fish_config_op_aliases
+#   (or the __fish_config_opinionated master), behaves exactly like bare
+#   command rm — no wrapper, no trash, no trapping.
+#
 # ARGUMENTS
 #   (none)              List current trash contents
 #   -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
@@ -27,6 +31,12 @@
 #   rm -e
 #   rm -S sensitive_key.pem
 function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
+    # Opinionated guard (C1): fall back to bare command rm when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command rm $argv
+        return $status
+    end
+
     # 1. No arguments: Show the Trash contents (Quick view)
     if not set -q argv[1]
         if type -q trash

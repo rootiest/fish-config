@@ -18,6 +18,12 @@
 # EXAMPLE
 #   du ~/Downloads
 function du --description 'Execute du'
+    # Opinionated guard (C1): fall back to bare command du when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command du $argv
+        return $status
+    end
+
     set cmd ""
     set args
 

@@ -1,5 +1,8 @@
 # Execute expand_bang_string
 function expand_bang_string --description 'Execute expand_bang_string'
+    # Opinionated guard (C3): no expansion when overrides are disabled.
+    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+
     # Fish 4.x passes the matched token as argv[1]
     set -l token $argv[1]
     if test -z "$token"

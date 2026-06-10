@@ -17,6 +17,12 @@
 #   ping google.com
 #   ping --legend google.com
 function ping --description 'prettyping with default nolegend'
+    # Opinionated guard (C1): fall back to bare command ping when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command ping $argv
+        return $status
+    end
+
     if command -q prettyping
         # Check if the user specifically asked for the legend
         if contains -- --legend $argv
