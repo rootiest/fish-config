@@ -525,6 +525,10 @@ interactively.</p>
 <pre><code>GPG_TTY              $(tty)  — ensures GPG passphrase prompts work
 CLAUDE_CODE_NO_FLICKER  1    — suppress terminal flicker in Claude Code
 CDPATH               . ~/projects ~</code></pre>
+<p>Opinionated defaults (CDPATH, PAGER/MANPAGER, Vi mode, command
+shadows, terminal integrations) can be switched off per category with
+universal variables — see Section 7, "Opinionated Components (Minimal
+Mode)".</p>
 <h2 data-number="5.6" id="pager-hierarchy">Pager Hierarchy</h2>
 <p>$PAGER is set to ov when available, falling back to less. The less
 wrapper function extends this into a full chain so anything that calls

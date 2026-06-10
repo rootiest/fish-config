@@ -48,6 +48,10 @@ automatically on exit. Use `logs` to browse them interactively.
     CLAUDE_CODE_NO_FLICKER  1    — suppress terminal flicker in Claude Code
     CDPATH               . ~/projects ~
 
+Opinionated defaults (CDPATH, PAGER/MANPAGER, Vi mode, command shadows,
+terminal integrations) can be switched off per category with universal
+variables — see Section 7, "Opinionated Components (Minimal Mode)".
+
 ## Pager Hierarchy
 
 $PAGER is set to ov when available, falling back to less. The less wrapper
