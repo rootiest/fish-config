@@ -11,6 +11,7 @@ abbreviation system for keyboard-driven workflows.
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Personalization](#personalization)
+- [Minimal Mode](#minimal-mode)
 - [Attribution](#attribution)
 - [License](#license)
 
@@ -28,6 +29,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 - **Kitty terminal** deep integration for splits, tabs, and SSH
 - **AI workflow** helpers for Claude and Antigravity session management
 - **WakaTime** shell activity tracking
+- **Opt-out toggles** for every opinionated component — see [Minimal Mode](#minimal-mode)
 
 ---
 
@@ -159,6 +161,35 @@ end
 ```
 
 `fish_variables` (which fish auto-manages and may contain universal variable state) is excluded from this repo via `.gitignore`.
+
+---
+
+## Minimal Mode
+
+Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, and terminal integrations — is active by default but can be switched off with universal variables. Four category toggles and one master switch are available:
+
+| Variable | Disables |
+|---|---|
+| `__fish_config_op_aliases` | Command shadows: `ls`→eza, `cat`→bat, `cd`→zoxide, `rm`→trash, `top`→btop, and friends; `grep`/`cp`/`mv`/`wget` flag injection |
+| `__fish_config_op_autoexec` | Startup side-effects: Fisher bootstrap, theme apply, `paru`/`yay` wrapper generation, auto venv activation, WakaTime hook |
+| `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`, bang-bang history expansion, autopair, puffer, Starship prompt, theme colors |
+| `__fish_config_op_integrations` | Kitty/WezTerm window abbreviations, `done` notifications, `spwin`/`tab`/`split`, `hist`, `logs`, `upgrade`, WakaTime |
+| `__fish_config_opinionated` | Master switch — all four categories at once |
+
+Set any of them to a falsy value (`0`, `false`, `no`, `off`, `n`) to disable; erase the variable to re-enable:
+
+```fish
+# Plain shell: disable everything opinionated
+set -U __fish_config_opinionated 0
+
+# Or pick a single category, e.g. keep integrations but drop command shadows
+set -U __fish_config_op_aliases off
+
+# Back to full flavor
+set -Ue __fish_config_opinionated
+```
+
+Command shadows react immediately; bindings, prompt, and abbreviations take effect in new shells. With aliases disabled, `rm` deletes permanently again instead of trashing. See `help config opinionated` for the full component list.
 
 ---
 
