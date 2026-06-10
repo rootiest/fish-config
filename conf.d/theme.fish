@@ -6,6 +6,16 @@
 #          ╰──────────────────────────────────────────────────────────╯
 # Catppuccin Mocha
 
+# Forcing theme colors and $FZF_DEFAULT_OPTS is opinionated (C3 overrides).
+# The FZF variable is universal, so clean up our Catppuccin value if it
+# lingers from a session where overrides were still enabled.
+if not __fish_config_op_enabled __fish_config_op_overrides
+    if set -q FZF_DEFAULT_OPTS; and string match -q '*#1E1E2E*' -- "$FZF_DEFAULT_OPTS"
+        set --erase FZF_DEFAULT_OPTS
+    end
+    return
+end
+
 #   ────────────────────── Syntax highlighting colors ──────────────────────
 set --global fish_color_autosuggestion 6c7086
 set --global fish_color_cancel f38ba8

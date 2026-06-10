@@ -5,6 +5,10 @@
 # /usr/bin/yay is installed. The wrapper tees yay output to a
 # timestamped log file and prunes old logs, mirroring smart_exit behavior.
 
+# Auto-generating a wrapper in ~/.local/bin is opinionated (C2 auto-exec).
+# Task #4's __fish_config_enable_logging will additionally gate this wrapper.
+__fish_config_op_enabled __fish_config_op_autoexec; or return
+
 set -l _yay_real /usr/bin/yay
 set -l _yay_wrapper "$HOME/.local/bin/yay"
 set -l _yay_wrapper_version 1

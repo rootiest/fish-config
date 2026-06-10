@@ -5,17 +5,32 @@
 #          │                    Fish Configuration                    │
 #          ╰──────────────────────────────────────────────────────────╯
 
+#   ───────────────────── Opinionated component guards ─────────────────────
+# Opinionated components (AGENTS.md Task #3) are wrapped in
+# __fish_config_op_enabled <category> guards throughout this file and conf.d/.
+# The helper always evaluates the master switch __fish_config_opinionated
+# first (falsy disables everything), then the per-category opt-out variable:
+#   __fish_config_op_aliases       C1 — command shadows / flag injection
+#   __fish_config_op_autoexec      C2 — startup side-effects
+#   __fish_config_op_overrides     C3 — key bindings, env, prompt overrides
+#   __fish_config_op_integrations  C4 — terminal/tool coupling
+# Example: set -U __fish_config_op_aliases off   (erase to re-enable)
+
 #   ──────────────────────── Source CachyOS configs ────────────────────────
 if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
     source /usr/share/cachyos-fish-config/cachyos-config.fish
-    # Source our tricks over the cachyOS config
-    test -f "$__fish_config_dir/conf.d/tricks.fish"
-    and source "$__fish_config_dir/conf.d/tricks.fish"
-    # Erase CachyOS aliases/functions that shadow our versions, then
-    # re-source our versions since functions --erase removes autoload entries.
-    for _fname in ls lt cleanup copy
-        functions --erase $_fname
-        source "$__fish_config_dir/functions/$_fname.fish"
+    # Surgically overriding the distro config is opinionated (C3 overrides):
+    # skip it entirely when overrides are disabled, keeping CachyOS defaults.
+    if __fish_config_op_enabled __fish_config_op_overrides
+        # Source our tricks over the cachyOS config
+        test -f "$__fish_config_dir/conf.d/tricks.fish"
+        and source "$__fish_config_dir/conf.d/tricks.fish"
+        # Erase CachyOS aliases/functions that shadow our versions, then
+        # re-source our versions since functions --erase removes autoload entries.
+        for _fname in ls lt cleanup copy
+            functions --erase $_fname
+            source "$__fish_config_dir/functions/$_fname.fish"
+        end
     end
 end
 set --erase _fname
@@ -47,10 +62,13 @@ set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
 set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
 
 #   ─────────────────────────── Pager variables ────────────────────────────
-if type -q ov
-    set -gx PAGER ov
-else if type -q less
-    set -gx PAGER less
+# Overriding $PAGER is opinionated (C3 overrides)
+if __fish_config_op_enabled __fish_config_op_overrides
+    if type -q ov
+        set -gx PAGER ov
+    else if type -q less
+        set -gx PAGER less
+    end
 end
 
 #   ─────────────────────────── Editor variables ───────────────────────────
@@ -76,7 +94,9 @@ set -gx SCROLLBACK_HISTORY_DIR "$HOME/.terminal_history"
 #   Maximum number of scrollback history files to keep
 set -gx SCROLLBACK_HISTORY_MAX_FILES 100
 # Wire up a clean exit function that won't fire on background subshells
-if status is-interactive
+# Replacing the exit builtin is opinionated (C3 overrides); smart_exit also
+# guards itself so a live toggle takes effect without restarting the shell.
+if status is-interactive; and __fish_config_op_enabled __fish_config_op_overrides
     function exit --description 'Safe interactive exit'
         # If the smart_exit file exists in our function path, invoke it explicitly
         if functions -q smart_exit
@@ -112,7 +132,10 @@ fish_add_path $HOME/.fzf/bin                 # Fuzzy Finder (fzf) core binary an
 # Additionally, directories inside the CWD will still take precedence over CDPATH,
 # so if you have a directory named 'myproject' in the current directory,
 # running 'cd myproject' will take you there instead of $HOME/projects/myproject.
-set -gx CDPATH . $HOME/projects $HOME
+# CDPATH injection is opinionated (C3 overrides)
+if __fish_config_op_enabled __fish_config_op_overrides
+    set -gx CDPATH . $HOME/projects $HOME
+end
 
 #   ──────────────────────────── Bootstrap Fisher ──────────────────────────
 #   Fisher is bootstrapped automatically on first run via conf.d/first_run.fish
@@ -123,7 +146,11 @@ if status is-interactive
     #   ────────────────────────────── Key bindings ────────────────────────────
     #   Helps ensure that key bindings are consistent with the Vi editing mode set below.
     #   This is optional but can improve the user experience for those who prefer Vi-style key bindings.
-    set -g fish_key_bindings fish_vi_key_bindings
+    #   Global Vi mode is opinionated (C3 overrides); without it fish keeps its
+    #   default Emacs-style bindings.
+    if __fish_config_op_enabled __fish_config_op_overrides
+        set -g fish_key_bindings fish_vi_key_bindings
+    end
 
     #   ──────────────────────── Source FZF integration ────────────────────────
     #   Prefer fzf's own fish integration (fzf --fish, available since fzf 0.48)

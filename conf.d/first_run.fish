@@ -29,6 +29,14 @@ echo "  Run 'help config' for offline documentation."
 echo "  Run 'fish-deps'   to check and install dependencies."
 echo ""
 
+#   ─────────────────────── Opinionated auto-exec guard ────────────────────
+# Startup side-effects below (Fisher curl, fisher update, theme apply) are
+# opinionated (C2 auto-execution). The first-run state variable is already
+# set above either way, so disabling auto-exec never re-triggers this file.
+if not __fish_config_op_enabled __fish_config_op_autoexec
+    return
+end
+
 #   ──────────────────────────── Bootstrap Fisher ──────────────────────────
 if not type -q fisher
     echo "  [first-run] Installing Fisher plugin manager..."
