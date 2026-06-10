@@ -162,6 +162,11 @@ local=## Machine-local Configuration
 secrets=## Secrets and API Keys
 overrides=## Overriding Configuration Variables
 universal=## Fish Universal Variables
+opinionated=## Opinionated Components (Minimal Mode)
+minimal=## Opinionated Components (Minimal Mode)
+minimal-mode=## Opinionated Components (Minimal Mode)
+opt-out=## Opinionated Components (Minimal Mode)
+toggles=## Opinionated Components (Minimal Mode)
 
 # ── Section 8: Fisher Plugins ─────────────────────────────────
 plugins=# 8. FISHER PLUGINS

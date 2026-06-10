@@ -46,6 +46,10 @@
 
 function fish_user_key_bindings
 
+    # Custom key chords are opinionated (C3 overrides); skip them entirely
+    # when overrides are disabled so stock bindings remain untouched.
+    __fish_config_op_enabled __fish_config_op_overrides; or return
+
     #   ───────────────────────────── Set Bindings ─────────────────────────────
     #
     # Set Emacs mode bindings:

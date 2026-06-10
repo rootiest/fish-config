@@ -15,6 +15,12 @@
 # EXAMPLE
 #   rg "TODO" src/
 function rg --description 'alias rg=rg --hyperlink-format=kitty'
+    # Opinionated guard (C1): fall back to bare command rg when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command rg $argv
+        return $status
+    end
+
     if test "$TERM" = xterm-kitty
         command rg --hyperlink-format=kitty $argv
     else

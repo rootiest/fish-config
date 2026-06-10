@@ -5,6 +5,9 @@
 # Without starship, fish's built-in prompt already emits OSC 133;A
 # on the prompt line itself, so no wrapper is needed.
 
+# Replacing the prompt is opinionated (C3 overrides)
+__fish_config_op_enabled __fish_config_op_overrides; or return
+
 type -q starship; or return
 
 function fish_prompt

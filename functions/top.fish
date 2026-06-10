@@ -14,6 +14,12 @@
 # EXAMPLE
 #   top
 function top --wraps='btop' --description 'Use btop as a modern replacement for top'
+    # Opinionated guard (C1): fall back to bare command top when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command top $argv
+        return $status
+    end
+
     # 1. Check if btop is actually installed
     if type -q btop
         # 2. Launch btop with any arguments passed

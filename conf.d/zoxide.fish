@@ -63,7 +63,11 @@ if status is-interactive
 
         # -------------
 
-        alias cd=z
+        # Shadowing cd with zoxide is opinionated (C1 aliasing); z and zi
+        # remain available either way.
+        if __fish_config_op_enabled __fish_config_op_aliases
+            alias cd=z
+        end
 
         # use custom completion
         complete -c z -f # disable files by default 

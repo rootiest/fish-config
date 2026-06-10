@@ -156,6 +156,10 @@ automatically on exit. Use `logs` to browse them interactively.
     CLAUDE_CODE_NO_FLICKER  1    — suppress terminal flicker in Claude Code
     CDPATH               . ~/projects ~
 
+Opinionated defaults (CDPATH, PAGER/MANPAGER, Vi mode, command shadows,
+terminal integrations) can be switched off per category with universal
+variables — see Section 7, "Opinionated Components (Minimal Mode)".
+
 ## Pager Hierarchy
 
 $PAGER is set to ov when available, falling back to less. The less wrapper
@@ -1374,6 +1378,61 @@ Example: to increase the scrollback history limit:
 Some settings (fzf colors, theme) are stored in fish_variables via
 `set -U`. These are machine-local and git-ignored. Do not commit
 fish_variables.
+
+## Opinionated Components (Minimal Mode)
+
+Every opinionated piece of this config is active by default but can be
+switched off through four category opt-out variables, each evaluated via
+__fish_variable_check. Set a variable to any falsy value (0, false, no,
+off, n) to disable its category; erase it or set a truthy value (1, true,
+yes, on, y) to re-enable. Unset means enabled.
+
+    Variable                        Disables
+    ------------------------------  ------------------------------------
+    __fish_config_op_aliases        Command shadows and flag injection:
+                                    ls->eza, cat->bat, cd->zoxide,
+                                    rm->trash, less->ov, top->btop,
+                                    ping->prettyping, ssh->kitten,
+                                    du->duf/dust, mkdir/bash wrappers,
+                                    history timestamps, grep/cp/mv/wget
+                                    flag injection, help intercept
+    __fish_config_op_autoexec       Startup side-effects: Fisher
+                                    bootstrap, theme apply, paru/yay
+                                    wrapper generation, auto venv
+                                    activation, WakaTime hook
+    __fish_config_op_overrides      Key and env overrides: Vi mode,
+                                    exit->smart_exit, PAGER/MANPAGER,
+                                    CDPATH, bang-bang system, autopair,
+                                    puffer, starship prompt, theme
+                                    colors, FZF_DEFAULT_OPTS, right
+                                    prompt
+    __fish_config_op_integrations   Terminal/tool coupling: Kitty/
+                                    WezTerm window abbreviations, done
+                                    notifications, spwin/tab/split,
+                                    hist, logs, upgrade, WakaTime
+
+Examples:
+
+    # Disable command shadows only (rm becomes plain rm again):
+    set -U __fish_config_op_aliases off
+
+    # Full minimal mode — disable all four categories at once:
+    set -U __fish_config_opinionated 0
+
+    # Re-enable everything:
+    set -Ue __fish_config_opinionated
+
+Notes:
+
+  - Command shadows (rm, cat, ls, ...) react immediately; conf.d-level
+    components (bindings, prompt, abbreviations, hooks) take effect in
+    new shells.
+  - With aliases disabled, rm falls back to bare `command rm` — files
+    are deleted permanently, not trashed.
+  - Disabled integration commands (spwin, tab, split, hist, logs,
+    upgrade) print an error naming the variable that disabled them.
+  - On CachyOS, the distro fish config's own aliases, history override,
+    and bang-bang bindings are stripped per category as well.
 
 ## Prompt and Theme
 

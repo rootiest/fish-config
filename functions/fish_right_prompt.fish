@@ -11,6 +11,9 @@
 # EXAMPLE
 #   # Rendered automatically by Fish shell; not called directly.
 function fish_right_prompt --description 'Execute fish_right_prompt'
+    # Opinionated guard (C3): no right prompt when overrides are disabled.
+    __fish_config_op_enabled __fish_config_op_overrides; or return
+
     # 1. Docker Context in Blue
     set -l docker_ctx (docker context show 2>/dev/null)
     if test -n "$docker_ctx"; and test "$docker_ctx" != default

@@ -18,6 +18,14 @@
 # EXAMPLE
 #   spwin
 function spwin --wraps='~/.config/kitty/spawn-window.sh' --description 'spawn window in kitty or wezterm'
+    # Opinionated guard (C4): integrations disabled
+    if not __fish_config_op_enabled __fish_config_op_integrations
+        set -l c_err (set_color red)
+        set -l c_reset (set_color normal)
+        echo "$c_err"'spwin: disabled by __fish_config_op_integrations'"$c_reset" >&2
+        return 1
+    end
+
     if test "$TERM" = xterm-kitty
         if test -x ~/.config/kitty/spawn-window.sh
             ~/.config/kitty/spawn-window.sh $argv

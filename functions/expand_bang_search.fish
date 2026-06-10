@@ -1,5 +1,8 @@
 # Execute expand_bang_search
 function expand_bang_search --description 'Execute expand_bang_search'
+    # Opinionated guard (C3): no expansion when overrides are disabled.
+    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+
     set -l token $argv[1]
     if test -z "$token"
         set token (commandline -t)

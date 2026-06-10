@@ -14,6 +14,12 @@
 # EXAMPLE
 #   ls ~/projects
 function ls --description 'List all files'
+    # Opinionated guard (C1): fall back to bare command ls when disabled.
+    if not __fish_config_op_enabled __fish_config_op_aliases
+        command ls $argv
+        return $status
+    end
+
     if which eza >/dev/null 2>&1
         eza -l -a --icons --color=auto --hyperlink $argv
 

@@ -24,6 +24,10 @@ if not status is-interactive
     exit
 end
 
+# Local modification: opinionated guard (AGENTS.md Task #3). Desktop
+# notifications assume a graphical session, classified as C4 integrations.
+__fish_config_op_enabled __fish_config_op_integrations; or exit
+
 set -g __done_version 1.19.1
 
 function __done_run_powershell_script
