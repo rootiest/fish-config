@@ -24,32 +24,27 @@
 #                      __fish_config_op_greeting
 #
 # RETURNS
-#   0  Component enabled (category explicitly truthy; or category unset
-#      and master truthy/unset/unrecognized)
-#   1  Component disabled (category explicitly falsy; or category unset
-#      and master explicitly falsy)
+#   0  Component enabled (category explicitly truthy; or category unset and master not falsy)
+#   1  Component disabled (category explicitly falsy; or category unset and master falsy)
+#      (no argument → category check returns 2/unset; master governs)
 #
 # EXAMPLE
 #   if __fish_config_op_enabled __fish_config_op_aliases
 #       alias grep='grep --color=auto'
 #   end
 function __fish_config_op_enabled --description 'Check whether an opinionated component category is enabled'
-    # Category variable checked first: an explicit value takes precedence over
-    # the master switch in both directions.
     __fish_variable_check $argv[1]
     set -l cat_status $status
 
-    # Explicitly truthy → enabled regardless of master.
     if test $cat_status -eq 0
         return 0
     end
 
-    # Explicitly falsy → disabled regardless of master.
     if test $cat_status -eq 1
         return 1
     end
 
-    # Category unset (2) or garbage (3): fall through to master switch.
+    # Status 3 (garbage) defers to master — an unrecognized value is not an opt-out.
     __fish_variable_check __fish_config_opinionated
     if test $status -eq 1
         return 1
