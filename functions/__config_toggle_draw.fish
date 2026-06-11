@@ -133,7 +133,7 @@ function __config_toggle_draw
     # ── Keybind hint ──────────────────────────────────────
     # Padded to the inner width so the right border stays aligned regardless
     # of the hint text. string pad is width-aware (arrows count as 1 column).
-    set -l hint " ↑↓ move  ←→ set  Space cycle  Tab scope  q quit"
+    set -l hint " ↑↓/kj move  ←→/hl set  Tab scope  q quit"
     printf '│%s%s%s│\n' $c_dim (string pad -r -w $IW -- $hint) $c_reset
 
     # ── Bottom border ─────────────────────────────────────

@@ -6,8 +6,8 @@
 #
 # DESCRIPTION
 #   Applies a state value to an opinionated-component variable in the given
-#   scope, immediately and persistently. Used by config-toggle's Space (cycle)
-#   and Left/Right (directional) handlers so the set/erase logic lives in one
+#   scope, immediately and persistently. Used by config-toggle's Left/Right
+#   (and vim h/l) directional handlers so the set/erase logic lives in one
 #   place. A value of "DEFAULT" erases the variable in that scope so the
 #   master switch / built-in default takes over again.
 #

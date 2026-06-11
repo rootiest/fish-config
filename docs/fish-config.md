@@ -1236,15 +1236,14 @@ Add -i (interactive confirmation) to destructive commands:
     regardless of the __fish_config_opinionated master state.
 
     Navigation:
-      ↑ ↓ / j k   Move cursor
-      ← →          Set value directionally: OFF ← DEFAULT → ON (clamped)
-      Space        Cycle through all states: ON → OFF → DEFAULT → ON (wraps)
+      ↑ ↓ / k j   Move cursor
+      ← → / h l   Set value: OFF ← DEFAULT → ON (clamped)
       Tab          Switch scope (Universal ↔ Session)
       q / Escape   Exit
 
-    Left/Right move one step along the OFF–DEFAULT–ON scale and stop at the
-    ends; Space cycles through every state and wraps around. DEFAULT erases
-    the variable so the master switch / built-in default applies.
+    Left/Right (or vim-style h/l) move the highlighted value one step along
+    the OFF–DEFAULT–ON scale and stop at the ends. DEFAULT erases the
+    variable so the master switch / built-in default applies.
 
     Flags:
       --help / -h   Show usage.
