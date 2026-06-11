@@ -491,9 +491,9 @@
 <h1 data-number="12" id="8-fisher-plugins">8. FISHER PLUGINS</h1>
 <p>Fisher is bootstrapped automatically on the <strong>first interactive
 session</strong> via <code>conf.d/first_run.fish</code>. This also
-applies the Catppuccin Mocha theme and prints a one-time welcome
-message. Subsequent sessions skip all first-run logic with zero
-overhead.</p>
+applies the Catppuccin Mocha theme and prints a one-time welcome message
+(gated by __fish_config_op_greeting; set it to 0 to suppress).
+Subsequent sessions skip all first-run logic with zero overhead.</p>
 <p>To re-trigger first-run initialization (e.g., after a fresh install
 or for testing), run:</p>
 <pre><code>set -Ue __fish_config_first_run_complete</code></pre>
