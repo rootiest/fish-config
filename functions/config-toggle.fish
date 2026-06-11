@@ -81,10 +81,11 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
     __config_toggle_draw $cur_row $cur_scope $vars
 
     # ── Event loop ────────────────────────────────────────
-    # read -k 1 reads exactly one raw byte. Arrow keys send ESC+[+letter as a
-    # 3-byte burst — after reading the ESC we immediately read 2 more bytes
-    # which are already in the terminal buffer. Single-char keys ('j','k',' ',
-    # 'q', Tab) are returned right away with no extra blocking.
+    # read -s -n 1 reads exactly one char without echoing it. Arrow keys send
+    # ESC+[+letter as a 3-byte burst — after reading the ESC we immediately
+    # read 2 more bytes which are already in the terminal buffer. Single-char
+    # keys ('j','k',' ','q', Tab) are returned right away with no extra
+    # blocking. NOTE: the nchars flag is -n; -k is not a valid read option.
     while true
         # Check for Ctrl-C signal (trap sets this flag)
         if set -q __config_toggle_exit
@@ -92,13 +93,17 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
             break
         end
 
-        read -k 1 -l key
+        # -n 1 reads exactly one char; -s suppresses echo so keystrokes do
+        # not garble the panel. If read fails (EOF / non-tty stdin) bail out
+        # instead of spinning the redraw loop.
+        read -s -n 1 -l key
+        or break
 
         # Detect CSI escape sequences (arrow keys: ESC [ A/B)
         if test "$key" = \e
-            read -k 1 -l key2
+            read -s -n 1 -l key2
             if test "$key2" = "["
-                read -k 1 -l key3
+                read -s -n 1 -l key3
                 set key "$key$key2$key3"   # \e[A or \e[B
             else
                 # ESC + non-bracket (ALT+key or plain ESC): treat key2 as key
