@@ -17,8 +17,10 @@
 # ARGUMENTS
 #   category_variable  Name (without $) of the category opt-out variable:
 #                      __fish_config_op_aliases, __fish_config_op_autoexec,
-#                      __fish_config_op_overrides, or
-#                      __fish_config_op_integrations
+#                      __fish_config_op_overrides,
+#                      __fish_config_op_integrations,
+#                      __fish_config_op_logging, or
+#                      __fish_config_op_greeting
 #
 # RETURNS
 #   0  Component enabled (variables truthy, unset, or unrecognized)

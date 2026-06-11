@@ -1382,7 +1382,7 @@ fish_variables.
 ## Opinionated Components (Minimal Mode)
 
 Every opinionated piece of this config is active by default but can be
-switched off through five category opt-out variables, each evaluated via
+switched off through six category opt-out variables, each evaluated via
 __fish_variable_check. Set a variable to any falsy value (0, false, no,
 off, n) to disable its category; erase it or set a truthy value (1, true,
 yes, on, y) to re-enable. Unset means enabled.
@@ -1415,13 +1415,19 @@ yes, on, y) to re-enable. Unset means enabled.
                                     wrappers, Kitty watcher capture;
                                     sentinel file coordinates
                                     cross-process state
+    __fish_config_op_greeting       Greeting & first-run UI: per-session
+                                    fish_greeting override (defines empty
+                                    function late in config.fish to
+                                    suppress distro greetings such as
+                                    CachyOS fastfetch); first-run welcome
+                                    banner in conf.d/first_run.fish
 
 Examples:
 
     # Disable command shadows only (rm becomes plain rm again):
     set -U __fish_config_op_aliases off
 
-    # Full minimal mode — disable all five categories at once:
+    # Full minimal mode — disable all six categories at once:
     set -U __fish_config_opinionated 0
 
     # Re-enable everything:
@@ -1478,8 +1484,9 @@ on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
 
 Fisher is bootstrapped automatically on the **first interactive session** via
 `conf.d/first_run.fish`. This also applies the Catppuccin Mocha theme and
-prints a one-time welcome message. Subsequent sessions skip all first-run
-logic with zero overhead.
+prints a one-time welcome message (gated by __fish_config_op_greeting; set
+it to 0 to suppress). Subsequent sessions skip all first-run logic with zero
+overhead.
 
 To re-trigger first-run initialization (e.g., after a fresh install or for
 testing), run:
