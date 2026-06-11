@@ -25,8 +25,7 @@
 #
 # RETURNS
 #   0  Component enabled (category explicitly truthy; or category unset and master not falsy)
-#   1  Component disabled (category explicitly falsy; or category unset and master falsy)
-#      (no argument → category check returns 2/unset; master governs)
+#   1  Component disabled (category explicitly falsy; or category unset and master falsy; or no argument with falsy master)
 #
 # EXAMPLE
 #   if __fish_config_op_enabled __fish_config_op_aliases
