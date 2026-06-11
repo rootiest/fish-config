@@ -1387,6 +1387,10 @@ __fish_variable_check. Set a variable to any falsy value (0, false, no,
 off, n) to disable its category; erase it or set a truthy value (1, true,
 yes, on, y) to re-enable. Unset means enabled.
 
+An explicit per-category truthy value takes precedence over the master
+switch: setting __fish_config_opinionated=0 disables all unset categories,
+but a category with an explicit truthy value remains enabled regardless.
+
     Variable                        Disables
     ------------------------------  ------------------------------------
     __fish_config_op_aliases        Command shadows and flag injection:
@@ -1432,6 +1436,11 @@ Examples:
 
     # Re-enable everything:
     set -Ue __fish_config_opinionated
+
+    # Minimal mode but keep the greeting:
+    set -U __fish_config_opinionated 0
+    set -U __fish_config_op_greeting 1
+    # (erase both to go back to full-flavor defaults)
 
 Notes:
 
