@@ -83,7 +83,7 @@ function __config_toggle_draw
         set -l badge
         switch $val
             case on
-                set badge "$c_ok""ON     $c_reset"
+                set badge "$c_ok""     ON$c_reset"
             case off
                 set badge "$c_err""OFF    $c_reset"
             case '*'
@@ -111,7 +111,7 @@ function __config_toggle_draw
     set -l badge
     switch $val
         case on
-            set badge "$c_ok""ON     $c_reset"
+            set badge "$c_ok""     ON$c_reset"
         case off
             set badge "$c_err""OFF    $c_reset"
         case '*'
