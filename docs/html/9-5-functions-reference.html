@@ -589,7 +589,16 @@ Falls back to /usr/bin/rm when trash is unavailable.
 rm file.txt           # moves to trash
 rm -e                 # empty trash
 rm -S sensitive.pem   # permanent delete</code></pre>
-<h3 data-number="9.1.17" id="scrub">scrub</h3>
+<h3 data-number="9.1.17" id="rg">rg</h3>
+<pre><code>Synopsis:  rg [args...]
+In Kitty, wraps ripgrep with --hyperlink-format=kitty so search
+results are clickable file links in the terminal. Falls back to
+system rg in any other terminal. All other arguments pass through
+unchanged.
+
+rg &quot;fish_greeting&quot; ~/.config/fish/
+rg -l &quot;TODO&quot; ~/projects/myapp</code></pre>
+<h3 data-number="9.1.18" id="scrub">scrub</h3>
 <pre><code>Synopsis:  scrub [-a] [-d] [-h]
 Recursively removes OS metadata, editor artifacts, compiler output,
 and dev caches using fd.

@@ -135,6 +135,17 @@
     rm -e                 # empty trash
     rm -S sensitive.pem   # permanent delete
 
+### rg
+
+    Synopsis:  rg [args...]
+    In Kitty, wraps ripgrep with --hyperlink-format=kitty so search
+    results are clickable file links in the terminal. Falls back to
+    system rg in any other terminal. All other arguments pass through
+    unchanged.
+
+    rg "fish_greeting" ~/.config/fish/
+    rg -l "TODO" ~/projects/myapp
+
 ### scrub
 
     Synopsis:  scrub [-a] [-d] [-h]
