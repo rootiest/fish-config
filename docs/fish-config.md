@@ -1382,7 +1382,7 @@ fish_variables.
 ## Opinionated Components (Minimal Mode)
 
 Every opinionated piece of this config is active by default but can be
-switched off through five category opt-out variables, each evaluated via
+switched off through six category opt-out variables, each evaluated via
 __fish_variable_check. Set a variable to any falsy value (0, false, no,
 off, n) to disable its category; erase it or set a truthy value (1, true,
 yes, on, y) to re-enable. Unset means enabled.
@@ -1415,6 +1415,12 @@ yes, on, y) to re-enable. Unset means enabled.
                                     wrappers, Kitty watcher capture;
                                     sentinel file coordinates
                                     cross-process state
+    __fish_config_op_greeting       Greeting & first-run UI: per-session
+                                    fish_greeting override (defines empty
+                                    function late in config.fish to
+                                    suppress distro greetings such as
+                                    CachyOS fastfetch); first-run welcome
+                                    banner in conf.d/first_run.fish
 
 Examples:
 
