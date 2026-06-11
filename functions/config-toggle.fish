@@ -81,40 +81,30 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
     __config_toggle_draw $cur_row $cur_scope $vars
 
     # ── Event loop ────────────────────────────────────────
+    # read -k 3 reads UP TO 3 chars and returns immediately when input is
+    # exhausted — it does not block waiting for exactly 3 chars.  A bare ESC
+    # sends 1 byte and read -k 3 returns at once with a 1-char string.
+    # Arrow keys send the 3-byte sequence ESC [ A/B, matched as \e\[A / \e\[B.
     while true
-        read -k 1 -l key
+        read -k 3 -l key
 
         switch $key
-            case \e
-                # Arrow key: ESC [ A/B — read next 2 chars one at a time.
-                # Terminal sends escape sequences as an atomic burst, so
-                # read -k 1 returns each char immediately.
-                # If the char after ESC is not '[', treat as bare Escape → quit.
-                read -k 1 -l ch1
-                if test "$ch1" != '['
-                    # Bare Escape (or unrecognised sequence) — exit
-                    break
-                end
-                read -k 1 -l ch2
-                switch $ch2
-                    case A   # Up arrow
-                        set cur_row (math "max(0, $cur_row - 1)")
-                    case B   # Down arrow
-                        set cur_row (math "min(6, $cur_row + 1)")
-                end
-
+            case \e\[A   # Up arrow (ESC [ A)
+                set cur_row (math "max(0, $cur_row - 1)")
+            case \e\[B   # Down arrow (ESC [ B)
+                set cur_row (math "min(6, $cur_row + 1)")
+            case \e      # Bare Escape (1 byte) — exit
+                break
             case k
                 set cur_row (math "max(0, $cur_row - 1)")
             case j
                 set cur_row (math "min(6, $cur_row + 1)")
-
-            case \t   # Tab — switch scope
+            case \t      # Tab — switch scope
                 if test $cur_scope = universal
                     set cur_scope session
                 else
                     set cur_scope universal
                 end
-
             case q Q
                 break
         end
@@ -125,5 +115,6 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
     end
 
     # ── Cleanup ───────────────────────────────────────────
-    printf '\e[?25h'   # restore cursor
+    trap - INT              # remove the signal handler
+    printf '\e[?25h'        # restore cursor
 end
