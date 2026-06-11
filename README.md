@@ -166,7 +166,11 @@ end
 
 ## Minimal Mode
 
-Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, terminal integrations, logging, and the first-run greeting — is active by default but can be switched off with universal variables. Six category toggles and one master switch are available:
+Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, terminal integrations, logging, and the first-run greeting — is active by default but can be switched off.
+
+> **The easy way — `config-toggle`:** Run `config-toggle` for an interactive TUI that flips every setting below on, off, or back to default — per-session or universally — without typing a single variable name. Use the arrow keys (or `h`/`j`/`k`/`l`) to navigate and adjust, `Tab` to switch scope, and `q` to quit. Changes apply instantly.
+
+If you'd rather set them by hand, each category is controlled by a universal variable. Six category toggles and one master switch are available:
 
 | Variable | Disables |
 |---|---|
@@ -197,8 +201,6 @@ set -Ue __fish_config_op_greeting
 ```
 
 Command shadows react immediately; bindings, prompt, and abbreviations take effect in new shells. With aliases disabled, `rm` deletes permanently again instead of trashing. See `help config opinionated` for the full component list.
-
-> **Tip:** Run `config-toggle` for an interactive TUI to toggle these settings without typing variable names.
 
 ---
 
