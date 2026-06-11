@@ -1220,6 +1220,36 @@ Add -i (interactive confirmation) to destructive commands:
     config-update --dry-run
     config-update --force
 
+### config-toggle
+
+    Synopsis:  config-toggle [-h]
+
+    Opens an interactive full-screen TUI for toggling the six opinionated
+    component categories (C1–C6) and the master disable variable without
+    having to type or remember variable names. Two scope tabs allow
+    independent per-scope configuration:
+
+      Universal — persists across all sessions (set -U)
+      Session   — current shell only (set -g)
+
+    Changes apply immediately on each value keypress. Always available
+    regardless of the __fish_config_opinionated master state.
+
+    Navigation:
+      ↑ ↓ / k j   Move cursor
+      ← → / h l   Set value: OFF ← DEFAULT → ON (clamped)
+      Tab          Switch scope (Universal ↔ Session)
+      q / Escape   Exit
+
+    Left/Right (or vim-style h/l) move the highlighted value one step along
+    the OFF–DEFAULT–ON scale and stop at the ends. DEFAULT erases the
+    variable so the master switch / built-in default applies.
+
+    Flags:
+      --help / -h   Show usage.
+
+    config-toggle
+
 ### bash
 
     Synopsis:  bash [args...]
