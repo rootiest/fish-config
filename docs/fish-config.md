@@ -1232,14 +1232,19 @@ Add -i (interactive confirmation) to destructive commands:
       Universal — persists across all sessions (set -U)
       Session   — current shell only (set -g)
 
-    Changes apply immediately on each Space keypress. Always available
+    Changes apply immediately on each value keypress. Always available
     regardless of the __fish_config_opinionated master state.
 
     Navigation:
       ↑ ↓ / j k   Move cursor
-      Space        Cycle: ON → OFF → DEFAULT → ON
+      ← →          Set value directionally: OFF ← DEFAULT → ON (clamped)
+      Space        Cycle through all states: ON → OFF → DEFAULT → ON (wraps)
       Tab          Switch scope (Universal ↔ Session)
       q / Escape   Exit
+
+    Left/Right move one step along the OFF–DEFAULT–ON scale and stop at the
+    ends; Space cycles through every state and wraps around. DEFAULT erases
+    the variable so the master switch / built-in default applies.
 
     Flags:
       --help / -h   Show usage.

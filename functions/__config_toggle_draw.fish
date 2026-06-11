@@ -131,8 +131,10 @@ function __config_toggle_draw
     printf '│%s│\n' $HBR
 
     # ── Keybind hint ──────────────────────────────────────
-    printf '│  %s↑↓/jk: move  Space: cycle  Tab: scope  q: quit%s  │\n' \
-        $c_dim $c_reset
+    # Padded to the inner width so the right border stays aligned regardless
+    # of the hint text. string pad is width-aware (arrows count as 1 column).
+    set -l hint " ↑↓ move  ←→ set  Space cycle  Tab scope  q quit"
+    printf '│%s%s%s│\n' $c_dim (string pad -r -w $IW -- $hint) $c_reset
 
     # ── Bottom border ─────────────────────────────────────
     printf '└%s┘\n' $HBR

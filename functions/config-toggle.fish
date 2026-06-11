@@ -44,7 +44,8 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                 echo
                 echo "$c_head""Navigation:$c_reset"
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""j k$c_reset    Move cursor up / down"
-                echo "  $c_flag""Space$c_reset         Cycle: ON → OFF → DEFAULT → ON"
+                echo "  $c_flag← →$c_reset           Set value: OFF ← DEFAULT → ON (clamped)"
+                echo "  $c_flag""Space$c_reset         Cycle: ON → OFF → DEFAULT → ON (wraps)"
                 echo "  $c_flag""Tab$c_reset           Switch scope (Universal ↔ Session)"
                 echo "  $c_flag""q$c_reset / $c_flag""Esc$c_reset       Exit"
                 echo
@@ -107,12 +108,12 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                 else
                     set cur_scope universal
                 end
-            case space   # Space — cycle and apply immediately
+            case space   # Space — cycle through all states and apply
                 set -l varname $vars[(math $cur_row + 1)]
                 set -l cur_val (__config_toggle_get_val $varname $cur_scope)
-                set -l next_val ""
 
-                # Cycle: on → off → DEFAULT → on
+                # Cycle (wraps): on → off → DEFAULT → on
+                set -l next_val on
                 switch $cur_val
                     case on
                         set next_val off
@@ -121,28 +122,37 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                     case '*'   # DEFAULT or any unrecognised
                         set next_val on
                 end
+                __config_toggle_apply $varname $cur_scope $next_val
+            case right   # → step toward ON (clamped, no wrap)
+                set -l varname $vars[(math $cur_row + 1)]
+                set -l cur_val (__config_toggle_get_val $varname $cur_scope)
 
-                # Apply immediately
-                switch $cur_scope
-                    case universal
-                        switch $next_val
-                            case on
-                                set -U $varname on
-                            case off
-                                set -U $varname off
-                            case DEFAULT
-                                set -Ue $varname
-                        end
-                    case session
-                        switch $next_val
-                            case on
-                                set -g $varname on
-                            case off
-                                set -g $varname off
-                            case DEFAULT
-                                set -eg $varname
-                        end
+                # Order: OFF ← DEFAULT → ON
+                set -l next_val on
+                switch $cur_val
+                    case off
+                        set next_val DEFAULT
+                    case on
+                        set next_val on     # already at the right end
+                    case '*'   # DEFAULT or unrecognised
+                        set next_val on
                 end
+                __config_toggle_apply $varname $cur_scope $next_val
+            case left    # ← step toward OFF (clamped, no wrap)
+                set -l varname $vars[(math $cur_row + 1)]
+                set -l cur_val (__config_toggle_get_val $varname $cur_scope)
+
+                # Order: OFF ← DEFAULT → ON
+                set -l next_val off
+                switch $cur_val
+                    case on
+                        set next_val DEFAULT
+                    case off
+                        set next_val off    # already at the left end
+                    case '*'   # DEFAULT or unrecognised
+                        set next_val off
+                end
+                __config_toggle_apply $varname $cur_scope $next_val
             case q Q quit escape
                 break
         end
