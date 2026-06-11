@@ -23,11 +23,16 @@ end
 set -U __fish_config_first_run_complete 1
 
 #   ──────────────────────────── Welcome message ───────────────────────────
-echo ""
-echo "  Welcome to your fish shell configuration!"
-echo "  Run 'help config' for offline documentation."
-echo "  Run 'fish-deps'   to check and install dependencies."
-echo ""
+# Printing a first-run welcome banner is opinionated (C6 greeting). The
+# first-run state variable is already set unconditionally above, so
+# disabling the greeting never re-triggers this file.
+if __fish_config_op_enabled __fish_config_op_greeting
+    echo ""
+    echo "  Welcome to your fish shell configuration!"
+    echo "  Run 'help config' for offline documentation."
+    echo "  Run 'fish-deps'   to check and install dependencies."
+    echo ""
+end
 
 #   ─────────────────────── Opinionated auto-exec guard ────────────────────
 # Startup side-effects below (Fisher curl, fisher update, theme apply) are
