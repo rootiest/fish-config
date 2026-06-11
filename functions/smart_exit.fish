@@ -48,49 +48,52 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
         return 0
     end
 
-    set -l snapshot_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
-    set -l max_files (set -q SCROLLBACK_HISTORY_MAX_FILES; and echo $SCROLLBACK_HISTORY_MAX_FILES; or echo 100)
+    # C5 — Logging & Capture: skip all capture when logging is disabled
+    if __fish_config_op_enabled __fish_config_op_logging
+        set -l snapshot_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
+        set -l max_files (set -q SCROLLBACK_HISTORY_MAX_FILES; and echo $SCROLLBACK_HISTORY_MAX_FILES; or echo 100)
 
-    # Handle Scrollback Capture (Skipped if -n/--no-log is used)
-    if not set -q _flag_no_log
-        mkdir -p $snapshot_dir
-        set -l timestamp (date "+%Y-%m-%d_%H-%M-%S")
-        set -l filename "$snapshot_dir/scrollback_$timestamp.log"
+        # Handle Scrollback Capture (Skipped if -n/--no-log is used)
+        if not set -q _flag_no_log
+            mkdir -p $snapshot_dir
+            set -l timestamp (date "+%Y-%m-%d_%H-%M-%S")
+            set -l filename "$snapshot_dir/scrollback_$timestamp.log"
 
-        # Safe child process detection
-        set -l active_tui (ps -o comm= --ppid $fish_pid 2>/dev/null)
+            # Safe child process detection
+            set -l active_tui (ps -o comm= --ppid $fish_pid 2>/dev/null)
 
-        if test -n "$KITTY_WINDOW_ID"
-            # LIVE BUFFER CHECK: Check the active token variable $_ 
-            # If the user typed exit, $_ will match "exit". If flags were passed, 
-            # we check if it contains the phrase "exit" to match 'exit -n' or 'exit --help'.
-            if string match -qr exit "$_"
-                if not string match -qr '^(nvim|vim|vi|nano|emacs|tmux)$' "$active_tui"
-                    # Capture the log via the shell
-                    kitty @ get-text --match id:$KITTY_WINDOW_ID --extent all --ansi | sed 's/^\[38;2;[0-9;]*m//g' >$filename 2>/dev/null
-                    # Broadcast a window variable flag telling Kitty the log is handled
-                    kitty @ set-user-vars "logged_by_shell=true" 2>/dev/null
+            if test -n "$KITTY_WINDOW_ID"
+                # LIVE BUFFER CHECK: Check the active token variable $_
+                # If the user typed exit, $_ will match "exit". If flags were passed,
+                # we check if it contains the phrase "exit" to match 'exit -n' or 'exit --help'.
+                if string match -qr exit "$_"
+                    if not string match -qr '^(nvim|vim|vi|nano|emacs|tmux)$' "$active_tui"
+                        # Capture the log via the shell
+                        kitty @ get-text --match id:$KITTY_WINDOW_ID --extent all --ansi | sed 's/^\[38;2;[0-9;]*m//g' >$filename 2>/dev/null
+                        # Broadcast a window variable flag telling Kitty the log is handled
+                        kitty @ set-user-vars "logged_by_shell=true" 2>/dev/null
+                    end
                 end
             end
-        end
 
-        # 4. Prune junk logs before counting toward the max
-        _scrollback_prune_junk $snapshot_dir
+            # 4. Prune junk logs before counting toward the max
+            _scrollback_prune_junk $snapshot_dir
 
-        # 5. Automatic Pruning Logic
-        set -l current_logs $snapshot_dir/scrollback_*.log
-        if test -f "$current_logs[1]"
-            set -l total_files (count $current_logs)
-            if test $total_files -gt $max_files
-                set -l num_to_delete (math $total_files - $max_files)
-                for i in (seq 1 $num_to_delete)
-                    rm -f $current_logs[$i]
+            # 5. Automatic Pruning Logic
+            set -l current_logs $snapshot_dir/scrollback_*.log
+            if test -f "$current_logs[1]"
+                set -l total_files (count $current_logs)
+                if test $total_files -gt $max_files
+                    set -l num_to_delete (math $total_files - $max_files)
+                    for i in (seq 1 $num_to_delete)
+                        rm -f $current_logs[$i]
+                    end
                 end
             end
+        else
+            echo -e "$c_warn""➔""$c_reset Exiting discreetly; $c_bold""no history logs saved.""$c_reset"
+            sleep 0.4
         end
-    else
-        echo -e "$c_warn""➔""$c_reset Exiting discreetly; $c_bold""no history logs saved.""$c_reset"
-        sleep 0.4
     end
 
     # Call the true system exit directly
