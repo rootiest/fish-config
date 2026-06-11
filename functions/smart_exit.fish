@@ -48,6 +48,16 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
         return 0
     end
 
+    # C5 — Logging & Capture: skip all capture when logging is disabled.
+    # When disabled, tell Kitty the window is handled so its watcher doesn't
+    # capture either — belt-and-suspenders alongside the sentinel file.
+    if not __fish_config_op_enabled __fish_config_op_logging
+        if test -n "$KITTY_WINDOW_ID"
+            kitty @ set-user-vars "logged_by_shell=true" 2>/dev/null
+        end
+        builtin exit
+    end
+
     set -l snapshot_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
     set -l max_files (set -q SCROLLBACK_HISTORY_MAX_FILES; and echo $SCROLLBACK_HISTORY_MAX_FILES; or echo 100)
 
@@ -61,8 +71,8 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
         set -l active_tui (ps -o comm= --ppid $fish_pid 2>/dev/null)
 
         if test -n "$KITTY_WINDOW_ID"
-            # LIVE BUFFER CHECK: Check the active token variable $_ 
-            # If the user typed exit, $_ will match "exit". If flags were passed, 
+            # LIVE BUFFER CHECK: Check the active token variable $_
+            # If the user typed exit, $_ will match "exit". If flags were passed,
             # we check if it contains the phrase "exit" to match 'exit -n' or 'exit --help'.
             if string match -qr exit "$_"
                 if not string match -qr '^(nvim|vim|vi|nano|emacs|tmux)$' "$active_tui"

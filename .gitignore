@@ -62,6 +62,11 @@
 opinionated_catalog.md
 docs/superpowers
 
+#   ──────────────────── Runtime State Files ───────────────────
+# Sentinel file written/removed at runtime to coordinate logging state
+# across the fish config and the Kitty Python watcher. Never committed.
+.logging_disabled
+
 #   ──────────────── Fisher-Managed Plugin Files ───────────────
 # Fisher writes these into the repo directory on install/update.
 # They are owned by Fisher — do not commit them.
