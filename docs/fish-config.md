@@ -1410,13 +1410,18 @@ yes, on, y) to re-enable. Unset means enabled.
                                     WezTerm window abbreviations, done
                                     notifications, spwin/tab/split,
                                     hist, logs, upgrade, WakaTime
+    __fish_config_op_logging        Logging & capture: scrollback
+                                    capture on exit, paru/yay AUR log
+                                    wrappers, Kitty watcher capture;
+                                    sentinel file coordinates
+                                    cross-process state
 
 Examples:
 
     # Disable command shadows only (rm becomes plain rm again):
     set -U __fish_config_op_aliases off
 
-    # Full minimal mode — disable all four categories at once:
+    # Full minimal mode — disable all five categories at once:
     set -U __fish_config_opinionated 0
 
     # Re-enable everything:
