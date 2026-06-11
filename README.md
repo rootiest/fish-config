@@ -178,7 +178,7 @@ Everything opinionated in this config — command shadows, startup side-effects,
 | `__fish_config_op_greeting` | Per-session `fish_greeting` (suppresses distro greetings such as CachyOS fastfetch by overriding with an empty function); first-run welcome banner |
 | `__fish_config_opinionated` | Master switch — all six categories at once |
 
-Set any of them to a falsy value (`0`, `false`, `no`, `off`, `n`) to disable; erase the variable to re-enable:
+Set any of them to a falsy value (`0`, `false`, `no`, `off`, `n`) to disable; erase the variable to re-enable. An explicit per-category truthy value overrides a falsy master switch, so you can disable everything with `__fish_config_opinionated=0` and selectively re-enable individual categories:
 
 ```fish
 # Plain shell: disable everything opinionated
@@ -187,8 +187,13 @@ set -U __fish_config_opinionated 0
 # Or pick a single category, e.g. keep integrations but drop command shadows
 set -U __fish_config_op_aliases off
 
+# Minimal mode but keep the greeting (per-category overrides master)
+set -U __fish_config_opinionated 0
+set -U __fish_config_op_greeting 1
+
 # Back to full flavor
 set -Ue __fish_config_opinionated
+set -Ue __fish_config_op_greeting
 ```
 
 Command shadows react immediately; bindings, prompt, and abbreviations take effect in new shells. With aliases disabled, `rm` deletes permanently again instead of trashing. See `help config opinionated` for the full component list.
