@@ -46,7 +46,7 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""j k$c_reset    Move cursor up / down"
                 echo "  $c_flag""Space$c_reset         Cycle: ON → OFF → DEFAULT → ON"
                 echo "  $c_flag""Tab$c_reset           Switch scope (Universal ↔ Session)"
-                echo "  $c_flag""q$c_reset / $c_flag""Escape$c_reset    Exit"
+                echo "  $c_flag""q$c_reset / $c_flag""Q$c_reset         Exit"
                 echo
                 echo "$c_head""Scopes:$c_reset"
                 echo "  $c_flag""Universal$c_reset   Persistent across all sessions ($c_dim""set -U$c_reset)"
@@ -81,10 +81,10 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
     __config_toggle_draw $cur_row $cur_scope $vars
 
     # ── Event loop ────────────────────────────────────────
-    # read -k 3 reads UP TO 3 chars and returns immediately when input is
-    # exhausted — it does not block waiting for exactly 3 chars.  A bare ESC
-    # sends 1 byte and read -k 3 returns at once with a 1-char string.
-    # Arrow keys send the 3-byte sequence ESC [ A/B, matched as \e\[A / \e\[B.
+    # read -k 1 reads exactly one raw byte. Arrow keys send ESC+[+letter as a
+    # 3-byte burst — after reading the ESC we immediately read 2 more bytes
+    # which are already in the terminal buffer. Single-char keys ('j','k',' ',
+    # 'q', Tab) are returned right away with no extra blocking.
     while true
         # Check for Ctrl-C signal (trap sets this flag)
         if set -q __config_toggle_exit
@@ -92,15 +92,25 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
             break
         end
 
-        read -k 3 -l key
+        read -k 1 -l key
+
+        # Detect CSI escape sequences (arrow keys: ESC [ A/B)
+        if test "$key" = \e
+            read -k 1 -l key2
+            if test "$key2" = "["
+                read -k 1 -l key3
+                set key "$key$key2$key3"   # \e[A or \e[B
+            else
+                # ESC + non-bracket (ALT+key or plain ESC): treat key2 as key
+                set key $key2
+            end
+        end
 
         switch $key
-            case \e\[A   # Up arrow (ESC [ A)
+            case \e\[A   # Up arrow
                 set cur_row (math "max(0, $cur_row - 1)")
-            case \e\[B   # Down arrow (ESC [ B)
+            case \e\[B   # Down arrow
                 set cur_row (math "min(6, $cur_row + 1)")
-            case \e      # Bare Escape (1 byte) — exit
-                break
             case k
                 set cur_row (math "max(0, $cur_row - 1)")
             case j
