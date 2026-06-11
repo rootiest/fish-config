@@ -1427,7 +1427,7 @@ Examples:
     # Disable command shadows only (rm becomes plain rm again):
     set -U __fish_config_op_aliases off
 
-    # Full minimal mode — disable all five categories at once:
+    # Full minimal mode — disable all six categories at once:
     set -U __fish_config_opinionated 0
 
     # Re-enable everything:
