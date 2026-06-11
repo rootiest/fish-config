@@ -46,7 +46,7 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""j k$c_reset    Move cursor up / down"
                 echo "  $c_flag""Space$c_reset         Cycle: ON → OFF → DEFAULT → ON"
                 echo "  $c_flag""Tab$c_reset           Switch scope (Universal ↔ Session)"
-                echo "  $c_flag""q$c_reset / $c_flag""Q$c_reset         Exit"
+                echo "  $c_flag""q$c_reset / $c_flag""Esc$c_reset       Exit"
                 echo
                 echo "$c_head""Scopes:$c_reset"
                 echo "  $c_flag""Universal$c_reset   Persistent across all sessions ($c_dim""set -U$c_reset)"
@@ -81,52 +81,33 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
     __config_toggle_draw $cur_row $cur_scope $vars
 
     # ── Event loop ────────────────────────────────────────
-    # read -s -n 1 reads exactly one char without echoing it. Arrow keys send
-    # ESC+[+letter as a 3-byte burst — after reading the ESC we immediately
-    # read 2 more bytes which are already in the terminal buffer. Single-char
-    # keys ('j','k',' ','q', Tab) are returned right away with no extra
-    # blocking. NOTE: the nchars flag is -n; -k is not a valid read option.
+    # __config_toggle_read_key reads a single keypress from /dev/tty in raw
+    # mode and returns a normalized token (up/down/tab/space/escape/quit or a
+    # literal char). It bypasses fish's `read`, whose line editor swallows Tab
+    # and arrow keys and prints a `read> ` prompt — unusable for a TUI.
     while true
-        # Check for Ctrl-C signal (trap sets this flag)
+        # Check for Ctrl-C signal (trap sets this flag during redraw, when the
+        # terminal is briefly back in cooked mode and SIGINT can fire).
         if set -q __config_toggle_exit
             set -eg __config_toggle_exit
             break
         end
 
-        # -n 1 reads exactly one char; -s suppresses echo so keystrokes do
-        # not garble the panel. If read fails (EOF / non-tty stdin) bail out
-        # instead of spinning the redraw loop.
-        read -s -n 1 -l key
-        or break
-
-        # Detect CSI escape sequences (arrow keys: ESC [ A/B)
-        if test "$key" = \e
-            read -s -n 1 -l key2
-            if test "$key2" = "["
-                read -s -n 1 -l key3
-                set key "$key$key2$key3"   # \e[A or \e[B
-            else
-                # ESC + non-bracket (ALT+key or plain ESC): treat key2 as key
-                set key $key2
-            end
-        end
+        set -l key (__config_toggle_read_key)
+        or break   # not a TTY — exit instead of spinning
 
         switch $key
-            case \e\[A   # Up arrow
+            case up k
                 set cur_row (math "max(0, $cur_row - 1)")
-            case \e\[B   # Down arrow
+            case down j
                 set cur_row (math "min(6, $cur_row + 1)")
-            case k
-                set cur_row (math "max(0, $cur_row - 1)")
-            case j
-                set cur_row (math "min(6, $cur_row + 1)")
-            case \t      # Tab — switch scope
+            case tab      # Tab — switch scope
                 if test $cur_scope = universal
                     set cur_scope session
                 else
                     set cur_scope universal
                 end
-            case ' '     # Space — cycle and apply immediately
+            case space   # Space — cycle and apply immediately
                 set -l varname $vars[(math $cur_row + 1)]
                 set -l cur_val (__config_toggle_get_val $varname $cur_scope)
                 set -l next_val ""
@@ -162,7 +143,7 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                                 set -eg $varname
                         end
                 end
-            case q Q
+            case q Q quit escape
                 break
         end
 
