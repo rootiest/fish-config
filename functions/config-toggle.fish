@@ -105,6 +105,42 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                 else
                     set cur_scope universal
                 end
+            case ' '     # Space — cycle and apply immediately
+                set -l varname $vars[(math $cur_row + 1)]
+                set -l cur_val (__config_toggle_get_val $varname $cur_scope)
+                set -l next_val ""
+
+                # Cycle: on → off → DEFAULT → on
+                switch $cur_val
+                    case on
+                        set next_val off
+                    case off
+                        set next_val DEFAULT
+                    case '*'   # DEFAULT or any unrecognised
+                        set next_val on
+                end
+
+                # Apply immediately
+                switch $cur_scope
+                    case universal
+                        switch $next_val
+                            case on
+                                set -U $varname on
+                            case off
+                                set -U $varname off
+                            case DEFAULT
+                                set -Ue $varname
+                        end
+                    case session
+                        switch $next_val
+                            case on
+                                set -g $varname on
+                            case off
+                                set -g $varname off
+                            case DEFAULT
+                                set -eg $varname
+                        end
+                end
             case q Q
                 break
         end
