@@ -58,4 +58,72 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                 return 1
         end
     end
+
+    # ── Variable list (matches Panel Layout Reference) ────
+    set -l vars \
+        __fish_config_op_aliases \
+        __fish_config_op_autoexec \
+        __fish_config_op_overrides \
+        __fish_config_op_integrations \
+        __fish_config_op_logging \
+        __fish_config_op_greeting \
+        __fish_config_opinionated
+
+    set -l cur_row   0           # 0–6
+    set -l cur_scope universal   # or "session"
+    set -l panel_h   14          # total panel lines
+
+    # ── Terminal setup ────────────────────────────────────
+    printf '\e[?25l'             # hide cursor
+    trap 'printf "\e[?25h"; printf "\n"' INT
+
+    # ── Initial draw ──────────────────────────────────────
+    __config_toggle_draw $cur_row $cur_scope $vars
+
+    # ── Event loop ────────────────────────────────────────
+    while true
+        read -k 1 -l key
+
+        switch $key
+            case \e
+                # Arrow key: ESC [ A/B — read next 2 chars one at a time.
+                # Terminal sends escape sequences as an atomic burst, so
+                # read -k 1 returns each char immediately.
+                # If the char after ESC is not '[', treat as bare Escape → quit.
+                read -k 1 -l ch1
+                if test "$ch1" != '['
+                    # Bare Escape (or unrecognised sequence) — exit
+                    break
+                end
+                read -k 1 -l ch2
+                switch $ch2
+                    case A   # Up arrow
+                        set cur_row (math "max(0, $cur_row - 1)")
+                    case B   # Down arrow
+                        set cur_row (math "min(6, $cur_row + 1)")
+                end
+
+            case k
+                set cur_row (math "max(0, $cur_row - 1)")
+            case j
+                set cur_row (math "min(6, $cur_row + 1)")
+
+            case \t   # Tab — switch scope
+                if test $cur_scope = universal
+                    set cur_scope session
+                else
+                    set cur_scope universal
+                end
+
+            case q Q
+                break
+        end
+
+        # Redraw in place
+        printf '\e[%dA\e[J' $panel_h
+        __config_toggle_draw $cur_row $cur_scope $vars
+    end
+
+    # ── Cleanup ───────────────────────────────────────────
+    printf '\e[?25h'   # restore cursor
 end
