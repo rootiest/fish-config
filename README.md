@@ -166,7 +166,7 @@ end
 
 ## Minimal Mode
 
-Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, and terminal integrations — is active by default but can be switched off with universal variables. Four category toggles and one master switch are available:
+Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, terminal integrations, and logging — is active by default but can be switched off with universal variables. Five category toggles and one master switch are available:
 
 | Variable | Disables |
 |---|---|
@@ -174,7 +174,8 @@ Everything opinionated in this config — command shadows, startup side-effects,
 | `__fish_config_op_autoexec` | Startup side-effects: Fisher bootstrap, theme apply, `paru`/`yay` wrapper generation, auto venv activation, WakaTime hook |
 | `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`, bang-bang history expansion, autopair, puffer, Starship prompt, theme colors |
 | `__fish_config_op_integrations` | Kitty/WezTerm window abbreviations, `done` notifications, `spwin`/`tab`/`split`, `hist`, `logs`, `upgrade`, WakaTime |
-| `__fish_config_opinionated` | Master switch — all four categories at once |
+| `__fish_config_op_logging` | Scrollback capture on exit, `paru`/`yay` AUR log wrappers, Kitty watcher capture (sentinel-file coordinated) |
+| `__fish_config_opinionated` | Master switch — all five categories at once |
 
 Set any of them to a falsy value (`0`, `false`, `no`, `off`, `n`) to disable; erase the variable to re-enable:
 
