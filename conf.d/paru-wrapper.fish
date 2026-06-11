@@ -6,8 +6,17 @@
 # timestamped log file and prunes old logs, mirroring smart_exit behavior.
 
 # Auto-generating a wrapper in ~/.local/bin is opinionated (C2 auto-exec).
-# Task #4's __fish_config_enable_logging will additionally gate this wrapper.
+# Wrapper generation is also gated by C5 (Logging & Capture).
 __fish_config_op_enabled __fish_config_op_autoexec; or return
+
+# C5 — Logging & Capture: remove generated wrapper and skip when logging is off
+if not __fish_config_op_enabled __fish_config_op_logging
+    if test -f "$HOME/.local/bin/paru"
+        and grep -q "# paru-wrapper-version:" "$HOME/.local/bin/paru" 2>/dev/null
+        rm -f "$HOME/.local/bin/paru"
+    end
+    return
+end
 
 set -l _paru_real /usr/bin/paru
 set -l _paru_wrapper "$HOME/.local/bin/paru"
