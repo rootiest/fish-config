@@ -14,6 +14,8 @@
 #   __fish_config_op_autoexec      C2 — startup side-effects
 #   __fish_config_op_overrides     C3 — key bindings, env, prompt overrides
 #   __fish_config_op_integrations  C4 — terminal/tool coupling
+#   __fish_config_op_logging       C5 — scrollback capture / AUR log wrappers
+#   __fish_config_op_greeting      C6 — per-session greeting / first-run welcome
 # Example: set -U __fish_config_op_aliases off   (erase to re-enable)
 
 #   ──────────────────────── Source CachyOS configs ────────────────────────
@@ -230,6 +232,16 @@ if status is-interactive
     #   your main config or secrets files. For example, you might want different PATH additions,
     #   aliases, or environment variables on your work laptop vs. your home desktop.
     test -f "$dot_fish/local.fish"; and source "$dot_fish/local.fish"
+
+    #   ─────────────────── C6: Greeting & First-Run UI override ───────────────
+    # When the greeting category is disabled, stamp out any fish_greeting
+    # function that distro configs set (e.g., CachyOS defines it as fastfetch).
+    # This runs last inside the interactive block so our empty definition wins
+    # over whatever cachyos-config.fish or vendor conf.d installed.
+    if not __fish_config_op_enabled __fish_config_op_greeting
+        function fish_greeting
+        end
+    end
     #
     #    ╭──────────────────────────── END OVERRIDES ──────────────────────────╮
     #    │                        End of override section.                     │
