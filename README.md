@@ -198,6 +198,8 @@ set -Ue __fish_config_op_greeting
 
 Command shadows react immediately; bindings, prompt, and abbreviations take effect in new shells. With aliases disabled, `rm` deletes permanently again instead of trashing. See `help config opinionated` for the full component list.
 
+> **Tip:** Run `config-toggle` for an interactive TUI to toggle these settings without typing variable names.
+
 ---
 
 ## Attribution

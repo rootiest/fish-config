@@ -75,7 +75,7 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
 
     # ── Terminal setup ────────────────────────────────────
     printf '\e[?25l'             # hide cursor
-    trap 'printf "\e[?25h"; printf "\n"' INT
+    trap 'printf "\e[?25h"; set -g __config_toggle_exit 1' INT
 
     # ── Initial draw ──────────────────────────────────────
     __config_toggle_draw $cur_row $cur_scope $vars
@@ -86,6 +86,12 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
     # sends 1 byte and read -k 3 returns at once with a 1-char string.
     # Arrow keys send the 3-byte sequence ESC [ A/B, matched as \e\[A / \e\[B.
     while true
+        # Check for Ctrl-C signal (trap sets this flag)
+        if set -q __config_toggle_exit
+            set -eg __config_toggle_exit
+            break
+        end
+
         read -k 3 -l key
 
         switch $key
