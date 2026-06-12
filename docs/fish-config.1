@@ -1754,7 +1754,7 @@ cargo       Rust toolchain (via rustup); used by fish-deps to install
             Rust-based tools and to build fish from source. All paths
             are gated on type -q cargo and degrade gracefully.
 starship    Cross-shell prompt; loaded via type -q starship guard.
-            Without it fish falls back to its built-in default prompt.
+            Without it the Catppuccin nim-style fallback prompt activates.
 uv          Python package and project manager (Astral); used by the
             fish-from-source build path in fish-deps. All consumers
             degrade gracefully without it.
@@ -2019,7 +2019,7 @@ Puffer key intercepts     . ! $ * keys intercepted for smart expansion
 Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
 Catppuccin colors         30+ fish_color_* variables set to Mocha palette
 FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
-Right prompt              fish_right_prompt: Docker context + timestamp
+Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
 \f[R]
 .fi
 .PP
@@ -2145,6 +2145,49 @@ This allows ov to use them as sticky section headers when browsing
 scrollback logs.
 Without Starship, fish\[cq]s built-in prompt handles these markers
 automatically.
+.SS Catppuccin Fallback Prompt
+.PP
+When Starship is absent or C3 overrides are disabled, a built-in
+nim-style two-line prompt activates from functions/fish_prompt.fish.
+No external dependencies \[em] fish builtins only.
+.PP
+Layout:
+.IP
+.nf
+\f[C]
+┬─[user\[at]host:\[ti]/path] (main)
+╰─>$
+\f[R]
+.fi
+.PP
+Elements:
+.IP
+.nf
+\f[C]
+user        Yellow (Catppuccin Yellow); red if root
+\[at]host       Blue (local) or Teal (SSH)
+\[ti]/path      prompt_pwd abbreviation (Catppuccin Text)
+(main)      Current git branch in Catppuccin Pink; omitted outside repos
+─[V:name]   Active Python venv basename; omitted when none
+─[N/I/R/V]  Vi-mode indicator when vi bindings are active
+┬─ / ╰─>    Connector lines: Catppuccin Green on success, Red on failure
+\f[R]
+.fi
+.PP
+The right prompt (fish_right_prompt.fish) always renders, regardless of
+C3 state.
+On failure it shows a red ✘ and the exit code; on success it shows only
+the dim timestamp.
+When starship is installed and C3 is enabled, the active Docker context
+is also shown (if non-default):
+.IP
+.nf
+\f[C]
+✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
+✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
+Fri Jun 12 00:51:21 2026                     ← success (no ✘)
+\f[R]
+.fi
 .SS FZF
 .PP
 FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in

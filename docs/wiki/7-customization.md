@@ -191,7 +191,7 @@ all of them.
     Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
     Catppuccin colors         30+ fish_color_* variables set to Mocha palette
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
-    Right prompt              fish_right_prompt: Docker context + timestamp
+    Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
 
 The bang-bang system spans key_bindings.fish, abbr.fish, puffer.fish, and
 six expand_bang_*.fish functions. All are gated together — disabling C3
@@ -291,6 +291,36 @@ Starship renders and OSC 133;B (input start) immediately after, placing both
 markers on the prompt line itself. This allows ov to use them as sticky
 section headers when browsing scrollback logs. Without Starship, fish's
 built-in prompt handles these markers automatically.
+
+### Catppuccin Fallback Prompt
+
+When Starship is absent or C3 overrides are disabled, a built-in nim-style
+two-line prompt activates from functions/fish_prompt.fish. No external
+dependencies — fish builtins only.
+
+Layout:
+
+    ┬─[user@host:~/path] (main)
+    ╰─>$
+
+Elements:
+
+    user        Yellow (Catppuccin Yellow); red if root
+    @host       Blue (local) or Teal (SSH)
+    ~/path      prompt_pwd abbreviation (Catppuccin Text)
+    (main)      Current git branch in Catppuccin Pink; omitted outside repos
+    ─[V:name]   Active Python venv basename; omitted when none
+    ─[N/I/R/V]  Vi-mode indicator when vi bindings are active
+    ┬─ / ╰─>    Connector lines: Catppuccin Green on success, Red on failure
+
+The right prompt (fish_right_prompt.fish) always renders, regardless of C3
+state. On failure it shows a red ✘ and the exit code; on success it shows
+only the dim timestamp. When starship is installed and C3 is enabled, the
+active Docker context is also shown (if non-default):
+
+    ✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
+    ✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
+    Fri Jun 12 00:51:21 2026                     ← success (no ✘)
 
 ### FZF
 
