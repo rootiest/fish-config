@@ -117,14 +117,6 @@ function _fish_deps_install
                         set -a methods special-yay
                         set -a method_labels "build from AUR (makepkg)"
                     end
-                case pipx
-                    if type -q pipx
-                        set -a methods special-pipx
-                        set -a method_labels "pipx ($bin)"
-                    else if type -q pip
-                        set -a methods special-pip
-                        set -a method_labels "pip install --user ($bin)"
-                    end
             end
 
             if test (count $methods) -eq 0
@@ -264,10 +256,6 @@ function _fish_deps_install
                     popd 2>/dev/null
                     rm -rf "$_tmpdir"
                     test $_build_ok -eq 1
-                case special-pipx
-                    pipx install $bin
-                case special-pip
-                    pip install --user $bin
             end
 
             if test $status -eq 0

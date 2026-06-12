@@ -845,16 +845,15 @@ Add -i (interactive confirmation) to destructive commands:
       3. system PM (paru/apt/brew/etc.)
       4. git clone (fzf)
       5. curl installer (starship, fisher, uv)
-      6. pipx (Python tools)
 
     When multiple methods are available you are prompted to choose.
 
     Dependencies are grouped into three tiers:
 
-      Required      uv, cargo, fish, fisher, starship, fzf, zoxide,
+      Required      cargo, fish, fisher, starship, fzf, zoxide,
                     direnv, paru/yay
       Integrations  wakatime, tailscale
-      Recommended   eza, lsd, bat, btop, dust, duf, prettyping, ov,
+      Recommended   uv, eza, lsd, bat, btop, dust, duf, prettyping, ov,
                     ripgrep, lazygit, lazydocker, trash, kitty, wezterm,
                     python3
 
@@ -1349,7 +1348,6 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
 
 ## Required
 
-    uv        Python package manager (Astral)
     cargo     Rust toolchain (via rustup)
     fish      Fish shell >= 4.0
     fisher    Fish plugin manager
@@ -1367,6 +1365,9 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
 
 ## Recommended
 
+    uv          Python package and project manager (Astral); used by the
+                fish-from-source build path in fish-deps. All consumers
+                degrade gracefully without it.
     eza         Modern ls replacement
     lsd         ls replacement (fallback to eza)
     bat         Syntax-highlighted cat
@@ -1396,7 +1397,6 @@ The install priority for each tool:
     system PM paru / apt / brew / dnf / etc. — for tools without a crate
     git clone fzf — installed from GitHub to ~/.fzf/
     curl      starship installer, fisher bootstrap, uv installer
-    pipx      Python-based tools
 
 ---
 
