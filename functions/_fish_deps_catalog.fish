@@ -14,27 +14,27 @@
 #   echo $_fdc_bins
 function _fish_deps_catalog
     set -g _fdc_bins \
-        uv cargo fish fisher starship fzf zoxide direnv paru yay \
+        uv cargo fish starship fzf zoxide direnv paru yay \
         wakatime tailscale \
         eza lsd bat btop dust duf prettyping ov rg lazygit lazydocker trash kitty wezterm python3
 
     set -g _fdc_tiers \
-        req req req req req req req req rec rec \
+        rec rec req rec req req rec rec rec \
         int int \
         rec rec rec rec rec rec rec rec rec rec rec rec rec rec rec
 
     set -g _fdc_cargo \
-        "" "" "" "" starship "" zoxide "" "" "" \
+        "" "" "" starship "" zoxide "" "" "" \
         "" "" \
         eza lsd bat "" du-dust "" "" ov ripgrep "" "" trashy "" "" ""
 
     set -g _fdc_pm \
-        uv cargo fish "" starship fzf zoxide direnv "" yay \
+        uv cargo fish starship fzf zoxide direnv "" yay \
         wakatime tailscale \
         eza lsd bat btop dust duf prettyping ov ripgrep lazygit lazydocker trash kitty wezterm python
 
     set -g _fdc_special \
-        curl-uv rustup-installer git-cargo-fish fisher-bootstrap curl-installer fzf-update "" "" paru-build yay-build \
+        curl-uv rustup-installer git-cargo-fish curl-installer fzf-update "" "" paru-build yay-build \
         wakatime-binary "" \
         "" "" "" "" "" "" "" "" "" "" curl-lazydocker "" "" "" ""
 end

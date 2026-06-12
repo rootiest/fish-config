@@ -92,9 +92,6 @@ function _fish_deps_install
                 case fzf-update
                     set -a methods special-fzf
                     set -a method_labels "git clone (~/.fzf)"
-                case fisher-bootstrap
-                    set -a methods special-fisher
-                    set -a method_labels "curl bootstrap (fisher)"
                 case curl-installer
                     set -a methods special-curl
                     set -a method_labels "curl installer"
@@ -116,14 +113,6 @@ function _fish_deps_install
                     if type -q pacman
                         set -a methods special-yay
                         set -a method_labels "build from AUR (makepkg)"
-                    end
-                case pipx
-                    if type -q pipx
-                        set -a methods special-pipx
-                        set -a method_labels "pipx ($bin)"
-                    else if type -q pip
-                        set -a methods special-pip
-                        set -a method_labels "pip install --user ($bin)"
                     end
             end
 
@@ -210,9 +199,6 @@ function _fish_deps_install
                     rm -rf "$_tmpdir"
                 case special-fzf
                     fzf-update
-                case special-fisher
-                    curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-                    fisher update
                 case special-curl
                     if test "$bin" = starship
                         curl -sS https://starship.rs/install.sh | sh
@@ -264,10 +250,6 @@ function _fish_deps_install
                     popd 2>/dev/null
                     rm -rf "$_tmpdir"
                     test $_build_ok -eq 1
-                case special-pipx
-                    pipx install $bin
-                case special-pip
-                    pip install --user $bin
             end
 
             if test $status -eq 0

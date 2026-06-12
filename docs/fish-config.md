@@ -845,18 +845,16 @@ Add -i (interactive confirmation) to destructive commands:
       3. system PM (paru/apt/brew/etc.)
       4. git clone (fzf)
       5. curl installer (starship, fisher, uv)
-      6. pipx (Python tools)
 
     When multiple methods are available you are prompted to choose.
 
     Dependencies are grouped into three tiers:
 
-      Required      uv, cargo, fish, fisher, starship, fzf, zoxide,
-                    direnv, paru/yay
+      Required      fish, fzf, zoxide
       Integrations  wakatime, tailscale
-      Recommended   eza, lsd, bat, btop, dust, duf, prettyping, ov,
-                    ripgrep, lazygit, lazydocker, trash, kitty, wezterm,
-                    python3
+      Recommended   cargo, starship, uv, direnv, paru, yay, eza, lsd, bat,
+                    btop, dust, duf, prettyping, ov, ripgrep, lazygit,
+                    lazydocker, trash, kitty, wezterm, python3
 
     fish-deps
     fish-deps install
@@ -1349,16 +1347,9 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
 
 ## Required
 
-    uv        Python package manager (Astral)
-    cargo     Rust toolchain (via rustup)
     fish      Fish shell >= 4.0
-    fisher    Fish plugin manager
-    starship  Cross-shell prompt
     fzf       Fuzzy finder
     zoxide    Smart cd with frecency
-    direnv    Per-directory environment loading
-    paru      AUR helper (Arch only; preferred)
-    yay       AUR helper (Arch only; fallback)
 
 ## Integrations
 
@@ -1367,6 +1358,20 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
 
 ## Recommended
 
+    cargo       Rust toolchain (via rustup); used by fish-deps to install
+                Rust-based tools and to build fish from source. All paths
+                are gated on type -q cargo and degrade gracefully.
+    starship    Cross-shell prompt; loaded via type -q starship guard.
+                Without it fish falls back to its built-in default prompt.
+    uv          Python package and project manager (Astral); used by the
+                fish-from-source build path in fish-deps. All consumers
+                degrade gracefully without it.
+    direnv      Per-directory environment loading; integration is fully
+                guarded with type -q direnv. Without it the direnv hook
+                is simply not loaded and auto-venv activates normally.
+    paru        AUR helper (Arch only; preferred); guarded throughout —
+                non-Arch systems silently skip AUR-specific paths.
+    yay         AUR helper (Arch only; fallback to paru); same guards apply.
     eza         Modern ls replacement
     lsd         ls replacement (fallback to eza)
     bat         Syntax-highlighted cat
@@ -1396,7 +1401,6 @@ The install priority for each tool:
     system PM paru / apt / brew / dnf / etc. — for tools without a crate
     git clone fzf — installed from GitHub to ~/.fzf/
     curl      starship installer, fisher bootstrap, uv installer
-    pipx      Python-based tools
 
 ---
 
