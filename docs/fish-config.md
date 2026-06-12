@@ -1106,6 +1106,20 @@ Add -i (interactive confirmation) to destructive commands:
     file in the current directory, or opens an interactive fzf picker if no
     session file is found.
 
+### claude
+
+    Synopsis:  claude [args...]
+    Wrapper for the claude CLI. Before launching, checks the current
+    directory and the git project root for CLAUDE.md; when it is absent but
+    AGENTS.md is present, creates a relative symlink CLAUDE.md -> AGENTS.md
+    so Claude Code picks up shared agent instructions without duplicating
+    the file. All arguments are forwarded verbatim. Command shadow (C1):
+    when __fish_config_op_aliases (or the master) is disabled, the call is
+    passed through to the real claude binary unchanged.
+
+    claude
+    claude --resume
+
 ### claude-resume
 
     Synopsis:  claude-resume
@@ -1459,7 +1473,8 @@ but a category with an explicit truthy value remains enabled regardless.
                                     ping->prettyping, ssh->kitten,
                                     du->duf/dust, mkdir/bash wrappers,
                                     history timestamps, grep/cp/mv/wget
-                                    flag injection, help intercept
+                                    flag injection, help intercept, claude
+                                    AGENTS.md auto-link
     __fish_config_op_autoexec       Startup side-effects: Fisher
                                     bootstrap, theme apply, paru/yay
                                     wrapper generation, auto venv
@@ -1545,6 +1560,7 @@ all of these commands.
     grep/fgrep/egrep   forced --color=auto                    system grep variants
     dir / vdir         forced --color=auto                    system dir / vdir
     help config        intercepts "help config" → config-help fish builtin help
+    claude             auto-links AGENTS.md as CLAUDE.md before launch command claude
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.

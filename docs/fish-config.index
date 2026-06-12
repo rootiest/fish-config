@@ -130,6 +130,7 @@ logs=### logs
 smart-exit=### smart_exit
 ai=## 5.12 AI and Developer Tools
 antigravity=### antigravity
+claude-cli=### claude
 claude=### claude-resume
 claude-docs=### claude-docs
 claude-pr=### claude-pr
