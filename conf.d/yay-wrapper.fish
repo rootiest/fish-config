@@ -20,7 +20,7 @@ end
 
 set -l _yay_real /usr/bin/yay
 set -l _yay_wrapper "$HOME/.local/bin/yay"
-set -l _yay_wrapper_version 2
+set -l _yay_wrapper_version 3
 
 # Skip entirely if the real yay binary isn't present
 test -x $_yay_real; or return
@@ -54,8 +54,12 @@ printf '%s\n' \
     'script -q -e -c "$cmd_str" "$log_file"' \
     'exit_code=$?' \
     '' \
-    '# Strip ANSI escape sequences and carriage returns for readable plain-text logs.' \
-    'sed -i '"'"'s/\x1b\[[0-9;?]*[a-zA-Z]//g; s/\r//g'"'"' "$log_file" 2>/dev/null || true' \
+    '# col -bp collapses CR-redrawn progress bar frames; sed strips ANSI codes and script(1) headers.' \
+    'if col -bp < "$log_file" | sed '"'"'s/\x1b\[[0-9;?]*[a-zA-Z]//g; /^Script \(started\|done\)/d'"'"' > "${log_file}.tmp" 2>/dev/null; then' \
+    '    mv "${log_file}.tmp" "$log_file"' \
+    'else' \
+    '    rm -f "${log_file}.tmp"' \
+    'fi' \
     '' \
     'max_files="${SCROLLBACK_HISTORY_MAX_FILES:-100}"' \
     'mapfile -t logs < <(ls -1t "$log_dir"/yay_*.log 2>/dev/null)' \
