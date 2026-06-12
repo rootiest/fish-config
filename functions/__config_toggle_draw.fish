@@ -5,10 +5,19 @@
 #   __config_toggle_draw <cur_row> <cur_scope> <var1> ... <var7>
 #
 # DESCRIPTION
-#   Renders the 14-line config-toggle TUI panel to stdout. Intended to be
-#   called once on startup, then again after each keypress preceded by
-#   `printf '\e[14A\e[J'` (cursor-up 14 lines + clear-to-end) to redraw
-#   in place. Does not move the cursor — caller manages positioning.
+#   Renders the 14-line config-toggle TUI panel to stdout. Panel width and
+#   horizontal position are chosen automatically from $COLUMNS each call,
+#   so a terminal resize takes effect on the next keypress without any
+#   extra bookkeeping. Four width tiers with a 6-col buffer per side:
+#
+#     COLUMNS ≥ 90 → 78-wide (IW=76, desc=43 chars)
+#     COLUMNS ≥ 86 → 74-wide (IW=72, desc=39 chars)
+#     COLUMNS ≥ 82 → 70-wide (IW=68, desc=35 chars)
+#     COLUMNS  < 82 → 52-wide (IW=50, desc=17 chars)  ← default
+#
+#   The box is horizontally centered via a left-padding prefix on every
+#   output line. \e[14A\e[J erases by line count so the horizontal offset
+#   does not interfere with the redraw loop.
 #
 # ARGUMENTS
 #   cur_row    0–6, the currently highlighted row
@@ -37,14 +46,60 @@ function __config_toggle_draw
     set -l c_head  (set_color --bold cyan)
     set -l c_reset (set_color normal)
 
-    set -l labels  Aliases Auto-exec Overrides Integrations Logging Greeting Master
-    set -l descs   "cmd shadows" startup "keys/env/prompt" "terminal coupling" scrollback fish_greeting "disable all"
+    set -l labels Aliases Auto-exec Overrides Integrations Logging Greeting Master
 
-    # Panel dimensions
-    set -l IW 50   # inner width (chars between │ │)
-    set -l HBR (string repeat -n $IW '─')
+    # ── Width tier: 6-col buffer per side before stepping up ──────────────
+    # IW = inner width (chars between │ │); desc field = IW - 33.
+    # All four layouts are exactly 14 lines tall — panel_h in caller stays 14.
+    set -l iw 50
+    set -l descs \
+        "cmd shadows" \
+        startup \
+        "keys/env/prompt" \
+        "terminal coupling" \
+        scrollback \
+        fish_greeting \
+        "disable all"
 
-    # ── Scope tabs ────────────────────────────────────────
+    if test "$COLUMNS" -ge 90
+        set iw 76
+        set descs \
+            "shadows: ls→eza, cat→bat, cd→z, rm→trash" \
+            "Fisher bootstrap, themes, py-venv activate" \
+            "vi-mode, bang-bang, PAGER, CDPATH, starship" \
+            "Kitty/WezTerm tab/split fns, notifications" \
+            "scrollback capture & paru/yay AUR wrappers" \
+            "fish_greeting & first-run welcome banner" \
+            "master off-switch: overrides all categories"
+    else if test "$COLUMNS" -ge 86
+        set iw 72
+        set descs \
+            "ls→eza, cat→bat, cd→zoxide, rm→trash" \
+            "Fisher bootstrap, themes, py-venv auto" \
+            "vi-mode, bang-bang, PAGER, starship" \
+            "Kitty/WezTerm fns, done notifications" \
+            "scrollback capture & paru/yay wrappers" \
+            "fish_greeting: first-run welcome banner" \
+            "master off-switch for all categories"
+    else if test "$COLUMNS" -ge 82
+        set iw 68
+        set descs \
+            "ls→eza, cat→bat, cd→z, rm→trash" \
+            "Fisher, themes, py-venv activate" \
+            "vi-mode, bang-bang, PAGER, starship" \
+            "Kitty/WezTerm, done notifications" \
+            "scrollback & paru/yay log wrappers" \
+            "fish_greeting & first-run banner" \
+            "master disable for all categories"
+    end
+
+    set -l HBR (string repeat -n $iw '─')
+
+    # ── Center padding ────────────────────────────────────────────────────
+    # ponytail: floor division — left margin may be 1 col less than right if gap is odd
+    set -l p (string repeat -n (math --scale=0 "max(0, ($COLUMNS - ($iw + 2)) / 2)") ' ')
+
+    # ── Scope tabs ────────────────────────────────────────────────────────
     set -l u_label
     set -l s_label
     if test $cur_scope = universal
@@ -55,27 +110,26 @@ function __config_toggle_draw
         set s_label "$c_hi● Session  $c_reset"
     end
 
-    # ── Top border ────────────────────────────────────────
-    # Visible: ┌(1) ─(1) space(1) "Opinionated Settings"(20) space(1) N×─ ┐(1) = 52
-    # N = 52 - 25 = 27 = IW - 23
-    printf '┌─%s Opinionated Settings %s┐\n' \
-        $c_head $c_reset(string repeat -n (math $IW - 23) '─')
+    # ── Top border ────────────────────────────────────────────────────────
+    # ┌─ Opinionated Settings (iw-23)×─ ┐  total = iw+2
+    printf '%s┌─%s Opinionated Settings %s┐\n' \
+        $p $c_head $c_reset(string repeat -n (math $iw - 23) '─')
 
-    # ── Scope tab line ────────────────────────────────────
-    # Visible inner (50): space(1) + u_label(11) + 2spaces + s_label(11) + 10spaces + "Tab to switch  "(15) = 50
-    printf '│ %s  %s%s│\n' \
-        $u_label $s_label \
-        (string repeat -n 10 ' ')"Tab to switch  "
+    # ── Scope tab line ────────────────────────────────────────────────────
+    # Inner: " ●/○ Universal  ●/○ Session  " (25) + (iw-40)×space + "Tab to switch  " (15) = iw
+    printf '%s│ %s  %s%s│\n' \
+        $p $u_label $s_label \
+        (string repeat -n (math $iw - 40) ' ')"Tab to switch  "
 
-    # ── Top divider ───────────────────────────────────────
-    printf '│%s│\n' $HBR
+    # ── Top divider ───────────────────────────────────────────────────────
+    printf '%s│%s│\n' $p $HBR
 
-    # ── Category rows 0–5 ─────────────────────────────────
+    # ── Category rows 0–5 ─────────────────────────────────────────────────
     for i in (seq 0 5)
-        set -l idx    (math $i + 1)
-        set -l var    $vars[$idx]
-        set -l label  $labels[$idx]
-        set -l desc   $descs[$idx]
+        set -l idx   (math $i + 1)
+        set -l var   $vars[$idx]
+        set -l label $labels[$idx]
+        set -l desc  $descs[$idx]
 
         set -l val (__config_toggle_get_val $var $cur_scope)
 
@@ -96,17 +150,17 @@ function __config_toggle_draw
             set curs "$c_sel▶$c_reset "
         end
 
-        # Label padded to 12, desc padded to 17, right margin 3
+        # Label padded to 12, desc padded to (iw-33), right margin 3
         set -l lpad (string pad -r -w 12 -- $label)
-        set -l dpad (string pad -r -w 17 -- $desc)
+        set -l dpad (string pad -r -w (math $iw - 33) -- $desc)
 
-        printf '│  %s%s [ %s ]  %s   │\n' $curs $lpad $badge $dpad
+        printf '%s│  %s%s [ %s ]  %s   │\n' $p $curs $lpad $badge $dpad
     end
 
-    # ── Separator before Master ───────────────────────────
-    printf '│    %s  │\n' (string repeat -n (math $IW - 6) '─')
+    # ── Separator before Master ───────────────────────────────────────────
+    printf '%s│    %s  │\n' $p (string repeat -n (math $iw - 6) '─')
 
-    # ── Master row (index 6) ──────────────────────────────
+    # ── Master row (index 6) ──────────────────────────────────────────────
     set -l val (__config_toggle_get_val $vars[7] $cur_scope)
     set -l badge
     switch $val
@@ -121,21 +175,20 @@ function __config_toggle_draw
     if test $cur_row -eq 6
         set curs "$c_sel▶$c_reset "
     end
-    printf '│  %s%s [ %s ]  %s   │\n' \
-        $curs \
+    printf '%s│  %s%s [ %s ]  %s   │\n' \
+        $p $curs \
         (string pad -r -w 12 -- Master) \
         $badge \
-        (string pad -r -w 17 -- "disable all")
+        (string pad -r -w (math $iw - 33) -- $descs[7])
 
-    # ── Bottom divider ────────────────────────────────────
-    printf '│%s│\n' $HBR
+    # ── Bottom divider ────────────────────────────────────────────────────
+    printf '%s│%s│\n' $p $HBR
 
-    # ── Keybind hint ──────────────────────────────────────
-    # Padded to the inner width so the right border stays aligned regardless
-    # of the hint text. string pad is width-aware (arrows count as 1 column).
+    # ── Keybind hint ──────────────────────────────────────────────────────
+    # string pad is width-aware (arrows count as 1 column)
     set -l hint " ↑↓/kj move  ←→/hl set  Tab scope  q quit"
-    printf '│%s%s%s│\n' $c_dim (string pad -r -w $IW -- $hint) $c_reset
+    printf '%s│%s%s%s│\n' $p $c_dim (string pad -r -w $iw -- $hint) $c_reset
 
-    # ── Bottom border ─────────────────────────────────────
-    printf '└%s┘\n' $HBR
+    # ── Bottom border ─────────────────────────────────────────────────────
+    printf '%s└%s┘\n' $p $HBR
 end
