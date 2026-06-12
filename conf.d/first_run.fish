@@ -22,6 +22,16 @@ end
 # leave the shell in a state that re-triggers everything next session.
 set -U __fish_config_first_run_complete 1
 
+#   ──────────────────────────── Man page symlink ──────────────────────────
+# Install fish-config.1 into the user man database once, like an install step.
+# Unconditional: standard enough that no category gate is warranted.
+set -l _man1 ~/.local/share/man/man1
+set -l _src ~/.config/fish/docs/fish-config.1
+if test -f $_src; and not test -L $_man1/fish-config.1
+    mkdir -p $_man1
+    ln -sf $_src $_man1/fish-config.1
+end
+
 #   ──────────────────────────── Welcome message ───────────────────────────
 # Printing a first-run welcome banner is opinionated (C6 greeting). The
 # first-run state variable is already set unconditionally above, so

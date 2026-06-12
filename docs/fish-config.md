@@ -1972,8 +1972,9 @@ navigation.
 
 Opens the compiled docs/fish-config.1 directly via man -l, bypassing
 the pager fallback chain. If a section keyword is given, the pager opens
-at the nearest matching heading. The symlink and MANPATH are also
-configured automatically on shell start for the standard invocation:
+at the nearest matching heading. The symlink is created once on first
+run (like an install step) and MANPATH is set each session, enabling
+the standard invocation:
 
     man fish-config
 
