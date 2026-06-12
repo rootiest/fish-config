@@ -759,16 +759,26 @@
 
     Synopsis:  config-toggle [-h]
 
-    Opens an interactive full-screen TUI for toggling the six opinionated
-    component categories (C1–C6) and the master disable variable without
-    having to type or remember variable names. Two scope tabs allow
-    independent per-scope configuration:
+    Opens an interactive TUI for toggling the six opinionated component
+    categories (C1–C6) and the master disable variable without having to
+    type or remember variable names. Two scope tabs allow independent
+    per-scope configuration:
 
       Universal — persists across all sessions (set -U)
       Session   — current shell only (set -g)
 
     Changes apply immediately on each value keypress. Always available
     regardless of the __fish_config_opinionated master state.
+
+    The panel adapts to the terminal width automatically, selecting from
+    four layout tiers (with a 6-column buffer on each side before stepping
+    up to the next tier) and horizontally centering the box. The panel
+    redraws within ~0.3 s of a terminal resize with no keypress required.
+
+      COLUMNS >= 90  →  78-wide panel (most detail)
+      COLUMNS >= 86  →  74-wide panel
+      COLUMNS >= 82  →  70-wide panel
+      COLUMNS  < 82  →  52-wide panel (default)
 
     Navigation:
       ↑ ↓ / k j   Move cursor
