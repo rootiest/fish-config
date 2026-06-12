@@ -92,9 +92,6 @@ function _fish_deps_install
                 case fzf-update
                     set -a methods special-fzf
                     set -a method_labels "git clone (~/.fzf)"
-                case fisher-bootstrap
-                    set -a methods special-fisher
-                    set -a method_labels "curl bootstrap (fisher)"
                 case curl-installer
                     set -a methods special-curl
                     set -a method_labels "curl installer"
@@ -202,9 +199,6 @@ function _fish_deps_install
                     rm -rf "$_tmpdir"
                 case special-fzf
                     fzf-update
-                case special-fisher
-                    curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-                    fisher update
                 case special-curl
                     if test "$bin" = starship
                         curl -sS https://starship.rs/install.sh | sh
