@@ -57,7 +57,8 @@ but a category with an explicit truthy value remains enabled regardless.
                                     ping->prettyping, ssh->kitten,
                                     du->duf/dust, mkdir/bash wrappers,
                                     history timestamps, grep/cp/mv/wget
-                                    flag injection, help intercept
+                                    flag injection, help intercept, claude
+                                    AGENTS.md auto-link
     __fish_config_op_autoexec       Startup side-effects: Fisher
                                     bootstrap, theme apply, paru/yay
                                     wrapper generation, auto venv
@@ -143,6 +144,7 @@ all of these commands.
     grep/fgrep/egrep   forced --color=auto                    system grep variants
     dir / vdir         forced --color=auto                    system dir / vdir
     help config        intercepts "help config" → config-help fish builtin help
+    claude             auto-links AGENTS.md as CLAUDE.md before launch command claude
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.

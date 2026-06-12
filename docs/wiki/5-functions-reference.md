@@ -619,6 +619,20 @@
     file in the current directory, or opens an interactive fzf picker if no
     session file is found.
 
+### claude
+
+    Synopsis:  claude [args...]
+    Wrapper for the claude CLI. Before launching, checks the current
+    directory and the git project root for CLAUDE.md; when it is absent but
+    AGENTS.md is present, creates a relative symlink CLAUDE.md -> AGENTS.md
+    so Claude Code picks up shared agent instructions without duplicating
+    the file. All arguments are forwarded verbatim. Command shadow (C1):
+    when __fish_config_op_aliases (or the master) is disabled, the call is
+    passed through to the real claude binary unchanged.
+
+    claude
+    claude --resume
+
 ### claude-resume
 
     Synopsis:  claude-resume
