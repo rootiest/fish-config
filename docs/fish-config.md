@@ -1593,7 +1593,7 @@ all of them.
     Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
     Catppuccin colors         30+ fish_color_* variables set to Mocha palette
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
-    Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered
+    Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
 
 The bang-bang system spans key_bindings.fish, abbr.fish, puffer.fish, and
 six expand_bang_*.fish functions. All are gated together — disabling C3
@@ -1717,10 +1717,12 @@ Elements:
 
 The right prompt (fish_right_prompt.fish) always renders, regardless of C3
 state. On failure it shows a red ✘ and the exit code; on success it shows
-only the dim timestamp:
+only the dim timestamp. When starship is installed and C3 is enabled, the
+active Docker context is also shown (if non-default):
 
-    ✘ 1   11:39:00     ← failed command
-    11:39:00           ← success (no ✘)
+    ✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
+    ✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
+    Fri Jun 12 00:51:21 2026                     ← success (no ✘)
 
 ### FZF
 
