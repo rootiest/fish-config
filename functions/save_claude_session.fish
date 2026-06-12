@@ -4,7 +4,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # 1. Read input and extract session ID
+#    python3 parses the session_id out of the hook's JSON payload. If it is
+#    unavailable we emit valid empty JSON and skip session tracking rather
+#    than erroring (see AGENTS.md Convention §6).
 set -l input (cat)
+if not type -q python3
+    echo '{}'
+    exit 0
+end
 set -l sid (echo $input | python3 -c "import sys,json; print(json.load(sys.stdin).get('session_id', ''))")
 set -l session_file ".claude_session"
 
