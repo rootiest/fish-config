@@ -509,8 +509,9 @@ q           quit</code></pre>
 help config pkg --man</code></pre>
 <p>Opens the compiled docs/fish-config.1 directly via man -l, bypassing
 the pager fallback chain. If a section keyword is given, the pager opens
-at the nearest matching heading. The symlink and MANPATH are also
-configured automatically on shell start for the standard invocation:</p>
+at the nearest matching heading. The symlink is created once on first
+run (like an install step) and MANPATH is set each session, enabling the
+standard invocation:</p>
 <pre><code>man fish-config</code></pre>
 <p>NOTE: fish-config (hyphen) is this config's man page. fish_config
 (underscore) is fish's built-in browser-based configuration tool — a
