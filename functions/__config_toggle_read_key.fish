@@ -42,9 +42,10 @@ function __config_toggle_read_key
     set -l saved (stty -g </dev/tty 2>/dev/null)
     or return 1
 
-    # Raw, no-echo. min 1 / time 1: block for the first byte, then wait up to
-    # 0.1s for the rest of a burst (escape sequence) before returning.
-    stty raw -echo min 1 time 1 </dev/tty 2>/dev/null
+    # Raw, no-echo. min 0 / time 3: return after 0.3s even with no bytes (poll
+    # interval for resize detection), or immediately when any bytes arrive.
+    # Escape sequences (e.g. arrow keys) arrive fast enough to land in one read.
+    stty raw -echo min 0 time 3 </dev/tty 2>/dev/null
 
     # One read() of up to 3 bytes — covers ESC [ A style sequences. od emits
     # the bytes as space-separated decimal codes.

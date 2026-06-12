@@ -72,7 +72,8 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
 
     set -l cur_row   0           # 0–6
     set -l cur_scope universal   # or "session"
-    set -l panel_h   14          # total panel lines
+    set -l panel_h   14          # total panel lines (all width tiers are 14 lines)
+    set -l last_cols $COLUMNS    # COLUMNS at the time of the last draw
 
     # ── Terminal setup ────────────────────────────────────
     printf '\e[?25l'             # hide cursor
@@ -142,13 +143,26 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
                 break
         end
 
-        # Redraw in place
-        printf '\e[%dA\e[J' $panel_h
+        # Skip redraw entirely when the key reader timed out with no resize
+        if test -z "$key" -a "$COLUMNS" = "$last_cols"
+            continue
+        end
+
+        # Wrap-aware erase: a panel drawn on a wider terminal has longer lines
+        # (due to center-padding) that wrap into extra physical rows when the
+        # terminal narrows. 78 = widest box (IW=76+2); the formula gives the
+        # worst-case old line width for any tier drawn at last_cols.
+        set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
+        set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
+        printf '\e[%dA\e[J' $erase_h
+        set last_cols $COLUMNS
         __config_toggle_draw $cur_row $cur_scope $vars
     end
 
     # ── Cleanup ───────────────────────────────────────────
     trap - INT              # remove the signal handler
-    printf '\e[%dA\e[J' $panel_h   # erase the panel
+    set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
+    set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
+    printf '\e[%dA\e[J' $erase_h   # erase the panel (wrap-aware)
     printf '\e[?25h'        # restore cursor
 end

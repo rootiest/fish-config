@@ -168,7 +168,7 @@ end
 
 Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, terminal integrations, logging, and the first-run greeting — is active by default but can be switched off.
 
-> **The easy way — `config-toggle`:** Run `config-toggle` for an interactive TUI that flips every setting below on, off, or back to default — per-session or universally — without typing a single variable name. Use the arrow keys (or `h`/`j`/`k`/`l`) to navigate and adjust, `Tab` to switch scope, and `q` to quit. Changes apply instantly.
+> **The easy way — `config-toggle`:** Run `config-toggle` for an interactive TUI that flips every setting below on, off, or back to default — per-session or universally — without typing a single variable name. Use the arrow keys (or `h`/`j`/`k`/`l`) to navigate and adjust, `Tab` to switch scope, and `q` to quit. Changes apply instantly. The panel auto-sizes to your terminal width (four tiers from 52- to 78-wide with a 6-column margin), centers itself horizontally, and redraws within ~0.3 s of a resize.
 
 If you'd rather set them by hand, each category is controlled by a universal variable. Six category toggles and one master switch are available:
 
