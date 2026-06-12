@@ -850,12 +850,11 @@ Add -i (interactive confirmation) to destructive commands:
 
     Dependencies are grouped into three tiers:
 
-      Required      cargo, fish, fisher, starship, fzf, zoxide,
-                    direnv, paru/yay
+      Required      cargo, fish, fisher, starship, fzf, zoxide, direnv
       Integrations  wakatime, tailscale
-      Recommended   uv, eza, lsd, bat, btop, dust, duf, prettyping, ov,
-                    ripgrep, lazygit, lazydocker, trash, kitty, wezterm,
-                    python3
+      Recommended   uv, paru, yay, eza, lsd, bat, btop, dust, duf,
+                    prettyping, ov, ripgrep, lazygit, lazydocker, trash,
+                    kitty, wezterm, python3
 
     fish-deps
     fish-deps install
@@ -1355,8 +1354,6 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
     fzf       Fuzzy finder
     zoxide    Smart cd with frecency
     direnv    Per-directory environment loading
-    paru      AUR helper (Arch only; preferred)
-    yay       AUR helper (Arch only; fallback)
 
 ## Integrations
 
@@ -1368,6 +1365,9 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
     uv          Python package and project manager (Astral); used by the
                 fish-from-source build path in fish-deps. All consumers
                 degrade gracefully without it.
+    paru        AUR helper (Arch only; preferred); guarded throughout —
+                non-Arch systems silently skip AUR-specific paths.
+    yay         AUR helper (Arch only; fallback to paru); same guards apply.
     eza         Modern ls replacement
     lsd         ls replacement (fallback to eza)
     bat         Syntax-highlighted cat
