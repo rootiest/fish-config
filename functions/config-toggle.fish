@@ -149,5 +149,6 @@ function config-toggle --description 'Interactive TUI for toggling opinionated c
 
     # ── Cleanup ───────────────────────────────────────────
     trap - INT              # remove the signal handler
+    printf '\e[%dA\e[J' $panel_h   # erase the panel
     printf '\e[?25h'        # restore cursor
 end

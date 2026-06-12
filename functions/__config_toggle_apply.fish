@@ -30,24 +30,33 @@ function __config_toggle_apply
     set -l scope   $argv[2]
     set -l value   $argv[3]
 
+    # stderr is suppressed because setting a value in one scope while the
+    # other scope already holds the same variable makes interactive fish
+    # emit a shadowing warning ("set: successfully set universal 'X'; but a
+    # global by that name shadows it"). config-toggle intentionally edits
+    # both scopes independently, so the warning is expected noise — and if
+    # it reached the terminal it would push the cursor down a row and
+    # corrupt the in-place panel redraw (leaving a stacked top border
+    # behind). Note: the warning only fires in a real interactive TTY, not
+    # under `fish -ic`, which is why it is easy to miss when testing.
     switch $scope
         case universal
             switch $value
                 case on
-                    set -U $varname on
+                    set -U $varname on 2>/dev/null
                 case off
-                    set -U $varname off
+                    set -U $varname off 2>/dev/null
                 case DEFAULT
-                    set -Ue $varname
+                    set -Ue $varname 2>/dev/null
             end
         case session
             switch $value
                 case on
-                    set -g $varname on
+                    set -g $varname on 2>/dev/null
                 case off
-                    set -g $varname off
+                    set -g $varname off 2>/dev/null
                 case DEFAULT
-                    set -eg $varname
+                    set -eg $varname 2>/dev/null
             end
     end
 end
