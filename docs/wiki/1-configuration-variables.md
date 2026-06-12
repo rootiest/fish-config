@@ -108,7 +108,13 @@ scrollback snapshot to SCROLLBACK_HISTORY_DIR. Files are named:
 
     scrollback_YYYY-MM-DD_HH-MM-SS.log
 
-The paru and yay wrappers (auto-generated in ~/.local/bin/) tee all output to:
+The paru and yay wrappers (auto-generated in ~/.local/bin/) run the command
+inside a PTY via script(1) so download progress bars are preserved on screen,
+then render the captured terminal animation down to a clean static log via
+scripts/clean_progress_log.py (a small terminal-screen emulator that replays
+cursor movements, collapses repainted progress frames to their final state,
+and preserves ANSI color). If python3 is unavailable the wrapper falls back to
+dropping only the script(1) header/footer. Output is saved to:
 
     paru_YYYY-MM-DD_HH-MM-SS.log
     yay_YYYY-MM-DD_HH-MM-SS.log
