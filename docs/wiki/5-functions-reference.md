@@ -368,7 +368,8 @@
                     direnv, paru/yay
       Integrations  wakatime, tailscale
       Recommended   eza, lsd, bat, btop, dust, duf, prettyping, ov,
-                    ripgrep, lazygit, lazydocker, trash, kitty, wezterm
+                    ripgrep, lazygit, lazydocker, trash, kitty, wezterm,
+                    python3
 
     fish-deps
     fish-deps install
