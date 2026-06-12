@@ -191,6 +191,15 @@ logging-sentinel=#### C5 — Logging and Capture
 c6=#### C6 — Greeting and First-Run UI
 greeting=#### C6 — Greeting and First-Run UI
 
+# ── Prompt and Theme ──────────────────────────────────────────
+prompt-theme=## Prompt and Theme
+starship=### Starship
+fallback-prompt=### Catppuccin Fallback Prompt
+catppuccin-prompt=### Catppuccin Fallback Prompt
+nim-prompt=### Catppuccin Fallback Prompt
+fzf-theme=### FZF
+catppuccin-theme=### Catppuccin Mocha Syntax Highlighting
+
 # ── Section 8: Fisher Plugins ─────────────────────────────────
 plugins=# 8. FISHER PLUGINS
 fisher=# 8. FISHER PLUGINS
