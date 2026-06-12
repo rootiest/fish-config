@@ -9,8 +9,10 @@
 #   that would prepend to the prompt line and break the two-line nim layout.
 #   Vi-mode display is handled inside fish_prompt itself.
 #
+# RETURNS
+#   0  Always (function body is empty)
+#
 # EXAMPLE
 #   # Rendered automatically by fish; not called directly.
-
 function fish_mode_prompt
 end
