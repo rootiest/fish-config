@@ -20,7 +20,7 @@ end
 
 set -l _yay_real /usr/bin/yay
 set -l _yay_wrapper "$HOME/.local/bin/yay"
-set -l _yay_wrapper_version 3
+set -l _yay_wrapper_version 4
 
 # Skip entirely if the real yay binary isn't present
 test -x $_yay_real; or return
@@ -54,12 +54,8 @@ printf '%s\n' \
     'script -q -e -c "$cmd_str" "$log_file"' \
     'exit_code=$?' \
     '' \
-    '# col -bp collapses CR-redrawn progress bar frames; sed strips ANSI codes and script(1) headers.' \
-    'if col -bp < "$log_file" | sed '"'"'s/\x1b\[[0-9;?]*[a-zA-Z]//g; /^Script \(started\|done\)/d'"'"' > "${log_file}.tmp" 2>/dev/null; then' \
-    '    mv "${log_file}.tmp" "$log_file"' \
-    'else' \
-    '    rm -f "${log_file}.tmp"' \
-    'fi' \
+    '# Collapse CR-redrawn frames; keep ANSI codes for ov rendering; strip script(1) headers.' \
+    'perl -ne '"'"'next if /^Script (started|done)/; s/\r$//; s/.*\r([^\r]+)$/$1/; print'"'"' < "$log_file" > "${log_file}.tmp" 2>/dev/null && mv "${log_file}.tmp" "$log_file" || rm -f "${log_file}.tmp"' \
     '' \
     'max_files="${SCROLLBACK_HISTORY_MAX_FILES:-100}"' \
     'mapfile -t logs < <(ls -1t "$log_dir"/yay_*.log 2>/dev/null)' \
