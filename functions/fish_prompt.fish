@@ -19,15 +19,15 @@ function fish_prompt
     set -l last_status $status
 
     # Catppuccin Mocha hex palette
-    set -l c_green  a6e3a1
-    set -l c_red    f38ba8
-    set -l c_yellow f9e2af
-    set -l c_text   cdd6f4
-    set -l c_blue   89b4fa
-    set -l c_teal   94e2d5
-    set -l c_pink   f5c2e7
-    set -l c_dim    6c7086
-    set -l c_mauve  cba6f7
+    set -l c_green  '#a6e3a1'
+    set -l c_red    '#f38ba8'
+    set -l c_yellow '#f9e2af'
+    set -l c_text   '#cdd6f4'
+    set -l c_blue   '#89b4fa'
+    set -l c_teal   '#94e2d5'
+    set -l c_pink   '#f5c2e7'
+    set -l c_dim    '#6c7086'
+    set -l c_mauve  '#cba6f7'
 
     # Line/connector color tracks last exit status; brackets stay bold green
     set -l retc $c_green
@@ -83,6 +83,10 @@ function fish_prompt
                 set mode_str (set_color --bold $c_teal)'R'(set_color normal)
             case visual
                 set mode_str (set_color --bold $c_mauve)'V'(set_color normal)
+            case operator
+                set mode_str (set_color --bold $c_teal)'O'(set_color normal)
+            case '*'
+                set mode_str (set_color --bold $c_dim)'?'(set_color normal)
         end
         set_color $retc
         echo -n '─'
