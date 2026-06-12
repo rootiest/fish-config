@@ -358,18 +358,16 @@
       3. system PM (paru/apt/brew/etc.)
       4. git clone (fzf)
       5. curl installer (starship, fisher, uv)
-      6. pipx (Python tools)
 
     When multiple methods are available you are prompted to choose.
 
     Dependencies are grouped into three tiers:
 
-      Required      uv, cargo, fish, fisher, starship, fzf, zoxide,
-                    direnv, paru/yay
+      Required      fish, fzf, zoxide
       Integrations  wakatime, tailscale
-      Recommended   eza, lsd, bat, btop, dust, duf, prettyping, ov,
-                    ripgrep, lazygit, lazydocker, trash, kitty, wezterm,
-                    python3
+      Recommended   cargo, starship, uv, direnv, paru, yay, eza, lsd, bat,
+                    btop, dust, duf, prettyping, ov, ripgrep, lazygit,
+                    lazydocker, trash, kitty, wezterm, python3
 
     fish-deps
     fish-deps install

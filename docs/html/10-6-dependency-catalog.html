@@ -493,21 +493,28 @@ CATALOG</h1>
 <p>fish-deps manages these tools. Run <code>fish-deps</code> to check
 status, or <code>fish-deps install</code> to install missing ones.</p>
 <h2 data-number="10.1" id="required">Required</h2>
-<pre><code>uv        Python package manager (Astral)
-cargo     Rust toolchain (via rustup)
-fish      Fish shell &gt;= 4.0
-fisher    Fish plugin manager
-starship  Cross-shell prompt
+<pre><code>fish      Fish shell &gt;= 4.0
 fzf       Fuzzy finder
-zoxide    Smart cd with frecency
-direnv    Per-directory environment loading
-paru      AUR helper (Arch only; preferred)
-yay       AUR helper (Arch only; fallback)</code></pre>
+zoxide    Smart cd with frecency</code></pre>
 <h2 data-number="10.2" id="integrations-1">Integrations</h2>
 <pre><code>wakatime   Developer time tracking
 tailscale  Mesh VPN client</code></pre>
 <h2 data-number="10.3" id="recommended">Recommended</h2>
-<pre><code>eza         Modern ls replacement
+<pre><code>cargo       Rust toolchain (via rustup); used by fish-deps to install
+            Rust-based tools and to build fish from source. All paths
+            are gated on type -q cargo and degrade gracefully.
+starship    Cross-shell prompt; loaded via type -q starship guard.
+            Without it fish falls back to its built-in default prompt.
+uv          Python package and project manager (Astral); used by the
+            fish-from-source build path in fish-deps. All consumers
+            degrade gracefully without it.
+direnv      Per-directory environment loading; integration is fully
+            guarded with type -q direnv. Without it the direnv hook
+            is simply not loaded and auto-venv activates normally.
+paru        AUR helper (Arch only; preferred); guarded throughout —
+            non-Arch systems silently skip AUR-specific paths.
+yay         AUR helper (Arch only; fallback to paru); same guards apply.
+eza         Modern ls replacement
 lsd         ls replacement (fallback to eza)
 bat         Syntax-highlighted cat
 btop        Modern resource monitor
@@ -532,8 +539,7 @@ python3     Standalone interpreter — used by the AI session helpers
           starship) — always gets the latest crate version
 system PM paru / apt / brew / dnf / etc. — for tools without a crate
 git clone fzf — installed from GitHub to ~/.fzf/
-curl      starship installer, fisher bootstrap, uv installer
-pipx      Python-based tools</code></pre>
+curl      starship installer, fisher bootstrap, uv installer</code></pre>
 <hr />
 </body>
 </html>
