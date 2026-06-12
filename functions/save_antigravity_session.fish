@@ -7,6 +7,12 @@
 set -l input (cat)
 
 # 2. Extract session_id using Python
+#    If python3 is unavailable, emit valid empty JSON and skip session
+#    tracking rather than erroring (see AGENTS.md Convention §6).
+if not type -q python3
+    echo '{}'
+    exit 0
+end
 set -l sid (echo $input | python3 -c "import sys,json; print(json.load(sys.stdin).get('session_id', ''))")
 set -l session_file ".antigravity_session"
 
