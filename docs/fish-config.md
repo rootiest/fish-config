@@ -216,7 +216,8 @@ scrollback snapshot to SCROLLBACK_HISTORY_DIR. Files are named:
 
     scrollback_YYYY-MM-DD_HH-MM-SS.log
 
-The paru and yay wrappers (auto-generated in ~/.local/bin/) tee all output to:
+The paru and yay wrappers (auto-generated in ~/.local/bin/) run inside a PTY
+via script(1) so progress bars are preserved, and capture all output to:
 
     paru_YYYY-MM-DD_HH-MM-SS.log
     yay_YYYY-MM-DD_HH-MM-SS.log
@@ -1615,9 +1616,9 @@ __fish_config_op_logging skips all capture and removes the logging wrappers.
     ───────────────────────────────────────────────────────────────────────────
     Scrollback capture      Terminal session output saved to:
                             ~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
-    paru wrapper            All paru/AUR output teed to:
+    paru wrapper            All paru/AUR output captured to:
                             ~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
-    yay wrapper             All yay/AUR output teed to:
+    yay wrapper             All yay/AUR output captured to:
                             ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
     Kitty watcher           watcher.py captures scrollback when Kitty closes
 
