@@ -15,7 +15,7 @@
 #
 # EXAMPLE
 #   # Rendered automatically by fish; not called directly.
-function fish_right_prompt --description 'Execute fish_right_prompt'
+function fish_right_prompt
     set -l last_status $status
 
     # Failed command: red ✘ + exit code; hidden when 0

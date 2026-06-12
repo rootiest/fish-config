@@ -7,8 +7,8 @@
 # DESCRIPTION
 #   Catppuccin Mocha fallback prompt (nim-style, two-line). Active whenever
 #   the starship prompt is not available — either starship is not installed or
-#   C3 overrides are disabled. Has no external dependencies; uses only fish
-#   builtins (set_color, fish_git_prompt, prompt_pwd, prompt_hostname).
+#   C3 overrides are disabled. Has no external dependencies; uses only fish-provided functions
+#   (set_color, fish_git_prompt, prompt_pwd, prompt_hostname).
 #
 # RETURNS
 #   0  Always; outputs the prompt to stdout
@@ -126,12 +126,13 @@ function fish_prompt
     echo  # newline
 
     # Background jobs (one per line, dim)
-    for job in (jobs)
+    for job in (jobs -c)
         set_color $retc
         echo -n '│ '
         set_color $c_dim
         echo $job
     end
+    set_color normal
 
     # ─── Second line ──────────────────────────────────────────────────────────
     set_color $retc
