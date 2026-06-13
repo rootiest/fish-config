@@ -72,8 +72,8 @@ abbr -a g git
 abbr -a gitig gi
 abbr -a git-ignore gi
 # Antigravity
-abbr -a ag antigravity
-abbr -a ag. antigravity .
+abbr -a ag agy
+abbr -a ag. agy .
 # Quit
 abbr -a /exit exit
 # Window-management abbreviations are opinionated (C4 integrations)

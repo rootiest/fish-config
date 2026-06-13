@@ -11,6 +11,10 @@ synopsis=# SYNOPSIS
 description=# DESCRIPTION
 toc=# TABLE OF CONTENTS
 contents=# TABLE OF CONTENTS
+autopair=# DESCRIPTION
+puffer=# DESCRIPTION
+puffer-fish=# DESCRIPTION
+logging-events=# DESCRIPTION
 
 # ── Section 1: Configuration Variables ───────────────────────
 variables=# 1. CONFIGURATION VARIABLES
