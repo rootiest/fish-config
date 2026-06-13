@@ -32,6 +32,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l c_cmd   (set_color --bold white)
     set -l c_flag  (set_color yellow)
     set -l c_ok    (set_color green)
+    set -l c_warn  (set_color yellow)
     set -l c_dim   (set_color brblack)
     set -l c_err   (set_color red)
     set -l c_reset (set_color normal)
@@ -40,7 +41,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     or return 1
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[--agents] [--plugins] [-h]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[--agents] [--plugins] [-h | --help]$c_reset"
         echo
         echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
         echo
@@ -57,7 +58,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l do_plugins 0
     set -q _flag_agents;  and set do_agents 1
     set -q _flag_plugins; and set do_plugins 1
-    if test $do_agents -eq 0 -a $do_plugins -eq 0
+    if test $do_agents -eq 0; and test $do_plugins -eq 0
         set do_agents 1
         set do_plugins 1
     end
@@ -70,10 +71,13 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l plugins_dir "$agents_dir/plugins"
 
     #   ─────────────────────── Always: AGENTS/ sub-repo ───────────────────────
-    set -l did_init 0
+    set -l did_init 0  # ponytail: set to 1 after git init — consumed by auto-commit in Task 5
 
     if not test -d "$agents_dir"
-        mkdir -p "$agents_dir"
+        if not mkdir -p "$agents_dir"
+            echo "$c_err""Error: could not create AGENTS/$c_reset" >&2
+            return 1
+        end
         echo "$c_ok→ Created AGENTS/$c_reset"
     end
 
@@ -90,7 +94,10 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # Ensure plugins dirs with .gitkeep
     for dir in "$plugins_dir" "$plugins_dir/superpowers" "$plugins_dir/plans" "$plugins_dir/specs"
         if not test -d "$dir"
-            mkdir -p "$dir"
+            if not mkdir -p "$dir"
+                echo "$c_err""Error: could not create "(string replace "$root/" "" "$dir")"/$c_reset" >&2
+                return 1
+            end
             echo "$c_ok→ Created "(string replace "$root/" "" "$dir")"/$c_reset"
         end
         test -f "$dir/.gitkeep"; or touch "$dir/.gitkeep"
