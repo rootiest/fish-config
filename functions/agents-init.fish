@@ -106,6 +106,38 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # ── Auto-commit (runs at end — defined here as a closure-style block) ─────
     # Implemented in Task 5; placeholder comment keeps structure clear.
 
-    # ── Mode dispatch ─────────────────────────────────────────────────────────
-    # --agents and --plugins blocks added in Tasks 3 and 4.
+    #   ──────────────────────────── --agents mode ──────────────────────────────
+    if test $do_agents -eq 1
+        # Move AGENTS.md from project root into sub-repo if it's a real file
+        if test -f "$root/AGENTS.md"; and not test -L "$root/AGENTS.md"
+            mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
+            echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
+        end
+
+        # Create empty AGENTS.md in sub-repo if still missing
+        if not test -f "$agents_dir/AGENTS.md"
+            touch "$agents_dir/AGENTS.md"
+            echo "$c_ok→ Created AGENTS/AGENTS.md$c_reset"
+        end
+
+        # Symlink AGENTS.md → AGENTS/AGENTS.md in project root
+        if not test -L "$root/AGENTS.md"
+            ln -s AGENTS/AGENTS.md "$root/AGENTS.md"
+            echo "$c_ok→ Linked AGENTS.md → AGENTS/AGENTS.md$c_reset"
+        end
+
+        # Symlink CLAUDE.md → AGENTS/AGENTS.md in project root
+        if not test -L "$root/CLAUDE.md"
+            ln -s AGENTS/AGENTS.md "$root/CLAUDE.md"
+            echo "$c_ok→ Linked CLAUDE.md → AGENTS/AGENTS.md$c_reset"
+        end
+
+        # Update .gitignore
+        for pattern in "AGENTS/" "AGENTS.md" "CLAUDE.md"
+            _agents_init_ensure_gitignore "$root" "$pattern"
+        end
+    end
+
+    #   ─────────────────────────── --plugins mode ──────────────────────────────
+    # Added in Task 4.
 end
