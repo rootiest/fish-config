@@ -243,7 +243,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             if test -d "$docs_target"; and not test -L "$docs_target"
                 set -l contents (ls -A "$docs_target" 2>/dev/null)
                 if test (count $contents) -gt 0
-                    if not cp -r "$docs_target/." "$agents_target/"
+                    if not command cp -rn "$docs_target/." "$agents_target/"
                         echo "$c_err""Error: could not copy docs/$plug → AGENTS/plugins/$plug$c_reset" >&2
                         return 1
                     end
