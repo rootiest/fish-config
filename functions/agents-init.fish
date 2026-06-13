@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   agents-init [--agents] [--plugins] [-q | --quiet] [-s | --silent] [-h | --help]
+#   agents-init [-a | --agents] [-p | --plugins] [-q | --quiet] [-s | --silent] [-h | --help]
 #
 # DESCRIPTION
 #   Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
@@ -23,8 +23,8 @@
 #   so that agent-made edits are captured automatically.
 #
 # ARGUMENTS
-#   --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only
-#   --plugins  Set up AGENTS/ repo + plugins dirs + docs/ symlinks only
+#   -a, --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only
+#   -p, --plugins  Set up AGENTS/ repo + plugins dirs + docs/ symlinks only
 #   -q, --quiet  Print only a start/done banner; suppress per-step output
 #   -s, --silent Suppress all output; errors only (standard UNIX convention)
 #   -h, --help Show this help message and exit
@@ -48,18 +48,18 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l c_err   (set_color red)
     set -l c_reset (set_color normal)
 
-    argparse 'h/help' 'agents' 'plugins' 'q/quiet' 's/silent' -- $argv
+    argparse 'h/help' 'a/agents' 'p/plugins' 'q/quiet' 's/silent' -- $argv
     or return 1
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[--agents] [--plugins] [-q] [-s] [-h | --help]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-q] [-s] [-h | --help]$c_reset"
         echo
         echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
         echo
         echo "$c_head""Options:$c_reset"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset     Show this help message"
-        echo "  $c_flag--agents$c_reset        Set up AGENTS.md / CLAUDE.md symlinks only"
-        echo "  $c_flag--plugins$c_reset       Set up plugins dirs and docs/ symlinks only"
+        echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md / CLAUDE.md symlinks only"
+        echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plugins dirs and docs/ symlinks only"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset    Print only a start/done banner; suppress per-step output"
         echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset   Suppress all output; only errors are printed"
         echo "  $c_dim(no flags)$c_reset       Run both --agents and --plugins setup"
