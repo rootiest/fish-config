@@ -174,7 +174,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
 
             # If a real directory exists in docs/, move its contents to AGENTS/plugins/
             if test -d "$docs_target"; and not test -L "$docs_target"
-                if test -n "$(ls -A $docs_target 2>/dev/null)"
+                if test -n (ls -A $docs_target 2>/dev/null)
                     if not cp -r "$docs_target/." "$agents_target/"
                         echo "$c_err""Error: could not move docs/$plug → AGENTS/plugins/$plug$c_reset" >&2
                         return 1
