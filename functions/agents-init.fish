@@ -1,0 +1,104 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# SYNOPSIS
+#   agents-init [--agents] [--plugins] [-h | --help]
+#
+# DESCRIPTION
+#   Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
+#   a self-contained git repo for agent specifications, moves any existing
+#   agent-related files into it, and replaces them with symlinks so the outer
+#   project never tracks agent files directly.
+#
+#   With no flags, runs both --agents and --plugins setup. At the end of
+#   every invocation, commits any uncommitted changes in the AGENTS/ sub-repo
+#   so that agent-made edits are captured automatically.
+#
+# ARGUMENTS
+#   --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only
+#   --plugins  Set up AGENTS/ repo + plugins dirs + docs/ symlinks only
+#   -h, --help Show this help message and exit
+#
+# RETURNS
+#   0  Setup completed successfully
+#   1  Fatal error (git init failed, move failed, etc.)
+#
+# EXAMPLE
+#   agents-init
+#   agents-init --agents
+#   agents-init --plugins
+function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
+    set -l c_head  (set_color --bold cyan)
+    set -l c_cmd   (set_color --bold white)
+    set -l c_flag  (set_color yellow)
+    set -l c_ok    (set_color green)
+    set -l c_dim   (set_color brblack)
+    set -l c_err   (set_color red)
+    set -l c_reset (set_color normal)
+
+    argparse 'h/help' 'agents' 'plugins' -- $argv
+    or return 1
+
+    if set -q _flag_help
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[--agents] [--plugins] [-h]$c_reset"
+        echo
+        echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
+        echo
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset     Show this help message"
+        echo "  $c_flag--agents$c_reset        Set up AGENTS.md / CLAUDE.md symlinks only"
+        echo "  $c_flag--plugins$c_reset       Set up plugins dirs and docs/ symlinks only"
+        echo "  $c_dim(no flags)$c_reset       Run both --agents and --plugins setup"
+        return 0
+    end
+
+    # No flags → run both modes
+    set -l do_agents 0
+    set -l do_plugins 0
+    set -q _flag_agents;  and set do_agents 1
+    set -q _flag_plugins; and set do_plugins 1
+    if test $do_agents -eq 0 -a $do_plugins -eq 0
+        set do_agents 1
+        set do_plugins 1
+    end
+
+    # Resolve target root: git root if available, otherwise cwd
+    set -l root (git rev-parse --show-toplevel 2>/dev/null)
+    test -z "$root"; and set root (pwd)
+
+    set -l agents_dir  "$root/AGENTS"
+    set -l plugins_dir "$agents_dir/plugins"
+
+    #   ─────────────────────── Always: AGENTS/ sub-repo ───────────────────────
+    set -l did_init 0
+
+    if not test -d "$agents_dir"
+        mkdir -p "$agents_dir"
+        echo "$c_ok→ Created AGENTS/$c_reset"
+    end
+
+    if not test -d "$agents_dir/.git"
+        git -C "$agents_dir" init -q
+        or begin
+            echo "$c_err""Error: git init failed in AGENTS/$c_reset" >&2
+            return 1
+        end
+        echo "$c_ok→ Initialized git repo in AGENTS/$c_reset"
+        set did_init 1
+    end
+
+    # Ensure plugins dirs with .gitkeep
+    for dir in "$plugins_dir" "$plugins_dir/superpowers" "$plugins_dir/plans" "$plugins_dir/specs"
+        if not test -d "$dir"
+            mkdir -p "$dir"
+            echo "$c_ok→ Created "(string replace "$root/" "" "$dir")"/$c_reset"
+        end
+        test -f "$dir/.gitkeep"; or touch "$dir/.gitkeep"
+    end
+
+    # ── Auto-commit (runs at end — defined here as a closure-style block) ─────
+    # Implemented in Task 5; placeholder comment keeps structure clear.
+
+    # ── Mode dispatch ─────────────────────────────────────────────────────────
+    # --agents and --plugins blocks added in Tasks 3 and 4.
+end
