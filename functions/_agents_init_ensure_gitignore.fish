@@ -23,10 +23,16 @@
 function _agents_init_ensure_gitignore
     set -l root    $argv[1]
     set -l pattern $argv[2]
-    set -l gitignore "$root/.gitignore"
 
     set -l c_ok    (set_color green)
     set -l c_reset (set_color normal)
+
+    if test (count $argv) -lt 2
+        echo (set_color red)"_agents_init_ensure_gitignore: requires <root> and <pattern>"(set_color normal) >&2
+        return 1
+    end
+
+    set -l gitignore "$root/.gitignore"
 
     # Prefer git check-ignore (respects wildcards, parent globs, negations).
     # --no-index lets it evaluate non-existent paths.
@@ -40,7 +46,10 @@ function _agents_init_ensure_gitignore
     end
 
     if test $already_ignored -eq 0
-        echo "$pattern" >>"$gitignore"
+        if not echo "$pattern" >>"$gitignore"
+            echo (set_color red)"Error: could not write to $gitignore"(set_color normal) >&2
+            return 1
+        end
         echo "$c_ok→ Added $pattern to .gitignore$c_reset"
     end
 end
