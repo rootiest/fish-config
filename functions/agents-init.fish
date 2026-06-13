@@ -208,9 +208,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         end
 
         # ── .gitignore ────────────────────────────────────────────────────────
-        for pattern in "AGENTS/" "/AGENTS.md" "/CLAUDE.md"
-            _agents_init_ensure_gitignore "$root" "$pattern"
-        end
+        _agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" "/AGENTS.md" "/CLAUDE.md"
     end
 
     #   ─────────────────────────── --plugins mode ──────────────────────────────
@@ -266,8 +264,8 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                 echo "$c_ok→ Linked docs/$plug → AGENTS/plugins/$plug$c_reset"
             end
 
-            _agents_init_ensure_gitignore "$root" "docs/$plug"
         end
+        _agents_init_ensure_gitignore "$root" "agents-init --plugins" "docs/superpowers" "docs/plans" "docs/specs"
     end
 
     #   ──────────────────────── Auto-commit AGENTS/ ────────────────────────────
