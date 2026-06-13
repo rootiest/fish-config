@@ -41,16 +41,16 @@
 #   agents-init --plugins
 #   agents-init --quiet
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
-    set -l c_head  (set_color --bold cyan)
-    set -l c_cmd   (set_color --bold white)
-    set -l c_flag  (set_color yellow)
-    set -l c_ok    (set_color green)
-    set -l c_warn  (set_color yellow)
-    set -l c_dim   (set_color brblack)
-    set -l c_err   (set_color red)
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold white)
+    set -l c_flag (set_color yellow)
+    set -l c_ok (set_color green)
+    set -l c_warn (set_color yellow)
+    set -l c_dim (set_color brblack)
+    set -l c_err (set_color red)
     set -l c_reset (set_color normal)
 
-    argparse 'h/help' 'a/agents' 'p/plugins' 'v/verbose' 'q/quiet' 's/silent' -- $argv
+    argparse h/help a/agents p/plugins v/verbose q/quiet s/silent -- $argv
     or return 1
 
     if set -q _flag_help
@@ -59,20 +59,20 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
         echo
         echo "$c_head""Options:$c_reset"
-        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset     Show this help message"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset      Show this help message"
         echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md / CLAUDE.md symlinks only"
         echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plugins dirs and docs/ symlinks only"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset   Print all per-step output (default)"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset     Print one summary line only if changes were made"
         echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset    Suppress all output; only errors are printed"
-        echo "  $c_dim(no flags)$c_reset       Run both --agents and --plugins setup"
+        echo "  $c_dim(no flags)$c_reset      Run both --agents and --plugins setup"
         return 0
     end
 
     # No flags → run both modes
     set -l do_agents 0
     set -l do_plugins 0
-    set -q _flag_agents;  and set do_agents 1
+    set -q _flag_agents; and set do_agents 1
     set -q _flag_plugins; and set do_plugins 1
     if test $do_agents -eq 0; and test $do_plugins -eq 0
         set do_agents 1
@@ -94,7 +94,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l root (git rev-parse --show-toplevel 2>/dev/null)
     test -z "$root"; and set root (pwd)
 
-    set -l agents_dir  "$root/AGENTS"
+    set -l agents_dir "$root/AGENTS"
     set -l plugins_dir "$agents_dir/plugins"
 
     # Track whether any action was taken this run (drives quiet-mode summary)
@@ -186,8 +186,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     '>' \
                     '> **DO NOT** attempt to write to or edit `CLAUDE.md` or `AGENTS.md` in the' \
                     '> project root. If you need to update these instructions, you **MUST write' \
-                    '> directly to `AGENTS/AGENTS.md`**.' \
-                    > "$agents_dir/AGENTS.md"
+                    '> directly to `AGENTS/AGENTS.md`**.' >"$agents_dir/AGENTS.md"
                 set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/AGENTS.md with agent directive$c_reset"
             end
@@ -274,7 +273,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         end
 
         for plug in superpowers plans specs
-            set -l docs_target   "$docs_dir/$plug"
+            set -l docs_target "$docs_dir/$plug"
             set -l agents_target "$plugins_dir/$plug"
 
             # If a real directory exists in docs/, migrate its contents to AGENTS/plugins/
