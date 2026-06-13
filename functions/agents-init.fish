@@ -103,9 +103,6 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         test -f "$dir/.gitkeep"; or touch "$dir/.gitkeep"
     end
 
-    # ── Auto-commit (runs at end — defined here as a closure-style block) ─────
-    # Implemented in Task 5; placeholder comment keeps structure clear.
-
     #   ──────────────────────────── --agents mode ──────────────────────────────
     if test $do_agents -eq 1
         # Move AGENTS.md from project root into sub-repo if it's a real file
@@ -194,6 +191,18 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             end
 
             _agents_init_ensure_gitignore "$root" "docs/$plug"
+        end
+    end
+
+    #   ──────────────────────── Auto-commit AGENTS/ ────────────────────────────
+    git -C "$agents_dir" add -A 2>/dev/null
+    set -l status_out (git -C "$agents_dir" status --porcelain 2>/dev/null)
+    if test -n "$status_out"
+        set -l msg "chore: sync AGENTS repository"
+        test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
+        if git -C "$agents_dir" -c commit.gpgsign=false commit -q -m "$msg" 2>/dev/null
+            set -l sha (git -C "$agents_dir" rev-parse --short HEAD 2>/dev/null)
+            echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$msg$c_reset"
         end
     end
 end
