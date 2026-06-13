@@ -1088,11 +1088,25 @@ Add -i (interactive confirmation) to destructive commands:
 
 ## 5.12 AI and Developer Tools
 
+### agy
+
+    Synopsis:  agy [args...]
+    Wrapper for the agy Antigravity AI CLI. Before launching, delegates to
+    agents-init --agents to ensure AGENTS/ is scaffolded and CLAUDE.md is
+    symlinked to AGENTS/AGENTS.md in the current project, then forwards all
+    arguments verbatim to the real agy binary. Command shadow (C1): when
+    __fish_config_op_aliases (or the master) is disabled, the call is
+    passed through to the real agy binary unchanged.
+
+    agy chat
+    agy resume
+
 ### antigravity
 
     Synopsis:  antigravity [args...]
-    Runs the agy CLI (Antigravity AI assistant) with noisy deprecation
-    warnings filtered from stderr.
+    Alias for agy with noisy deprecation warnings filtered from stderr.
+    Delegates to the agy fish function, so agents-init --agents runs on
+    every invocation.
 
     antigravity chat
 
@@ -1121,7 +1135,7 @@ Add -i (interactive confirmation) to destructive commands:
     sub-repo. Fully idempotent: a second run produces no output and no new
     commits. Flags: --agents re-runs only the AGENTS.md / symlink step;
     --plugins re-runs only the plugin-directory wiring step. Called
-    automatically by the claude wrapper on every invocation.
+    automatically by the claude and agy wrappers on every invocation.
 
     agents-init
     agents-init --agents

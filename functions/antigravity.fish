@@ -15,5 +15,5 @@
 #   antigravity chat
 function antigravity --wraps='agy' --description 'alias antigravity=agy'
     # In fish, we pipe stderr using '2>|' to another command
-    command agy $argv 2>| grep -v "'app' is not in the list of known options" >&2
+    agy $argv 2>| grep -v "'app' is not in the list of known options" >&2
 end
