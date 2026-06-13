@@ -110,7 +110,10 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     if test $do_agents -eq 1
         # Move AGENTS.md from project root into sub-repo if it's a real file
         if test -f "$root/AGENTS.md"; and not test -L "$root/AGENTS.md"
-            mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
+            if not mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
+                echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
+                return 1
+            end
             echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
         end
 
@@ -122,13 +125,28 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
 
         # Symlink AGENTS.md → AGENTS/AGENTS.md in project root
         if not test -L "$root/AGENTS.md"
-            ln -s AGENTS/AGENTS.md "$root/AGENTS.md"
+            if not ln -s AGENTS/AGENTS.md "$root/AGENTS.md"
+                echo "$c_err""Error: could not create AGENTS.md symlink$c_reset" >&2
+                return 1
+            end
             echo "$c_ok→ Linked AGENTS.md → AGENTS/AGENTS.md$c_reset"
+        end
+
+        # Move real CLAUDE.md into sub-repo if it exists as a regular file
+        if test -f "$root/CLAUDE.md"; and not test -L "$root/CLAUDE.md"
+            if not mv "$root/CLAUDE.md" "$agents_dir/CLAUDE.md"
+                echo "$c_err""Error: could not move CLAUDE.md → AGENTS/CLAUDE.md$c_reset" >&2
+                return 1
+            end
+            echo "$c_ok→ Moved CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
         end
 
         # Symlink CLAUDE.md → AGENTS/AGENTS.md in project root
         if not test -L "$root/CLAUDE.md"
-            ln -s AGENTS/AGENTS.md "$root/CLAUDE.md"
+            if not ln -s AGENTS/AGENTS.md "$root/CLAUDE.md"
+                echo "$c_err""Error: could not create CLAUDE.md symlink$c_reset" >&2
+                return 1
+            end
             echo "$c_ok→ Linked CLAUDE.md → AGENTS/AGENTS.md$c_reset"
         end
 
