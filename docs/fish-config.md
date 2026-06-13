@@ -43,15 +43,18 @@ The configuration is split across:
     config.fish               Main entry point; sets env vars and PATH
     conf.d/
       abbr.fish               All abbreviations
-      cheat.fish              cheat.sh completions
+      autopair.fish           Auto-pair brackets and quotes (bundled from jorgebucaran/autopair.fish)
+      cheat.fish              cheat.sh tab completions
       done.fish               Desktop notifications for long commands
       first_run.fish          One-time init: Fisher bootstrap, theme, welcome
       key_bindings.fish       Custom key bindings and Vi mode
+      logging-events.fish     C5 --on-variable event handlers; syncs logging state at startup
       paru-wrapper.fish       Auto-generates ~/.local/bin/paru logging wrapper
+      puffer.fish             !! / !$ / ./ expansion (bundled from nickeb96/puffer-fish)
+      sponge_privacy.fish     Sponge privacy patterns; filters credentials from history
       starship.fish           fish_prompt with OSC 133 shell-integration markers
       tailscale.fish          Tailscale CLI tab completions
       theme.fish              Catppuccin syntax highlight colors
-      sponge_privacy.fish     Sponge privacy patterns; filters credentials from history
       tricks.fish             PATH, bang-bang helpers, bat man pages, aliases
       wakatime.fish           WakaTime shell hook
       yay-wrapper.fish        Auto-generates ~/.local/bin/yay logging wrapper
@@ -1105,15 +1108,33 @@ Add -i (interactive confirmation) to destructive commands:
     file in the current directory, or opens an interactive fzf picker if no
     session file is found.
 
+### agents-init
+
+    Synopsis:  agents-init [--agents | --plugins]
+    Scaffold an AGENTS/ sub-repository for tracking agent specs and plugin
+    directories. Creates AGENTS/ as a standalone git repo, initializes
+    standard plugin subdirectories (superpowers/, plans/, specs/), moves any
+    existing AGENTS.md and docs/plugin dirs into the sub-repo, and replaces
+    them with relative symlinks. Also adds CLAUDE.md -> AGENTS/AGENTS.md so
+    Claude Code picks up the shared agent instructions. Adds all managed
+    paths to .gitignore and auto-commits every change inside the AGENTS/
+    sub-repo. Fully idempotent: a second run produces no output and no new
+    commits. Flags: --agents re-runs only the AGENTS.md / symlink step;
+    --plugins re-runs only the plugin-directory wiring step. Called
+    automatically by the claude wrapper on every invocation.
+
+    agents-init
+    agents-init --agents
+    agents-init --plugins
+
 ### claude
 
     Synopsis:  claude [args...]
-    Wrapper for the claude CLI. Before launching, checks the current
-    directory and the git project root for CLAUDE.md; when it is absent but
-    AGENTS.md is present, creates a relative symlink CLAUDE.md -> AGENTS.md
-    so Claude Code picks up shared agent instructions without duplicating
-    the file. All arguments are forwarded verbatim. Command shadow (C1):
-    when __fish_config_op_aliases (or the master) is disabled, the call is
+    Wrapper for the claude CLI. Before launching, delegates to agents-init
+    --agents to ensure AGENTS/ is scaffolded and CLAUDE.md is symlinked to
+    AGENTS/AGENTS.md in the current project, then forwards all arguments
+    verbatim to the real claude binary. Command shadow (C1): when
+    __fish_config_op_aliases (or the master) is disabled, the call is
     passed through to the real claude binary unchanged.
 
     claude
