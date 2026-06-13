@@ -71,7 +71,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l plugins_dir "$agents_dir/plugins"
 
     #   ─────────────────────── Always: AGENTS/ sub-repo ───────────────────────
-    set -l did_init 0  # ponytail: set to 1 after git init — consumed by auto-commit in Task 5
+    set -l did_init 0  # set to 1 when git init runs this invocation; selects commit message
 
     if not test -d "$agents_dir"
         if not mkdir -p "$agents_dir"
@@ -129,17 +129,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             echo "$c_ok→ Linked AGENTS.md → AGENTS/AGENTS.md$c_reset"
         end
 
-        # Move real CLAUDE.md into sub-repo if it exists as a regular file
-        if test -f "$root/CLAUDE.md"; and not test -L "$root/CLAUDE.md"
-            if not mv "$root/CLAUDE.md" "$agents_dir/CLAUDE.md"
-                echo "$c_err""Error: could not move CLAUDE.md → AGENTS/CLAUDE.md$c_reset" >&2
-                return 1
-            end
-            echo "$c_ok→ Moved CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
-        end
-
         # Symlink CLAUDE.md → AGENTS/AGENTS.md in project root
-        if not test -L "$root/CLAUDE.md"
+        # If a real CLAUDE.md already exists, warn and skip — don't clobber or orphan content.
+        if test -f "$root/CLAUDE.md"; and not test -L "$root/CLAUDE.md"
+            echo "$c_warn""Warning: CLAUDE.md exists as a real file — skipping symlink. Remove it manually to let agents-init manage it.$c_reset" >&2
+        else if not test -L "$root/CLAUDE.md"
             if not ln -s AGENTS/AGENTS.md "$root/CLAUDE.md"
                 echo "$c_err""Error: could not create CLAUDE.md symlink$c_reset" >&2
                 return 1
@@ -148,7 +142,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         end
 
         # Update .gitignore
-        for pattern in "AGENTS/" "AGENTS.md" "CLAUDE.md"
+        for pattern in "AGENTS/" "/AGENTS.md" "/CLAUDE.md"
             _agents_init_ensure_gitignore "$root" "$pattern"
         end
     end
@@ -171,13 +165,17 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
 
             # If a real directory exists in docs/, move its contents to AGENTS/plugins/
             if test -d "$docs_target"; and not test -L "$docs_target"
-                if test -n (ls -A $docs_target 2>/dev/null)
+                set -l contents (ls -A "$docs_target" 2>/dev/null)
+                if test (count $contents) -gt 0
                     if not cp -r "$docs_target/." "$agents_target/"
-                        echo "$c_err""Error: could not move docs/$plug → AGENTS/plugins/$plug$c_reset" >&2
+                        echo "$c_err""Error: could not copy docs/$plug → AGENTS/plugins/$plug$c_reset" >&2
                         return 1
                     end
                 end
-                rm -rf "$docs_target"
+                if not rm -rf "$docs_target"
+                    echo "$c_err""Error: could not remove docs/$plug after copy$c_reset" >&2
+                    return 1
+                end
                 echo "$c_ok→ Moved docs/$plug → AGENTS/plugins/$plug$c_reset"
             end
 

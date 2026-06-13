@@ -37,7 +37,7 @@ function _agents_init_ensure_gitignore
     # Prefer git check-ignore (respects wildcards, parent globs, negations).
     # --no-index lets it evaluate non-existent paths.
     set -l already_ignored 0
-    if test -d "$root/.git"
+    if git -C "$root" rev-parse --git-dir >/dev/null 2>&1
         git -C "$root" check-ignore -q --no-index "$pattern" 2>/dev/null
         and set already_ignored 1
     else if test -f "$gitignore"
