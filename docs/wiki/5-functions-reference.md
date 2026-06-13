@@ -599,13 +599,18 @@
 
 ## 5.12 AI and Developer Tools
 
-### antigravity
+### agy
 
-    Synopsis:  antigravity [args...]
-    Runs the agy CLI (Antigravity AI assistant) with noisy deprecation
-    warnings filtered from stderr.
+    Synopsis:  agy [args...]
+    Wrapper for the agy Antigravity AI CLI. Before launching, delegates to
+    agents-init --agents to ensure AGENTS/ is scaffolded and CLAUDE.md is
+    symlinked to AGENTS/AGENTS.md in the current project, then forwards all
+    arguments verbatim to the real agy binary. Command shadow (C1): when
+    __fish_config_op_aliases (or the master) is disabled, the call is
+    passed through to the real agy binary unchanged.
 
-    antigravity chat
+    agy chat
+    agy resume
 
 ### antigravity-ide
 
@@ -619,15 +624,33 @@
     file in the current directory, or opens an interactive fzf picker if no
     session file is found.
 
+### agents-init
+
+    Synopsis:  agents-init [--agents | --plugins]
+    Scaffold an AGENTS/ sub-repository for tracking agent specs and plugin
+    directories. Creates AGENTS/ as a standalone git repo, initializes
+    standard plugin subdirectories (superpowers/, plans/, specs/), moves any
+    existing AGENTS.md and docs/plugin dirs into the sub-repo, and replaces
+    them with relative symlinks. Also adds CLAUDE.md -> AGENTS/AGENTS.md so
+    Claude Code picks up the shared agent instructions. Adds all managed
+    paths to .gitignore and auto-commits every change inside the AGENTS/
+    sub-repo. Fully idempotent: a second run produces no output and no new
+    commits. Flags: --agents re-runs only the AGENTS.md / symlink step;
+    --plugins re-runs only the plugin-directory wiring step. Called
+    automatically by the claude and agy wrappers on every invocation.
+
+    agents-init
+    agents-init --agents
+    agents-init --plugins
+
 ### claude
 
     Synopsis:  claude [args...]
-    Wrapper for the claude CLI. Before launching, checks the current
-    directory and the git project root for CLAUDE.md; when it is absent but
-    AGENTS.md is present, creates a relative symlink CLAUDE.md -> AGENTS.md
-    so Claude Code picks up shared agent instructions without duplicating
-    the file. All arguments are forwarded verbatim. Command shadow (C1):
-    when __fish_config_op_aliases (or the master) is disabled, the call is
+    Wrapper for the claude CLI. Before launching, delegates to agents-init
+    --agents to ensure AGENTS/ is scaffolded and CLAUDE.md is symlinked to
+    AGENTS/AGENTS.md in the current project, then forwards all arguments
+    verbatim to the real claude binary. Command shadow (C1): when
+    __fish_config_op_aliases (or the master) is disabled, the call is
     passed through to the real claude binary unchanged.
 
     claude

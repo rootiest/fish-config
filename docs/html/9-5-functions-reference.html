@@ -945,12 +945,17 @@ smart_exit --no-log</code></pre>
 <hr />
 <h2 data-number="9.12" id="512-ai-and-developer-tools">5.12 AI and
 Developer Tools</h2>
-<h3 data-number="9.12.1" id="antigravity">antigravity</h3>
-<pre><code>Synopsis:  antigravity [args...]
-Runs the agy CLI (Antigravity AI assistant) with noisy deprecation
-warnings filtered from stderr.
+<h3 data-number="9.12.1" id="agy">agy</h3>
+<pre><code>Synopsis:  agy [args...]
+Wrapper for the agy Antigravity AI CLI. Before launching, delegates to
+agents-init --agents to ensure AGENTS/ is scaffolded and CLAUDE.md is
+symlinked to AGENTS/AGENTS.md in the current project, then forwards all
+arguments verbatim to the real agy binary. Command shadow (C1): when
+__fish_config_op_aliases (or the master) is disabled, the call is
+passed through to the real agy binary unchanged.
 
-antigravity chat</code></pre>
+agy chat
+agy resume</code></pre>
 <h3 data-number="9.12.2" id="antigravity-ide">antigravity-ide</h3>
 <pre><code>Synopsis:  antigravity-ide [args...]
 Runs the antigravity-ide editor with warnings filtered.</code></pre>
@@ -959,36 +964,52 @@ Runs the antigravity-ide editor with warnings filtered.</code></pre>
 Resumes the most recent Antigravity session from the .antigravity_session
 file in the current directory, or opens an interactive fzf picker if no
 session file is found.</code></pre>
-<h3 data-number="9.12.4" id="claude">claude</h3>
+<h3 data-number="9.12.4" id="agents-init">agents-init</h3>
+<pre><code>Synopsis:  agents-init [--agents | --plugins]
+Scaffold an AGENTS/ sub-repository for tracking agent specs and plugin
+directories. Creates AGENTS/ as a standalone git repo, initializes
+standard plugin subdirectories (superpowers/, plans/, specs/), moves any
+existing AGENTS.md and docs/plugin dirs into the sub-repo, and replaces
+them with relative symlinks. Also adds CLAUDE.md -&gt; AGENTS/AGENTS.md so
+Claude Code picks up the shared agent instructions. Adds all managed
+paths to .gitignore and auto-commits every change inside the AGENTS/
+sub-repo. Fully idempotent: a second run produces no output and no new
+commits. Flags: --agents re-runs only the AGENTS.md / symlink step;
+--plugins re-runs only the plugin-directory wiring step. Called
+automatically by the claude and agy wrappers on every invocation.
+
+agents-init
+agents-init --agents
+agents-init --plugins</code></pre>
+<h3 data-number="9.12.5" id="claude">claude</h3>
 <pre><code>Synopsis:  claude [args...]
-Wrapper for the claude CLI. Before launching, checks the current
-directory and the git project root for CLAUDE.md; when it is absent but
-AGENTS.md is present, creates a relative symlink CLAUDE.md -&gt; AGENTS.md
-so Claude Code picks up shared agent instructions without duplicating
-the file. All arguments are forwarded verbatim. Command shadow (C1):
-when __fish_config_op_aliases (or the master) is disabled, the call is
+Wrapper for the claude CLI. Before launching, delegates to agents-init
+--agents to ensure AGENTS/ is scaffolded and CLAUDE.md is symlinked to
+AGENTS/AGENTS.md in the current project, then forwards all arguments
+verbatim to the real claude binary. Command shadow (C1): when
+__fish_config_op_aliases (or the master) is disabled, the call is
 passed through to the real claude binary unchanged.
 
 claude
 claude --resume</code></pre>
-<h3 data-number="9.12.5" id="claude-resume">claude-resume</h3>
+<h3 data-number="9.12.6" id="claude-resume">claude-resume</h3>
 <pre><code>Synopsis:  claude-resume
 Resumes the most recent Claude Code session from the .claude_session
 file in the current directory, or opens an interactive fzf picker.</code></pre>
-<h3 data-number="9.12.6" id="claude-docs">claude-docs</h3>
+<h3 data-number="9.12.7" id="claude-docs">claude-docs</h3>
 <pre><code>Synopsis:  claude-docs
 Invokes Claude Code to analyze recent repository changes and update
 README.md, ensuring all documented features and examples are accurate.</code></pre>
-<h3 data-number="9.12.7" id="claude-pr">claude-pr</h3>
+<h3 data-number="9.12.8" id="claude-pr">claude-pr</h3>
 <pre><code>Synopsis:  claude-pr
 Invokes Claude Code to run the full PR workflow: create branch,
 conventional commit, verification, push, and open a PR with a manual
 verification checklist.</code></pre>
-<h3 data-number="9.12.8" id="code-resume">code-resume</h3>
+<h3 data-number="9.12.9" id="code-resume">code-resume</h3>
 <pre><code>Synopsis:  code-resume
 Resumes the most recent AI session (Claude or Antigravity), preferring
 the newest session file found in the current directory.</code></pre>
-<h3 data-number="9.12.9" id="superpowers">superpowers</h3>
+<h3 data-number="9.12.10" id="superpowers">superpowers</h3>
 <pre><code>Synopsis:  superpowers [on|off] [-g]
 Enables or disables the Superpowers plugin for Antigravity and Claude
 Code at workspace/project scope (default) or user scope (-g/--global).

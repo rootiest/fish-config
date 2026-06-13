@@ -16,15 +16,18 @@ The configuration is split across:
     config.fish               Main entry point; sets env vars and PATH
     conf.d/
       abbr.fish               All abbreviations
-      cheat.fish              cheat.sh completions
+      autopair.fish           Auto-pair brackets and quotes (bundled from jorgebucaran/autopair.fish)
+      cheat.fish              cheat.sh tab completions
       done.fish               Desktop notifications for long commands
       first_run.fish          One-time init: Fisher bootstrap, theme, welcome
       key_bindings.fish       Custom key bindings and Vi mode
+      logging-events.fish     C5 --on-variable event handlers; syncs logging state at startup
       paru-wrapper.fish       Auto-generates ~/.local/bin/paru logging wrapper
+      puffer.fish             !! / !$ / ./ expansion (bundled from nickeb96/puffer-fish)
+      sponge_privacy.fish     Sponge privacy patterns; filters credentials from history
       starship.fish           fish_prompt with OSC 133 shell-integration markers
       tailscale.fish          Tailscale CLI tab completions
       theme.fish              Catppuccin syntax highlight colors
-      sponge_privacy.fish     Sponge privacy patterns; filters credentials from history
       tricks.fish             PATH, bang-bang helpers, bat man pages, aliases
       wakatime.fish           WakaTime shell hook
       yay-wrapper.fish        Auto-generates ~/.local/bin/yay logging wrapper

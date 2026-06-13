@@ -112,8 +112,8 @@ Appending n to any :cd* abbreviation also runs nvim after changing dir.
 
 ## 4.8 AI Assistants
 
-    ag          antigravity
-    ag.         antigravity .
+    ag          agy
+    ag.         agy .
     v           antigravity-ide
     s           wezterm ssh (WezTerm only)
 
