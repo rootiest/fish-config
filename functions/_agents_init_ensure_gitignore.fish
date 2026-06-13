@@ -21,9 +21,6 @@
 # EXAMPLE
 #   _agents_init_ensure_gitignore /home/user/myproject "AGENTS/"
 function _agents_init_ensure_gitignore
-    set -l root    $argv[1]
-    set -l pattern $argv[2]
-
     set -l c_ok    (set_color green)
     set -l c_reset (set_color normal)
 
@@ -31,6 +28,9 @@ function _agents_init_ensure_gitignore
         echo (set_color red)"_agents_init_ensure_gitignore: requires <root> and <pattern>"(set_color normal) >&2
         return 1
     end
+
+    set -l root    $argv[1]
+    set -l pattern $argv[2]
 
     set -l gitignore "$root/.gitignore"
 
