@@ -10,6 +10,14 @@
 #   agent-related files into it, and replaces them with symlinks so the outer
 #   project never tracks agent files directly.
 #
+#   File layout after setup:
+#     AGENTS/AGENTS.md          canonical agent spec (real file)
+#     AGENTS/CLAUDE.md          real file (if CLAUDE.md existed separately)
+#                               or symlink → AGENTS.md (single-source case)
+#     <root>/AGENTS.md          → AGENTS/AGENTS.md
+#     <root>/CLAUDE.md          → AGENTS/CLAUDE.md
+#     docs/<plug>               → ../AGENTS/plugins/<plug>
+#
 #   With no flags, runs both --agents and --plugins setup. At the end of
 #   every invocation, commits any uncommitted changes in the AGENTS/ sub-repo
 #   so that agent-made edits are captured automatically.
@@ -71,7 +79,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l plugins_dir "$agents_dir/plugins"
 
     #   ─────────────────────── Always: AGENTS/ sub-repo ───────────────────────
-    set -l did_init 0  # set to 1 when git init runs this invocation; selects commit message
+    set -l did_init 0
 
     if not test -d "$agents_dir"
         if not mkdir -p "$agents_dir"
@@ -91,37 +99,91 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         set did_init 1
     end
 
-    # Ensure plugins dirs with .gitkeep
-    for dir in "$plugins_dir" "$plugins_dir/superpowers" "$plugins_dir/plans" "$plugins_dir/specs"
-        if not test -d "$dir"
-            if not mkdir -p "$dir"
-                echo "$c_err""Error: could not create "(string replace "$root/" "" "$dir")"/$c_reset" >&2
-                return 1
-            end
-            echo "$c_ok→ Created "(string replace "$root/" "" "$dir")"/$c_reset"
-        end
-        test -f "$dir/.gitkeep"; or touch "$dir/.gitkeep"
-    end
-
     #   ──────────────────────────── --agents mode ──────────────────────────────
     if test $do_agents -eq 1
-        # Move AGENTS.md from project root into sub-repo if it's a real file
+        # Detect which root-level files are real (not symlinks)
+        set -l has_agents 0
+        set -l has_claude 0
         if test -f "$root/AGENTS.md"; and not test -L "$root/AGENTS.md"
-            if not mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
-                echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
+            set has_agents 1
+        end
+        if test -f "$root/CLAUDE.md"; and not test -L "$root/CLAUDE.md"
+            set has_claude 1
+        end
+
+        # ── Move real files into AGENTS/ ──────────────────────────────────────
+        if test $has_agents -eq 1; and test $has_claude -eq 1
+            # Both exist: preserve each as its own file in AGENTS/
+            if not test -f "$agents_dir/AGENTS.md"
+                if not mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
+                    echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
+                    return 1
+                end
+                echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
+            end
+            if not test -f "$agents_dir/CLAUDE.md"; and not test -L "$agents_dir/CLAUDE.md"
+                if not mv "$root/CLAUDE.md" "$agents_dir/CLAUDE.md"
+                    echo "$c_err""Error: could not move CLAUDE.md → AGENTS/CLAUDE.md$c_reset" >&2
+                    return 1
+                end
+                echo "$c_ok→ Moved CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
+            end
+        else if test $has_agents -eq 1
+            if not test -f "$agents_dir/AGENTS.md"
+                if not mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
+                    echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
+                    return 1
+                end
+                echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
+            end
+        else if test $has_claude -eq 1
+            # Only CLAUDE.md: treat it as the agent spec
+            if not test -f "$agents_dir/AGENTS.md"
+                if not mv "$root/CLAUDE.md" "$agents_dir/AGENTS.md"
+                    echo "$c_err""Error: could not move CLAUDE.md → AGENTS/AGENTS.md$c_reset" >&2
+                    return 1
+                end
+                echo "$c_ok→ Moved CLAUDE.md → AGENTS/AGENTS.md$c_reset"
+            end
+        else
+            # Neither exists: create AGENTS/AGENTS.md with the agent directive
+            if not test -f "$agents_dir/AGENTS.md"
+                printf '%s\n' \
+                    '# AGENTS.md' \
+                    '' \
+                    '> ⚠️ **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' \
+                    '> You may be reading this file via a symlink (`CLAUDE.md` or `AGENTS.md`) in' \
+                    '> the root of the project. Your environment'\''s file-editing tools cannot write' \
+                    '> through symlinks and will throw an error.' \
+                    '>' \
+                    '> **DO NOT** attempt to write to or edit `CLAUDE.md` or `AGENTS.md` in the' \
+                    '> project root. If you need to update these instructions, you **MUST write' \
+                    '> directly to `AGENTS/AGENTS.md`**.' \
+                    > "$agents_dir/AGENTS.md"
+                echo "$c_ok→ Created AGENTS/AGENTS.md with agent directive$c_reset"
+            end
+        end
+
+        # ── Ensure AGENTS/CLAUDE.md exists ────────────────────────────────────
+        # When both files existed, AGENTS/CLAUDE.md is already a real file.
+        # Otherwise, create it as a symlink → AGENTS.md (within AGENTS/).
+        if not test -f "$agents_dir/CLAUDE.md"; and not test -L "$agents_dir/CLAUDE.md"
+            if not ln -s AGENTS.md "$agents_dir/CLAUDE.md"
+                echo "$c_err""Error: could not create AGENTS/CLAUDE.md symlink$c_reset" >&2
                 return 1
             end
-            echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
+            echo "$c_ok→ Linked AGENTS/CLAUDE.md → AGENTS/AGENTS.md$c_reset"
         end
 
-        # Create empty AGENTS.md in sub-repo if still missing
-        if not test -f "$agents_dir/AGENTS.md"
-            touch "$agents_dir/AGENTS.md"
-            echo "$c_ok→ Created AGENTS/AGENTS.md$c_reset"
-        end
-
-        # Symlink AGENTS.md → AGENTS/AGENTS.md in project root
+        # ── Root symlink: AGENTS.md → AGENTS/AGENTS.md ───────────────────────
+        set -l _need_link 0
         if not test -L "$root/AGENTS.md"
+            set _need_link 1
+        else if test (readlink "$root/AGENTS.md") != AGENTS/AGENTS.md
+            rm -f "$root/AGENTS.md"
+            set _need_link 1
+        end
+        if test $_need_link -eq 1
             if not ln -s AGENTS/AGENTS.md "$root/AGENTS.md"
                 echo "$c_err""Error: could not create AGENTS.md symlink$c_reset" >&2
                 return 1
@@ -129,19 +191,23 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             echo "$c_ok→ Linked AGENTS.md → AGENTS/AGENTS.md$c_reset"
         end
 
-        # Symlink CLAUDE.md → AGENTS/AGENTS.md in project root
-        # If a real CLAUDE.md already exists, warn and skip — don't clobber or orphan content.
-        if test -f "$root/CLAUDE.md"; and not test -L "$root/CLAUDE.md"
-            echo "$c_warn""Warning: CLAUDE.md exists as a real file — skipping symlink. Remove it manually to let agents-init manage it.$c_reset" >&2
-        else if not test -L "$root/CLAUDE.md"
-            if not ln -s AGENTS/AGENTS.md "$root/CLAUDE.md"
+        # ── Root symlink: CLAUDE.md → AGENTS/CLAUDE.md ───────────────────────
+        set -l _need_link 0
+        if not test -L "$root/CLAUDE.md"
+            set _need_link 1
+        else if test (readlink "$root/CLAUDE.md") != AGENTS/CLAUDE.md
+            rm -f "$root/CLAUDE.md"
+            set _need_link 1
+        end
+        if test $_need_link -eq 1
+            if not ln -s AGENTS/CLAUDE.md "$root/CLAUDE.md"
                 echo "$c_err""Error: could not create CLAUDE.md symlink$c_reset" >&2
                 return 1
             end
-            echo "$c_ok→ Linked CLAUDE.md → AGENTS/AGENTS.md$c_reset"
+            echo "$c_ok→ Linked CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
         end
 
-        # Update .gitignore
+        # ── .gitignore ────────────────────────────────────────────────────────
         for pattern in "AGENTS/" "/AGENTS.md" "/CLAUDE.md"
             _agents_init_ensure_gitignore "$root" "$pattern"
         end
@@ -149,6 +215,18 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
 
     #   ─────────────────────────── --plugins mode ──────────────────────────────
     if test $do_plugins -eq 1
+        # Ensure AGENTS/plugins/ dirs exist with .gitkeep
+        for dir in "$plugins_dir" "$plugins_dir/superpowers" "$plugins_dir/plans" "$plugins_dir/specs"
+            if not test -d "$dir"
+                if not mkdir -p "$dir"
+                    echo "$c_err""Error: could not create "(string replace "$root/" "" "$dir")"/$c_reset" >&2
+                    return 1
+                end
+                echo "$c_ok→ Created "(string replace "$root/" "" "$dir")"/$c_reset"
+            end
+            test -f "$dir/.gitkeep"; or touch "$dir/.gitkeep"
+        end
+
         set -l docs_dir "$root/docs"
 
         if not test -d "$docs_dir"
@@ -160,10 +238,10 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         end
 
         for plug in superpowers plans specs
-            set -l docs_target  "$docs_dir/$plug"
+            set -l docs_target   "$docs_dir/$plug"
             set -l agents_target "$plugins_dir/$plug"
 
-            # If a real directory exists in docs/, move its contents to AGENTS/plugins/
+            # If a real directory exists in docs/, migrate its contents to AGENTS/plugins/
             if test -d "$docs_target"; and not test -L "$docs_target"
                 set -l contents (ls -A "$docs_target" 2>/dev/null)
                 if test (count $contents) -gt 0

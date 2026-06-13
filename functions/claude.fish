@@ -7,7 +7,7 @@
 # DESCRIPTION
 #   Wrapper for the claude CLI that ensures the AGENTS/ sub-repository is
 #   initialized and any agent-made changes are committed before launch.
-#   Delegates all scaffold and commit logic to agents-init --agents.
+#   Delegates all scaffold and commit logic to agents-init (full setup).
 #   All arguments are forwarded verbatim to the real claude binary.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases
@@ -30,7 +30,7 @@ function claude --wraps=claude --description 'claude wrapper: auto-links AGENTS.
         return $status
     end
 
-    agents-init --agents
+    agents-init
 
     command claude $argv
 end

@@ -8,7 +8,7 @@
 #   Wrapper for the agy Antigravity AI CLI that ensures the AGENTS/
 #   sub-repository is initialized and any agent-made changes are committed
 #   before launch. Delegates all scaffold and commit logic to agents-init
-#   --agents. All arguments are forwarded verbatim to the real agy binary.
+#   (full setup). All arguments are forwarded verbatim to the real agy binary.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases
 #   (or the __fish_config_opinionated master), the command is passed through
@@ -30,7 +30,7 @@ function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ su
         return $status
     end
 
-    agents-init --agents
+    agents-init
 
     command agy $argv
 end
