@@ -157,5 +157,43 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     end
 
     #   ─────────────────────────── --plugins mode ──────────────────────────────
-    # Added in Task 4.
+    if test $do_plugins -eq 1
+        set -l docs_dir "$root/docs"
+
+        if not test -d "$docs_dir"
+            if not mkdir -p "$docs_dir"
+                echo "$c_err""Error: could not create docs/$c_reset" >&2
+                return 1
+            end
+            echo "$c_ok→ Created docs/$c_reset"
+        end
+
+        for plug in superpowers plans specs
+            set -l docs_target  "$docs_dir/$plug"
+            set -l agents_target "$plugins_dir/$plug"
+
+            # If a real directory exists in docs/, move its contents to AGENTS/plugins/
+            if test -d "$docs_target"; and not test -L "$docs_target"
+                if test -n "$(ls -A $docs_target 2>/dev/null)"
+                    if not cp -r "$docs_target/." "$agents_target/"
+                        echo "$c_err""Error: could not move docs/$plug → AGENTS/plugins/$plug$c_reset" >&2
+                        return 1
+                    end
+                end
+                rm -rf "$docs_target"
+                echo "$c_ok→ Moved docs/$plug → AGENTS/plugins/$plug$c_reset"
+            end
+
+            # Create symlink docs/<plug> → ../AGENTS/plugins/<plug>
+            if not test -L "$docs_target"
+                if not ln -s "../AGENTS/plugins/$plug" "$docs_target"
+                    echo "$c_err""Error: could not create docs/$plug symlink$c_reset" >&2
+                    return 1
+                end
+                echo "$c_ok→ Linked docs/$plug → AGENTS/plugins/$plug$c_reset"
+            end
+
+            _agents_init_ensure_gitignore "$root" "docs/$plug"
+        end
+    end
 end
