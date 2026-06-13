@@ -416,8 +416,8 @@ Appending n to any :cd* abbreviation also runs nvim after changing dir.
 
 ## 4.8 AI Assistants
 
-    ag          antigravity
-    ag.         antigravity .
+    ag          agy
+    ag.         agy .
     v           antigravity-ide
     s           wezterm ssh (WezTerm only)
 
@@ -1100,15 +1100,6 @@ Add -i (interactive confirmation) to destructive commands:
 
     agy chat
     agy resume
-
-### antigravity
-
-    Synopsis:  antigravity [args...]
-    Alias for agy with noisy deprecation warnings filtered from stderr.
-    Delegates to the agy fish function, so agents-init --agents runs on
-    every invocation.
-
-    antigravity chat
 
 ### antigravity-ide
 
