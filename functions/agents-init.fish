@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   agents-init [-a | --agents] [-p | --plugins] [-q | --quiet] [-s | --silent] [-h | --help]
+#   agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
+#               [-q | --quiet] [-s | --silent] [-h | --help]
 #
 # DESCRIPTION
 #   Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
@@ -25,9 +26,10 @@
 # ARGUMENTS
 #   -a, --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only
 #   -p, --plugins  Set up AGENTS/ repo + plugins dirs + docs/ symlinks only
-#   -q, --quiet  Print only a start/done banner; suppress per-step output
-#   -s, --silent Suppress all output; errors only (standard UNIX convention)
-#   -h, --help Show this help message and exit
+#   -v, --verbose  Print all per-step output (default)
+#   -q, --quiet    Print one summary line only if changes were made
+#   -s, --silent   Suppress all output; errors only (standard UNIX convention)
+#   -h, --help     Show this help message and exit
 #
 # RETURNS
 #   0  Setup completed successfully
@@ -48,11 +50,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l c_err   (set_color red)
     set -l c_reset (set_color normal)
 
-    argparse 'h/help' 'a/agents' 'p/plugins' 'q/quiet' 's/silent' -- $argv
+    argparse 'h/help' 'a/agents' 'p/plugins' 'v/verbose' 'q/quiet' 's/silent' -- $argv
     or return 1
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-q] [-s] [-h | --help]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-v] [-q] [-s] [-h | --help]$c_reset"
         echo
         echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
         echo
@@ -60,8 +62,9 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset     Show this help message"
         echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md / CLAUDE.md symlinks only"
         echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plugins dirs and docs/ symlinks only"
-        echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset    Print only a start/done banner; suppress per-step output"
-        echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset   Suppress all output; only errors are printed"
+        echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset   Print all per-step output (default)"
+        echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset     Print one summary line only if changes were made"
+        echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset    Suppress all output; only errors are printed"
         echo "  $c_dim(no flags)$c_reset       Run both --agents and --plugins setup"
         return 0
     end
@@ -76,7 +79,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         set do_plugins 1
     end
 
-    # Output verbosity: verbose (default), quiet (banner only), silent (errors only)
+    # Output verbosity: verbose (default), quiet (summary if changed), silent (errors only)
     set -l verbose 1
     set -l quiet 0
     if set -q _flag_silent
@@ -85,6 +88,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         set verbose 0
         set quiet 1
     end
+    # --verbose is explicit default; no-op but accepted for completeness
 
     # Resolve target root: git root if available, otherwise cwd
     set -l root (git rev-parse --show-toplevel 2>/dev/null)
@@ -93,7 +97,8 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l agents_dir  "$root/AGENTS"
     set -l plugins_dir "$agents_dir/plugins"
 
-    test $quiet -eq 1; and echo "$c_head→ Initializing AGENTS scaffolding…$c_reset"
+    # Track whether any action was taken this run (drives quiet-mode summary)
+    set -l changed 0
 
     #   ─────────────────────── Always: AGENTS/ sub-repo ───────────────────────
     set -l did_init 0
@@ -103,6 +108,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             echo "$c_err""Error: could not create AGENTS/$c_reset" >&2
             return 1
         end
+        set changed 1
         test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/$c_reset"
     end
 
@@ -112,8 +118,9 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             echo "$c_err""Error: git init failed in AGENTS/$c_reset" >&2
             return 1
         end
-        test $verbose -eq 1; and echo "$c_ok→ Initialized git repo in AGENTS/$c_reset"
+        set changed 1
         set did_init 1
+        test $verbose -eq 1; and echo "$c_ok→ Initialized git repo in AGENTS/$c_reset"
     end
 
     #   ──────────────────────────── --agents mode ──────────────────────────────
@@ -136,6 +143,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
                     return 1
                 end
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
             end
             if not test -f "$agents_dir/CLAUDE.md"; and not test -L "$agents_dir/CLAUDE.md"
@@ -143,6 +151,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     echo "$c_err""Error: could not move CLAUDE.md → AGENTS/CLAUDE.md$c_reset" >&2
                     return 1
                 end
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Moved CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
             end
         else if test $has_agents -eq 1
@@ -151,6 +160,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
                     return 1
                 end
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
             end
         else if test $has_claude -eq 1
@@ -160,6 +170,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     echo "$c_err""Error: could not move CLAUDE.md → AGENTS/AGENTS.md$c_reset" >&2
                     return 1
                 end
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Moved CLAUDE.md → AGENTS/AGENTS.md$c_reset"
             end
         else
@@ -177,6 +188,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     '> project root. If you need to update these instructions, you **MUST write' \
                     '> directly to `AGENTS/AGENTS.md`**.' \
                     > "$agents_dir/AGENTS.md"
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/AGENTS.md with agent directive$c_reset"
             end
         end
@@ -189,6 +201,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                 echo "$c_err""Error: could not create AGENTS/CLAUDE.md symlink$c_reset" >&2
                 return 1
             end
+            set changed 1
             test $verbose -eq 1; and echo "$c_ok→ Linked AGENTS/CLAUDE.md → AGENTS/AGENTS.md$c_reset"
         end
 
@@ -205,6 +218,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                 echo "$c_err""Error: could not create AGENTS.md symlink$c_reset" >&2
                 return 1
             end
+            set changed 1
             test $verbose -eq 1; and echo "$c_ok→ Linked AGENTS.md → AGENTS/AGENTS.md$c_reset"
         end
 
@@ -221,14 +235,15 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                 echo "$c_err""Error: could not create CLAUDE.md symlink$c_reset" >&2
                 return 1
             end
+            set changed 1
             test $verbose -eq 1; and echo "$c_ok→ Linked CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
         end
 
         # ── .gitignore ────────────────────────────────────────────────────────
-        if test $verbose -eq 1
-            _agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" "/AGENTS.md" "/CLAUDE.md"
-        else
-            _agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" "/AGENTS.md" "/CLAUDE.md" >/dev/null
+        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" "/AGENTS.md" "/CLAUDE.md")
+        if test -n "$_gi"
+            set changed 1
+            test $verbose -eq 1; and echo $_gi
         end
     end
 
@@ -241,6 +256,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     echo "$c_err""Error: could not create "(string replace "$root/" "" "$dir")"/$c_reset" >&2
                     return 1
                 end
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Created "(string replace "$root/" "" "$dir")"/$c_reset"
             end
             test -f "$dir/.gitkeep"; or touch "$dir/.gitkeep"
@@ -253,6 +269,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                 echo "$c_err""Error: could not create docs/$c_reset" >&2
                 return 1
             end
+            set changed 1
             test $verbose -eq 1; and echo "$c_ok→ Created docs/$c_reset"
         end
 
@@ -273,6 +290,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     echo "$c_err""Error: could not remove docs/$plug after copy$c_reset" >&2
                     return 1
                 end
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Moved docs/$plug → AGENTS/plugins/$plug$c_reset"
             end
 
@@ -282,14 +300,15 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     echo "$c_err""Error: could not create docs/$plug symlink$c_reset" >&2
                     return 1
                 end
+                set changed 1
                 test $verbose -eq 1; and echo "$c_ok→ Linked docs/$plug → AGENTS/plugins/$plug$c_reset"
             end
-
         end
-        if test $verbose -eq 1
-            _agents_init_ensure_gitignore "$root" "agents-init --plugins" "docs/superpowers" "docs/plans" "docs/specs"
-        else
-            _agents_init_ensure_gitignore "$root" "agents-init --plugins" "docs/superpowers" "docs/plans" "docs/specs" >/dev/null
+
+        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --plugins" "docs/superpowers" "docs/plans" "docs/specs")
+        if test -n "$_gi"
+            set changed 1
+            test $verbose -eq 1; and echo $_gi
         end
     end
 
@@ -300,6 +319,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         set -l msg "chore: sync AGENTS repository"
         test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
         if git -C "$agents_dir" -c commit.gpgsign=false commit -q -m "$msg" 2>/dev/null
+            set changed 1
             if test $verbose -eq 1
                 set -l sha (git -C "$agents_dir" rev-parse --short HEAD 2>/dev/null)
                 echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$msg$c_reset"
@@ -307,5 +327,12 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         end
     end
 
-    test $quiet -eq 1; and echo "$c_head→ Done$c_reset"
+    # Quiet summary: one line at the end, only if something actually changed
+    if test $quiet -eq 1; and test $changed -eq 1
+        if test $did_init -eq 1
+            echo "$c_ok→ Initialized AGENTS scaffolding$c_reset"
+        else
+            echo "$c_ok→ Synced AGENTS scaffolding$c_reset"
+        end
+    end
 end
