@@ -30,7 +30,7 @@ function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ su
         return $status
     end
 
-    agents-init
+    agents-init --quiet
 
     command agy $argv
 end

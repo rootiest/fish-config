@@ -30,7 +30,7 @@ function claude --wraps=claude --description 'claude wrapper: auto-links AGENTS.
         return $status
     end
 
-    agents-init
+    agents-init --quiet
 
     command claude $argv
 end
