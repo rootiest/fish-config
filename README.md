@@ -93,6 +93,22 @@ Kitty watcher to skip capture via a sentinel file — no shell or terminal
 restart required. Logging is category **C5** in [Minimal Mode](#minimal-mode);
 `set -U __fish_config_opinionated 0` turns it off along with everything else.
 
+The Kitty scrollback capture is provided by a watcher script that fish-config can
+install and manage for you. Inside Kitty, if it isn't set up yet, you'll see a
+one-time-per-session reminder. Manage it with:
+
+| Command | Action |
+|---|---|
+| `kitty-logging install` | Copy the watcher into your Kitty config and wire it into `kitty.conf` |
+| `kitty-logging uninstall` | Remove the managed block and the watcher file |
+| `kitty-logging status` | Show whether it's wired, the watcher version, and C5 state |
+| `kitty-logging dismiss` | Stop the per-session reminder without installing |
+
+`install` adds a clearly-marked managed block to `kitty.conf` and comments out
+any conflicting `watcher` line. It affects **new** Kitty windows (existing
+windows keep their current watcher until restarted). Disabling C5 logging makes
+the watcher inert without uninstalling it.
+
 ---
 
 ## Documentation
