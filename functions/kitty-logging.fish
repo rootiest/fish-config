@@ -53,6 +53,15 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
         return 0
     end
 
+    # dismiss only sets a universal variable — it must work even where kitty is
+    # absent (e.g. shared dotfiles on a non-kitty machine), so handle it before
+    # the kitty guard.
+    if test "$cmd" = dismiss
+        set -U __fish_config_kitty_watcher_dismissed 1
+        echo "$c_ok""→ Reminder dismissed.$c_reset Run $c_cmd""kitty-logging install$c_reset anytime to enable."
+        return 0
+    end
+
     if not type -q kitty
         echo "$c_err""kitty-logging: kitty is not installed$c_reset" >&2
         return 1
@@ -66,11 +75,6 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
     set -l blk_end "# <<< fish-config logging (managed) <<<"
 
     switch $cmd
-        case dismiss
-            set -U __fish_config_kitty_watcher_dismissed 1
-            echo "$c_ok""→ Reminder dismissed.$c_reset Run $c_cmd""kitty-logging install$c_reset anytime to enable."
-            return 0
-
         case status
             echo "$c_head""Kitty logging status$c_reset"
             echo "  Config dir:    $kitty_dir"
@@ -103,12 +107,16 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
                 return 1
             end
 
-            # Copy/refresh the watcher when missing or stale.
+            # Copy/refresh the watcher when missing or stale. A failed copy must
+            # abort: otherwise we would wire a managed block pointing at a watcher
+            # file that does not exist and report success.
             set -l copied 0
-            if not test -f $dst
-                command cp $src $dst; and set copied 1
-            else if test (__kitty_logging_version $src) -gt (__kitty_logging_version $dst)
-                command cp $src $dst; and set copied 1
+            if not test -f $dst; or test (__kitty_logging_version $src) -gt (__kitty_logging_version $dst)
+                if not command cp $src $dst
+                    echo "$c_err""kitty-logging: failed to copy watcher to $dst$c_reset" >&2
+                    return 1
+                end
+                set copied 1
             end
 
             # Already wired: idempotent no-op (watcher may still have refreshed).
@@ -140,9 +148,13 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
             return 0
 
         case uninstall
-            if test -f $conf; and command grep -qF -- "$blk_begin" $conf
+            # Require both markers before the range-delete: a sed range with a
+            # missing end marker would delete from the begin marker to EOF.
+            if test -f $conf; and command grep -qF -- "$blk_begin" $conf; and command grep -qF -- "$blk_end" $conf
                 command sed -i '/^# >>> fish-config logging/,/^# <<< fish-config logging/d' $conf
                 echo "$c_ok""→ Removed managed block from $conf$c_reset"
+            else if test -f $conf; and command grep -qF -- "$blk_begin" $conf
+                echo "$c_warn""→ Managed block in $conf looks malformed (missing end marker); left it untouched.$c_reset" >&2
             else
                 echo "$c_dim""→ No managed block found in $conf$c_reset"
             end
