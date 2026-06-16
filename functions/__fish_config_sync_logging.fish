@@ -6,8 +6,9 @@
 #
 # DESCRIPTION
 #   Synchronises C5 logging state: creates or removes the Kitty sentinel
-#   file ($XDG_CONFIG_HOME/fish/.logging_disabled) and generates or removes
-#   the paru/yay AUR-helper log wrappers based on the combined value of
+#   file ($XDG_CONFIG_HOME/fish/.logging_disabled), generates or removes the
+#   paru/yay AUR-helper log wrappers, and starts or stops tmux pipe-pane
+#   capture for the current pane — all based on the combined value of
 #   __fish_config_opinionated (master) and __fish_config_op_logging (C5).
 #   Called by --on-variable event handlers whenever either variable changes.
 #   Safe to call at any time; wrapper removal only affects files bearing
@@ -18,7 +19,7 @@
 #
 # EXAMPLE
 #   __fish_config_sync_logging
-function __fish_config_sync_logging --description 'Sync C5 logging state: sentinel file and paru/yay wrappers'
+function __fish_config_sync_logging --description 'Sync C5 logging state: sentinel file, paru/yay wrappers, and tmux pipe-pane'
     set -l config_home $XDG_CONFIG_HOME
     if test -z "$config_home"
         set config_home "$HOME/.config"
@@ -31,6 +32,9 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     if __fish_config_op_enabled __fish_config_op_logging
         # Logging enabled: remove sentinel and regenerate wrappers if binaries exist
         rm -f $sentinel
+
+        # Restart tmux pipe-pane for the current pane if inside tmux
+        _tmux_pipe_log
 
         if test -x /usr/bin/paru
             mkdir -p (dirname $paru_wrapper)
@@ -94,6 +98,11 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
         if test -f $yay_wrapper
             and grep -q "# yay-wrapper-version:" $yay_wrapper 2>/dev/null
             rm -f $yay_wrapper
+        end
+
+        # Stop tmux pipe-pane for the current pane if inside tmux
+        if set -q TMUX
+            tmux pipe-pane 2>/dev/null
         end
     end
 end
