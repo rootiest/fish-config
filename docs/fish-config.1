@@ -54,8 +54,9 @@ Drop-in replacements for common Unix tools (ls, cat, rm, du, ping, less)
 Deep Kitty and WezTerm terminal integration: tab/window/pane management
 from the command line
 .IP \[bu] 2
-Scrollback history snapshots saved to \[ti]/.terminal_history on session
-exit
+Automatic session logging: terminal scrollback, tmux/zellij panes, and
+paru/yay output captured to \[ti]/.terminal_history (on by default; see
+below)
 .IP \[bu] 2
 Automatic Python virtualenv activation on directory change
 .IP \[bu] 2
@@ -64,6 +65,23 @@ Cross-platform package management via pkg and fish-deps
 AI session helpers for Claude Code and Antigravity
 .IP \[bu] 2
 Catppuccin Mocha color theme throughout
+.RS 2
+.PP
+┌───────────────────────────────────────────────────────────────────────────┐
+│ CAUTION - SESSION LOGGING IS ON BY DEFAULT │ │ │ │ This configuration
+silently records terminal output to │ │ \[ti]/.terminal_history: Kitty
+scrollback on window close, live tmux pane │ │ streams, zellij pane
+snapshots on exit, and full paru/yay output.
+These │ │ logs can contain command output, file contents, and secrets
+printed to │ │ the terminal.
+Nothing leaves your machine, but the files persist locally.
+│ │ │ │ Disable all logging with: set -U __fish_config_op_logging off │
+│ Prefer a menu?
+Run the interactive picker: config-toggle │ │ See Section 7 (C5 -
+Logging and Capture) for the full breakdown.
+│
+└───────────────────────────────────────────────────────────────────────────┘
+.RE
 .PP
 The configuration is split across:
 .IP
@@ -80,6 +98,8 @@ conf.d/
   logging-events.fish     C5 --on-variable event handlers; syncs logging state at startup
   paru-wrapper.fish       Auto-generates \[ti]/.local/bin/paru logging wrapper
   puffer.fish             !! / !$ / ./ expansion (bundled from nickeb96/puffer-fish)
+  tmux-logging.fish       C5 starts tmux pipe-pane capture when fish runs inside tmux
+  zellij-logging.fish     C5 fish_exit handler dumping zellij pane scrollback on exit
   sponge_privacy.fish     Sponge privacy patterns; filters credentials from history
   starship.fish           fish_prompt with OSC 133 shell-integration markers
   tailscale.fish          Tailscale CLI tab completions
@@ -1973,6 +1993,11 @@ set -U __fish_config_op_greeting 1
 \f[R]
 .fi
 .PP
+For an interactive alternative to setting these variables by hand, run
+config-toggle \[em] a full-screen TUI that flips any category (including
+C5 logging) on or off, per session or universally.
+See its entry in Section 5.
+.PP
 Notes:
 .IP \[bu] 2
 Command shadows (rm, cat, ls, \&...)
@@ -2116,7 +2141,7 @@ print a colored error to stderr naming the variable that disabled them
 rather than silently failing.
 .SS C5 \[em] Logging and Capture
 .PP
-Three components capture shell output to disk.
+Five components capture shell output to disk.
 Disabling __fish_config_op_logging skips all capture and removes the
 logging wrappers.
 .IP
@@ -2126,6 +2151,10 @@ Component               What it captures
 ───────────────────────────────────────────────────────────────────────────
 Scrollback capture      Terminal session output saved to:
                         \[ti]/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
+tmux pane capture       Continuous pane stream via pipe-pane, saved to:
+                        \[ti]/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
+zellij pane capture     Pane scrollback snapshot on shell exit, saved to:
+                        \[ti]/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
 paru wrapper            All paru/AUR output captured to:
                         \[ti]/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
 yay wrapper             All yay/AUR output captured to:
@@ -2133,6 +2162,27 @@ yay wrapper             All yay/AUR output captured to:
 Kitty watcher           watcher.py captures scrollback when Kitty closes
 \f[R]
 .fi
+.PP
+The tmux capture starts automatically when fish launches inside any tmux
+pane ($TMUX is set).
+It uses tmux\[cq]s native pipe-pane to stream all pane output directly
+to disk without an intermediate process.
+Each fish shell session gets its own log file; a new log is created on
+each shell start (including exec fish and new splits).
+Before each new log, the oldest tmux_*.log files are pruned (by
+modification time) to keep the total within
+SCROLLBACK_HISTORY_MAX_FILES, matching the paru/yay wrapper behaviour.
+.PP
+The zellij capture works differently: Zellij has no live
+output-streaming facility like pipe-pane, so the log is taken as a
+one-shot snapshot when the shell exits, via
+\f[V]zellij action dump-screen --full\f[R].
+A fish_exit handler (registered whenever $ZELLIJ is set) writes the
+pane\[cq]s full scrollback and then prunes old zellij_*.log files the
+same way.
+Because the capture happens at exit, toggling __fish_config_op_logging
+takes effect on the next exit with no restart or sentinel coordination
+needed \[em] the C5 guard is re-checked when the handler fires.
 .PP
 Logging coordination via sentinel file
 .PP
@@ -2155,6 +2205,8 @@ Kitty\[cq]s watcher.py reads the sentinel on each save attempt and skips
 capture \[em] no Kitty restart required.
 4.
 smart_exit stops saving scrollback logs.
+5.
+Stops tmux pipe-pane capture in every open fish shell inside tmux.
 .PP
 Re-enabling __fish_config_op_logging: 1.
 Removes the sentinel in every open shell.
@@ -2162,6 +2214,8 @@ Removes the sentinel in every open shell.
 Regenerates paru/yay logging wrappers in \[ti]/.local/bin/.
 3.
 Kitty watcher resumes capture on the next session exit.
+4.
+Restarts tmux pipe-pane capture in every open fish shell inside tmux.
 .PP
 Changes propagate to all running shells through an event handler that
 fires whenever __fish_config_op_logging changes \[em] no shell restart
