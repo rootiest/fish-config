@@ -37,6 +37,7 @@ The configuration is split across:
       first_run.fish          One-time init: Fisher bootstrap, theme, welcome
       key_bindings.fish       Custom key bindings and Vi mode
       logging-events.fish     C5 --on-variable event handlers; syncs logging state at startup
+      kitty-watcher-reminder.fish  C5 per-session reminder to set up the Kitty watcher
       paru-wrapper.fish       Auto-generates ~/.local/bin/paru logging wrapper
       puffer.fish             !! / !$ / ./ expansion (bundled from nickeb96/puffer-fish)
       tmux-logging.fish       C5 starts tmux pipe-pane capture when fish runs inside tmux

@@ -879,6 +879,29 @@
     replay "source ~/.bashrc"
     replay "export FOO=bar"
 
+### kitty-logging
+
+    Synopsis:  kitty-logging [install|uninstall|status|dismiss] [-h]
+
+    Manages the Kitty scrollback watcher that powers C5 logging. Ships a
+    canonical, version-marked watcher and installs it into the Kitty config
+    directory, wiring it into kitty.conf through a sentinel-marked managed
+    block. Commenting out any conflicting watcher line avoids double-capture.
+
+    Commands:
+      install    Copy/refresh the watcher and add the managed block
+      uninstall  Remove the managed block and the watcher file
+      status     Show wiring, installed watcher version, and C5 state
+      dismiss    Stop the per-session setup reminder
+
+    Runtime capture stays governed by the C5 .logging_disabled sentinel, so
+    disabling __fish_config_op_logging makes the watcher inert without
+    uninstalling. Install affects new Kitty windows only.
+
+    Example:
+      kitty-logging install
+      kitty-logging status
+
 ### tmux-clean
 
     Synopsis:  tmux-clean

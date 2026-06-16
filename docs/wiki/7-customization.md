@@ -265,6 +265,13 @@ at exit, toggling __fish_config_op_logging takes effect on the next exit with
 no restart or sentinel coordination needed — the C5 guard is re-checked when
 the handler fires.
 
+The Kitty watcher is managed by the kitty-logging command: it installs a
+version-marked watcher (fish-config-watcher.py) into the Kitty config directory
+and wires it into kitty.conf via a managed block. Inside Kitty, a non-blocking
+per-session reminder points first-time users at `kitty-logging install` until
+they install or run `kitty-logging dismiss`. Install affects new Kitty windows
+only; runtime disable is still handled by the .logging_disabled sentinel.
+
 Logging coordination via sentinel file
 
 C5 uses a sentinel file to synchronize state between the shell and

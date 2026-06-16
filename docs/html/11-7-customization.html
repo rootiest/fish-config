@@ -727,6 +727,14 @@ and then prunes old zellij_*.log files the same way. Because the capture
 happens at exit, toggling __fish_config_op_logging takes effect on the
 next exit with no restart or sentinel coordination needed — the C5 guard
 is re-checked when the handler fires.</p>
+<p>The Kitty watcher is managed by the kitty-logging command: it
+installs a version-marked watcher (fish-config-watcher.py) into the
+Kitty config directory and wires it into kitty.conf via a managed block.
+Inside Kitty, a non-blocking per-session reminder points first-time
+users at <code>kitty-logging install</code> until they install or run
+<code>kitty-logging dismiss</code>. Install affects new Kitty windows
+only; runtime disable is still handled by the .logging_disabled
+sentinel.</p>
 <p>Logging coordination via sentinel file</p>
 <p>C5 uses a sentinel file to synchronize state between the shell and
 out-of-process components (the Kitty watcher and all running
