@@ -192,6 +192,11 @@ integrations-detail=#### C4 — Terminal and Tool Integration
 c5=#### C5 — Logging and Capture
 logging-detail=#### C5 — Logging and Capture
 logging-sentinel=#### C5 — Logging and Capture
+zellij=#### C5 — Logging and Capture
+zellij-logging=#### C5 — Logging and Capture
+tmux-logging=#### C5 — Logging and Capture
+pipe-pane=#### C5 — Logging and Capture
+dump-screen=#### C5 — Logging and Capture
 c6=#### C6 — Greeting and First-Run UI
 greeting=#### C6 — Greeting and First-Run UI
 
