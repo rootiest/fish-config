@@ -32,11 +32,26 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 - Drop-in replacements for common Unix tools (ls, cat, rm, du, ping, less)
 - Deep Kitty and WezTerm terminal integration: tab/window/pane management from
   the command line
-- Scrollback history snapshots saved to ~/.terminal_history on session exit
+- Automatic session logging: terminal scrollback, tmux/zellij panes, and
+  paru/yay output captured to ~/.terminal_history (on by default; see below)
 - Automatic Python virtualenv activation on directory change
 - Cross-platform package management via pkg and fish-deps
 - AI session helpers for Claude Code and Antigravity
 - Catppuccin Mocha color theme throughout
+
+  ┌───────────────────────────────────────────────────────────────────────────┐
+  │ CAUTION - SESSION LOGGING IS ON BY DEFAULT                                │
+  │                                                                           │
+  │ This configuration silently records terminal output to                    │
+  │ ~/.terminal_history: Kitty scrollback on window close, live tmux pane     │
+  │ streams, zellij pane snapshots on exit, and full paru/yay output. These   │
+  │ logs can contain command output, file contents, and secrets printed to    │
+  │ the terminal. Nothing leaves your machine, but the files persist locally. │
+  │                                                                           │
+  │ Disable all logging with:  set -U __fish_config_op_logging off            │
+  │ Prefer a menu? Run the interactive picker:  config-toggle                 │
+  │ See Section 7 (C5 - Logging and Capture) for the full breakdown.          │
+  └───────────────────────────────────────────────────────────────────────────┘
 
 The configuration is split across:
 
@@ -51,6 +66,8 @@ The configuration is split across:
       logging-events.fish     C5 --on-variable event handlers; syncs logging state at startup
       paru-wrapper.fish       Auto-generates ~/.local/bin/paru logging wrapper
       puffer.fish             !! / !$ / ./ expansion (bundled from nickeb96/puffer-fish)
+      tmux-logging.fish       C5 starts tmux pipe-pane capture when fish runs inside tmux
+      zellij-logging.fish     C5 fish_exit handler dumping zellij pane scrollback on exit
       sponge_privacy.fish     Sponge privacy patterns; filters credentials from history
       starship.fish           fish_prompt with OSC 133 shell-integration markers
       tailscale.fish          Tailscale CLI tab completions
@@ -1551,6 +1568,10 @@ Examples:
     set -U __fish_config_opinionated 0
     set -U __fish_config_op_greeting 1
     # (erase both to go back to full-flavor defaults)
+
+For an interactive alternative to setting these variables by hand, run
+config-toggle — a full-screen TUI that flips any category (including C5
+logging) on or off, per session or universally. See its entry in Section 5.
 
 Notes:
 

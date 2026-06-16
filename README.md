@@ -8,6 +8,7 @@ abbreviation system for keyboard-driven workflows.
 ## Table of Contents
 
 - [Overview](#overview)
+- [Session Logging](#session-logging)
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Personalization](#personalization)
@@ -27,9 +28,70 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 - **Smart CLI wrappers** that prefer modern tools (`eza`, `bat`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Auto Python venv** activation on directory change (direnv-aware)
 - **Kitty terminal** deep integration for splits, tabs, and SSH
+- **Automatic session logging** — terminal scrollback, multiplexer panes (tmux/zellij), and AUR-helper output are captured to `~/.terminal_history` (see the caution below and [Session Logging](#session-logging))
 - **AI workflow** helpers for Claude and Antigravity session management
 - **WakaTime** shell activity tracking
 - **Opt-out toggles** for every opinionated component — see [Minimal Mode](#minimal-mode)
+
+> [!CAUTION]
+> **This configuration logs your terminal sessions to disk by default.**
+> Out of the box it silently captures terminal output to `~/.terminal_history`:
+> Kitty scrollback when a window closes, live tmux pane streams, zellij pane
+> snapshots on exit, and full `paru`/`yay` output. These logs can contain
+> command output, file contents, and anything else printed to your terminal.
+> Nothing is sent off your machine, but the files persist locally until pruned.
+>
+> To turn all logging off, set the C5 category variable:
+>
+> ```fish
+> set -U __fish_config_op_logging off
+> ```
+>
+> Or run **`config-toggle`** for an interactive menu to flip logging (and any
+> other opinionated category) on or off — no variable names to remember.
+>
+> This takes effect immediately in every open shell. See [Session Logging](#session-logging)
+> for exactly what is captured and where, and [Minimal Mode](#minimal-mode) for the
+> full set of opt-out toggles.
+
+---
+
+## Session Logging
+
+This config captures terminal output to `~/.terminal_history` (override with
+`$SCROLLBACK_HISTORY_DIR`) so you can search back through past sessions. It is
+**on by default**. Five sources feed it:
+
+| Source | When it captures | Log file |
+|---|---|---|
+| Kitty scrollback | When a Kitty window/tab closes | `scrollback_<timestamp>.log` |
+| tmux pane | Continuously while the pane is open (`pipe-pane`) | `tmux_<session>-w<win>-p<pane>_<timestamp>.log` |
+| zellij pane | Snapshot taken on shell exit (`dump-screen`) | `zellij_<session>-p<pane>_<timestamp>.log` |
+| `paru` wrapper | Every `paru` invocation | `paru_<timestamp>.log` |
+| `yay` wrapper | Every `yay` invocation | `yay_<timestamp>.log` |
+
+Old logs are pruned automatically to stay within `$SCROLLBACK_HISTORY_MAX_FILES`
+(default 100) per source, and empty/trivial captures are discarded.
+
+**These logs can contain secrets** — anything printed to your terminal (command
+output, file dumps, tokens echoed to stdout) ends up in them. They never leave
+your machine, but treat `~/.terminal_history` as sensitive.
+
+Disable all of it with a single universal variable:
+
+```fish
+set -U __fish_config_op_logging off   # disable; takes effect in every open shell
+set -Ue __fish_config_op_logging      # re-enable (erase the override)
+```
+
+Prefer an interactive interface? Run **`config-toggle`** for a full-screen
+picker that flips logging — and every other opinionated category — on or off
+per session or universally, without memorizing variable names.
+
+Disabling also removes the generated `paru`/`yay` log wrappers and tells the
+Kitty watcher to skip capture via a sentinel file — no shell or terminal
+restart required. Logging is category **C5** in [Minimal Mode](#minimal-mode);
+`set -U __fish_config_opinionated 0` turns it off along with everything else.
 
 ---
 
