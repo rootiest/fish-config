@@ -19,7 +19,7 @@
 #
 # EXAMPLE
 #   __fish_config_sync_logging
-function __fish_config_sync_logging --description 'Sync C5 logging state: sentinel file and paru/yay wrappers'
+function __fish_config_sync_logging --description 'Sync C5 logging state: sentinel file, paru/yay wrappers, and tmux pipe-pane'
     set -l config_home $XDG_CONFIG_HOME
     if test -z "$config_home"
         set config_home "$HOME/.config"
