@@ -64,6 +64,7 @@ The configuration is split across:
       first_run.fish          One-time init: Fisher bootstrap, theme, welcome
       key_bindings.fish       Custom key bindings and Vi mode
       logging-events.fish     C5 --on-variable event handlers; syncs logging state at startup
+      kitty-watcher-reminder.fish  C5 per-session reminder to set up the Kitty watcher
       paru-wrapper.fish       Auto-generates ~/.local/bin/paru logging wrapper
       puffer.fish             !! / !$ / ./ expansion (bundled from nickeb96/puffer-fish)
       tmux-logging.fish       C5 starts tmux pipe-pane capture when fish runs inside tmux
@@ -1385,6 +1386,29 @@ Add -i (interactive confirmation) to destructive commands:
     replay "source ~/.bashrc"
     replay "export FOO=bar"
 
+### kitty-logging
+
+    Synopsis:  kitty-logging [install|uninstall|status|dismiss] [-h]
+
+    Manages the Kitty scrollback watcher that powers C5 logging. Ships a
+    canonical, version-marked watcher and installs it into the Kitty config
+    directory, wiring it into kitty.conf through a sentinel-marked managed
+    block. Commenting out any conflicting watcher line avoids double-capture.
+
+    Commands:
+      install    Copy/refresh the watcher and add the managed block
+      uninstall  Remove the managed block and the watcher file
+      status     Show wiring, installed watcher version, and C5 state
+      dismiss    Stop the per-session setup reminder
+
+    Runtime capture stays governed by the C5 .logging_disabled sentinel, so
+    disabling __fish_config_op_logging makes the watcher inert without
+    uninstalling. Install affects new Kitty windows only.
+
+    Example:
+      kitty-logging install
+      kitty-logging status
+
 ### tmux-clean
 
     Synopsis:  tmux-clean
@@ -1732,6 +1756,13 @@ then prunes old zellij_*.log files the same way. Because the capture happens
 at exit, toggling __fish_config_op_logging takes effect on the next exit with
 no restart or sentinel coordination needed — the C5 guard is re-checked when
 the handler fires.
+
+The Kitty watcher is managed by the kitty-logging command: it installs a
+version-marked watcher (fish-config-watcher.py) into the Kitty config directory
+and wires it into kitty.conf via a managed block. Inside Kitty, a non-blocking
+per-session reminder points first-time users at `kitty-logging install` until
+they install or run `kitty-logging dismiss`. Install affects new Kitty windows
+only; runtime disable is still handled by the .logging_disabled sentinel.
 
 Logging coordination via sentinel file
 
