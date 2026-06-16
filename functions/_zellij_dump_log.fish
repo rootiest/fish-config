@@ -34,7 +34,12 @@ function _zellij_dump_log --description 'Dump the current Zellij pane scrollback
     set -l log_file "$log_dir/zellij_"$session"-p"$pane_id"_"$timestamp".log"
 
     mkdir -p $log_dir
-    zellij action dump-screen --full "$log_file" 2>/dev/null
+    # Dump to STDOUT and let this fish process write the file. `--path` makes the
+    # zellij *server* write the file (its CWD/permissions, historically flaky);
+    # capturing STDOUT keeps the write client-side and reliable. Drop the empty
+    # file if the dump produced nothing (e.g. pane already torn down on exit).
+    zellij action dump-screen --full --ansi >"$log_file" 2>/dev/null
+    test -s "$log_file"; or command rm -f "$log_file"
 
     _prune_terminal_logs zellij
 end
