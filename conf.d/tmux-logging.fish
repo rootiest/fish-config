@@ -14,6 +14,7 @@ set -q TMUX; or exit
 set -l log_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
 set -l pane_id (tmux display-message -p '#{session_name}-w#{window_index}-p#{pane_index}' 2>/dev/null)
 set -l timestamp (date "+%Y-%m-%d_%H-%M-%S")
+set -l log_file "$log_dir/tmux_"$pane_id"_"$timestamp".log"
 
 mkdir -p $log_dir
-tmux pipe-pane "cat >> $log_dir/tmux_${pane_id}_${timestamp}.log" 2>/dev/null
+tmux pipe-pane "cat >> $log_file" 2>/dev/null
