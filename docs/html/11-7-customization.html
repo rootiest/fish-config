@@ -721,12 +721,34 @@ behaviour.</p>
 <p>The zellij capture works differently: Zellij has no live
 output-streaming facility like pipe-pane, so the log is taken as a
 one-shot snapshot when the shell exits, via
-<code>zellij action dump-screen --full</code>. A fish_exit handler
+<code>zellij action dump-screen --full --ansi</code> (the --ansi flag
+preserves color). The dump is captured on the fish process's stdout and
+written to the log file by fish itself (not via <code>--path</code>,
+which would make the zellij server write the file). A fish_exit handler
 (registered whenever $ZELLIJ is set) writes the pane's full scrollback
 and then prunes old zellij_*.log files the same way. Because the capture
 happens at exit, toggling __fish_config_op_logging takes effect on the
 next exit with no restart or sentinel coordination needed — the C5 guard
 is re-checked when the handler fires.</p>
+<p>LIMITATION — zellij capture only fires on a clean shell exit (typing
+<code>exit</code>, Ctrl-D, or a logout), because that is when the
+fish_exit handler runs. It does NOT capture when you close a pane or
+quit zellij through zellij itself:</p>
+<ul>
+<li>Closing a pane signals the shell and tears the pane down
+concurrently, so even if the handler runs, <code>dump-screen</code> may
+find the pane buffer already gone.</li>
+<li>Quitting zellij kills the zellij server, and
+<code>dump-screen</code> needs a live server to read from — there is
+nothing left to snapshot.</li>
+</ul>
+<p>This is a structural difference from tmux, NOT a bug. tmux streams
+pane output to disk continuously via pipe-pane, so whatever was printed
+is already saved no matter how the pane dies. Zellij can only snapshot,
+and the only reliable snapshot point from the shell is a clean exit. To
+guarantee a zellij pane is logged, end the session with
+<code>exit</code> or Ctrl-D rather than zellij's close-pane or quit
+actions.</p>
 <p>The Kitty watcher is managed by the kitty-logging command: it
 installs a version-marked watcher (fish-config-watcher.py) into the
 Kitty config directory and wires it into kitty.conf via a managed block.

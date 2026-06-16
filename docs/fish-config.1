@@ -1816,14 +1816,6 @@ idle or sleeping until the command completes.
 wake-lock rsync -avz src/ dest/
 \f[R]
 .fi
-.SS zellij
-.IP
-.nf
-\f[C]
-Synopsis:  zellij [args...]
-Launches zellij with the Catppuccin Mocha theme applied.
-\f[R]
-.fi
 .PP
    *   *   *   *   *
 .SH 6. DEPENDENCY CATALOG
@@ -2203,13 +2195,39 @@ SCROLLBACK_HISTORY_MAX_FILES, matching the paru/yay wrapper behaviour.
 The zellij capture works differently: Zellij has no live
 output-streaming facility like pipe-pane, so the log is taken as a
 one-shot snapshot when the shell exits, via
-\f[V]zellij action dump-screen --full\f[R].
+\f[V]zellij action dump-screen --full --ansi\f[R] (the \[en]ansi flag
+preserves color).
+The dump is captured on the fish process\[cq]s stdout and written to the
+log file by fish itself (not via \f[V]--path\f[R], which would make the
+zellij server write the file).
 A fish_exit handler (registered whenever $ZELLIJ is set) writes the
 pane\[cq]s full scrollback and then prunes old zellij_*.log files the
 same way.
 Because the capture happens at exit, toggling __fish_config_op_logging
 takes effect on the next exit with no restart or sentinel coordination
 needed \[em] the C5 guard is re-checked when the handler fires.
+.PP
+LIMITATION \[em] zellij capture only fires on a clean shell exit (typing
+\f[V]exit\f[R], Ctrl-D, or a logout), because that is when the fish_exit
+handler runs.
+It does NOT capture when you close a pane or quit zellij through zellij
+itself:
+.IP \[bu] 2
+Closing a pane signals the shell and tears the pane down concurrently,
+so even if the handler runs, \f[V]dump-screen\f[R] may find the pane
+buffer already gone.
+.IP \[bu] 2
+Quitting zellij kills the zellij server, and \f[V]dump-screen\f[R] needs
+a live server to read from \[em] there is nothing left to snapshot.
+.PP
+This is a structural difference from tmux, NOT a bug.
+tmux streams pane output to disk continuously via pipe-pane, so whatever
+was printed is already saved no matter how the pane dies.
+Zellij can only snapshot, and the only reliable snapshot point from the
+shell is a clean exit.
+To guarantee a zellij pane is logged, end the session with
+\f[V]exit\f[R] or Ctrl-D rather than zellij\[cq]s close-pane or quit
+actions.
 .PP
 The Kitty watcher is managed by the kitty-logging command: it installs a
 version-marked watcher (fish-config-watcher.py) into the Kitty config

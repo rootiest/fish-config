@@ -916,9 +916,4 @@
 
     wake-lock rsync -avz src/ dest/
 
-### zellij
-
-    Synopsis:  zellij [args...]
-    Launches zellij with the Catppuccin Mocha theme applied.
-
 ---
