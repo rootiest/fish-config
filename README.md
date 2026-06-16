@@ -66,12 +66,17 @@ This config captures terminal output to `~/.terminal_history` (override with
 |---|---|---|
 | Kitty scrollback | When a Kitty window/tab closes | `scrollback_<timestamp>.log` |
 | tmux pane | Continuously while the pane is open (`pipe-pane`) | `tmux_<session>-w<win>-p<pane>_<timestamp>.log` |
-| zellij pane | Snapshot taken on shell exit (`dump-screen`) | `zellij_<session>-p<pane>_<timestamp>.log` |
+| zellij pane | Snapshot taken on **clean** shell exit (`dump-screen`) | `zellij_<session>-p<pane>_<timestamp>.log` |
 | `paru` wrapper | Every `paru` invocation | `paru_<timestamp>.log` |
 | `yay` wrapper | Every `yay` invocation | `yay_<timestamp>.log` |
 
 Old logs are pruned automatically to stay within `$SCROLLBACK_HISTORY_MAX_FILES`
 (default 100) per source, and empty/trivial captures are discarded.
+
+> **zellij caveat:** zellij has no continuous pipe like tmux, so its pane is
+> snapshotted only on a clean shell exit (`exit`/Ctrl-D). Closing a pane or
+> quitting zellij directly tears down the pane/server before it can be dumped,
+> so those sessions are not logged. End with `exit` to guarantee a log.
 
 **These logs can contain secrets** — anything printed to your terminal (command
 output, file dumps, tokens echoed to stdout) ends up in them. They never leave

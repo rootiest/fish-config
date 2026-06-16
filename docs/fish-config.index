@@ -155,7 +155,6 @@ joplin=### joplin
 replay=### replay
 tmux=### tmux-clean
 wake-lock=### wake-lock
-zellij=### zellij
 
 # ── Section 6: Dependency Catalog ────────────────────────────
 catalog=# 6. DEPENDENCY CATALOG
