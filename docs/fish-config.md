@@ -1678,7 +1678,7 @@ silently failing.
 
 #### C5 — Logging and Capture
 
-Four components capture shell output to disk. Disabling
+Five components capture shell output to disk. Disabling
 __fish_config_op_logging skips all capture and removes the logging wrappers.
 
     Component               What it captures
@@ -1687,6 +1687,8 @@ __fish_config_op_logging skips all capture and removes the logging wrappers.
                             ~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
     tmux pane capture       Continuous pane stream via pipe-pane, saved to:
                             ~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
+    zellij pane capture     Pane scrollback snapshot on shell exit, saved to:
+                            ~/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
     paru wrapper            All paru/AUR output captured to:
                             ~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
     yay wrapper             All yay/AUR output captured to:
@@ -1700,6 +1702,15 @@ session gets its own log file; a new log is created on each shell start
 (including exec fish and new splits). Before each new log, the oldest
 tmux_*.log files are pruned (by modification time) to keep the total within
 SCROLLBACK_HISTORY_MAX_FILES, matching the paru/yay wrapper behaviour.
+
+The zellij capture works differently: Zellij has no live output-streaming
+facility like pipe-pane, so the log is taken as a one-shot snapshot when the
+shell exits, via `zellij action dump-screen --full`. A fish_exit handler
+(registered whenever $ZELLIJ is set) writes the pane's full scrollback and
+then prunes old zellij_*.log files the same way. Because the capture happens
+at exit, toggling __fish_config_op_logging takes effect on the next exit with
+no restart or sentinel coordination needed — the C5 guard is re-checked when
+the handler fires.
 
 Logging coordination via sentinel file
 
