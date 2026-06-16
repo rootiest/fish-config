@@ -1697,7 +1697,9 @@ The tmux capture starts automatically when fish launches inside any tmux
 pane ($TMUX is set). It uses tmux's native pipe-pane to stream all pane
 output directly to disk without an intermediate process. Each fish shell
 session gets its own log file; a new log is created on each shell start
-(including exec fish and new splits).
+(including exec fish and new splits). Before each new log, the oldest
+tmux_*.log files are pruned (by modification time) to keep the total within
+SCROLLBACK_HISTORY_MAX_FILES, matching the paru/yay wrapper behaviour.
 
 Logging coordination via sentinel file
 
