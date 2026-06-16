@@ -1678,18 +1678,26 @@ silently failing.
 
 #### C5 — Logging and Capture
 
-Three components capture shell output to disk. Disabling
+Four components capture shell output to disk. Disabling
 __fish_config_op_logging skips all capture and removes the logging wrappers.
 
     Component               What it captures
     ───────────────────────────────────────────────────────────────────────────
     Scrollback capture      Terminal session output saved to:
                             ~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
+    tmux pane capture       Continuous pane stream via pipe-pane, saved to:
+                            ~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
     paru wrapper            All paru/AUR output captured to:
                             ~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
     yay wrapper             All yay/AUR output captured to:
                             ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
     Kitty watcher           watcher.py captures scrollback when Kitty closes
+
+The tmux capture starts automatically when fish launches inside any tmux
+pane ($TMUX is set). It uses tmux's native pipe-pane to stream all pane
+output directly to disk without an intermediate process. Each fish shell
+session gets its own log file; a new log is created on each shell start
+(including exec fish and new splits).
 
 Logging coordination via sentinel file
 
@@ -1705,11 +1713,13 @@ Disabling __fish_config_op_logging:
   3. Kitty's watcher.py reads the sentinel on each save attempt and
      skips capture — no Kitty restart required.
   4. smart_exit stops saving scrollback logs.
+  5. Stops tmux pipe-pane capture in every open fish shell inside tmux.
 
 Re-enabling __fish_config_op_logging:
   1. Removes the sentinel in every open shell.
   2. Regenerates paru/yay logging wrappers in ~/.local/bin/.
   3. Kitty watcher resumes capture on the next session exit.
+  4. Restarts tmux pipe-pane capture in every open fish shell inside tmux.
 
 Changes propagate to all running shells through an event handler that fires
 whenever __fish_config_op_logging changes — no shell restart needed.
