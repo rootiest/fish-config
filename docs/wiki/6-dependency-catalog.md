@@ -48,11 +48,10 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
     trash       Safe delete (trash-cli)
     kitty       GPU-accelerated terminal (primary)
     wezterm     GPU-accelerated terminal (alternative)
-    python3     Standalone interpreter — used by the AI session helpers
-                (save_claude_session / save_antigravity_session) and the
-                paru/yay log cleaner. Note: uv does not provide python3 on
-                PATH, and Arch's base does not include it, so it is listed
-                separately. All consumers degrade gracefully without it.
+    python3     Standalone interpreter — used by the paru/yay log cleaner.
+                Note: uv does not provide python3 on PATH, and Arch's base
+                does not include it, so it is listed separately. All
+                consumers degrade gracefully without it.
 
 ## Install Methods
 

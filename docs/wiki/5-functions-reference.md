@@ -617,13 +617,6 @@
     Synopsis:  antigravity-ide [args...]
     Runs the antigravity-ide editor with warnings filtered.
 
-### antigravity-resume
-
-    Synopsis:  antigravity-resume
-    Resumes the most recent Antigravity session from the .antigravity_session
-    file in the current directory, or opens an interactive fzf picker if no
-    session file is found.
-
 ### agents-init
 
     Synopsis:  agents-init [--agents | --plugins]
@@ -656,12 +649,6 @@
     claude
     claude --resume
 
-### claude-resume
-
-    Synopsis:  claude-resume
-    Resumes the most recent Claude Code session from the .claude_session
-    file in the current directory, or opens an interactive fzf picker.
-
 ### claude-docs
 
     Synopsis:  claude-docs
@@ -674,12 +661,6 @@
     Invokes Claude Code to run the full PR workflow: create branch,
     conventional commit, verification, push, and open a PR with a manual
     verification checklist.
-
-### code-resume
-
-    Synopsis:  code-resume
-    Resumes the most recent AI session (Claude or Antigravity), preferring
-    the newest session file found in the current directory.
 
 ### superpowers
 

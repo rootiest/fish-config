@@ -1444,16 +1444,6 @@ Synopsis:  antigravity-ide [args...]
 Runs the antigravity-ide editor with warnings filtered.
 \f[R]
 .fi
-.SS antigravity-resume
-.IP
-.nf
-\f[C]
-Synopsis:  antigravity-resume
-Resumes the most recent Antigravity session from the .antigravity_session
-file in the current directory, or opens an interactive fzf picker if no
-session file is found.
-\f[R]
-.fi
 .SS agents-init
 .IP
 .nf
@@ -1492,15 +1482,6 @@ claude
 claude --resume
 \f[R]
 .fi
-.SS claude-resume
-.IP
-.nf
-\f[C]
-Synopsis:  claude-resume
-Resumes the most recent Claude Code session from the .claude_session
-file in the current directory, or opens an interactive fzf picker.
-\f[R]
-.fi
 .SS claude-docs
 .IP
 .nf
@@ -1518,15 +1499,6 @@ Synopsis:  claude-pr
 Invokes Claude Code to run the full PR workflow: create branch,
 conventional commit, verification, push, and open a PR with a manual
 verification checklist.
-\f[R]
-.fi
-.SS code-resume
-.IP
-.nf
-\f[C]
-Synopsis:  code-resume
-Resumes the most recent AI session (Claude or Antigravity), preferring
-the newest session file found in the current directory.
 \f[R]
 .fi
 .SS superpowers
@@ -1872,11 +1844,10 @@ lazydocker  Terminal docker UI
 trash       Safe delete (trash-cli)
 kitty       GPU-accelerated terminal (primary)
 wezterm     GPU-accelerated terminal (alternative)
-python3     Standalone interpreter \[em] used by the AI session helpers
-            (save_claude_session / save_antigravity_session) and the
-            paru/yay log cleaner. Note: uv does not provide python3 on
-            PATH, and Arch\[aq]s base does not include it, so it is listed
-            separately. All consumers degrade gracefully without it.
+python3     Standalone interpreter \[em] used by the paru/yay log cleaner.
+            Note: uv does not provide python3 on PATH, and Arch\[aq]s base
+            does not include it, so it is listed separately. All
+            consumers degrade gracefully without it.
 \f[R]
 .fi
 .SS Install Methods
