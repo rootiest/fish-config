@@ -1124,13 +1124,6 @@ Add -i (interactive confirmation) to destructive commands:
     Synopsis:  antigravity-ide [args...]
     Runs the antigravity-ide editor with warnings filtered.
 
-### antigravity-resume
-
-    Synopsis:  antigravity-resume
-    Resumes the most recent Antigravity session from the .antigravity_session
-    file in the current directory, or opens an interactive fzf picker if no
-    session file is found.
-
 ### agents-init
 
     Synopsis:  agents-init [--agents | --plugins]
@@ -1163,12 +1156,6 @@ Add -i (interactive confirmation) to destructive commands:
     claude
     claude --resume
 
-### claude-resume
-
-    Synopsis:  claude-resume
-    Resumes the most recent Claude Code session from the .claude_session
-    file in the current directory, or opens an interactive fzf picker.
-
 ### claude-docs
 
     Synopsis:  claude-docs
@@ -1181,12 +1168,6 @@ Add -i (interactive confirmation) to destructive commands:
     Invokes Claude Code to run the full PR workflow: create branch,
     conventional commit, verification, push, and open a PR with a manual
     verification checklist.
-
-### code-resume
-
-    Synopsis:  code-resume
-    Resumes the most recent AI session (Claude or Antigravity), preferring
-    the newest session file found in the current directory.
 
 ### superpowers
 
@@ -1471,11 +1452,10 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
     trash       Safe delete (trash-cli)
     kitty       GPU-accelerated terminal (primary)
     wezterm     GPU-accelerated terminal (alternative)
-    python3     Standalone interpreter — used by the AI session helpers
-                (save_claude_session / save_antigravity_session) and the
-                paru/yay log cleaner. Note: uv does not provide python3 on
-                PATH, and Arch's base does not include it, so it is listed
-                separately. All consumers degrade gracefully without it.
+    python3     Standalone interpreter — used by the paru/yay log cleaner.
+                Note: uv does not provide python3 on PATH, and Arch's base
+                does not include it, so it is listed separately. All
+                consumers degrade gracefully without it.
 
 ## Install Methods
 
