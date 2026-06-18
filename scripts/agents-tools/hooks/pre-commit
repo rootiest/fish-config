@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
-# agents-tools-version: 1
-# Delegates to the repo's committed .agents-tools/version-bump. Guarded so a
-# missing script or failed rev-parse never blocks the commit (always exit 0).
+# agents-tools-version: 2
+# Runs the committed .agents-tools/version-bump, then chains to the user's
+# global/system git hook (core.hooksPath) so ggshield, LFS, etc. still run.
+# agents-init's local core.hooksPath override would otherwise shadow them.
+# Guarded so a missing script or failed rev-parse never blocks the commit;
+# only the chained global hook can fail it.
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 [ -x "$root/.agents-tools/version-bump" ] && "$root/.agents-tools/version-bump" precommit
+
+# Chain to the global/system hook this local override is shadowing.
+global_hooks="$(git config --global core.hooksPath 2>/dev/null)"
+[ -z "$global_hooks" ] && global_hooks="$(git config --system core.hooksPath 2>/dev/null)"
+if [ -n "$global_hooks" ]; then
+  global_hooks="${global_hooks/#\~/$HOME}" # git stores ~ verbatim
+  [ -x "$global_hooks/pre-commit" ] && exec "$global_hooks/pre-commit" "$@"
+fi
 exit 0
