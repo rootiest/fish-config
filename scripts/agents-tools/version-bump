@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# agents-tools-version: 1
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# version-bump <precommit|prepmsg> [msgfile]
+#
+# Maintains <repo>/.version (MAJOR.MINOR.PATCH). MAJOR is manual-only.
+# MINOR bumps when the tracked directory set changes between HEAD and the
+# staged index; PATCH bumps on any other commit. Never blocks a commit:
+# all hook paths exit 0 even on unexpected errors.
+
+mode="${1:-}"
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+vfile="$root/.version"
+
+read_dirset() {
+    # $1: HEAD|INDEX — print sorted unique content dirs (dot-dirs excluded)
+    local listing
+    if [ "$1" = HEAD ]; then
+        listing="$(git ls-tree -r --name-only HEAD 2>/dev/null || true)"
+    else
+        listing="$(git ls-files 2>/dev/null || true)"
+    fi
+    printf '%s\n' "$listing" \
+        | while IFS= read -r f; do [ -n "$f" ] && dirname "$f"; done \
+        | { grep -v '^\.' || true; } \
+        | sort -u
+}
+
+bump_precommit() {
+    [ -f "$vfile" ] || printf '1.0.0\n' > "$vfile"
+
+    # First commit: establish the baseline, no bump.
+    if ! git rev-parse --verify -q HEAD >/dev/null 2>&1; then
+        grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' "$vfile" || printf '1.0.0\n' > "$vfile"
+        git add -- "$vfile" 2>/dev/null || true
+        return 0
+    fi
+
+    local major minor patch
+    IFS=. read -r major minor patch < "$vfile"
+    case "$major$minor$patch" in
+        *[!0-9]*|"") major=1; minor=0; patch=0 ;;
+    esac
+
+    if [ "$(read_dirset HEAD)" != "$(read_dirset INDEX)" ]; then
+        minor=$((minor + 1)); patch=0
+    else
+        patch=$((patch + 1))
+    fi
+    printf '%s.%s.%s\n' "$major" "$minor" "$patch" > "$vfile"
+    git add -- "$vfile" 2>/dev/null || true
+}
+
+bump_prepmsg() {
+    local msgfile="${1:-}" version first rest
+    [ -n "$msgfile" ] && [ -f "$msgfile" ] || return 0
+    [ -f "$vfile" ] || return 0
+    version="$(head -n1 "$vfile")"
+    [ -n "$version" ] || return 0
+    head -n1 "$msgfile" | grep -qF "(v$version)" && return 0
+    first="$(head -n1 "$msgfile")"
+    rest="$(tail -n +2 "$msgfile")"
+    if [ -n "$rest" ]; then
+        { printf '%s (v%s)\n' "$first" "$version"; printf '%s\n' "$rest"; } > "$msgfile"
+    else
+        printf '%s (v%s)\n' "$first" "$version" > "$msgfile"
+    fi
+}
+
+case "$mode" in
+    precommit) bump_precommit ;;
+    prepmsg)   bump_prepmsg "${2:-}" ;;
+    *) echo "version-bump: unknown mode '$mode'" >&2; exit 2 ;;
+esac
+exit 0
