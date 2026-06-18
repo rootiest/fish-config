@@ -1,3 +1,0 @@
-# Explicitly exclude agents-tools scripts from Git LFS auto-tracking.
-# These are small shell scripts that must be stored as regular git objects.
-scripts/agents-tools/**  !filter !diff !merge text eol=lf

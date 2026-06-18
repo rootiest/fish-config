@@ -4,6 +4,9 @@
 #
 # Self-contained tests for version-bump. Run: bash test-version-bump.sh
 set -u
+# Neutralize an inherited CDPATH: bash `cd` echoes the resolved path when a
+# target is found via CDPATH, which would corrupt the command substitutions below.
+CDPATH=
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT="$HERE/version-bump"
 fail() { echo "FAIL: $1"; exit 1; }
@@ -14,6 +17,9 @@ new_repo() {
     git -C "$d" config user.email t@t
     git -C "$d" config user.name t
     git -C "$d" config commit.gpgsign false
+    # Isolate from any global core.hooksPath so the test is hermetic. The e2e
+    # block re-points hooksPath at the repo's own .agents-tools/hooks.
+    git -C "$d" config core.hooksPath /dev/null
     printf '%s\n' "$d"
 }
 
