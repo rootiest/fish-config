@@ -36,8 +36,11 @@
 #   core.hooksPath: a pre-commit hook bumps AGENTS/.version on every commit
 #   (MINOR when the tracked directory set changes, PATCH otherwise; MAJOR is
 #   manual-only), and a prepare-commit-msg hook appends "(vX.Y.Z)" to the
-#   commit subject. The script/hooks are version-managed from
-#   scripts/agents-tools/ and refreshed when their marker is stale.
+#   commit subject. Each shim then chains (execs) to the global/system
+#   core.hooksPath hook of the same name, so this local override does not
+#   shadow global hooks (e.g. ggshield, Git LFS). The script/hooks are
+#   version-managed from scripts/agents-tools/ and refreshed when their marker
+#   is stale.
 #
 #   With no flags, runs both --agents and --plugins setup. At the end of
 #   every invocation, commits any uncommitted changes in the AGENTS/ sub-repo
