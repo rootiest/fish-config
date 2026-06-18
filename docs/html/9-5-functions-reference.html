@@ -961,17 +961,30 @@ agy resume</code></pre>
 Runs the antigravity-ide editor with warnings filtered.</code></pre>
 <h3 data-number="9.12.3" id="agents-init">agents-init</h3>
 <pre><code>Synopsis:  agents-init [--agents | --plugins]
-Scaffold an AGENTS/ sub-repository for tracking agent specs and plugin
-directories. Creates AGENTS/ as a standalone git repo, initializes
-standard plugin subdirectories (superpowers/, plans/, specs/), moves any
-existing AGENTS.md and docs/plugin dirs into the sub-repo, and replaces
-them with relative symlinks. Also adds CLAUDE.md -&gt; AGENTS/AGENTS.md so
-Claude Code picks up the shared agent instructions. Adds all managed
-paths to .gitignore and auto-commits every change inside the AGENTS/
-sub-repo. Fully idempotent: a second run produces no output and no new
-commits. Flags: --agents re-runs only the AGENTS.md / symlink step;
---plugins re-runs only the plugin-directory wiring step. Called
-automatically by the claude and agy wrappers on every invocation.
+Scaffold an AGENTS/ sub-repository for tracking agent specs, plans, specs,
+and dev logs. Creates AGENTS/ as a standalone git repo, moves any existing
+AGENTS.md into it, and replaces it with a relative symlink (plus
+CLAUDE.md -&gt; AGENTS/AGENTS.md so Claude Code picks up the shared agent
+instructions). Consolidates plans/ and specs/ directly under AGENTS/
+(merging any legacy docs/plans, docs/superpowers/plans, or old
+AGENTS/plugins/ locations into the canonical AGENTS/&lt;tgt&gt;), creates
+AGENTS/devlogs/, and wires docs/superpowers/{plans,specs} symlinks back to
+them. Adds managed paths to .gitignore and auto-commits every change inside
+the AGENTS/ sub-repo; pulls first when the sub-repo has an upstream.
+Fully idempotent: a second run produces no output and no new commits.
+Flags: --agents re-runs only the AGENTS.md / symlink step; --plugins
+re-runs only the plans/specs/devlogs wiring step. Called automatically by
+the claude and agy wrappers on every invocation.
+
+Structure versioning: each AGENTS/ repo carries a self-contained version
+bumper. AGENTS/.version holds MAJOR.MINOR.PATCH (seeded 1.0.0). Committed
+git hooks under AGENTS/.agents-tools/ (wired via core.hooksPath) bump it on
+every commit: MINOR (resetting PATCH) when the tracked directory set
+changes, PATCH otherwise; MAJOR is manual-only. A prepare-commit-msg hook
+appends &quot;(vX.Y.Z)&quot; to the commit subject. Downstream tooling can read
+AGENTS/.version - a changed MINOR field signals a structure change. The
+script and hooks are shipped from scripts/agents-tools/ and refreshed when
+their version marker is stale.
 
 agents-init
 agents-init --agents
