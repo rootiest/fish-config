@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# agents-tools-version: 1
+exec "$(git rev-parse --show-toplevel)/.agents-tools/version-bump" precommit
