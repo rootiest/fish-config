@@ -134,6 +134,26 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         test $verbose -eq 1; and echo "$c_ok→ Initialized git repo in AGENTS/$c_reset"
     end
 
+    #   ─────────────── Always: version tracking (.version + hooks) ───────────────
+    if not test -f "$agents_dir/.version"
+        echo 1.0.0 >"$agents_dir/.version"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/.version (1.0.0)$c_reset"
+    end
+
+    set -l _tools (_agents_init_install_tools "$agents_dir")
+    if test -n "$_tools"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok$_tools$c_reset"
+    end
+
+    set -l _hp (git -C "$agents_dir" config --local core.hooksPath 2>/dev/null)
+    if test "$_hp" != .agents-tools/hooks
+        git -C "$agents_dir" config --local core.hooksPath .agents-tools/hooks
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Set core.hooksPath → .agents-tools/hooks$c_reset"
+    end
+
     #   ──────────────────────────── --agents mode ──────────────────────────────
     if test $do_agents -eq 1
         # Detect which root-level files are real (not symlinks)
@@ -417,6 +437,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     end
 
     #   ──────────────────────── Auto-commit AGENTS/ ────────────────────────────
+    # Pull first when an upstream is configured so the local .version reflects
+    # any remote bumps before we add to it (no-op for local-only repos).
+    if git -C "$agents_dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
+        git -C "$agents_dir" pull --rebase --autostash -q 2>/dev/null
+    end
     git -C "$agents_dir" add -A 2>/dev/null
     set -l status_out (git -C "$agents_dir" status --porcelain 2>/dev/null)
     if test -n "$status_out"
@@ -426,7 +451,8 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             set changed 1
             if test $verbose -eq 1
                 set -l sha (git -C "$agents_dir" rev-parse --short HEAD 2>/dev/null)
-                echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$msg$c_reset"
+                set -l realmsg (git -C "$agents_dir" log -1 --pretty=%s 2>/dev/null)
+                echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$realmsg$c_reset"
             end
         end
     end
