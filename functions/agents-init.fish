@@ -17,7 +17,27 @@
 #                               or symlink → AGENTS.md (single-source case)
 #     <root>/AGENTS.md          → AGENTS/AGENTS.md
 #     <root>/CLAUDE.md          → AGENTS/CLAUDE.md
-#     docs/<plug>               → ../AGENTS/plugins/<plug>
+#     AGENTS/plans              superpowers plans      (real dir, .gitkeep)
+#     AGENTS/specs              superpowers specs      (real dir, .gitkeep)
+#     AGENTS/devlogs            agent development logs (real dir, .gitkeep)
+#     AGENTS/.version           MAJOR.MINOR.PATCH structure version (seed 1.0.0)
+#     AGENTS/.agents-tools/     committed version-bump script + git hook shims
+#     docs/superpowers/plans    → ../../AGENTS/plans   (always)
+#     docs/superpowers/specs    → ../../AGENTS/specs   (always)
+#     docs/plans                → ../AGENTS/plans   (only if docs/plans existed)
+#     docs/specs                → ../AGENTS/specs   (only if docs/specs existed)
+#     docs/devlogs              → ../AGENTS/devlogs (only if docs/devlogs existed)
+#
+#   plans/ and specs/ are merged from every legacy location (docs/<tgt>,
+#   docs/superpowers/<tgt>, and the old AGENTS/plugins/ layout) into the
+#   canonical AGENTS/<tgt>; the AGENTS/plugins/ layer is removed.
+#
+#   Each AGENTS repo carries a self-contained version bumper wired via
+#   core.hooksPath: a pre-commit hook bumps AGENTS/.version on every commit
+#   (MINOR when the tracked directory set changes, PATCH otherwise; MAJOR is
+#   manual-only), and a prepare-commit-msg hook appends "(vX.Y.Z)" to the
+#   commit subject. The script/hooks are version-managed from
+#   scripts/agents-tools/ and refreshed when their marker is stale.
 #
 #   With no flags, runs both --agents and --plugins setup. At the end of
 #   every invocation, commits any uncommitted changes in the AGENTS/ sub-repo
@@ -25,7 +45,7 @@
 #
 # ARGUMENTS
 #   -a, --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only
-#   -p, --plugins  Set up AGENTS/ repo + plugins dirs + docs/ symlinks only
+#   -p, --plugins  Set up AGENTS/ repo + plans/specs/devlogs dirs + docs/ symlinks only
 #   -v, --verbose  Print all per-step output (default)
 #   -q, --quiet    Print one summary line only if changes were made
 #   -s, --silent   Suppress all output; errors only (standard UNIX convention)
@@ -61,7 +81,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         echo "$c_head""Options:$c_reset"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset      Show this help message"
         echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md / CLAUDE.md symlinks only"
-        echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plugins dirs and docs/ symlinks only"
+        echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plans/specs/devlogs dirs and docs/ symlinks only"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset   Print all per-step output (default)"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset     Print one summary line only if changes were made"
         echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset    Suppress all output; only errors are printed"
@@ -121,6 +141,26 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         set changed 1
         set did_init 1
         test $verbose -eq 1; and echo "$c_ok→ Initialized git repo in AGENTS/$c_reset"
+    end
+
+    #   ─────────────── Always: version tracking (.version + hooks) ───────────────
+    if not test -f "$agents_dir/.version"
+        echo 1.0.0 >"$agents_dir/.version"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/.version (1.0.0)$c_reset"
+    end
+
+    set -l _tools (_agents_init_install_tools "$agents_dir")
+    if test -n "$_tools"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok$_tools$c_reset"
+    end
+
+    set -l _hp (git -C "$agents_dir" config --local core.hooksPath 2>/dev/null)
+    if test "$_hp" != .agents-tools/hooks
+        git -C "$agents_dir" config --local core.hooksPath .agents-tools/hooks
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Set core.hooksPath → .agents-tools/hooks$c_reset"
     end
 
     #   ──────────────────────────── --agents mode ──────────────────────────────
@@ -248,19 +288,6 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
 
     #   ─────────────────────────── --plugins mode ──────────────────────────────
     if test $do_plugins -eq 1
-        # Ensure AGENTS/plugins/ dirs exist with .gitkeep
-        for dir in "$plugins_dir" "$plugins_dir/superpowers" "$plugins_dir/plans" "$plugins_dir/specs"
-            if not test -d "$dir"
-                if not mkdir -p "$dir"
-                    echo "$c_err""Error: could not create "(string replace "$root/" "" "$dir")"/$c_reset" >&2
-                    return 1
-                end
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Created "(string replace "$root/" "" "$dir")"/$c_reset"
-            end
-            test -f "$dir/.gitkeep"; or touch "$dir/.gitkeep"
-        end
-
         set -l docs_dir "$root/docs"
 
         if not test -d "$docs_dir"
@@ -272,39 +299,146 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             test $verbose -eq 1; and echo "$c_ok→ Created docs/$c_reset"
         end
 
-        for plug in superpowers plans specs
-            set -l docs_target "$docs_dir/$plug"
-            set -l agents_target "$plugins_dir/$plug"
+        # Consolidate plans/ and specs/ directly under AGENTS/ (no plugins/ layer).
+        # Real source dirs from any known layout are merged into the canonical
+        # AGENTS/<tgt> and removed: docs/<tgt>, docs/superpowers/<tgt>,
+        # AGENTS/plugins/<tgt>, AGENTS/plugins/superpowers/<tgt> (legacy).
+        # Symlinks: docs/superpowers/<tgt> always (superpowers skills expect it);
+        # docs/<tgt> only when it had existed as a real directory.
+        for tgt in plans specs
+            set -l canonical "$agents_dir/$tgt"
 
-            # If a real directory exists in docs/, migrate its contents to AGENTS/plugins/
-            if test -d "$docs_target"; and not test -L "$docs_target"
-                set -l contents (ls -A "$docs_target" 2>/dev/null)
-                if test (count $contents) -gt 0
-                    if not command cp -rn "$docs_target/." "$agents_target/"
-                        echo "$c_err""Error: could not copy docs/$plug → AGENTS/plugins/$plug$c_reset" >&2
-                        return 1
-                    end
-                end
-                if not rm -rf "$docs_target"
-                    echo "$c_err""Error: could not remove docs/$plug after copy$c_reset" >&2
-                    return 1
-                end
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Moved docs/$plug → AGENTS/plugins/$plug$c_reset"
+            # Remember whether docs/<tgt> was a real dir (drives its symlink below)
+            set -l docs_tgt_was_real 0
+            if test -d "$docs_dir/$tgt"; and not test -L "$docs_dir/$tgt"
+                set docs_tgt_was_real 1
             end
 
-            # Create symlink docs/<plug> → ../AGENTS/plugins/<plug>
-            if not test -L "$docs_target"
-                if not ln -s "../AGENTS/plugins/$plug" "$docs_target"
-                    echo "$c_err""Error: could not create docs/$plug symlink$c_reset" >&2
-                    return 1
+            test -d "$canonical"; or mkdir -p "$canonical"
+
+            # Candidate real source dirs to merge into the canonical dir
+            set -l srcs "$docs_dir/$tgt" "$plugins_dir/$tgt" "$plugins_dir/superpowers/$tgt"
+            # Only follow docs/superpowers/<tgt> when docs/superpowers is a real
+            # dir; if it is a legacy symlink, its target is already covered by the
+            # AGENTS/plugins/superpowers/<tgt> source above.
+            if not test -L "$docs_dir/superpowers"
+                set -a srcs "$docs_dir/superpowers/$tgt"
+            end
+
+            for src in $srcs
+                if test -d "$src"; and not test -L "$src"
+                    set -l rel (string replace "$root/" "" "$src")
+                    set -l contents (command ls -A "$src" 2>/dev/null)
+                    if test (count $contents) -gt 0
+                        if not command cp -rn "$src/." "$canonical/"
+                            echo "$c_err""Error: could not merge $rel → AGENTS/$tgt$c_reset" >&2
+                            return 1
+                        end
+                    end
+                    if not rm -rf "$src"
+                        echo "$c_err""Error: could not remove $rel after merge$c_reset" >&2
+                        return 1
+                    end
+                    set changed 1
+                    test $verbose -eq 1; and echo "$c_ok→ Merged $rel → AGENTS/$tgt$c_reset"
                 end
+            end
+
+            test -f "$canonical/.gitkeep"; or touch "$canonical/.gitkeep"
+
+            # docs/<tgt> symlink: only recreated when it had been a real directory
+            set -l docs_link "$docs_dir/$tgt"
+            if test $docs_tgt_was_real -eq 1
+                if not test -L "$docs_link"
+                    if not ln -s "../AGENTS/$tgt" "$docs_link"
+                        echo "$c_err""Error: could not create docs/$tgt symlink$c_reset" >&2
+                        return 1
+                    end
+                    set changed 1
+                    test $verbose -eq 1; and echo "$c_ok→ Linked docs/$tgt → AGENTS/$tgt$c_reset"
+                end
+            else if test -L "$docs_link"; and test (readlink "$docs_link") != "../AGENTS/$tgt"
+                # Stale legacy symlink (pointed into AGENTS/plugins) → drop it
+                rm -f "$docs_link"
                 set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Linked docs/$plug → AGENTS/plugins/$plug$c_reset"
+                test $verbose -eq 1; and echo "$c_warn→ Removed stale docs/$tgt symlink$c_reset"
             end
         end
 
-        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --plugins" "docs/superpowers" "docs/plans" "docs/specs")
+        # docs/superpowers/ must be a real dir holding the plans/ + specs/ symlinks.
+        # Replace any legacy docs/superpowers symlink (content merged above).
+        if test -L "$docs_dir/superpowers"
+            rm -f "$docs_dir/superpowers"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_warn→ Removed legacy docs/superpowers symlink$c_reset"
+        end
+        if not test -d "$docs_dir/superpowers"
+            if not mkdir -p "$docs_dir/superpowers"
+                echo "$c_err""Error: could not create docs/superpowers/$c_reset" >&2
+                return 1
+            end
+        end
+
+        # docs/superpowers/<tgt> symlinks — always present (superpowers default)
+        for tgt in plans specs
+            set -l sp_link "$docs_dir/superpowers/$tgt"
+            if not test -L "$sp_link"
+                if not ln -s "../../AGENTS/$tgt" "$sp_link"
+                    echo "$c_err""Error: could not create docs/superpowers/$tgt symlink$c_reset" >&2
+                    return 1
+                end
+                set changed 1
+                test $verbose -eq 1; and echo "$c_ok→ Linked docs/superpowers/$tgt → AGENTS/$tgt$c_reset"
+            else if test (readlink "$sp_link") != "../../AGENTS/$tgt"
+                rm -f "$sp_link"
+                ln -s "../../AGENTS/$tgt" "$sp_link"
+                set changed 1
+                test $verbose -eq 1; and echo "$c_ok→ Relinked docs/superpowers/$tgt → AGENTS/$tgt$c_reset"
+            end
+        end
+
+        # Drop the now-empty legacy AGENTS/plugins/ layer entirely
+        if test -d "$plugins_dir"
+            rm -rf "$plugins_dir"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_warn→ Removed legacy AGENTS/plugins/$c_reset"
+        end
+
+        # ── AGENTS/devlogs (standard location for agent dev logs) ─────────────
+        set -l devlogs_dir "$agents_dir/devlogs"
+        set -l docs_devlogs "$docs_dir/devlogs"
+
+        if test -d "$docs_devlogs"; and not test -L "$docs_devlogs"
+            # Migrate an existing docs/devlogs into AGENTS/devlogs, then symlink
+            test -d "$devlogs_dir"; or mkdir -p "$devlogs_dir"
+            set -l contents (command ls -A "$docs_devlogs" 2>/dev/null)
+            if test (count $contents) -gt 0
+                if not command cp -rn "$docs_devlogs/." "$devlogs_dir/"
+                    echo "$c_err""Error: could not copy docs/devlogs → AGENTS/devlogs$c_reset" >&2
+                    return 1
+                end
+            end
+            if not rm -rf "$docs_devlogs"
+                echo "$c_err""Error: could not remove docs/devlogs after copy$c_reset" >&2
+                return 1
+            end
+            if not ln -s "../AGENTS/devlogs" "$docs_devlogs"
+                echo "$c_err""Error: could not create docs/devlogs symlink$c_reset" >&2
+                return 1
+            end
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Moved docs/devlogs → AGENTS/devlogs$c_reset"
+        else if not test -d "$devlogs_dir"
+            if not mkdir -p "$devlogs_dir"
+                echo "$c_err""Error: could not create AGENTS/devlogs$c_reset" >&2
+                return 1
+            end
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/devlogs/$c_reset"
+        end
+        test -f "$devlogs_dir/.gitkeep"; or touch "$devlogs_dir/.gitkeep"
+
+        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --plugins" "docs/superpowers" "docs/plans" "docs/specs" "docs/devlogs")
         if test -n "$_gi"
             set changed 1
             test $verbose -eq 1; and echo $_gi
@@ -312,6 +446,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     end
 
     #   ──────────────────────── Auto-commit AGENTS/ ────────────────────────────
+    # Pull first when an upstream is configured so the local .version reflects
+    # any remote bumps before we add to it (no-op for local-only repos).
+    if git -C "$agents_dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
+        git -C "$agents_dir" pull --rebase --autostash -q 2>/dev/null
+    end
     git -C "$agents_dir" add -A 2>/dev/null
     set -l status_out (git -C "$agents_dir" status --porcelain 2>/dev/null)
     if test -n "$status_out"
@@ -321,7 +460,8 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             set changed 1
             if test $verbose -eq 1
                 set -l sha (git -C "$agents_dir" rev-parse --short HEAD 2>/dev/null)
-                echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$msg$c_reset"
+                set -l realmsg (git -C "$agents_dir" log -1 --pretty=%s 2>/dev/null)
+                echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$realmsg$c_reset"
             end
         end
     end
