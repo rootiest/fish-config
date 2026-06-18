@@ -34,7 +34,7 @@ function cat --wraps='bat' --description 'Use bat for files, ls for directories,
         # contains raw terminal ANSI color escape sequences.
         if test -f $argv[1]
             if string match -q "$SCROLLBACK_HISTORY_DIR/*" $argv[1]
-                or string match -qr '\e\[[0-9;]*m' (head -n 5 $argv[1] 2>/dev/null)
+                or string match -qr -- '\e\[[0-9;]*m' (head -n 5 $argv[1] 2>/dev/null)
                 command cat $argv
                 return
             end
