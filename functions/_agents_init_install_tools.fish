@@ -23,8 +23,9 @@
 #   set -l msg (_agents_init_install_tools /path/to/AGENTS)
 #   test -n "$msg"; and echo $msg
 function _agents_init_install_tools --argument-names agents_dir
+    test -n "$agents_dir"; or return 1
     set -l src (path resolve (status dirname)/../scripts/agents-tools)
-    test -d "$src"; or return 1
+    test -f "$src/version-bump"; or return 1
     set -l dest "$agents_dir/.agents-tools"
 
     set -l want (command grep -m1 -oE 'agents-tools-version: *[0-9]+' "$src/version-bump" 2>/dev/null | command grep -oE '[0-9]+$')
@@ -37,7 +38,7 @@ function _agents_init_install_tools --argument-names agents_dir
     command cp "$src/version-bump" "$dest/version-bump"; or return 1
     command cp "$src/hooks/pre-commit" "$dest/hooks/pre-commit"; or return 1
     command cp "$src/hooks/prepare-commit-msg" "$dest/hooks/prepare-commit-msg"; or return 1
-    chmod +x "$dest/version-bump" "$dest/hooks/pre-commit" "$dest/hooks/prepare-commit-msg"
+    chmod +x "$dest/version-bump" "$dest/hooks/pre-commit" "$dest/hooks/prepare-commit-msg"; or return 1
 
     if test -z "$have"
         echo "→ Installed AGENTS/.agents-tools/ (version-bump v$want)"
