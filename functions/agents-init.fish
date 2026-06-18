@@ -20,6 +20,8 @@
 #     AGENTS/plans              superpowers plans      (real dir, .gitkeep)
 #     AGENTS/specs              superpowers specs      (real dir, .gitkeep)
 #     AGENTS/devlogs            agent development logs (real dir, .gitkeep)
+#     AGENTS/.version           MAJOR.MINOR.PATCH structure version (seed 1.0.0)
+#     AGENTS/.agents-tools/     committed version-bump script + git hook shims
 #     docs/superpowers/plans    → ../../AGENTS/plans   (always)
 #     docs/superpowers/specs    → ../../AGENTS/specs   (always)
 #     docs/plans                → ../AGENTS/plans   (only if docs/plans existed)
@@ -29,6 +31,13 @@
 #   plans/ and specs/ are merged from every legacy location (docs/<tgt>,
 #   docs/superpowers/<tgt>, and the old AGENTS/plugins/ layout) into the
 #   canonical AGENTS/<tgt>; the AGENTS/plugins/ layer is removed.
+#
+#   Each AGENTS repo carries a self-contained version bumper wired via
+#   core.hooksPath: a pre-commit hook bumps AGENTS/.version on every commit
+#   (MINOR when the tracked directory set changes, PATCH otherwise; MAJOR is
+#   manual-only), and a prepare-commit-msg hook appends "(vX.Y.Z)" to the
+#   commit subject. The script/hooks are version-managed from
+#   scripts/agents-tools/ and refreshed when their marker is stale.
 #
 #   With no flags, runs both --agents and --plugins setup. At the end of
 #   every invocation, commits any uncommitted changes in the AGENTS/ sub-repo
