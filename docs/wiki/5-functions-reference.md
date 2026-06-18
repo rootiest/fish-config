@@ -641,9 +641,13 @@
     every commit: MINOR (resetting PATCH) when the tracked directory set
     changes, PATCH otherwise; MAJOR is manual-only. A prepare-commit-msg hook
     appends "(vX.Y.Z)" to the commit subject. Downstream tooling can read
-    AGENTS/.version - a changed MINOR field signals a structure change. The
-    script and hooks are shipped from scripts/agents-tools/ and refreshed when
-    their version marker is stale.
+    AGENTS/.version - a changed MINOR field signals a structure change. Because
+    core.hooksPath is a single setting, the local override would otherwise
+    shadow your global hooks; after bumping the version, each shim chains
+    (execs) to the global/system core.hooksPath hook of the same name so global
+    pre-commit / prepare-commit-msg hooks (e.g. ggshield, Git LFS) still run.
+    The script and hooks are shipped from scripts/agents-tools/ and refreshed
+    when their version marker is stale.
 
     agents-init
     agents-init --agents
