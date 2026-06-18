@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 # agents-tools-version: 1
-exec "$(git rev-parse --show-toplevel)/.agents-tools/version-bump" precommit
+# Delegates to the repo's committed .agents-tools/version-bump. Guarded so a
+# missing script or failed rev-parse never blocks the commit (always exit 0).
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+[ -x "$root/.agents-tools/version-bump" ] && "$root/.agents-tools/version-bump" precommit
+exit 0

@@ -38,11 +38,14 @@ bump_precommit() {
         return 0
     fi
 
-    local major minor patch
-    IFS=. read -r major minor patch < "$vfile"
-    case "$major$minor$patch" in
-        *[!0-9]*|"") major=1; minor=0; patch=0 ;;
-    esac
+    local ver major minor patch
+    ver="$(head -n1 "$vfile")"
+    if printf '%s' "$ver" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+        IFS=. read -r major minor patch <<< "$ver"
+    else
+        # Corrupt/partial .version (e.g. "1." or "abc") → reset to a clean baseline.
+        major=1; minor=0; patch=0
+    fi
 
     if [ "$(read_dirset HEAD)" != "$(read_dirset INDEX)" ]; then
         minor=$((minor + 1)); patch=0
