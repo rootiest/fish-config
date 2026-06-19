@@ -762,6 +762,30 @@ Add -i (interactive confirmation) to destructive commands:
 
 ## 5.4 Git and Version Control
 
+### auto-pull
+
+    Synopsis:  auto-pull [list]
+               auto-pull add [PATH]
+               auto-pull remove <NAME|PATH>
+               auto-pull status
+
+    Manages the registry of repositories that are background fast-forwarded
+    when you enter them (see "Auto-pull fast-forward" under the C2 component
+    reference). The fish-config repo is always covered as a baseline. The
+    registry is machine-local at ~/.config/.user-dots/fish/auto-pull.list, one
+    absolute path per line, and is never committed. Registry management works
+    even when C2 auto-execution is disabled; only the background sync is gated.
+
+      list               Show registered repos (default)
+      add [PATH]         Register PATH's git root (default: current repo)
+      remove <NAME|PATH> Unregister by basename or exact path
+      status             Show enabled/disabled state, repo count, list path
+
+    cd ~/src/qmk_firmware; and auto-pull add
+    auto-pull add ~/work/api
+    auto-pull list
+    auto-pull remove qmk_firmware
+
 ### branch
 
     Synopsis:  branch <branch_name>
@@ -1677,15 +1701,26 @@ __fish_config_op_autoexec prevents all of them.
     yay wrapper                Every startup        Writes ~/.local/bin/yay wrapper
     Python venv activation     On every cd          Sources .venv/bin/activate.fish
     WakaTime command hook      On every command     Reports to WakaTime API
+    Auto-pull fast-forward     On entering a repo   Background ff-only git pull
 
 When C2 is disabled: no Fisher install, no theme application, no paru/yay
-wrapper generation, no automatic venv activation, and no WakaTime reporting.
+wrapper generation, no automatic venv activation, no WakaTime reporting, and
+no auto-pull (the PWD handler is never registered).
 The first-run completion marker (__fish_config_first_run_complete) is still
 set so the init does not re-run on subsequent shells.
 
 Python venv activation fires on every directory change. If a directory uses
 direnv (.envrc present), direnv takes priority and auto-venv is skipped for
 that directory.
+
+Auto-pull fast-forwards opted-in repositories in the background when you cd
+into them. The fish-config repo is always covered; other repos are added with
+the `auto-pull` command (see its entry in the functions reference). It only
+ever fast-forwards a clean repo whose branch has an upstream — never rebases,
+merges, or overwrites work — so it is a no-op on dirty trees, divergent
+branches, or repos without a remote. The handler fires once per repo entry
+(not on every sub-directory cd). The registry is machine-local at
+~/.config/.user-dots/fish/auto-pull.list and is never committed.
 
 #### C3 — Key and Environment Overrides
 

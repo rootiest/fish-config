@@ -88,6 +88,7 @@ less=### less
 rawfish=### rawfish
 view=### view
 git=## 5.4 Git and Version Control
+auto-pull=### auto-pull
 branch=### branch
 gi=### gi
 gitignore=### gi
