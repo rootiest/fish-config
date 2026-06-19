@@ -255,6 +255,30 @@
 
 ## 5.4 Git and Version Control
 
+### auto-pull
+
+    Synopsis:  auto-pull [list]
+               auto-pull add [PATH]
+               auto-pull remove <NAME|PATH>
+               auto-pull status
+
+    Manages the registry of repositories that are background fast-forwarded
+    when you enter them (see "Auto-pull fast-forward" under the C2 component
+    reference). The fish-config repo is always covered as a baseline. The
+    registry is machine-local at ~/.config/.user-dots/fish/auto-pull.list, one
+    absolute path per line, and is never committed. Registry management works
+    even when C2 auto-execution is disabled; only the background sync is gated.
+
+      list               Show registered repos (default)
+      add [PATH]         Register PATH's git root (default: current repo)
+      remove <NAME|PATH> Unregister by basename or exact path
+      status             Show enabled/disabled state, repo count, list path
+
+    cd ~/src/qmk_firmware; and auto-pull add
+    auto-pull add ~/work/api
+    auto-pull list
+    auto-pull remove qmk_firmware
+
 ### branch
 
     Synopsis:  branch <branch_name>

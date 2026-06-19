@@ -685,12 +685,34 @@ view /etc/fstab</code></pre>
 <hr />
 <h2 data-number="9.4" id="54-git-and-version-control">5.4 Git and
 Version Control</h2>
-<h3 data-number="9.4.1" id="branch">branch</h3>
+<h3 data-number="9.4.1" id="auto-pull">auto-pull</h3>
+<pre><code>Synopsis:  auto-pull [list]
+           auto-pull add [PATH]
+           auto-pull remove &lt;NAME|PATH&gt;
+           auto-pull status
+
+Manages the registry of repositories that are background fast-forwarded
+when you enter them (see &quot;Auto-pull fast-forward&quot; under the C2 component
+reference). The fish-config repo is always covered as a baseline. The
+registry is machine-local at ~/.config/.user-dots/fish/auto-pull.list, one
+absolute path per line, and is never committed. Registry management works
+even when C2 auto-execution is disabled; only the background sync is gated.
+
+  list               Show registered repos (default)
+  add [PATH]         Register PATH&#39;s git root (default: current repo)
+  remove &lt;NAME|PATH&gt; Unregister by basename or exact path
+  status             Show enabled/disabled state, repo count, list path
+
+cd ~/src/qmk_firmware; and auto-pull add
+auto-pull add ~/work/api
+auto-pull list
+auto-pull remove qmk_firmware</code></pre>
+<h3 data-number="9.4.2" id="branch">branch</h3>
 <pre><code>Synopsis:  branch &lt;branch_name&gt;
 Switches to a local branch, or creates it if it does not exist.
 
 branch feature/new-ui</code></pre>
-<h3 data-number="9.4.2" id="gi">gi</h3>
+<h3 data-number="9.4.3" id="gi">gi</h3>
 <pre><code>Synopsis:  gi [-h] [-b] [-p] [-s] [-l] [targets...]
 Generates .gitignore content from the gitignore.io API with MD5-based
 deduplication (patterns already present are not re-appended).
@@ -704,7 +726,7 @@ deduplication (patterns already present are not re-appended).
 gi python,venv
 gi -b -p
 gi -s node &gt; .gitignore</code></pre>
-<h3 data-number="9.4.3" id="git-clean">git-clean</h3>
+<h3 data-number="9.4.4" id="git-clean">git-clean</h3>
 <pre><code>Synopsis:  git-clean [-f]
 Fetches and prunes the remote, fast-forwards the current branch, then
 deletes local branches whose remote tracking branch has been deleted.
@@ -714,17 +736,17 @@ Switches to main/master automatically if the current branch is orphaned.
 
 git-clean
 git-clean --force</code></pre>
-<h3 data-number="9.4.4" id="gitup">gitup</h3>
+<h3 data-number="9.4.5" id="gitup">gitup</h3>
 <pre><code>Synopsis:  gitup [args...]
 Fetches updates from the remote and shows git status. Extra args are
 forwarded to git fetch.
 
 gitup
 gitup --all</code></pre>
-<h3 data-number="9.4.5" id="gitui">gitui</h3>
+<h3 data-number="9.4.6" id="gitui">gitui</h3>
 <pre><code>Synopsis:  gitui [args...]
 Launches gitui with the Catppuccin Frappe theme pre-applied.</code></pre>
-<h3 data-number="9.4.6" id="hist">hist</h3>
+<h3 data-number="9.4.7" id="hist">hist</h3>
 <pre><code>Synopsis:  hist
 Searches shell history with fzf, inserts the selection into the command
 line, and copies it to the clipboard via wl-copy.</code></pre>
