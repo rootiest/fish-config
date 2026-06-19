@@ -149,6 +149,7 @@ all of these commands.
     dir / vdir         forced --color=auto                    system dir / vdir
     help config        intercepts "help config" → config-help fish builtin help
     claude             auto-links AGENTS.md as CLAUDE.md before launch command claude
+    edit               multi-editor launcher (GUI/term + fallbacks)  $EDITOR/nvim/nano/vi
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.

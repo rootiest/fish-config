@@ -192,10 +192,35 @@
 
 ### edit
 
-    Synopsis:  edit [args...]
-    Opens files in nvim. Falls back to $EDITOR, nano, vi.
+    Synopsis:  edit [-V|-t] [-e EDITOR] [-c] [-x TEXT] [-n] [-v|-s] [FILE...]
+
+    Opens files in a text editor, choosing a terminal or GUI editor and
+    resolving a rich chain of fallbacks. With no --visual/--terminal flag the
+    mode is auto-detected: interactive terminals use the terminal editor
+    ($EDITOR), while detached invocations (e.g. desktop shortcuts) use the GUI
+    editor ($VISUAL). Clipboard contents and literal strings can be opened as
+    throwaway temp files. Editor output is suppressed unless --verbose.
+
+    GUI fallback chain:      zed → antigravity-ide → code → kate → kwrite →
+                             gnome-text-editor → gedit
+    Terminal fallback chain: nvim → vim → micro → nano → vi
+
+    Options:
+      -V, --visual      Force the GUI editor ($VISUAL or fallbacks)
+      -t, --terminal    Force the terminal editor ($EDITOR or fallbacks)
+      -e, --editor=X    Use a specific editor binary X
+      -c, --clipboard   Open the clipboard contents (as a temp file)
+      -x, --text=STR    Open STR as the contents of a new temp file
+      -n, --new         Force a new window/instance (best-effort)
+      -v, --verbose     Print the launch command and editor output
+      -s, --silent      Suppress all output, including the editor's
+      -h, --help        Show this help message
 
     edit ~/.config/fish/config.fish
+    edit --visual notes.txt
+    edit --terminal --new todo.md
+    edit --editor=code --clipboard
+    edit --text="hello world"
 
 ### fc
 

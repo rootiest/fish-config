@@ -511,7 +511,8 @@ GNUPGHOME          $XDG_CONFIG_HOME/gnupg
 WAKATIME_HOME      $XDG_CONFIG_HOME/wakatime</code></pre>
 <h2 data-number="5.3" id="editor-and-pager">Editor and Pager</h2>
 <pre><code>EDITOR      nvim (falls back to vi if nvim is absent)
-VISUAL      same as EDITOR
+VISUAL      unset by default; set a GUI editor via local.fish (the edit
+            function falls back to a GUI chain when VISUAL is empty)
 SUDO_EDITOR same as EDITOR
 PAGER       ov (falls back to less)</code></pre>
 <h2 data-number="5.4" id="scrollback-history">Scrollback History</h2>

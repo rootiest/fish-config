@@ -29,7 +29,8 @@ Tools that respect XDG are directed to these paths rather than polluting $HOME.
 ## Editor and Pager
 
     EDITOR      nvim (falls back to vi if nvim is absent)
-    VISUAL      same as EDITOR
+    VISUAL      unset by default; set a GUI editor via local.fish (the edit
+                function falls back to a GUI chain when VISUAL is empty)
     SUDO_EDITOR same as EDITOR
     PAGER       ov (falls back to less)
 
