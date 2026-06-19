@@ -159,7 +159,8 @@ Tools that respect XDG are directed to these paths rather than polluting $HOME.
 ## Editor and Pager
 
     EDITOR      nvim (falls back to vi if nvim is absent)
-    VISUAL      same as EDITOR
+    VISUAL      unset by default; set a GUI editor via local.fish (the edit
+                function falls back to a GUI chain when VISUAL is empty)
     SUDO_EDITOR same as EDITOR
     PAGER       ov (falls back to less)
 
@@ -698,10 +699,35 @@ Add -i (interactive confirmation) to destructive commands:
 
 ### edit
 
-    Synopsis:  edit [args...]
-    Opens files in nvim. Falls back to $EDITOR, nano, vi.
+    Synopsis:  edit [-V|-t] [-e EDITOR] [-c] [-x TEXT] [-n] [-v|-s] [FILE...]
+
+    Opens files in a text editor, choosing a terminal or GUI editor and
+    resolving a rich chain of fallbacks. With no --visual/--terminal flag the
+    mode is auto-detected: interactive terminals use the terminal editor
+    ($EDITOR), while detached invocations (e.g. desktop shortcuts) use the GUI
+    editor ($VISUAL). Clipboard contents and literal strings can be opened as
+    throwaway temp files. Editor output is suppressed unless --verbose.
+
+    GUI fallback chain:      zed → antigravity-ide → code → kate → kwrite →
+                             gnome-text-editor → gedit
+    Terminal fallback chain: nvim → vim → micro → nano → vi
+
+    Options:
+      -V, --visual      Force the GUI editor ($VISUAL or fallbacks)
+      -t, --terminal    Force the terminal editor ($EDITOR or fallbacks)
+      -e, --editor=X    Use a specific editor binary X
+      -c, --clipboard   Open the clipboard contents (as a temp file)
+      -x, --text=STR    Open STR as the contents of a new temp file
+      -n, --new         Force a new window/instance (best-effort)
+      -v, --verbose     Print the launch command and editor output
+      -s, --silent      Suppress all output, including the editor's
+      -h, --help        Show this help message
 
     edit ~/.config/fish/config.fish
+    edit --visual notes.txt
+    edit --terminal --new todo.md
+    edit --editor=code --clipboard
+    edit --text="hello world"
 
 ### fc
 
@@ -1632,6 +1658,7 @@ all of these commands.
     dir / vdir         forced --color=auto                    system dir / vdir
     help config        intercepts "help config" → config-help fish builtin help
     claude             auto-links AGENTS.md as CLAUDE.md before launch command claude
+    edit               multi-editor launcher (GUI/term + fallbacks)  $EDITOR/nvim/nano/vi
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.

@@ -108,7 +108,7 @@ if type -q nvim
 else
     set -gx EDITOR (command -s vi)
 end
-set -gx VISUAL $EDITOR
+# set -gx VISUAL $EDITOR # <- Use local.fish to set your preferred GUI editor.
 set -gx SUDO_EDITOR $EDITOR
 
 #   ──────────────────────────── GPG variables ─────────────────────────────
