@@ -258,7 +258,7 @@ If you'd rather set them by hand, each category is controlled by a universal var
 | Variable | Disables |
 |---|---|
 | `__fish_config_op_aliases` | Command shadows: `ls`→eza, `cat`→bat, `cd`→zoxide, `rm`→trash, `top`→btop, `edit`→multi-editor launcher, and friends; `grep`/`cp`/`mv`/`wget` flag injection |
-| `__fish_config_op_autoexec` | Startup side-effects: Fisher bootstrap, theme apply, `paru`/`yay` wrapper generation, auto venv activation, WakaTime hook |
+| `__fish_config_op_autoexec` | Startup side-effects: Fisher bootstrap, theme apply, `paru`/`yay` wrapper generation, auto venv activation, WakaTime hook, auto-pull background fast-forward |
 | `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`, bang-bang history expansion, autopair, puffer, Starship prompt, theme colors |
 | `__fish_config_op_integrations` | Kitty/WezTerm window abbreviations, `done` notifications, `spwin`/`tab`/`split`, `hist`, `logs`, `upgrade`, WakaTime |
 | `__fish_config_op_logging` | Scrollback capture on exit, tmux `pipe-pane` pane logging, zellij `dump-screen` capture on exit, `paru`/`yay` AUR log wrappers, Kitty watcher capture (sentinel-file coordinated) |
