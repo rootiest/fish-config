@@ -151,6 +151,7 @@ superpowers=### superpowers
 media=## 5.13 Media and Utilities
 dng2avif=### dng2avif
 spark=### spark
+yt-dlp=### yt-dlp
 miscfns=## 5.14 Miscellaneous
 config-help=### config-help
 config-update=### config-update

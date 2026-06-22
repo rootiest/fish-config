@@ -22,7 +22,9 @@ function _fish_deps_install
         # Determine if this dep needs attention: missing, or fish < 4.0
         set -l needs_install 0
         set -l upgrade_label Install
-        if not type -q $bin
+        # command -q (not type -q): a wrapper function shadowing the name
+        # (rg, rm, yt-dlp) must not be mistaken for the installed binary.
+        if not command -q $bin
             set needs_install 1
         else if test "$bin" = fish
             set -l _major (fish --version 2>&1 | string match -r 'version (\d+)')[2]
