@@ -26,8 +26,9 @@ function _fish_deps_update
 
     set -l i 1
     for bin in $_fdc_bins
-        # Skip fisher itself (handled above) and tools that aren't installed
-        if test "$bin" = fisher; or not type -q $bin
+        # Skip fisher itself (handled above) and tools that aren't installed.
+        # command -q (not type -q): ignore wrapper functions shadowing the name.
+        if test "$bin" = fisher; or not command -q $bin
             set i (math $i + 1)
             continue
         end

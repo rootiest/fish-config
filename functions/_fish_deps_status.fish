@@ -14,7 +14,9 @@ function _fish_deps_status
     _fish_deps_catalog
 
     function __fds_print_dep --argument-names bin tier
-        if type -q $bin
+        # command -q (not type -q): probe PATH only, so wrapper functions that
+        # shadow a tool name (rg, rm, yt-dlp) don't mask a missing binary.
+        if command -q $bin
             # Special version check: fish < 4.0 is functionally incompatible
             if test "$bin" = fish
                 set -l _major (fish --version 2>&1 | string match -r 'version (\d+)')[2]
@@ -28,7 +30,7 @@ function _fish_deps_status
             end
             set_color green; echo -n " ✓ "; set_color normal
             echo -n "$bin "
-            set_color brblack; echo "(Found at "(type -p $bin)")"; set_color normal
+            set_color brblack; echo "(Found at "(command -s $bin)")"; set_color normal
         else if test "$tier" = rec
             set_color yellow; echo -n " ⚠ "; set_color normal
             echo -n "$bin "
