@@ -298,3 +298,4 @@ AGENTS/
 #   agents-init --plugins
 docs/devlogs
 #   ────────────────────────────────────────────────────────
+/.cache_ggshield
