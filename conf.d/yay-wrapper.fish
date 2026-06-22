@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Generates ~/.local/bin/yay on first run (and on version bump) when
-# /usr/bin/yay is installed. The wrapper runs yay in a PTY so progress
+# yay is installed. The wrapper runs yay in a PTY so progress
 # bars are preserved, renders the captured animation to a clean static log
 # (via scripts/clean_progress_log.py), and prunes old logs.
 
@@ -19,12 +19,13 @@ if not __fish_config_op_enabled __fish_config_op_logging
     return
 end
 
-set -l _yay_real /usr/bin/yay
+# Resolve the real yay binary, skipping our own shim (never /usr/bin-assumed).
+set -l _yay_real (__fish_real_command yay)
 set -l _yay_wrapper "$HOME/.local/bin/yay"
-set -l _yay_wrapper_version 5
+set -l _yay_wrapper_version 6
 
 # Skip entirely if the real yay binary isn't present
-test -x $_yay_real; or return
+test -x "$_yay_real"; or return
 
 # Check if wrapper already exists at the expected version
 if test -f $_yay_wrapper
@@ -48,7 +49,7 @@ printf '%s\n' \
     '' \
     '# Build a safely-quoted command string for script(1).' \
     '# script(1) allocates a PTY so yay detects a real terminal and shows progress.' \
-    'cmd_str="/usr/bin/yay"' \
+    "cmd_str=\"$_yay_real\"" \
     'for arg in "$@"; do' \
     '    cmd_str+=" $(printf '"'"'%q'"'"' "$arg")"' \
     'done' \

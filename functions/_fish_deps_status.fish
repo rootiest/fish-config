@@ -30,7 +30,7 @@ function _fish_deps_status
             end
             set_color green; echo -n " ✓ "; set_color normal
             echo -n "$bin "
-            set_color brblack; echo "(Found at "(command -s $bin)")"; set_color normal
+            set_color brblack; echo "(Found at "(__fish_real_command $bin)")"; set_color normal
         else if test "$tier" = rec
             set_color yellow; echo -n " ⚠ "; set_color normal
             echo -n "$bin "
