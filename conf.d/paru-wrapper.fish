@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Generates ~/.local/bin/paru on first run (and on version bump) when
-# /usr/bin/paru is installed. The wrapper runs paru in a PTY so progress
+# paru is installed. The wrapper runs paru in a PTY so progress
 # bars are preserved, renders the captured animation to a clean static log
 # (via scripts/clean_progress_log.py), and prunes old logs.
 
@@ -19,12 +19,13 @@ if not __fish_config_op_enabled __fish_config_op_logging
     return
 end
 
-set -l _paru_real /usr/bin/paru
+# Resolve the real paru binary, skipping our own shim (never /usr/bin-assumed).
+set -l _paru_real (__fish_real_command paru)
 set -l _paru_wrapper "$HOME/.local/bin/paru"
-set -l _paru_wrapper_version 5
+set -l _paru_wrapper_version 6
 
 # Skip entirely if the real paru binary isn't present
-test -x $_paru_real; or return
+test -x "$_paru_real"; or return
 
 # Check if wrapper already exists at the expected version
 if test -f $_paru_wrapper
@@ -48,7 +49,7 @@ printf '%s\n' \
     '' \
     '# Build a safely-quoted command string for script(1).' \
     '# script(1) allocates a PTY so paru detects a real terminal and shows progress.' \
-    'cmd_str="/usr/bin/paru"' \
+    "cmd_str=\"$_paru_real\"" \
     'for arg in "$@"; do' \
     '    cmd_str+=" $(printf '"'"'%q'"'"' "$arg")"' \
     'done' \
