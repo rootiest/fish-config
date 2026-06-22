@@ -52,6 +52,9 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
                 Note: uv does not provide python3 on PATH, and Arch's base
                 does not include it, so it is listed separately. All
                 consumers degrade gracefully without it.
+    yt-dlp      Video/media downloader; backs the yt-dlp wrapper function.
+                Optional — the wrapper falls back to the system yt-dlp and
+                the rest of the config works without it.
 
 ## Install Methods
 

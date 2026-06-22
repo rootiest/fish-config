@@ -819,7 +819,7 @@ Dependencies are grouped into three tiers:
   Integrations  wakatime, tailscale
   Recommended   cargo, starship, uv, direnv, paru, yay, eza, lsd, bat,
                 btop, dust, duf, prettyping, ov, ripgrep, lazygit,
-                lazydocker, trash, kitty, wezterm, python3
+                lazydocker, trash, kitty, wezterm, python3, yt-dlp
 
 fish-deps
 fish-deps install
@@ -1093,6 +1093,19 @@ Reads from stdin if no numbers are given.
 
 spark 1 1 2 5 14 42
 echo &quot;3 7 2 9 1&quot; | spark</code></pre>
+<h3 data-number="9.13.4" id="yt-dlp">yt-dlp</h3>
+<pre><code>Synopsis:  yt-dlp [args...] URL [URL...]
+Wraps yt-dlp, prepending sane defaults: --sponsorblock-remove all,
+--embed-subs, --embed-metadata, and --embed-thumbnail. Each default
+is suppressed when you already pass that flag, its alias, or its
+negation (e.g. --no-embed-thumbnail drops the thumbnail default;
+--no-sponsorblock or your own --sponsorblock-remove drops ours). All
+other arguments pass through unchanged, and --help falls through to
+real yt-dlp. Opinionated component (C1 aliases); when disabled it
+passes straight through to the system yt-dlp.
+
+yt-dlp dQw4w9WgXcQ
+yt-dlp --no-embed-thumbnail dQw4w9WgXcQ</code></pre>
 <hr />
 <h2 data-number="9.14" id="514-miscellaneous">5.14 Miscellaneous</h2>
 <h3 data-number="9.14.1" id="config-help">config-help</h3>

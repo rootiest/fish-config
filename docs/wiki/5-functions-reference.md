@@ -416,7 +416,7 @@
       Integrations  wakatime, tailscale
       Recommended   cargo, starship, uv, direnv, paru, yay, eza, lsd, bat,
                     btop, dust, duf, prettyping, ov, ripgrep, lazygit,
-                    lazydocker, trash, kitty, wezterm, python3
+                    lazydocker, trash, kitty, wezterm, python3, yt-dlp
 
     fish-deps
     fish-deps install
@@ -769,6 +769,21 @@
 
     spark 1 1 2 5 14 42
     echo "3 7 2 9 1" | spark
+
+### yt-dlp
+
+    Synopsis:  yt-dlp [args...] URL [URL...]
+    Wraps yt-dlp, prepending sane defaults: --sponsorblock-remove all,
+    --embed-subs, --embed-metadata, and --embed-thumbnail. Each default
+    is suppressed when you already pass that flag, its alias, or its
+    negation (e.g. --no-embed-thumbnail drops the thumbnail default;
+    --no-sponsorblock or your own --sponsorblock-remove drops ours). All
+    other arguments pass through unchanged, and --help falls through to
+    real yt-dlp. Opinionated component (C1 aliases); when disabled it
+    passes straight through to the system yt-dlp.
+
+    yt-dlp dQw4w9WgXcQ
+    yt-dlp --no-embed-thumbnail dQw4w9WgXcQ
 
 ---
 
