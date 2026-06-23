@@ -21,7 +21,7 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 > your machine, but the files persist locally.
 >
 > - Disable all logging with: `set -U __fish_config_op_logging off`
-> - Prefer a menu? Run the interactive picker: `config-toggle`
+> - Prefer a menu? Run the interactive picker: `config-settings`
 > - See Section 7 (C5 - Logging and Capture) for the full breakdown.
 
 The configuration is split across:

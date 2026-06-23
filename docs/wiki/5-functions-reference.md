@@ -840,19 +840,24 @@
     config-update --dry-run
     config-update --force
 
-### config-toggle
+### config-settings
 
-    Synopsis:  config-toggle [-h]
+    Synopsis:  config-settings [-h]
 
-    Opens an interactive TUI for toggling the six opinionated component
-    categories (C1–C6) and the master disable variable without having to
-    type or remember variable names. Two scope tabs allow independent
-    per-scope configuration:
+    Opens an interactive TUI for managing fish configuration settings. Handles
+    the six opinionated component categories (C1–C6), the master disable
+    variable, and the __fish_user_dots_path path variable — without having to
+    type or remember variable names. Two scope tabs allow independent per-scope
+    configuration for category toggles:
 
       Universal — persists across all sessions (set -U)
       Session   — current shell only (set -g)
 
-    Changes apply immediately on each value keypress. Always available
+    The Dots Path row always operates on the universal scope regardless of the
+    active tab.
+
+    Changes to category toggles apply immediately on each keypress. Changes to
+    the path variable use an inline edit prompt (Enter). Always available
     regardless of the __fish_config_opinionated master state.
 
     The panel adapts to the terminal width automatically, selecting from
@@ -867,16 +872,29 @@
 
     Navigation:
       ↑ ↓ / k j   Move cursor
-      ← → / h l   Set value: OFF ← DEFAULT → ON (clamped)
+      ← → / h l   Set value: OFF ← DEFAULT → ON (toggle rows); LEFT clears path
+      Enter        Edit the Dots Path (path row only)
       Tab          Switch scope (Universal ↔ Session)
       q / Escape   Exit
 
-    Left/Right (or vim-style h/l) move the highlighted value one step along
-    the OFF–DEFAULT–ON scale and stop at the ends. DEFAULT erases the
-    variable so the master switch / built-in default applies.
+    Left/Right (or vim-style h/l) move the highlighted toggle value one step
+    along the OFF–DEFAULT–ON scale and stop at the ends. DEFAULT erases the
+    variable so the master switch / built-in default applies. On the Dots Path
+    row, LEFT/h clears the universal variable; RIGHT/l is a no-op (use Enter).
+
+    Dots Path row [U] tag: the tag confirms this row always writes to the
+    universal scope, regardless of which tab is active. Setting it per-session
+    would have no effect on startup sourcing.
 
     Flags:
       --help / -h   Show usage.
+
+    config-settings
+
+### config-toggle (deprecated)
+
+    Deprecated alias for config-settings. Prints a deprecation notice to
+    stderr, then delegates all arguments to config-settings.
 
     config-toggle
 

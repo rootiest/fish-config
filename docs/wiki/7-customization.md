@@ -108,7 +108,7 @@ Examples:
     # (erase both to go back to full-flavor defaults)
 
 For an interactive alternative to setting these variables by hand, run
-config-toggle — a full-screen TUI that flips any category (including C5
+config-settings — a full-screen TUI that flips any category (including C5
 logging) on or off, per session or universally. See its entry in Section 5.
 
 Notes:

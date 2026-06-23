@@ -493,6 +493,9 @@
 version control in a private directory. The path defaults to
 <code>~/.config/.user-dots/fish/</code> but can be overridden:</p>
 <pre><code>set -U __fish_user_dots_path /path/to/your/dots/fish</code></pre>
+<p>Or use the interactive TUI — run <code>config-settings</code> and
+navigate to the "Dots Path" row (last row). Press Enter to type a new
+path, or ← / h to reset to the default.</p>
 <p>config.fish sources local.fish from that directory on every
 interactive session. local.fish is responsible for sourcing its own
 secrets.fish:</p>

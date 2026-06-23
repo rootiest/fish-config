@@ -10,6 +10,10 @@ control in a private directory. The path defaults to
 
     set -U __fish_user_dots_path /path/to/your/dots/fish
 
+Or use the interactive TUI — run `config-settings` and navigate to the
+"Dots Path" row (last row). Press Enter to type a new path, or ← / h to
+reset to the default.
+
 config.fish sources local.fish from that directory on every interactive
 session. local.fish is responsible for sourcing its own secrets.fish:
 
