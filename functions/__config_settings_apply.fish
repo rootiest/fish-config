@@ -48,6 +48,8 @@ function __config_settings_apply
                     set -U $varname off 2>/dev/null
                 case DEFAULT
                     set -Ue $varname 2>/dev/null
+                case '*'
+                    set -U $varname $value 2>/dev/null
             end
         case session
             switch $value
