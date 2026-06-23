@@ -40,7 +40,7 @@ function config-settings --description 'Interactive TUI for managing fish config
             case -h --help
                 echo "$c_head""Usage:$c_reset $c_cmd""config-settings$c_reset $c_flag""[-h]$c_reset"
                 echo
-                echo "  Interactive TUI for toggling opinionated component categories."
+                echo "  Interactive TUI for managing fish config settings."
                 echo "  Changes apply immediately — no confirm step required."
                 echo
                 echo "$c_head""Navigation:$c_reset"
