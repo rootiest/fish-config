@@ -155,7 +155,7 @@ git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
 
 Then open a new Fish shell — Fisher will be installed automatically on first launch and the Catppuccin Mocha theme will be applied. All plugin functionality is bundled directly with this config and requires no additional installation.
 
-A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are sourced from `~/.config/.user-dots/fish/secrets.fish` and excluded from version control.
+A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are kept in a private overlay directory (see [Personalization](#personalization)) and excluded from version control.
 
 > [!IMPORTANT]
 > `config.fish` ends with a `return` sentinel guard. Any lines appended **after** it by a tool's setup command will silently have no effect. Many tools (starship, zoxide, mise, etc.) offer a setup command that appends an `init | source` line to your `config.fish` — all integrations are managed through `conf.d/` files instead. If you add a new tool and its shell integration appears to do nothing, check whether its setup command appended an init line to the bottom of `config.fish` and create a `conf.d/<tool>.fish` file for it instead.
@@ -174,12 +174,18 @@ Pull the latest changes from upstream without needing a configured git remote:
 
 ## Personalization
 
-Sensitive credentials and machine-specific paths are kept out of version control via a secondary private directory at `~/.config/.user-dots/fish/`. Two files are sourced automatically by `config.fish` if they exist:
+Sensitive credentials and machine-specific paths are kept out of version control via a private overlay directory. The path defaults to `~/.config/.user-dots/fish/` but can be changed by setting a universal variable:
+
+```fish
+set -U __fish_user_dots_path /path/to/your/dots/fish
+```
+
+`config.fish` sources `local.fish` from that directory. `local.fish` is responsible for sourcing its own `secrets.fish` companion:
 
 ```
-~/.config/.user-dots/fish/
+$__fish_user_dots_path/
 ├── secrets.fish   # API keys, tokens, passwords, personal identifiers
-└── local.fish     # Machine-specific paths and environment variables
+└── local.fish     # Machine-specific paths, env vars, and sourcing secrets
 ```
 
 ### secrets.fish
@@ -231,16 +237,14 @@ abbr -a dcw 'docker context use work-server'
 
 ### How it works
 
-`config.fish` sources both files with an existence check so the public config works cleanly on any machine that doesn't have the private repo:
+`config.fish` sources only `local.fish` with an existence check so the public config works cleanly on any machine without the private repo. `local.fish` is responsible for sourcing its own `secrets.fish`:
 
 ```fish
-if test -f $HOME/.config/.user-dots/fish/secrets.fish
-    source $HOME/.config/.user-dots/fish/secrets.fish
-end
-
-if test -f $HOME/.config/.user-dots/fish/local.fish
-    source $HOME/.config/.user-dots/fish/local.fish
-end
+# config.fish resolves the path, then sources local.fish
+set -q __fish_user_dots_path
+    or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
+test -f "$__fish_user_dots_path/local.fish"
+    and source "$__fish_user_dots_path/local.fish"
 ```
 
 `fish_variables` (which fish auto-manages and may contain universal variable state) is excluded from this repo via `.gitignore`.

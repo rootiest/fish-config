@@ -139,16 +139,16 @@ end
 #   Adds common user bin directories to the PATH. The -mg --move option for cargo ensures that
 #   the cargo bin directory is moved to the end of the PATH, which can help avoid conflicts
 #   with system-installed Rust tools while still allowing user-installed cargo binaries to be found.
-fish_add_path $HOME/.local/bin               # Standard user-local executables (XDG spec)
-fish_add_path $HOME/.local/share/../bin      # Alternative/legacy path for local user binaries
-fish_add_path $HOME/Applications             # User-installed applications and standalone apps
-fish_add_path $HOME/scripts                  # Custom personal shell scripts and automation
-fish_add_path -mga $CARGO_HOME/bin           # Rust binaries and tools installed via Cargo
-fish_add_path $BUN_INSTALL/bin               # Bun runtime executables and globally installed packages
-fish_add_path $XDG_DATA_HOME/npm-global/bin  # Global Node.js/npm packages (XDG compliant location)
-fish_add_path $HOME/.lmstudio/bin            # LM Studio CLI tools for local LLM management
-fish_add_path $HOME/.resend/bin              # Resend email service CLI tools
-fish_add_path $HOME/.fzf/bin                 # Fuzzy Finder (fzf) core binary and helper scripts
+fish_add_path $HOME/.local/bin # Standard user-local executables (XDG spec)
+fish_add_path $HOME/.local/share/../bin # Alternative/legacy path for local user binaries
+fish_add_path $HOME/Applications # User-installed applications and standalone apps
+fish_add_path $HOME/scripts # Custom personal shell scripts and automation
+fish_add_path -mga $CARGO_HOME/bin # Rust binaries and tools installed via Cargo
+fish_add_path $BUN_INSTALL/bin # Bun runtime executables and globally installed packages
+fish_add_path $XDG_DATA_HOME/npm-global/bin # Global Node.js/npm packages (XDG compliant location)
+fish_add_path $HOME/.lmstudio/bin # LM Studio CLI tools for local LLM management
+fish_add_path $HOME/.resend/bin # Resend email service CLI tools
+fish_add_path $HOME/.fzf/bin # Fuzzy Finder (fzf) core binary and helper scripts
 
 #   ───────────────────────── CDPATH projects dir ──────────────────────────
 # Allows cd-ing to directories within $HOME/projects or $HOME without needing to specify the full path.
@@ -215,23 +215,13 @@ if status is-interactive
     #   │    This is useful for machine-specific behavior or configurations.   │
     #   ╰────────────────────────────── OVERRIDES ─────────────────────────────╯
     #
-    # Define user-dots path variable for a more legible secrets/local config.
-    set -l dot_fish "$XDG_CONFIG_HOME/.user-dots/fish"
-    #   ───────────────────────── Source user secrets ──────────────────────────
-    #   Sources a secrets.fish file if it exists, which can be used to store
-    #   sensitive environment variables and configurations that shouldn't be
-    #   committed to version control.
-    #   This allows you to keep things like API keys, database credentials,
-    #   and other secrets out of your main config files and safely ignored by git.
-    test -f "$dot_fish/secrets.fish"; and source "$dot_fish/secrets.fish"
-
+    # Resolve user-dots path. Customize via: set -U __fish_user_dots_path /your/path
+    set -q __fish_user_dots_path
+        or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
     #   ─────────────────────── Source machine-local config ────────────────────
-    #   Sources a local.fish file if it exists, which can be used for machine-specific
-    #   variables and configurations that shouldn't be shared across machines.
-    #   This allows you to have different settings on different machines without affecting
-    #   your main config or secrets files. For example, you might want different PATH additions,
-    #   aliases, or environment variables on your work laptop vs. your home desktop.
-    test -f "$dot_fish/local.fish"; and source "$dot_fish/local.fish"
+    #   Sources local.fish if it exists. That file handles sourcing its own
+    #   secrets.fish companion when needed.
+    test -f "$__fish_user_dots_path/local.fish"; and source "$__fish_user_dots_path/local.fish"
 
     #   ─────────────────── C6: Greeting & First-Run UI override ───────────────
     # When the greeting category is disabled, stamp out any fish_greeting
