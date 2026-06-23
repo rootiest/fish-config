@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __config_toggle_draw <cur_row> <cur_scope> <var1> ... <var7>
+#   __config_toggle_draw <cur_row> <cur_scope> <var1> ... <var8>
 #
 # DESCRIPTION
-#   Renders the 14-line config-toggle TUI panel to stdout. Panel width and
+#   Renders the 16-line config-toggle TUI panel to stdout. Panel width and
 #   horizontal position are chosen automatically from $COLUMNS each call,
 #   so a terminal resize takes effect on the next keypress without any
 #   extra bookkeeping. Four width tiers with a 6-col buffer per side:
@@ -16,13 +16,13 @@
 #     COLUMNS  < 82 → 52-wide (IW=50, desc=17 chars)  ← default
 #
 #   The box is horizontally centered via a left-padding prefix on every
-#   output line. \e[14A\e[J erases by line count so the horizontal offset
+#   output line. \e[16A\e[J erases by line count so the horizontal offset
 #   does not interfere with the redraw loop.
 #
 # ARGUMENTS
-#   cur_row    0–6, the currently highlighted row
+#   cur_row    0–7, the currently highlighted row
 #   cur_scope  "universal" or "session"
-#   var1–var7  Variable names for rows 0–6 (in order per Variable Reference)
+#   var1–var8  Variable names for rows 0–7 (in order per Variable Reference)
 #
 # RETURNS
 #   0  Always
@@ -50,7 +50,7 @@ function __config_settings_draw
 
     # ── Width tier: 6-col buffer per side before stepping up ──────────────
     # IW = inner width (chars between │ │); desc field = IW - 33.
-    # All four layouts are exactly 14 lines tall — panel_h in caller stays 14.
+    # All four layouts are exactly 16 lines tall — panel_h in caller stays 16.
     set -l iw 50
     set -l descs \
         "cmd shadows" \
@@ -181,12 +181,42 @@ function __config_settings_draw
         $badge \
         (string pad -r -w (math $iw - 33) -- $descs[7])
 
+    # ── Separator before Path Settings ───────────────────────────────────
+    printf '%s│    %s  │\n' $p (string repeat -n (math $iw - 6) '─')
+
+    # ── Path row (index 7) — always universal scope ───────────────────────
+    set -l path_var $vars[8]
+    set -l raw_path (__config_settings_get_val $path_var universal)
+
+    set -l path_badge
+    set -l path_dpad
+    if test "$raw_path" = DEFAULT
+        set path_badge "$c_dim""DEFAULT$c_reset"
+        set path_dpad  (string pad -r -w (math $iw - 33) -- "—default—  [U]")
+    else
+        set path_badge "$c_ok"" PATH  $c_reset"
+        set -l max_path (math $iw - 37)
+        set -l truncated (string shorten -m $max_path -- "$raw_path")
+        set path_dpad (string pad -r -w (math $iw - 33) -- "$truncated [U]")
+    end
+
+    set -l path_curs "  "
+    if test $cur_row -eq 7
+        set path_curs "$c_sel▶$c_reset "
+    end
+
+    printf '%s│  %s%s [ %s ]  %s   │\n' \
+        $p $path_curs \
+        (string pad -r -w 12 -- "Dots Path") \
+        $path_badge \
+        $path_dpad
+
     # ── Bottom divider ────────────────────────────────────────────────────
     printf '%s│%s│\n' $p $HBR
 
     # ── Keybind hint ──────────────────────────────────────────────────────
     # string pad is width-aware (arrows count as 1 column)
-    set -l hint " ↑↓/kj move  ←→/hl set  Tab scope  q quit"
+    set -l hint " ↑↓/kj move  ←→/hl set  Enter edit path  q quit"
     printf '%s│%s%s%s│\n' $p $c_dim (string pad -r -w $iw -- $hint) $c_reset
 
     # ── Bottom border ─────────────────────────────────────────────────────
