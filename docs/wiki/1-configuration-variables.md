@@ -5,7 +5,7 @@
 ---
 
 These variables are exported from config.fish on every interactive session.
-Override them in ~/.config/.user-dots/fish/local.fish.
+Override them in local.fish (see Section 10, Personalization).
 
 ## Environment Directories (XDG)
 

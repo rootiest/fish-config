@@ -8,20 +8,26 @@
 
 Place machine-specific settings that should not be committed to git in:
 
-    ~/.config/.user-dots/fish/local.fish
+    $__fish_user_dots_path/local.fish
+
+`__fish_user_dots_path` defaults to `~/.config/.user-dots/fish`. Set a
+custom location with:
+
+    set -U __fish_user_dots_path /path/to/your/dots/fish
 
 Typical uses: additional PATH entries, local aliases, hostname-specific env
 vars, work-specific tool configs.
 
 ## Secrets and API Keys
 
-    ~/.config/.user-dots/fish/secrets.fish
+    $__fish_user_dots_path/secrets.fish
 
 Store API tokens, GPG keys, private credentials here. This file is never
-committed.
+committed. It is sourced by local.fish directly, not by config.fish.
 
-Both files are sourced at the end of config.fish on every interactive
-session, so they can override anything set earlier.
+`local.fish` is sourced at the end of config.fish on every interactive
+session, so it and its companion secrets.fish can override anything set
+earlier.
 
 ## Overriding Configuration Variables
 

@@ -493,16 +493,21 @@
 Configuration</h2>
 <p>Place machine-specific settings that should not be committed to git
 in:</p>
-<pre><code>~/.config/.user-dots/fish/local.fish</code></pre>
+<pre><code>$__fish_user_dots_path/local.fish</code></pre>
+<p><code>__fish_user_dots_path</code> defaults to
+<code>~/.config/.user-dots/fish</code>. Set a custom location with:</p>
+<pre><code>set -U __fish_user_dots_path /path/to/your/dots/fish</code></pre>
 <p>Typical uses: additional PATH entries, local aliases,
 hostname-specific env vars, work-specific tool configs.</p>
 <h2 data-number="11.2" id="secrets-and-api-keys">Secrets and API
 Keys</h2>
-<pre><code>~/.config/.user-dots/fish/secrets.fish</code></pre>
+<pre><code>$__fish_user_dots_path/secrets.fish</code></pre>
 <p>Store API tokens, GPG keys, private credentials here. This file is
-never committed.</p>
-<p>Both files are sourced at the end of config.fish on every interactive
-session, so they can override anything set earlier.</p>
+never committed. It is sourced by local.fish directly, not by
+config.fish.</p>
+<p><code>local.fish</code> is sourced at the end of config.fish on every
+interactive session, so it and its companion secrets.fish can override
+anything set earlier.</p>
 <h2 data-number="11.3"
 id="overriding-configuration-variables">Overriding Configuration
 Variables</h2>

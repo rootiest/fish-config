@@ -490,11 +490,15 @@
 </nav>
 <h1 data-number="14" id="10-personalization">10. PERSONALIZATION</h1>
 <p>Sensitive credentials and machine-specific settings are kept out of
-version control in a private directory at ~/.config/.user-dots/fish/.
-Two files are sourced automatically by config.fish if they exist:</p>
-<pre><code>~/.config/.user-dots/fish/
+version control in a private directory. The path defaults to
+<code>~/.config/.user-dots/fish/</code> but can be overridden:</p>
+<pre><code>set -U __fish_user_dots_path /path/to/your/dots/fish</code></pre>
+<p>config.fish sources local.fish from that directory on every
+interactive session. local.fish is responsible for sourcing its own
+secrets.fish:</p>
+<pre><code>$__fish_user_dots_path/
 ├── secrets.fish   API keys, tokens, passwords, personal identifiers
-└── local.fish     Machine-specific paths and environment variables</code></pre>
+└── local.fish     Machine-specific paths, env vars, and sourcing secrets</code></pre>
 <p>fish_variables (auto-managed by fish) is excluded from this repo via
 .gitignore. Do not commit it.</p>
 <h2 data-number="14.1" id="secretsfish">secrets.fish</h2>
@@ -524,9 +528,10 @@ abbr -a sshw &#39;ssh you@work-server.example.com&#39;
 # Docker context shortcuts
 abbr -a dcr &#39;docker context use my-remote-server&#39;
 abbr -a dcw &#39;docker context use work-server&#39;</code></pre>
-<p>Both files are sourced at the end of config.fish with an existence
+<p>local.fish is sourced at the end of config.fish with an existence
 check so the public config works cleanly on any machine without the
-private repo.</p>
+private repo. local.fish in turn sources secrets.fish when it
+exists.</p>
 <hr />
 </body>
 </html>

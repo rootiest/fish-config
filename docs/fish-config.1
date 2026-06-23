@@ -176,7 +176,7 @@ docs/                     Offline documentation and compiled man page
 .PP
 These variables are exported from config.fish on every interactive
 session.
-Override them in \[ti]/.config/.user-dots/fish/local.fish.
+Override them in local.fish (see Section 10, Personalization).
 .SS Environment Directories (XDG)
 .IP
 .nf
@@ -1966,7 +1966,17 @@ Place machine-specific settings that should not be committed to git in:
 .IP
 .nf
 \f[C]
-\[ti]/.config/.user-dots/fish/local.fish
+$__fish_user_dots_path/local.fish
+\f[R]
+.fi
+.PP
+\f[V]__fish_user_dots_path\f[R] defaults to
+\f[V]\[ti]/.config/.user-dots/fish\f[R].
+Set a custom location with:
+.IP
+.nf
+\f[C]
+set -U __fish_user_dots_path /path/to/your/dots/fish
 \f[R]
 .fi
 .PP
@@ -1976,15 +1986,17 @@ env vars, work-specific tool configs.
 .IP
 .nf
 \f[C]
-\[ti]/.config/.user-dots/fish/secrets.fish
+$__fish_user_dots_path/secrets.fish
 \f[R]
 .fi
 .PP
 Store API tokens, GPG keys, private credentials here.
 This file is never committed.
+It is sourced by local.fish directly, not by config.fish.
 .PP
-Both files are sourced at the end of config.fish on every interactive
-session, so they can override anything set earlier.
+\f[V]local.fish\f[R] is sourced at the end of config.fish on every
+interactive session, so it and its companion secrets.fish can override
+anything set earlier.
 .SS Overriding Configuration Variables
 .PP
 Any variable set in local.fish after the main config loads takes effect.
@@ -2621,15 +2633,25 @@ Run exec fish after a successful update to reload.
 .SH 10. PERSONALIZATION
 .PP
 Sensitive credentials and machine-specific settings are kept out of
-version control in a private directory at
-\[ti]/.config/.user-dots/fish/.
-Two files are sourced automatically by config.fish if they exist:
+version control in a private directory.
+The path defaults to \f[V]\[ti]/.config/.user-dots/fish/\f[R] but can be
+overridden:
 .IP
 .nf
 \f[C]
-\[ti]/.config/.user-dots/fish/
+set -U __fish_user_dots_path /path/to/your/dots/fish
+\f[R]
+.fi
+.PP
+config.fish sources local.fish from that directory on every interactive
+session.
+local.fish is responsible for sourcing its own secrets.fish:
+.IP
+.nf
+\f[C]
+$__fish_user_dots_path/
 ├── secrets.fish   API keys, tokens, passwords, personal identifiers
-└── local.fish     Machine-specific paths and environment variables
+└── local.fish     Machine-specific paths, env vars, and sourcing secrets
 \f[R]
 .fi
 .PP
@@ -2676,9 +2698,10 @@ abbr -a dcw \[aq]docker context use work-server\[aq]
 \f[R]
 .fi
 .PP
-Both files are sourced at the end of config.fish with an existence check
+local.fish is sourced at the end of config.fish with an existence check
 so the public config works cleanly on any machine without the private
 repo.
+local.fish in turn sources secrets.fish when it exists.
 .PP
    *   *   *   *   *
 .SH 11. VIEWING THIS MANUAL
