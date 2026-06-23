@@ -28,12 +28,12 @@
 #   0  Always
 #
 # EXAMPLE
-#   __config_toggle_draw 0 universal \
+#   __config_settings_draw 0 universal \
 #       __fish_config_op_aliases __fish_config_op_autoexec \
 #       __fish_config_op_overrides __fish_config_op_integrations \
 #       __fish_config_op_logging __fish_config_op_greeting \
 #       __fish_config_opinionated
-function __config_toggle_draw
+function __config_settings_draw
     set -l cur_row   $argv[1]
     set -l cur_scope $argv[2]
     set -l vars      $argv[3..]
@@ -131,7 +131,7 @@ function __config_toggle_draw
         set -l label $labels[$idx]
         set -l desc  $descs[$idx]
 
-        set -l val (__config_toggle_get_val $var $cur_scope)
+        set -l val (__config_settings_get_val $var $cur_scope)
 
         # Badge: 7 visible chars, coloured
         set -l badge
@@ -161,7 +161,7 @@ function __config_toggle_draw
     printf '%s│    %s  │\n' $p (string repeat -n (math $iw - 6) '─')
 
     # ── Master row (index 6) ──────────────────────────────────────────────
-    set -l val (__config_toggle_get_val $vars[7] $cur_scope)
+    set -l val (__config_settings_get_val $vars[7] $cur_scope)
     set -l badge
     switch $val
         case on

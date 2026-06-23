@@ -23,9 +23,9 @@
 #   0  Always
 #
 # EXAMPLE
-#   __config_toggle_apply __fish_config_op_aliases universal off
-#   __config_toggle_apply __fish_config_op_greeting session DEFAULT
-function __config_toggle_apply
+#   __config_settings_apply __fish_config_op_aliases universal off
+#   __config_settings_apply __fish_config_op_greeting session DEFAULT
+function __config_settings_apply
     set -l varname $argv[1]
     set -l scope   $argv[2]
     set -l value   $argv[3]
