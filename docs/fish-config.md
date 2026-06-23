@@ -135,7 +135,7 @@ The configuration is split across:
 # 1. CONFIGURATION VARIABLES
 
 These variables are exported from config.fish on every interactive session.
-Override them in ~/.config/.user-dots/fish/local.fish.
+Override them in local.fish (see Section 10, Personalization).
 
 ## Environment Directories (XDG)
 
@@ -1559,20 +1559,26 @@ The install priority for each tool:
 
 Place machine-specific settings that should not be committed to git in:
 
-    ~/.config/.user-dots/fish/local.fish
+    $__fish_user_dots_path/local.fish
+
+`__fish_user_dots_path` defaults to `~/.config/.user-dots/fish`. Set a
+custom location with:
+
+    set -U __fish_user_dots_path /path/to/your/dots/fish
 
 Typical uses: additional PATH entries, local aliases, hostname-specific env
 vars, work-specific tool configs.
 
 ## Secrets and API Keys
 
-    ~/.config/.user-dots/fish/secrets.fish
+    $__fish_user_dots_path/secrets.fish
 
 Store API tokens, GPG keys, private credentials here. This file is never
-committed.
+committed. It is sourced by local.fish directly, not by config.fish.
 
-Both files are sourced at the end of config.fish on every interactive
-session, so they can override anything set earlier.
+`local.fish` is sourced at the end of config.fish on every interactive
+session, so it and its companion secrets.fish can override anything set
+earlier.
 
 ## Overriding Configuration Variables
 
@@ -2087,12 +2093,17 @@ git output is suppressed. Run exec fish after a successful update to reload.
 # 10. PERSONALIZATION
 
 Sensitive credentials and machine-specific settings are kept out of version
-control in a private directory at ~/.config/.user-dots/fish/. Two files are
-sourced automatically by config.fish if they exist:
+control in a private directory. The path defaults to
+`~/.config/.user-dots/fish/` but can be overridden:
 
-    ~/.config/.user-dots/fish/
+    set -U __fish_user_dots_path /path/to/your/dots/fish
+
+config.fish sources local.fish from that directory on every interactive
+session. local.fish is responsible for sourcing its own secrets.fish:
+
+    $__fish_user_dots_path/
     ├── secrets.fish   API keys, tokens, passwords, personal identifiers
-    └── local.fish     Machine-specific paths and environment variables
+    └── local.fish     Machine-specific paths, env vars, and sourcing secrets
 
 fish_variables (auto-managed by fish) is excluded from this repo via
 .gitignore. Do not commit it.
@@ -2130,8 +2141,9 @@ wrong on any other system.
     abbr -a dcr 'docker context use my-remote-server'
     abbr -a dcw 'docker context use work-server'
 
-Both files are sourced at the end of config.fish with an existence check so
+local.fish is sourced at the end of config.fish with an existence check so
 the public config works cleanly on any machine without the private repo.
+local.fish in turn sources secrets.fish when it exists.
 
 ---
 
