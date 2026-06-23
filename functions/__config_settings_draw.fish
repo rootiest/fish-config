@@ -5,7 +5,7 @@
 #   __config_settings_draw <cur_row> <cur_scope> <var1> ... <var8>
 #
 # DESCRIPTION
-#   Renders the 16-line config-toggle TUI panel to stdout. Panel width and
+#   Renders the 16-line config-settings TUI panel to stdout. Panel width and
 #   horizontal position are chosen automatically from $COLUMNS each call,
 #   so a terminal resize takes effect on the next keypress without any
 #   extra bookkeeping. Four width tiers with a 6-col buffer per side:
