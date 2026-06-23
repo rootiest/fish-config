@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __config_toggle_draw <cur_row> <cur_scope> <var1> ... <var8>
+#   __config_settings_draw <cur_row> <cur_scope> <var1> ... <var8>
 #
 # DESCRIPTION
 #   Renders the 16-line config-toggle TUI panel to stdout. Panel width and

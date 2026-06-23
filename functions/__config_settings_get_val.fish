@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __config_toggle_get_val <varname> <scope>
+#   __config_settings_get_val <varname> <scope>
 #
 # DESCRIPTION
 #   Returns the current value of a named variable in the specified scope by

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __config_toggle_read_key
+#   __config_settings_read_key
 #
 # DESCRIPTION
 #   Reads a single keypress directly from the controlling terminal in raw
