@@ -47,6 +47,7 @@ function config-settings --description 'Interactive TUI for managing fish config
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""k j$c_reset    Move cursor up / down"
                 echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Set value: OFF ← DEFAULT → ON"
                 echo "  $c_flag""Tab$c_reset           Switch scope (Universal ↔ Session)"
+                echo "  $c_flag""Enter$c_reset         Edit path (on Dots Path row)"
                 echo "  $c_flag""q$c_reset / $c_flag""Esc$c_reset       Exit"
                 echo
                 echo "$c_head""Scopes:$c_reset"
@@ -68,11 +69,12 @@ function config-settings --description 'Interactive TUI for managing fish config
         __fish_config_op_integrations \
         __fish_config_op_logging \
         __fish_config_op_greeting \
-        __fish_config_opinionated
+        __fish_config_opinionated \
+        __fish_user_dots_path
 
-    set -l cur_row   0           # 0–6
+    set -l cur_row   0           # 0–7
     set -l cur_scope universal   # or "session"
-    set -l panel_h   14          # total panel lines (all width tiers are 14 lines)
+    set -l panel_h   16          # total panel lines (all width tiers are 16 lines)
     set -l last_cols $COLUMNS    # COLUMNS at the time of the last draw
 
     # ── Terminal setup ────────────────────────────────────
@@ -98,53 +100,89 @@ function config-settings --description 'Interactive TUI for managing fish config
         set -l key (__config_settings_read_key)
         or break   # not a TTY — exit instead of spinning
 
+        set -l did_redraw 0
+
         switch $key
             case up k
                 set cur_row (math "max(0, $cur_row - 1)")
             case down j
-                set cur_row (math "min(6, $cur_row + 1)")
+                set cur_row (math "min(7, $cur_row + 1)")
             case tab      # Tab — switch scope
                 if test $cur_scope = universal
                     set cur_scope session
                 else
                     set cur_scope universal
                 end
+            case enter
+                if test $cur_row -eq 7
+                    # Erase panel (wrap-aware, same formula as cleanup)
+                    set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
+                    set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
+                    printf '\e[%dA\e[J' $erase_h
+                    printf '\e[?25h'     # restore cursor
+
+                    printf 'User Dots Path (leave blank to reset to default): '
+                    read -l new_path
+
+                    if test -n "$new_path"
+                        set -U __fish_user_dots_path $new_path
+                    else
+                        set -Ue __fish_user_dots_path
+                    end
+
+                    printf '\e[?25l'    # hide cursor
+                    set last_cols $COLUMNS
+                    __config_settings_draw $cur_row $cur_scope $vars
+                    set did_redraw 1
+                end
             case right l   # → / l — step toward ON (clamped, no wrap)
-                set -l varname $vars[(math $cur_row + 1)]
-                set -l cur_val (__config_settings_get_val $varname $cur_scope)
+                if test $cur_row -eq 7
+                    # no-op for path var; use Enter to set
+                else
+                    set -l varname $vars[(math $cur_row + 1)]
+                    set -l cur_val (__config_settings_get_val $varname $cur_scope)
 
-                # Order: OFF ← DEFAULT → ON
-                set -l next_val on
-                switch $cur_val
-                    case off
-                        set next_val DEFAULT
-                    case on
-                        set next_val on     # already at the right end
-                    case '*'   # DEFAULT or unrecognised
-                        set next_val on
+                    set -l next_val on
+                    switch $cur_val
+                        case off
+                            set next_val DEFAULT
+                        case on
+                            set next_val on
+                        case '*'
+                            set next_val on
+                    end
+                    __config_settings_apply $varname $cur_scope $next_val
                 end
-                __config_settings_apply $varname $cur_scope $next_val
             case left h   # ← / h — step toward OFF (clamped, no wrap)
-                set -l varname $vars[(math $cur_row + 1)]
-                set -l cur_val (__config_settings_get_val $varname $cur_scope)
+                if test $cur_row -eq 7
+                    # Clear the universal path var (restore default)
+                    __config_settings_apply __fish_user_dots_path universal DEFAULT
+                else
+                    set -l varname $vars[(math $cur_row + 1)]
+                    set -l cur_val (__config_settings_get_val $varname $cur_scope)
 
-                # Order: OFF ← DEFAULT → ON
-                set -l next_val off
-                switch $cur_val
-                    case on
-                        set next_val DEFAULT
-                    case off
-                        set next_val off    # already at the left end
-                    case '*'   # DEFAULT or unrecognised
-                        set next_val off
+                    set -l next_val off
+                    switch $cur_val
+                        case on
+                            set next_val DEFAULT
+                        case off
+                            set next_val off
+                        case '*'
+                            set next_val off
+                    end
+                    __config_settings_apply $varname $cur_scope $next_val
                 end
-                __config_settings_apply $varname $cur_scope $next_val
             case q Q quit escape
                 break
         end
 
         # Skip redraw entirely when the key reader timed out with no resize
         if test -z "$key" -a "$COLUMNS" = "$last_cols"
+            continue
+        end
+
+        # Skip redraw if the Enter handler already redrew (e.g. after path edit)
+        if test $did_redraw -eq 1
             continue
         end
 

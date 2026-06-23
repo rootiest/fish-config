@@ -32,7 +32,7 @@
 #       __fish_config_op_aliases __fish_config_op_autoexec \
 #       __fish_config_op_overrides __fish_config_op_integrations \
 #       __fish_config_op_logging __fish_config_op_greeting \
-#       __fish_config_opinionated
+#       __fish_config_opinionated __fish_user_dots_path
 function __config_settings_draw
     set -l cur_row   $argv[1]
     set -l cur_scope $argv[2]
