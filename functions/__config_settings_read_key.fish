@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __config_toggle_read_key
+#   __config_settings_read_key
 #
 # DESCRIPTION
 #   Reads a single keypress directly from the controlling terminal in raw
@@ -31,13 +31,13 @@
 #   1  The terminal could not be put into raw mode (stdin is not a TTY)
 #
 # EXAMPLE
-#   set -l key (__config_toggle_read_key)
+#   set -l key (__config_settings_read_key)
 #   or return                       # not a TTY — bail
 #   switch $key
 #       case up;    echo "moved up"
 #       case space; echo "toggled"
 #   end
-function __config_toggle_read_key
+function __config_settings_read_key
     # Snapshot current terminal settings; failure means stdin is not a TTY.
     set -l saved (stty -g </dev/tty 2>/dev/null)
     or return 1

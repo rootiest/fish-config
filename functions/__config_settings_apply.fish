@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __config_toggle_apply <varname> <scope> <value>
+#   __config_settings_apply <varname> <scope> <value>
 #
 # DESCRIPTION
 #   Applies a state value to an opinionated-component variable in the given
-#   scope, immediately and persistently. Used by config-toggle's Left/Right
+#   scope, immediately and persistently. Used by config-settings's Left/Right
 #   (and vim h/l) directional handlers so the set/erase logic lives in one
 #   place. A value of "DEFAULT" erases the variable in that scope so the
 #   master switch / built-in default takes over again.
@@ -17,15 +17,15 @@
 # ARGUMENTS
 #   varname  Variable name without the $ prefix
 #   scope    "universal" or "session"
-#   value    "on", "off", or "DEFAULT"
+#   value    "on", "off", "DEFAULT", or any arbitrary string (universal scope only)
 #
 # RETURNS
 #   0  Always
 #
 # EXAMPLE
-#   __config_toggle_apply __fish_config_op_aliases universal off
-#   __config_toggle_apply __fish_config_op_greeting session DEFAULT
-function __config_toggle_apply
+#   __config_settings_apply __fish_config_op_aliases universal off
+#   __config_settings_apply __fish_config_op_greeting session DEFAULT
+function __config_settings_apply
     set -l varname $argv[1]
     set -l scope   $argv[2]
     set -l value   $argv[3]
@@ -33,7 +33,7 @@ function __config_toggle_apply
     # stderr is suppressed because setting a value in one scope while the
     # other scope already holds the same variable makes interactive fish
     # emit a shadowing warning ("set: successfully set universal 'X'; but a
-    # global by that name shadows it"). config-toggle intentionally edits
+    # global by that name shadows it"). config-settings intentionally edits
     # both scopes independently, so the warning is expected noise — and if
     # it reached the terminal it would push the cursor down a row and
     # corrupt the in-place panel redraw (leaving a stacked top border
@@ -48,6 +48,8 @@ function __config_toggle_apply
                     set -U $varname off 2>/dev/null
                 case DEFAULT
                     set -Ue $varname 2>/dev/null
+                case '*'
+                    set -U $varname $value 2>/dev/null
             end
         case session
             switch $value

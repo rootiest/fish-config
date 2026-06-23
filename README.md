@@ -47,7 +47,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 > set -U __fish_config_op_logging off
 > ```
 >
-> Or run **`config-toggle`** for an interactive menu to flip logging (and any
+> Or run **`config-settings`** for an interactive menu to flip logging (and any
 > other opinionated category) on or off — no variable names to remember.
 >
 > This takes effect immediately in every open shell. See [Session Logging](#session-logging)
@@ -89,7 +89,7 @@ set -U __fish_config_op_logging off   # disable; takes effect in every open shel
 set -Ue __fish_config_op_logging      # re-enable (erase the override)
 ```
 
-Prefer an interactive interface? Run **`config-toggle`** for a full-screen
+Prefer an interactive interface? Run **`config-settings`** for a full-screen
 picker that flips logging — and every other opinionated category — on or off
 per session or universally, without memorizing variable names.
 
@@ -255,7 +255,7 @@ test -f "$__fish_user_dots_path/local.fish"
 
 Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, terminal integrations, logging, and the first-run greeting — is active by default but can be switched off.
 
-> **The easy way — `config-toggle`:** Run `config-toggle` for an interactive TUI that flips every setting below on, off, or back to default — per-session or universally — without typing a single variable name. Use the arrow keys (or `h`/`j`/`k`/`l`) to navigate and adjust, `Tab` to switch scope, and `q` to quit. Changes apply instantly. The panel auto-sizes to your terminal width (four tiers from 52- to 78-wide with a 6-column margin), centers itself horizontally, and redraws within ~0.3 s of a resize.
+> **The easy way — `config-settings`:** Run `config-settings` for an interactive TUI that flips every setting below on, off, or back to default — per-session or universally — without typing a single variable name. Use the arrow keys (or `h`/`j`/`k`/`l`) to navigate and adjust, `Tab` to switch scope, and `q` to quit. Changes apply instantly. The panel auto-sizes to your terminal width (four tiers from 52- to 78-wide with a 6-column margin), centers itself horizontally, and redraws within ~0.3 s of a resize.
 
 If you'd rather set them by hand, each category is controlled by a universal variable. Six category toggles and one master switch are available:
 
