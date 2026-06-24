@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __config_settings_draw <cur_row> <cur_scope> <var1> ... <var8>
+#   __config_settings_draw <cur_row> <cur_scope> <var1> ... <var7>
 #
 # DESCRIPTION
 #   Renders the 16-line config-settings TUI panel to stdout. Panel width and
@@ -20,9 +20,9 @@
 #   does not interfere with the redraw loop.
 #
 # ARGUMENTS
-#   cur_row    0–7, the currently highlighted row
+#   cur_row    0–6, the currently highlighted row
 #   cur_scope  "universal" or "session"
-#   var1–var8  Variable names for rows 0–7 (in order per Variable Reference)
+#   var1–var7  Variable names for rows 0–6 (6 categories + master)
 #
 # RETURNS
 #   0  Always
@@ -32,7 +32,7 @@
 #       __fish_config_op_aliases __fish_config_op_autoexec \
 #       __fish_config_op_overrides __fish_config_op_integrations \
 #       __fish_config_op_logging __fish_config_op_greeting \
-#       __fish_config_opinionated __fish_user_dots_path
+#       __fish_config_opinionated
 function __config_settings_draw
     set -l cur_row   $argv[1]
     set -l cur_scope $argv[2]
@@ -99,27 +99,17 @@ function __config_settings_draw
     # ponytail: floor division — left margin may be 1 col less than right if gap is odd
     set -l p (string repeat -n (math --scale=0 "max(0, ($COLUMNS - ($iw + 2)) / 2)") ' ')
 
-    # ── Scope tabs ────────────────────────────────────────────────────────
-    set -l u_label
-    set -l s_label
-    if test $cur_scope = universal
-        set u_label "$c_hi● Universal$c_reset"
-        set s_label "○ Session  "
-    else
-        set u_label "○ Universal"
-        set s_label "$c_hi● Session  $c_reset"
-    end
-
     # ── Top border ────────────────────────────────────────────────────────
     # ┌─ Opinionated Settings (iw-23)×─ ┐  total = iw+2
     printf '%s┌─%s Opinionated Settings %s┐\n' \
         $p $c_head $c_reset(string repeat -n (math $iw - 23) '─')
 
-    # ── Scope tab line ────────────────────────────────────────────────────
-    # Inner: " ●/○ Universal  ●/○ Session  " (25) + (iw-40)×space + "Tab to switch  " (15) = iw
-    printf '%s│ %s  %s%s│\n' \
-        $p $u_label $s_label \
-        (string repeat -n (math $iw - 40) ' ')"Tab to switch  "
+    # ── Page-tab header ───────────────────────────────────────────────────
+    set -l active_idx 0
+    if test $cur_scope = session
+        set active_idx 1
+    end
+    printf '%s│%s│\n' $p (__config_settings_pagetab $active_idx $iw)
 
     # ── Top divider ───────────────────────────────────────────────────────
     printf '%s│%s│\n' $p $HBR
@@ -181,42 +171,18 @@ function __config_settings_draw
         $badge \
         (string pad -r -w (math $iw - 33) -- $descs[7])
 
-    # ── Separator before Path Settings ───────────────────────────────────
-    printf '%s│    %s  │\n' $p (string repeat -n (math $iw - 6) '─')
-
-    # ── Path row (index 7) — always universal scope ───────────────────────
-    set -l path_var $vars[8]
-    set -l raw_path (__config_settings_get_val $path_var universal)
-
-    set -l path_badge
-    set -l path_dpad
-    if test "$raw_path" = DEFAULT
-        set path_badge "$c_dim""DEFAULT$c_reset"
-        set path_dpad  (string pad -r -w (math $iw - 33) -- "—default—  [U]")
-    else
-        set path_badge "$c_ok"" PATH  $c_reset"
-        set -l max_path (math $iw - 37)
-        set -l truncated (string shorten -m $max_path -- "$raw_path")
-        set path_dpad (string pad -r -w (math $iw - 33) -- "$truncated [U]")
-    end
-
-    set -l path_curs "  "
-    if test $cur_row -eq 7
-        set path_curs "$c_sel▶$c_reset "
-    end
-
-    printf '%s│  %s%s [ %s ]  %s   │\n' \
-        $p $path_curs \
-        (string pad -r -w 12 -- "Dots Path") \
-        $path_badge \
-        $path_dpad
+    # ── Filler (Dots Path moved to the Paths page) ────────────────────────
+    printf '%s│  %s%s│\n' $p \
+        "$c_dim→ Tab for Sponge & Path settings$c_reset" \
+        (string repeat -n (math $iw - 34) ' ')
+    printf '%s│%s│\n' $p (string repeat -n $iw ' ')
 
     # ── Bottom divider ────────────────────────────────────────────────────
     printf '%s│%s│\n' $p $HBR
 
     # ── Keybind hint ──────────────────────────────────────────────────────
     # string pad is width-aware (arrows count as 1 column)
-    set -l hint " ↑↓/kj move  ←→/hl set  Enter edit path  q quit"
+    set -l hint " ↑↓/kj move  ←→/hl set  Tab page  q quit"
     printf '%s│%s%s%s│\n' $p $c_dim (string pad -r -w $iw -- $hint) $c_reset
 
     # ── Bottom border ─────────────────────────────────────────────────────
