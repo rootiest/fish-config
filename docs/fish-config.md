@@ -1378,7 +1378,9 @@ Add -i (interactive confirmation) to destructive commands:
     Toggle rows use ← → (or h/l) along an OFF ← DEFAULT → ON scale; DEFAULT
     erases the variable so the master switch / built-in default applies. Value
     rows (the path/int/list settings on the Sponge and Paths pages) use Enter to
-    edit inline; ← / h clears the value back to its default. Changes apply
+    edit inline; ← / h clears the value back to its default. List rows (e.g.
+    Extra secret, OK codes) accept values separated by commas and/or whitespace
+    — "A, B", "A,B" and "A B" all yield the same two entries. Changes apply
     immediately. Always available regardless of the __fish_config_opinionated
     master state.
 

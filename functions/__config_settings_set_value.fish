@@ -38,7 +38,11 @@ function __config_settings_set_value
     else
         switch $type
             case list
-                set -U -- $varname (string split -n ' ' -- $value) 2>/dev/null
+                # Accept commas and/or whitespace as separators: collapse any run
+                # of them to a single space, then split (dropping empties). So
+                # "A,B", "A, B", "A  B" and "A B" all yield the same two tokens.
+                set -U -- $varname \
+                    (string split -n ' ' -- (string replace -ra '[,\s]+' ' ' -- $value)) 2>/dev/null
             case '*'
                 # -- (before the name) guards typed input that begins with a dash
                 set -U -- $varname $value 2>/dev/null
