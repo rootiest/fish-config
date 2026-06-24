@@ -116,15 +116,18 @@ set -gx SUDO_EDITOR $EDITOR
 set -gx GPG_TTY (tty)
 
 #   ────────────────────────── Scrollback History ──────────────────────────
-#   fish-style source of truth (editable via config-settings); exported for the
-#   POSIX wrappers (paru/yay/tmux/zellij/_prune_terminal_logs) that read them.
+#   Optional fish-style source of truth (set -U via config-settings); exported
+#   for the POSIX wrappers (paru/yay/tmux/zellij/_prune_terminal_logs) that read
+#   them. We export the default unconditionally, then override from the universal
+#   var only if set — deliberately NOT creating a global, which would shadow the
+#   universal and stop live edits (config-settings → Paths) from taking effect.
+set -gx SCROLLBACK_HISTORY_DIR "$HOME/.terminal_history"
 set -q __fish_scrollback_history_dir
-or set -g __fish_scrollback_history_dir "$HOME/.terminal_history"
-set -gx SCROLLBACK_HISTORY_DIR $__fish_scrollback_history_dir
+and set -gx SCROLLBACK_HISTORY_DIR $__fish_scrollback_history_dir
 
+set -gx SCROLLBACK_HISTORY_MAX_FILES 100
 set -q __fish_scrollback_history_max_files
-or set -g __fish_scrollback_history_max_files 100
-set -gx SCROLLBACK_HISTORY_MAX_FILES $__fish_scrollback_history_max_files
+and set -gx SCROLLBACK_HISTORY_MAX_FILES $__fish_scrollback_history_max_files
 # Wire up a clean exit function that won't fire on background subshells
 # Replacing the exit builtin is opinionated (C3 overrides); smart_exit also
 # guards itself so a live toggle takes effect without restarting the shell.
