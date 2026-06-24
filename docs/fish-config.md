@@ -772,8 +772,9 @@ Add -i (interactive confirmation) to destructive commands:
     Manages the registry of repositories that are background fast-forwarded
     when you enter them (see "Auto-pull fast-forward" under the C2 component
     reference). The fish-config repo is always covered as a baseline. The
-    registry is machine-local at ~/.config/.user-dots/fish/auto-pull.list, one
-    absolute path per line, and is never committed. Registry management works
+    registry is machine-local at `$__fish_user_dots_path/auto-pull.list` (defaults
+    to `~/.config/.user-dots/fish/auto-pull.list`), one absolute path per line,
+    and is never committed. Registry management works
     even when C2 auto-execution is disabled; only the background sync is gated.
 
       list               Show registered repos (default)
@@ -1762,7 +1763,7 @@ ever fast-forwards a clean repo whose branch has an upstream — never rebases,
 merges, or overwrites work — so it is a no-op on dirty trees, divergent
 branches, or repos without a remote. The handler fires once per repo entry
 (not on every sub-directory cd). The registry is machine-local at
-~/.config/.user-dots/fish/auto-pull.list and is never committed.
+`$__fish_user_dots_path/auto-pull.list` (defaults to `~/.config/.user-dots/fish/auto-pull.list`) and is never committed.
 
 #### C3 — Key and Environment Overrides
 
