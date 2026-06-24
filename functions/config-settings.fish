@@ -204,35 +204,65 @@ function config-settings --description 'Interactive TUI for managing fish config
                 if test $cur_page -ge 2
                     set -l v_vars $sponge_vars
                     set -l v_types $sponge_types
-                    set -l v_labels $sponge_labels
                     set -l v_defaults $sponge_defaults
                     if test $cur_page -eq 3
                         set v_vars $paths_vars
                         set v_types $paths_types
-                        set v_labels $paths_labels
                         set v_defaults $paths_defaults
                     end
                     set -l ridx (math $cur_row + 1)
                     set -l varname $v_vars[$ridx]
                     set -l vtype $v_types[$ridx]
-                    set -l vlabel $v_labels[$ridx]
                     # Only path/int/list rows are editable; bool rows toggle with ←/→.
                     if test "$vtype" != toggle -a "$vtype" != bool
-                        # Erase panel, drop to cooked mode, prompt, redraw.
-                        set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
-                        set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
-                        printf '\e[%dA\e[J' $erase_h
-                        printf '\e[?25h'
-                        printf '%s (blank = reset to default): ' "$vlabel"
-                        read -l new_val
-                        # Blank / Escape reverts to the row's default (a value, or
-                        # erase when the var tolerates unset) — never leaves it empty.
-                        if test -n "$new_val"
-                            __config_settings_set_value $varname $vtype "$new_val"
-                        else
-                            __config_settings_set_value $varname $vtype "$v_defaults[$ridx]"
+                        # Inline editor: edit in-place in the row's value field
+                        # using the raw key reader — no fish `read` / `read>`
+                        # prompt, and the panel cleans itself up on exit. The
+                        # buffer is pre-filled with the current value; clearing it
+                        # and pressing Enter reverts to the row's default.
+                        set -l page sponge
+                        test $cur_page -eq 3; and set page paths
+                        set -l buf (__config_settings_get_raw $varname)
+                        test "$buf" = DEFAULT; and set buf ""
+                        set -l committed 0
+                        while true
+                            set -l pml (math --scale=0 "($last_cols + 78) / 2")
+                            set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
+                            printf '\e[%dA\e[J' $eh
+                            set last_cols $COLUMNS
+                            __config_settings_draw_value $cur_row $page edit "$buf"
+
+                            set -l ek (__config_settings_read_key)
+                            or break
+                            switch $ek
+                                case enter
+                                    set committed 1
+                                    break
+                                case escape
+                                    break
+                                case backspace
+                                    set buf (string sub -s 1 -e -1 -- "$buf")
+                                case space
+                                    set buf "$buf "
+                                case up down left right tab backtab quit ''
+                                    # ignored while editing
+                                case '*'
+                                    set buf "$buf$ek"
+                            end
                         end
-                        printf '\e[?25l'
+                        if test $committed -eq 1
+                            # Empty buffer reverts to the row default (a value, or
+                            # erase when the var tolerates being unset).
+                            if test -n "$buf"
+                                __config_settings_set_value $varname $vtype "$buf"
+                            else
+                                __config_settings_set_value $varname $vtype "$v_defaults[$ridx]"
+                            end
+                        end
+                        # Redraw the normal panel in place of the editor.
+                        set -l pml (math --scale=0 "($last_cols + 78) / 2")
+                        set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
+                        printf '\e[%dA\e[J' $eh
                         set last_cols $COLUMNS
                         __cs_dispatch_draw
                         set did_redraw 1

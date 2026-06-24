@@ -28,6 +28,10 @@
 function __config_settings_draw_value
     set -l cur_row $argv[1]
     set -l page    $argv[2]
+    # Inline-edit state: when argv[3] is "edit", the cur_row field renders the
+    # live input buffer (argv[4]) with a caret instead of its stored value.
+    set -l edit_mode $argv[3]
+    set -l edit_buf  $argv[4]
 
     set -l c_ok    (set_color green)
     set -l c_err   (set_color red)
@@ -126,13 +130,36 @@ function __config_settings_draw_value
             end
         end
 
+        # Inline edit: render the active row's field as the live buffer with a
+        # block caret, tail-anchored so the caret stays visible as text grows.
+        if test "$edit_mode" = edit -a $i -eq $cur_row
+            set -l fw (math $iw - 33)
+            set -l avail (math $fw - 1)
+            set -l shown "$edit_buf"
+            set -l blen (string length -- "$edit_buf")
+            if test $blen -gt $avail
+                set shown (string sub -s (math $blen - $avail + 1) -- "$edit_buf")
+            end
+            set badge "$c_head"" EDIT  $c_reset"
+            set field "$shown"(set_color --reverse)" "(set_color normal)
+        end
+
         set -l curs "  "
         if test $i -eq $cur_row
             set curs "$c_sel▶$c_reset "
         end
 
+        set -l fw (math $iw - 33)
         set -l lpad (string pad -r -w 12 -- $label)
-        set -l fpad (string pad -r -w (math $iw - 33) -- (string shorten -m (math $iw - 33) -- "$field"))
+        # The edit field is already length-constrained and contains a reverse
+        # caret; running it through `string shorten` miscounts the escapes, so
+        # pad it directly. Non-edit fields still shorten to add an ellipsis.
+        set -l fpad
+        if test "$edit_mode" = edit -a $i -eq $cur_row
+            set fpad (string pad -r -w $fw -- "$field")
+        else
+            set fpad (string pad -r -w $fw -- (string shorten -m $fw -- "$field"))
+        end
         printf '%s│  %s%s [ %s ]  %s   │\n' $p $curs $lpad $badge $fpad
     end
 
@@ -145,8 +172,11 @@ function __config_settings_draw_value
     # ── Bottom divider ────────────────────────────────────────────────────
     printf '%s│%s│\n' $p $HBR
 
-    # ── Hint line ─────────────────────────────────────────────────────────
+    # ── Hint line (changes while editing) ─────────────────────────────────
     set -l hint_line " ↑↓ move  Enter edit  ←/h clear  Tab page  q quit"
+    if test "$edit_mode" = edit
+        set hint_line " type value   Enter save   Esc cancel   ⌫ delete"
+    end
     printf '%s│%s%s%s│\n' $p $c_dim (string pad -r -w $iw -- $hint_line) $c_reset
 
     # ── Bottom border ─────────────────────────────────────────────────────
