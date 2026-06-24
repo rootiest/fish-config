@@ -84,6 +84,15 @@ function config-settings --description 'Interactive TUI for managing fish config
     set -l paths_types path int path
     set -l paths_labels "Log dir" "Log max" "Dots path"
 
+    # Reset/blank-edit target for each value row. A non-empty entry is written
+    # verbatim (sponge reads sponge_delay / sponge_successful_exit_codes with no
+    # fallback, so they must never be left unset); an empty entry erases the var
+    # so its own built-in default applies (scrollback/dots paths and the
+    # extra-sensitive list all tolerate being unset). Bool rows are not reset
+    # through this path — they are a 2-state true/false with no unset state.
+    set -l sponge_defaults 2 '' '' 0 ''
+    set -l paths_defaults '' '' ''
+
     # Rows per page index 0..3
     set -l page_rows 7 7 5 3
 
@@ -154,17 +163,11 @@ function config-settings --description 'Interactive TUI for managing fish config
                     test "$cur_val" = off; and set next_val DEFAULT
                     __config_settings_apply $varname $scope $next_val
                 else if test $cur_page -eq 2
-                    # Sponge page: only bool rows respond to → (false ← DEFAULT → true).
-                    # Sponge reads true/false (not on/off), so write those literals.
+                    # Sponge bool rows are 2-state (true/false) with no unset
+                    # state — sponge reads them with no fallback. → sets true.
                     set -l ridx (math $cur_row + 1)
                     if test "$sponge_types[$ridx]" = bool
-                        set -l varname $sponge_vars[$ridx]
-                        set -l cur_val (__config_settings_get_raw $varname)
-                        if test "$cur_val" = false
-                            set -Ue $varname 2>/dev/null
-                        else
-                            set -U $varname true 2>/dev/null
-                        end
+                        set -U $sponge_vars[$ridx] true 2>/dev/null
                     end
                 end
             case left h
@@ -177,25 +180,24 @@ function config-settings --description 'Interactive TUI for managing fish config
                     test "$cur_val" = on; and set next_val DEFAULT
                     __config_settings_apply $varname $scope $next_val
                 else
-                    # Value pages: ← clears a value row to default; toggles step toward OFF
+                    # Value pages: bool rows set false; other value rows reset to
+                    # their default (a literal value, or erase when the var
+                    # tolerates being unset — see sponge_defaults/paths_defaults).
                     set -l v_vars $sponge_vars
                     set -l v_types $sponge_types
+                    set -l v_defaults $sponge_defaults
                     if test $cur_page -eq 3
                         set v_vars $paths_vars
                         set v_types $paths_types
+                        set v_defaults $paths_defaults
                     end
-                    set -l varname $v_vars[(math $cur_row + 1)]
-                    set -l vtype $v_types[(math $cur_row + 1)]
+                    set -l ridx (math $cur_row + 1)
+                    set -l varname $v_vars[$ridx]
+                    set -l vtype $v_types[$ridx]
                     if test "$vtype" = bool
-                        # Step toward OFF (true → DEFAULT → false); sponge reads true/false.
-                        set -l cur_val (__config_settings_get_raw $varname)
-                        if test "$cur_val" = true
-                            set -Ue $varname 2>/dev/null
-                        else
-                            set -U $varname false 2>/dev/null
-                        end
+                        set -U $varname false 2>/dev/null
                     else
-                        __config_settings_set_value $varname $vtype ''
+                        __config_settings_set_value $varname $vtype "$v_defaults[$ridx]"
                     end
                 end
             case enter
@@ -203,15 +205,19 @@ function config-settings --description 'Interactive TUI for managing fish config
                     set -l v_vars $sponge_vars
                     set -l v_types $sponge_types
                     set -l v_labels $sponge_labels
+                    set -l v_defaults $sponge_defaults
                     if test $cur_page -eq 3
                         set v_vars $paths_vars
                         set v_types $paths_types
                         set v_labels $paths_labels
+                        set v_defaults $paths_defaults
                     end
-                    set -l varname $v_vars[(math $cur_row + 1)]
-                    set -l vtype $v_types[(math $cur_row + 1)]
-                    set -l vlabel $v_labels[(math $cur_row + 1)]
-                    if test "$vtype" != toggle
+                    set -l ridx (math $cur_row + 1)
+                    set -l varname $v_vars[$ridx]
+                    set -l vtype $v_types[$ridx]
+                    set -l vlabel $v_labels[$ridx]
+                    # Only path/int/list rows are editable; bool rows toggle with ←/→.
+                    if test "$vtype" != toggle -a "$vtype" != bool
                         # Erase panel, drop to cooked mode, prompt, redraw.
                         set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
                         set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
@@ -219,7 +225,13 @@ function config-settings --description 'Interactive TUI for managing fish config
                         printf '\e[?25h'
                         printf '%s (blank = reset to default): ' "$vlabel"
                         read -l new_val
-                        __config_settings_set_value $varname $vtype "$new_val"
+                        # Blank / Escape reverts to the row's default (a value, or
+                        # erase when the var tolerates unset) — never leaves it empty.
+                        if test -n "$new_val"
+                            __config_settings_set_value $varname $vtype "$new_val"
+                        else
+                            __config_settings_set_value $varname $vtype "$v_defaults[$ridx]"
+                        end
                         printf '\e[?25l'
                         set last_cols $COLUMNS
                         __cs_dispatch_draw
