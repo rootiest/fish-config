@@ -5,17 +5,19 @@
 #   config-settings [-h | --help]
 #
 # DESCRIPTION
-#   Opens an interactive full-screen TUI for managing fish config settings,
-#   including the six opinionated component categories (C1–C6) and the master
-#   disable variable, without having to remember variable names. Two scope
-#   tabs allow independent per-scope configuration:
+#   Opens an interactive full-screen TUI for managing fish config settings
+#   across four pages:
 #
-#     Universal — persists across all sessions (set -U / set -Ue)
-#     Session   — active for the current shell only (set -g / set -eg)
+#     Universal — opinionated-category toggles, persistent (set -U / set -Ue)
+#     Session   — opinionated-category toggles, this shell only (set -g / set -eg)
+#     Sponge    — sponge history-scrubbing settings (delay, codes, secrets …)
+#     Paths     — scrollback log dir, log max, and user-dots path
 #
-#   Values are changed directionally with the arrow keys (or vim-style h/l)
-#   along an OFF ← DEFAULT → ON scale, and apply immediately — no confirm
-#   step. Always available regardless of __fish_config_opinionated state.
+#   Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON.
+#   Value rows (Sponge, Paths) use Enter to edit inline; ← / h clears to default.
+#   Tab / Shift-Tab cycle forward / backward through pages.
+#   Changes apply immediately — no confirm step. Always available regardless of
+#   __fish_config_opinionated state.
 #
 # ARGUMENTS
 #   -h, --help  Print usage and exit
@@ -45,14 +47,17 @@ function config-settings --description 'Interactive TUI for managing fish config
                 echo
                 echo "$c_head""Navigation:$c_reset"
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""k j$c_reset    Move cursor up / down"
-                echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Set value: OFF ← DEFAULT → ON"
-                echo "  $c_flag""Tab$c_reset           Switch scope (Universal ↔ Session)"
-                echo "  $c_flag""Enter$c_reset         Edit path (on Dots Path row)"
+                echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Toggle pages: OFF ← DEFAULT → ON"
+                echo "  $c_flag""Enter$c_reset         Edit value (Sponge / Paths pages)"
+                echo "  $c_flag← / h$c_reset         Clear value to default (value rows)"
+                echo "  $c_flag""Tab / S-Tab$c_reset   Next / previous page"
                 echo "  $c_flag""q$c_reset / $c_flag""Esc$c_reset       Exit"
                 echo
-                echo "$c_head""Scopes:$c_reset"
-                echo "  $c_flag""Universal$c_reset   Persistent across all sessions ($c_dim""set -U$c_reset)"
-                echo "  $c_flag""Session$c_reset     Current session only ($c_dim""set -g$c_reset)"
+                echo "$c_head""Pages:$c_reset"
+                echo "  $c_flag""Universal$c_reset   Toggles, persistent ($c_dim""set -U$c_reset)"
+                echo "  $c_flag""Session$c_reset     Toggles, this shell ($c_dim""set -g$c_reset)"
+                echo "  $c_flag""Sponge$c_reset      sponge history-scrubbing settings"
+                echo "  $c_flag""Paths$c_reset       scrollback & user-dots paths"
                 return 0
             case '*'
                 echo "$c_err""Unknown option: $arg$c_reset" >&2
@@ -61,28 +66,50 @@ function config-settings --description 'Interactive TUI for managing fish config
         end
     end
 
-    # ── Variable list (matches Panel Layout Reference) ────
-    set -l vars \
+    # ── Toggle-page variables (rows 0–6: 6 categories + master) ───────────
+    set -l toggle_vars \
         __fish_config_op_aliases \
         __fish_config_op_autoexec \
         __fish_config_op_overrides \
         __fish_config_op_integrations \
         __fish_config_op_logging \
         __fish_config_op_greeting \
-        __fish_config_opinionated \
-        __fish_user_dots_path
+        __fish_config_opinionated
 
-    set -l cur_row   0           # 0–7
-    set -l cur_scope universal   # or "session"
-    set -l panel_h   16          # total panel lines (all width tiers are 16 lines)
-    set -l last_cols $COLUMNS    # COLUMNS at the time of the last draw
+    # ── Value-page row metadata (parallel: var / type) ────────────────────
+    set -l sponge_vars sponge_delay sponge_purge_only_on_exit sponge_allow_previously_successful sponge_successful_exit_codes __fish_sponge_extra_sensitive
+    set -l sponge_types int toggle toggle list list
+    set -l sponge_labels Delay "Purge@exit" "Allow prev" "OK codes" "Extra secret"
+    set -l paths_vars __fish_scrollback_history_dir __fish_scrollback_history_max_files __fish_user_dots_path
+    set -l paths_types path int path
+    set -l paths_labels "Log dir" "Log max" "Dots path"
+
+    # Rows per page index 0..3
+    set -l page_rows 7 7 5 3
+
+    set -l cur_page  0           # 0=Universal 1=Session 2=Sponge 3=Paths
+    set -l cur_row   0
+    set -l panel_h   16
+    set -l last_cols $COLUMNS
 
     # ── Terminal setup ────────────────────────────────────
     printf '\e[?25l'             # hide cursor
     trap 'printf "\e[?25h"; set -g __config_settings_exit 1' INT
 
-    # ── Initial draw ──────────────────────────────────────
-    __config_settings_draw $cur_row $cur_scope $vars
+    # ── Draw dispatch (page 0/1 = toggle table; 2/3 = value page) ─────────
+    function __cs_dispatch_draw --no-scope-shadowing
+        switch $cur_page
+            case 0
+                __config_settings_draw $cur_row universal $toggle_vars
+            case 1
+                __config_settings_draw $cur_row session $toggle_vars
+            case 2
+                __config_settings_draw_value $cur_row sponge
+            case 3
+                __config_settings_draw_value $cur_row paths
+        end
+    end
+    __cs_dispatch_draw
 
     # ── Event loop ────────────────────────────────────────
     # __config_settings_read_key reads a single keypress from /dev/tty in raw
@@ -106,71 +133,92 @@ function config-settings --description 'Interactive TUI for managing fish config
             case up k
                 set cur_row (math "max(0, $cur_row - 1)")
             case down j
-                set cur_row (math "min(7, $cur_row + 1)")
-            case tab      # Tab — switch scope
-                if test $cur_scope = universal
-                    set cur_scope session
+                # Hoist the page index: fish cannot expand a command-substitution
+                # index inside a quoted math string.
+                set -l pidx (math $cur_page + 1)
+                set cur_row (math "min($page_rows[$pidx] - 1, $cur_row + 1)")
+            case tab
+                set cur_page (math "($cur_page + 1) % 4")
+                set cur_row 0
+            case backtab
+                set cur_page (math "($cur_page + 3) % 4")
+                set cur_row 0
+            case right l
+                if test $cur_page -le 1
+                    # Toggle page: step toward ON
+                    set -l scope universal
+                    test $cur_page -eq 1; and set scope session
+                    set -l varname $toggle_vars[(math $cur_row + 1)]
+                    set -l cur_val (__config_settings_get_val $varname $scope)
+                    set -l next_val on
+                    test "$cur_val" = off; and set next_val DEFAULT
+                    __config_settings_apply $varname $scope $next_val
+                else if test $cur_page -eq 2
+                    # Sponge page: only toggle-type rows respond to →
+                    set -l ridx (math $cur_row + 1)
+                    if test "$sponge_types[$ridx]" = toggle
+                        set -l varname $sponge_vars[$ridx]
+                        set -l cur_val (__config_settings_get_val $varname universal)
+                        set -l next_val on
+                        test "$cur_val" = off; and set next_val DEFAULT
+                        __config_settings_apply $varname universal $next_val
+                    end
+                end
+            case left h
+                if test $cur_page -le 1
+                    set -l scope universal
+                    test $cur_page -eq 1; and set scope session
+                    set -l varname $toggle_vars[(math $cur_row + 1)]
+                    set -l cur_val (__config_settings_get_val $varname $scope)
+                    set -l next_val off
+                    test "$cur_val" = on; and set next_val DEFAULT
+                    __config_settings_apply $varname $scope $next_val
                 else
-                    set cur_scope universal
+                    # Value pages: ← clears a value row to default; toggles step toward OFF
+                    set -l v_vars $sponge_vars
+                    set -l v_types $sponge_types
+                    if test $cur_page -eq 3
+                        set v_vars $paths_vars
+                        set v_types $paths_types
+                    end
+                    set -l varname $v_vars[(math $cur_row + 1)]
+                    set -l vtype $v_types[(math $cur_row + 1)]
+                    if test "$vtype" = toggle
+                        set -l cur_val (__config_settings_get_val $varname universal)
+                        set -l next_val off
+                        test "$cur_val" = on; and set next_val DEFAULT
+                        __config_settings_apply $varname universal $next_val
+                    else
+                        __config_settings_set_value $varname $vtype ''
+                    end
                 end
             case enter
-                if test $cur_row -eq 7
-                    # Erase panel (wrap-aware, same formula as cleanup)
-                    set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
-                    set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
-                    printf '\e[%dA\e[J' $erase_h
-                    printf '\e[?25h'     # restore cursor
-
-                    printf 'User Dots Path (leave blank to reset to default): '
-                    read -l new_path
-
-                    if test -n "$new_path"
-                        set -U __fish_user_dots_path $new_path
-                    else
-                        set -Ue __fish_user_dots_path
+                if test $cur_page -ge 2
+                    set -l v_vars $sponge_vars
+                    set -l v_types $sponge_types
+                    set -l v_labels $sponge_labels
+                    if test $cur_page -eq 3
+                        set v_vars $paths_vars
+                        set v_types $paths_types
+                        set v_labels $paths_labels
                     end
-
-                    printf '\e[?25l'    # hide cursor
-                    set last_cols $COLUMNS
-                    __config_settings_draw $cur_row $cur_scope $vars
-                    set did_redraw 1
-                end
-            case right l   # → / l — step toward ON (clamped, no wrap)
-                if test $cur_row -eq 7
-                    # no-op for path var; use Enter to set
-                else
-                    set -l varname $vars[(math $cur_row + 1)]
-                    set -l cur_val (__config_settings_get_val $varname $cur_scope)
-
-                    set -l next_val on
-                    switch $cur_val
-                        case off
-                            set next_val DEFAULT
-                        case on
-                            set next_val on
-                        case '*'
-                            set next_val on
+                    set -l varname $v_vars[(math $cur_row + 1)]
+                    set -l vtype $v_types[(math $cur_row + 1)]
+                    set -l vlabel $v_labels[(math $cur_row + 1)]
+                    if test "$vtype" != toggle
+                        # Erase panel, drop to cooked mode, prompt, redraw.
+                        set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
+                        set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
+                        printf '\e[%dA\e[J' $erase_h
+                        printf '\e[?25h'
+                        printf '%s (blank = reset to default): ' "$vlabel"
+                        read -l new_val
+                        __config_settings_set_value $varname $vtype "$new_val"
+                        printf '\e[?25l'
+                        set last_cols $COLUMNS
+                        __cs_dispatch_draw
+                        set did_redraw 1
                     end
-                    __config_settings_apply $varname $cur_scope $next_val
-                end
-            case left h   # ← / h — step toward OFF (clamped, no wrap)
-                if test $cur_row -eq 7
-                    # Clear the universal path var (restore default)
-                    __config_settings_apply __fish_user_dots_path universal DEFAULT
-                else
-                    set -l varname $vars[(math $cur_row + 1)]
-                    set -l cur_val (__config_settings_get_val $varname $cur_scope)
-
-                    set -l next_val off
-                    switch $cur_val
-                        case on
-                            set next_val DEFAULT
-                        case off
-                            set next_val off
-                        case '*'
-                            set next_val off
-                    end
-                    __config_settings_apply $varname $cur_scope $next_val
                 end
             case q Q quit escape
                 break
@@ -194,7 +242,7 @@ function config-settings --description 'Interactive TUI for managing fish config
         set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
         printf '\e[%dA\e[J' $erase_h
         set last_cols $COLUMNS
-        __config_settings_draw $cur_row $cur_scope $vars
+        __cs_dispatch_draw
     end
 
     # ── Cleanup ───────────────────────────────────────────
@@ -203,4 +251,5 @@ function config-settings --description 'Interactive TUI for managing fish config
     set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
     printf '\e[%dA\e[J' $erase_h   # erase the panel (wrap-aware)
     printf '\e[?25h'        # restore cursor
+    functions --erase __cs_dispatch_draw
 end
