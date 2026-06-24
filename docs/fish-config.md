@@ -166,8 +166,19 @@ Tools that respect XDG are directed to these paths rather than polluting $HOME.
 
 ## Scrollback History
 
-    SCROLLBACK_HISTORY_DIR        ~/.terminal_history
-    SCROLLBACK_HISTORY_MAX_FILES  100
+    __fish_scrollback_history_dir        (unset → ~/.terminal_history)
+    __fish_scrollback_history_max_files  (unset → 100)
+    SCROLLBACK_HISTORY_DIR        ~/.terminal_history    (exported mirror)
+    SCROLLBACK_HISTORY_MAX_FILES  100                    (exported mirror)
+
+The __fish_scrollback_history_* universal variables are the fish-style source
+of truth — set them via `config-settings` → Paths, or `set -U` directly.
+config.fish exports the SCROLLBACK_HISTORY_* mirrors from them, because the
+POSIX wrapper scripts (paru/yay/tmux/zellij logging and _prune_terminal_logs)
+read the exported names from the environment. When the __fish_ vars are unset,
+the documented defaults are exported. config.fish deliberately does not create
+a global source var, which would shadow the universal and stop live edits from
+taking effect.
 
 Scrollback logs accumulate in SCROLLBACK_HISTORY_DIR as timestamped files.
 When the count exceeds SCROLLBACK_HISTORY_MAX_FILES the oldest are pruned
@@ -1352,21 +1363,31 @@ Add -i (interactive confirmation) to destructive commands:
 
     Synopsis:  config-settings [-h]
 
-    Opens an interactive TUI for managing fish configuration settings. Handles
-    the six opinionated component categories (C1–C6), the master disable
-    variable, and the __fish_user_dots_path path variable — without having to
-    type or remember variable names. Two scope tabs allow independent per-scope
-    configuration for category toggles:
+    Opens an interactive TUI for managing fish configuration settings across
+    four pages, without having to type or remember variable names. Tab cycles
+    forward through the pages; Shift-Tab cycles backward.
 
-      Universal — persists across all sessions (set -U)
-      Session   — current shell only (set -g)
+      Universal — opinionated category toggles (C1–C6) + master, persistent (set -U)
+      Session   — the same toggles, current shell only (set -g)
+      Sponge    — sponge history-scrubbing settings: delay, successful exit
+                  codes, purge-only-on-exit, allow-previously-successful, and
+                  extra sensitive variable-name tokens
+      Paths     — scrollback log directory, scrollback max files, and the
+                  user-dots path
 
-    The Dots Path row always operates on the universal scope regardless of the
-    active tab.
+    Toggle rows use ← → (or h/l) along an OFF ← DEFAULT → ON scale; DEFAULT
+    erases the variable so the master switch / built-in default applies. Value
+    rows (the path/int/list settings on the Sponge and Paths pages) use Enter to
+    edit inline; ← / h clears the value back to its default. Changes apply
+    immediately. Always available regardless of the __fish_config_opinionated
+    master state.
 
-    Changes to category toggles apply immediately on each keypress. Changes to
-    the path variable use an inline edit prompt (Enter). Always available
-    regardless of the __fish_config_opinionated master state.
+    The Sponge and Paths pages always write universal variables — these are
+    persistent, set-and-forget settings with no per-session scope. Editing a
+    scrollback row updates both the __fish_scrollback_history_* source-of-truth
+    variables and the exported SCROLLBACK_HISTORY_* mirrors, so the AUR/tmux/
+    zellij log wrappers (which read the exported names) see the change in the
+    running session.
 
     The panel adapts to the terminal width automatically, selecting from
     four layout tiers (with a 6-column buffer on each side before stepping
@@ -1379,20 +1400,12 @@ Add -i (interactive confirmation) to destructive commands:
       COLUMNS  < 82  →  52-wide panel (default)
 
     Navigation:
-      ↑ ↓ / k j   Move cursor
-      ← → / h l   Set value: OFF ← DEFAULT → ON (toggle rows); LEFT clears path
-      Enter        Edit the Dots Path (path row only)
-      Tab          Switch scope (Universal ↔ Session)
-      q / Escape   Exit
-
-    Left/Right (or vim-style h/l) move the highlighted toggle value one step
-    along the OFF–DEFAULT–ON scale and stop at the ends. DEFAULT erases the
-    variable so the master switch / built-in default applies. On the Dots Path
-    row, LEFT/h clears the universal variable; RIGHT/l is a no-op (use Enter).
-
-    Dots Path row [U] tag: the tag confirms this row always writes to the
-    universal scope, regardless of which tab is active. Setting it per-session
-    would have no effect on startup sourcing.
+      ↑ ↓ / k j     Move cursor
+      ← → / h l     Toggle rows: OFF ← DEFAULT → ON
+      ←  / h        Value rows: clear to default
+      Enter         Value rows: edit inline (Sponge / Paths pages)
+      Tab / S-Tab   Next / previous page
+      q / Escape    Exit
 
     Flags:
       --help / -h   Show usage.
@@ -2042,6 +2055,20 @@ sourced from a project .env file mid-session.
 To add your own persistent patterns:
 
     set -U -a sponge_regex_patterns 'your-regex-here'
+
+To mark additional variable NAMES as credential-bearing (so Layer 2 scrubs
+their values), add name tokens — via `config-settings` → Sponge, or directly:
+
+    set -U -a __fish_sponge_extra_sensitive ACME_API VAULT_PW
+
+Tokens are folded into the Layer 2 name match case-insensitively as substrings,
+so ACME_API also covers ACME_API_KEY. (The match uses `--entire` to return the
+full variable name, so partial-name tokens dereference the right value.)
+
+The `config-settings` Sponge page also surfaces sponge's own tuning variables —
+sponge_delay, sponge_successful_exit_codes, sponge_purge_only_on_exit, and
+sponge_allow_previously_successful — so they can be changed without typing
+variable names.
 
 ## Bundled Plugin Functionality
 
