@@ -45,7 +45,8 @@ function auto-pull --description 'Manage the auto-pull repository registry'
     set -l c_reset (set_color normal)
 
     set -q __fish_config_dir; or set -l __fish_config_dir $XDG_CONFIG_HOME/fish
-    set -l list "$XDG_CONFIG_HOME/.user-dots/fish/auto-pull.list"
+    set -q __fish_user_dots_path; or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
+    set -l list "$__fish_user_dots_path/auto-pull.list"
 
     set -l cmd $argv[1]
     set -e argv[1]
