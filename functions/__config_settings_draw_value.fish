@@ -48,7 +48,7 @@ function __config_settings_draw_value
         set active_idx 2
         set vars  sponge_delay sponge_purge_only_on_exit sponge_allow_previously_successful sponge_successful_exit_codes __fish_sponge_extra_sensitive
         set labels Delay "Purge@exit" "Allow prev" "OK codes" "Extra secret"
-        set types  int toggle toggle list list
+        set types  int bool bool list list
         set hints  2 false true 0 "(none)"
     else
         set title "Path Settings"
@@ -94,12 +94,13 @@ function __config_settings_draw_value
         # Badge (7 visible cols) + value field
         set -l badge
         set -l field
-        if test $type = toggle
-            set -l val (__config_settings_get_val $var universal)
+        if test $type = bool
+            # Booleans store true/false (sponge convention); unset = DEFAULT.
+            set -l val (__config_settings_get_raw $var)
             switch $val
-                case on
+                case true
                     set badge "$c_ok""     ON$c_reset"
-                case off
+                case false
                     set badge "$c_err""OFF    $c_reset"
                 case '*'
                     set badge "$c_dim""DEFAULT$c_reset"
@@ -145,7 +146,7 @@ function __config_settings_draw_value
     printf '%s│%s│\n' $p $HBR
 
     # ── Hint line ─────────────────────────────────────────────────────────
-    set -l hint_line " ↑↓/kj move  Enter edit  ←/h clear  Tab page  q quit"
+    set -l hint_line " ↑↓ move  Enter edit  ←/h clear  Tab page  q quit"
     printf '%s│%s%s%s│\n' $p $c_dim (string pad -r -w $iw -- $hint_line) $c_reset
 
     # ── Bottom border ─────────────────────────────────────────────────────

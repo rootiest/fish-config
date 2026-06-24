@@ -38,10 +38,10 @@ function __config_settings_set_value
     else
         switch $type
             case list
-                set -U $varname (string split -n ' ' -- $value) 2>/dev/null
+                set -U -- $varname (string split -n ' ' -- $value) 2>/dev/null
             case '*'
-                # ponytail: values here are paths/ints/tokens, never leading-dash
-                set -U $varname $value 2>/dev/null
+                # -- (before the name) guards typed input that begins with a dash
+                set -U -- $varname $value 2>/dev/null
         end
     end
 

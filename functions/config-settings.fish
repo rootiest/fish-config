@@ -78,7 +78,7 @@ function config-settings --description 'Interactive TUI for managing fish config
 
     # ── Value-page row metadata (parallel: var / type) ────────────────────
     set -l sponge_vars sponge_delay sponge_purge_only_on_exit sponge_allow_previously_successful sponge_successful_exit_codes __fish_sponge_extra_sensitive
-    set -l sponge_types int toggle toggle list list
+    set -l sponge_types int bool bool list list
     set -l sponge_labels Delay "Purge@exit" "Allow prev" "OK codes" "Extra secret"
     set -l paths_vars __fish_scrollback_history_dir __fish_scrollback_history_max_files __fish_user_dots_path
     set -l paths_types path int path
@@ -154,14 +154,17 @@ function config-settings --description 'Interactive TUI for managing fish config
                     test "$cur_val" = off; and set next_val DEFAULT
                     __config_settings_apply $varname $scope $next_val
                 else if test $cur_page -eq 2
-                    # Sponge page: only toggle-type rows respond to →
+                    # Sponge page: only bool rows respond to → (false ← DEFAULT → true).
+                    # Sponge reads true/false (not on/off), so write those literals.
                     set -l ridx (math $cur_row + 1)
-                    if test "$sponge_types[$ridx]" = toggle
+                    if test "$sponge_types[$ridx]" = bool
                         set -l varname $sponge_vars[$ridx]
-                        set -l cur_val (__config_settings_get_val $varname universal)
-                        set -l next_val on
-                        test "$cur_val" = off; and set next_val DEFAULT
-                        __config_settings_apply $varname universal $next_val
+                        set -l cur_val (__config_settings_get_raw $varname)
+                        if test "$cur_val" = false
+                            set -Ue $varname 2>/dev/null
+                        else
+                            set -U $varname true 2>/dev/null
+                        end
                     end
                 end
             case left h
@@ -183,11 +186,14 @@ function config-settings --description 'Interactive TUI for managing fish config
                     end
                     set -l varname $v_vars[(math $cur_row + 1)]
                     set -l vtype $v_types[(math $cur_row + 1)]
-                    if test "$vtype" = toggle
-                        set -l cur_val (__config_settings_get_val $varname universal)
-                        set -l next_val off
-                        test "$cur_val" = on; and set next_val DEFAULT
-                        __config_settings_apply $varname universal $next_val
+                    if test "$vtype" = bool
+                        # Step toward OFF (true → DEFAULT → false); sponge reads true/false.
+                        set -l cur_val (__config_settings_get_raw $varname)
+                        if test "$cur_val" = true
+                            set -Ue $varname 2>/dev/null
+                        else
+                            set -U $varname false 2>/dev/null
+                        end
                     else
                         __config_settings_set_value $varname $vtype ''
                     end
