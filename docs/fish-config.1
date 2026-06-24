@@ -989,8 +989,9 @@ Synopsis:  auto-pull [list]
 Manages the registry of repositories that are background fast-forwarded
 when you enter them (see \[dq]Auto-pull fast-forward\[dq] under the C2 component
 reference). The fish-config repo is always covered as a baseline. The
-registry is machine-local at \[ti]/.config/.user-dots/fish/auto-pull.list, one
-absolute path per line, and is never committed. Registry management works
+registry is machine-local at \[ga]$__fish_user_dots_path/auto-pull.list\[ga] (defaults
+to \[ga]\[ti]/.config/.user-dots/fish/auto-pull.list\[ga]), one absolute path per line,
+and is never committed. Registry management works
 even when C2 auto-execution is disabled; only the background sync is gated.
 
   list               Show registered repos (default)
@@ -2208,7 +2209,9 @@ It only ever fast-forwards a clean repo whose branch has an upstream
 on dirty trees, divergent branches, or repos without a remote.
 The handler fires once per repo entry (not on every sub-directory cd).
 The registry is machine-local at
-\[ti]/.config/.user-dots/fish/auto-pull.list and is never committed.
+\f[V]$__fish_user_dots_path/auto-pull.list\f[R] (defaults to
+\f[V]\[ti]/.config/.user-dots/fish/auto-pull.list\f[R]) and is never
+committed.
 .SS C3 \[em] Key and Environment Overrides
 .PP
 These change fundamental shell behavior: how keys work, which pager

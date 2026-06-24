@@ -661,7 +661,9 @@ branch has an upstream — never rebases, merges, or overwrites work — so
 it is a no-op on dirty trees, divergent branches, or repos without a
 remote. The handler fires once per repo entry (not on every
 sub-directory cd). The registry is machine-local at
-~/.config/.user-dots/fish/auto-pull.list and is never committed.</p>
+<code>$__fish_user_dots_path/auto-pull.list</code> (defaults to
+<code>~/.config/.user-dots/fish/auto-pull.list</code>) and is never
+committed.</p>
 <h4 data-number="11.5.1.3" id="c3--key-and-environment-overrides">C3 —
 Key and Environment Overrides</h4>
 <p>These change fundamental shell behavior: how keys work, which pager

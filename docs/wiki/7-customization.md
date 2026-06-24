@@ -193,7 +193,7 @@ ever fast-forwards a clean repo whose branch has an upstream — never rebases,
 merges, or overwrites work — so it is a no-op on dirty trees, divergent
 branches, or repos without a remote. The handler fires once per repo entry
 (not on every sub-directory cd). The registry is machine-local at
-~/.config/.user-dots/fish/auto-pull.list and is never committed.
+`$__fish_user_dots_path/auto-pull.list` (defaults to `~/.config/.user-dots/fish/auto-pull.list`) and is never committed.
 
 #### C3 — Key and Environment Overrides
 
