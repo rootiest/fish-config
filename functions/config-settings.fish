@@ -80,9 +80,9 @@ function config-settings --description 'Interactive TUI for managing fish config
     set -l sponge_vars sponge_delay sponge_purge_only_on_exit sponge_allow_previously_successful sponge_successful_exit_codes __fish_sponge_extra_sensitive
     set -l sponge_types int bool bool list list
     set -l sponge_labels Delay "Purge@exit" "Allow prev" "OK codes" "Extra secret"
-    set -l paths_vars __fish_scrollback_history_dir __fish_scrollback_history_max_files __fish_user_dots_path
-    set -l paths_types path int path
-    set -l paths_labels "Log dir" "Log max" "Dots path"
+    set -l paths_vars __fish_scrollback_history_dir __fish_scrollback_history_max_files __fish_user_dots_path __fish_user_dots_symlink
+    set -l paths_types path int path bool
+    set -l paths_labels "Log dir" "Log max" "Dots path" "Dots link"
 
     # Reset/blank-edit target for each value row. A non-empty entry is written
     # verbatim (sponge reads sponge_delay / sponge_successful_exit_codes with no
@@ -91,10 +91,10 @@ function config-settings --description 'Interactive TUI for managing fish config
     # extra-sensitive list all tolerate being unset). Bool rows are not reset
     # through this path — they are a 2-state true/false with no unset state.
     set -l sponge_defaults 2 '' '' 0 ''
-    set -l paths_defaults '' '' ''
+    set -l paths_defaults '' '' '' ''
 
     # Rows per page index 0..3
-    set -l page_rows 7 7 5 3
+    set -l page_rows 7 7 5 4
 
     set -l cur_page  0           # 0=Universal 1=Session 2=Sponge 3=Paths
     set -l cur_row   0
@@ -162,12 +162,21 @@ function config-settings --description 'Interactive TUI for managing fish config
                     set -l next_val on
                     test "$cur_val" = off; and set next_val DEFAULT
                     __config_settings_apply $varname $scope $next_val
-                else if test $cur_page -eq 2
-                    # Sponge bool rows are 2-state (true/false) with no unset
-                    # state — sponge reads them with no fallback. → sets true.
+                else
+                    # Value pages: bool rows are 2-state (true/false). → sets
+                    # true. Sponge reads its bools with no fallback; the Paths
+                    # "Dots link" bool drives __fish_user_dots_link on change.
+                    set -l v_vars $sponge_vars
+                    set -l v_types $sponge_types
+                    if test $cur_page -eq 3
+                        set v_vars $paths_vars
+                        set v_types $paths_types
+                    end
                     set -l ridx (math $cur_row + 1)
-                    if test "$sponge_types[$ridx]" = bool
-                        set -U $sponge_vars[$ridx] true 2>/dev/null
+                    if test "$v_types[$ridx]" = bool
+                        set -U $v_vars[$ridx] true 2>/dev/null
+                        test "$v_vars[$ridx]" = __fish_user_dots_symlink
+                            and __fish_user_dots_link
                     end
                 end
             case left h
@@ -196,6 +205,8 @@ function config-settings --description 'Interactive TUI for managing fish config
                     set -l vtype $v_types[$ridx]
                     if test "$vtype" = bool
                         set -U $varname false 2>/dev/null
+                        test "$varname" = __fish_user_dots_symlink
+                            and __fish_user_dots_link
                     else
                         __config_settings_set_value $varname $vtype "$v_defaults[$ridx]"
                     end

@@ -227,20 +227,11 @@ if status is-interactive
     set -q __fish_user_dots_path
         or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
     #   ────────────────────── user-dots convenience symlink ───────────────────
-    #   Keep $__fish_config_dir/user-dots pointing at the resolved path so it can
-    #   be browsed from the fish config dir. Git-ignored; a C2 startup side-effect.
-    #   Only ever manages a symlink — never clobbers a real file/dir placed there.
-    if __fish_config_op_enabled __fish_config_op_autoexec
-        set -l __udots_link "$__fish_config_dir/user-dots"
-        if test -d "$__fish_user_dots_path"
-            if test -L "$__udots_link"
-                test (readlink "$__udots_link") != "$__fish_user_dots_path"
-                    and ln -sfn "$__fish_user_dots_path" "$__udots_link"
-            else if not test -e "$__udots_link"
-                ln -s "$__fish_user_dots_path" "$__udots_link"
-            end
-        end
-    end
+    #   Keep $__fish_config_dir/user-dots tracking the resolved path so it can be
+    #   browsed from the fish config dir. Git-ignored. Controlled by the
+    #   __fish_user_dots_symlink toggle (config-settings → Paths); creation is a
+    #   C2 side-effect, removal-on-opt-out is honoured regardless. See the helper.
+    __fish_user_dots_link
 
     #   ─────────────────────── Source machine-local config ────────────────────
     #   Sources local.fish if it exists. That file handles sourcing its own
