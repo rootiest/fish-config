@@ -313,6 +313,12 @@ abbr -a ssct 'sudo systemctl status'
 abbr -a sscs 'sudo systemctl start'
 abbr -a sscr 'sudo systemctl restart'
 
+### Alternate command names ###
+# Expand to the canonical function name so muscle-memory typos still work,
+# while surfacing the real command instead of silently forwarding to it.
+abbr -a open-repo repo-open
+abbr -a url-open open-url
+
 ### History Expansions and Substitutions ###
 # Bash-style history expansion is opinionated (C3 overrides), gated atomically
 # with conf.d/tricks.fish, conf.d/puffer.fish, and functions/expand_*.fish.

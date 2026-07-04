@@ -138,71 +138,8 @@ function config-help --description 'Open the offline fish shell configuration ma
 
         set -l page_url "file://$html_dir/$html_path"
 
-        # Browser detection — mirrors fish's help.fish priority order but
-        # resolves actual browser binaries before falling back to xdg-open.
-        # xdg-open dispatches on the file's MIME type (text/html), which can
-        # be associated with non-browser apps (e.g. ebook readers). Using a
-        # real browser binary directly with a file:// URI avoids that lookup.
-        set -l graphical_browsers \
-            firefox firefox-esr chromium chromium-browser google-chrome \
-            brave-browser vivaldi vivaldi-stable epiphany falkon qutebrowser \
-            opera x-www-browser htmlview
-
-        set -l browser $fish_help_browser
-
-        if not set -q browser[1]
-            if set -q BROWSER
-                echo $BROWSER | read -at browser
-                if not type -q $browser[1]
-                    set_color red
-                    echo "error: \$BROWSER '$browser[1]' is not a valid command" >&2
-                    set_color normal
-                    return 1
-                end
-            else
-                # Resolve the https scheme handler from xdg-mime and use its
-                # binary directly — most reliable on modern Linux desktops.
-                if type -q xdg-mime
-                    set -l desk (xdg-mime query default x-scheme-handler/https 2>/dev/null)
-                    if test -n "$desk"
-                        set -l candidate (string replace -r '\.desktop$' '' -- $desk)
-                        if type -q $candidate
-                            set browser $candidate
-                        end
-                    end
-                end
-
-                # Fall back to trying known browser binaries in order.
-                if not set -q browser[1]
-                    for b in $graphical_browsers
-                        if type -q -f $b
-                            set browser $b
-                            break
-                        end
-                    end
-                end
-
-                # Last resort: xdg-open (may hit wrong app for local files).
-                if not set -q browser[1]; and type -q xdg-open
-                    set browser xdg-open
-                end
-            end
-        end
-
-        if not set -q browser[1]
-            set_color red
-            echo "error: could not find a web browser — set \$fish_help_browser or \$BROWSER" >&2
-            set_color normal
-            return 1
-        end
-
-        set_color green
-        echo "Opening HTML docs in $browser[1]…"
-        set_color normal
-
-        # Background the browser so it doesn't block the terminal.
-        sh -c '("$@") &' -- $browser $page_url
-        return 0
+        open-url $page_url
+        return $status
     end
 
     # ── --man / -m ───────────────────────────────────────────────

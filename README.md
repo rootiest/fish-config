@@ -134,6 +134,7 @@ To browse the docs from the terminal:
 | `help config <keyword> --html` | Open HTML docs at the matching section anchor |
 | `help config --man` | Open the compiled man page via `man -l` |
 | `help config <keyword> --man` | Open the man page jumping to the nearest match |
+| `repo-open` | Open this repo's web page in the browser (deep-links to the current branch and sub-directory) |
 
 The pager falls back through: **ov** → **bat** → **man -l** → **less** → **cat**.
 
