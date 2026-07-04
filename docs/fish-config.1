@@ -1802,8 +1802,9 @@ forward through the pages; Shift-Tab cycles backward.
   Sponge    \[em] sponge history-scrubbing settings: delay, successful exit
               codes, purge-only-on-exit, allow-previously-successful, and
               extra sensitive variable-name tokens
-  Paths     \[em] scrollback log directory, scrollback max files, and the
-              user-dots path
+  Paths     \[em] scrollback log directory, scrollback max files, the
+              user-dots path, and the user-dots convenience symlink toggle
+              (Dots link)
 
 Toggle rows use ← → (or h/l) along an OFF ← DEFAULT → ON scale; DEFAULT
 erases the variable so the master switch / built-in default applies. Value
@@ -2089,6 +2090,16 @@ set -U __fish_user_dots_path /path/to/your/dots/fish
 .PP
 Typical uses: additional PATH entries, local aliases, hostname-specific
 env vars, work-specific tool configs.
+.PP
+For convenience, a git-ignored \f[V]user-dots\f[R] symlink in the fish
+config directory tracks \f[V]$__fish_user_dots_path\f[R] so the overlay
+can be browsed from \f[V]\[ti]/.config/fish/\f[R].
+It is created if missing and repointed if the path changes.
+Opt out by setting \f[V]__fish_user_dots_symlink\f[R] to a falsy value,
+or toggling \[lq]Dots link\[rq] off on the config-settings Paths page
+\[em] this stops generation and removes any existing link.
+It only ever manages a symlink and never clobbers a real file or
+directory at that path.
 .SS Secrets and API Keys
 .IP
 .nf
@@ -2272,12 +2283,22 @@ yay wrapper                Every startup        Writes \[ti]/.local/bin/yay wrap
 Python venv activation     On every cd          Sources .venv/bin/activate.fish
 WakaTime command hook      On every command     Reports to WakaTime API
 Auto-pull fast-forward     On entering a repo   Background ff-only git pull
+user-dots symlink          Every startup        Links $__fish_config_dir/user-dots
+                                                to $__fish_user_dots_path
 \f[R]
 .fi
 .PP
 When C2 is disabled: no Fisher install, no theme application, no
 paru/yay wrapper generation, no automatic venv activation, no WakaTime
-reporting, and no auto-pull (the PWD handler is never registered).
+reporting, no auto-pull (the PWD handler is never registered), and the
+user-dots convenience symlink is not created.
+The symlink is git-ignored and only ever managed as a symlink \[em] a
+real file or directory at that path is left untouched.
+The symlink has its own opt-out independent of C2: set
+__fish_user_dots_symlink to a falsy value (or toggle \[lq]Dots link\[rq]
+off on the config-settings Paths page) to stop generating it and remove
+any existing link \[em] honoured even when C2 is enabled.
+Managed by the __fish_user_dots_link helper.
 The first-run completion marker (__fish_config_first_run_complete) is
 still set so the init does not re-run on subsequent shells.
 .PP
