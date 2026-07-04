@@ -248,6 +248,10 @@ test -f "$__fish_user_dots_path/local.fish"
     and source "$__fish_user_dots_path/local.fish"
 ```
 
+For convenience, a git-ignored `user-dots` symlink in the fish config directory is pointed at `$__fish_user_dots_path` on startup, so the overlay can be browsed from `~/.config/fish/`. It is recreated if missing and repointed if the path variable changes. Creation is a C2 startup side-effect (`__fish_config_op_autoexec`); it only ever manages a symlink and never clobbers a real file or directory at that path.
+
+To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots link** off on the **Paths** page of `config-settings`). Disabling it stops the symlink being generated and removes any existing one immediately — honoured regardless of the C2 master switch.
+
 `fish_variables` (which fish auto-manages and may contain universal variable state) is excluded from this repo via `.gitignore`.
 
 ---

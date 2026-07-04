@@ -226,6 +226,13 @@ if status is-interactive
     # Resolve user-dots path. Customize via: set -U __fish_user_dots_path /your/path
     set -q __fish_user_dots_path
         or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
+    #   ────────────────────── user-dots convenience symlink ───────────────────
+    #   Keep $__fish_config_dir/user-dots tracking the resolved path so it can be
+    #   browsed from the fish config dir. Git-ignored. Controlled by the
+    #   __fish_user_dots_symlink toggle (config-settings → Paths); creation is a
+    #   C2 side-effect, removal-on-opt-out is honoured regardless. See the helper.
+    __fish_user_dots_link
+
     #   ─────────────────────── Source machine-local config ────────────────────
     #   Sources local.fish if it exists. That file handles sourcing its own
     #   secrets.fish companion when needed.

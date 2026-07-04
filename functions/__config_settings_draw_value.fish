@@ -57,10 +57,10 @@ function __config_settings_draw_value
     else
         set title "Path Settings"
         set active_idx 3
-        set vars  __fish_scrollback_history_dir __fish_scrollback_history_max_files __fish_user_dots_path
-        set labels "Log dir" "Log max" "Dots path"
-        set types  path int path
-        set hints  "~/.terminal_history" 100 "(default)"
+        set vars  __fish_scrollback_history_dir __fish_scrollback_history_max_files __fish_user_dots_path __fish_user_dots_symlink
+        set labels "Log dir" "Log max" "Dots path" "Dots link"
+        set types  path int path bool
+        set hints  "~/.terminal_history" 100 "(default)" on
     end
     set -l nrows (count $vars)
 
