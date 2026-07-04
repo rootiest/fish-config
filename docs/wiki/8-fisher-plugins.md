@@ -58,6 +58,20 @@ To add your own persistent patterns:
 
     set -U -a sponge_regex_patterns 'your-regex-here'
 
+To mark additional variable NAMES as credential-bearing (so Layer 2 scrubs
+their values), add name tokens — via `config-settings` → Sponge, or directly:
+
+    set -U -a __fish_sponge_extra_sensitive ACME_API VAULT_PW
+
+Tokens are folded into the Layer 2 name match case-insensitively as substrings,
+so ACME_API also covers ACME_API_KEY. (The match uses `--entire` to return the
+full variable name, so partial-name tokens dereference the right value.)
+
+The `config-settings` Sponge page also surfaces sponge's own tuning variables —
+sponge_delay, sponge_successful_exit_codes, sponge_purge_only_on_exit, and
+sponge_allow_previously_successful — so they can be changed without typing
+variable names.
+
 ## Bundled Plugin Functionality
 
 The remaining plugin functionality is bundled directly with this config rather

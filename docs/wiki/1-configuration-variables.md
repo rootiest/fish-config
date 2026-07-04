@@ -36,8 +36,19 @@ Tools that respect XDG are directed to these paths rather than polluting $HOME.
 
 ## Scrollback History
 
-    SCROLLBACK_HISTORY_DIR        ~/.terminal_history
-    SCROLLBACK_HISTORY_MAX_FILES  100
+    __fish_scrollback_history_dir        (unset → ~/.terminal_history)
+    __fish_scrollback_history_max_files  (unset → 100)
+    SCROLLBACK_HISTORY_DIR        ~/.terminal_history    (exported mirror)
+    SCROLLBACK_HISTORY_MAX_FILES  100                    (exported mirror)
+
+The __fish_scrollback_history_* universal variables are the fish-style source
+of truth — set them via `config-settings` → Paths, or `set -U` directly.
+config.fish exports the SCROLLBACK_HISTORY_* mirrors from them, because the
+POSIX wrapper scripts (paru/yay/tmux/zellij logging and _prune_terminal_logs)
+read the exported names from the environment. When the __fish_ vars are unset,
+the documented defaults are exported. config.fish deliberately does not create
+a global source var, which would shadow the universal and stop live edits from
+taking effect.
 
 Scrollback logs accumulate in SCROLLBACK_HISTORY_DIR as timestamped files.
 When the count exceeds SCROLLBACK_HISTORY_MAX_FILES the oldest are pruned

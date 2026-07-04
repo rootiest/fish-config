@@ -533,6 +533,18 @@ credentials in variables exported after login, such as tokens sourced
 from a project .env file mid-session.</p>
 <p>To add your own persistent patterns:</p>
 <pre><code>set -U -a sponge_regex_patterns &#39;your-regex-here&#39;</code></pre>
+<p>To mark additional variable NAMES as credential-bearing (so Layer 2
+scrubs their values), add name tokens — via <code>config-settings</code>
+→ Sponge, or directly:</p>
+<pre><code>set -U -a __fish_sponge_extra_sensitive ACME_API VAULT_PW</code></pre>
+<p>Tokens are folded into the Layer 2 name match case-insensitively as
+substrings, so ACME_API also covers ACME_API_KEY. (The match uses
+<code>--entire</code> to return the full variable name, so partial-name
+tokens dereference the right value.)</p>
+<p>The <code>config-settings</code> Sponge page also surfaces sponge's
+own tuning variables — sponge_delay, sponge_successful_exit_codes,
+sponge_purge_only_on_exit, and sponge_allow_previously_successful — so
+they can be changed without typing variable names.</p>
 <h2 data-number="12.3" id="bundled-plugin-functionality">Bundled Plugin
 Functionality</h2>
 <p>The remaining plugin functionality is bundled directly with this

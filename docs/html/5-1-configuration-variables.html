@@ -517,8 +517,19 @@ VISUAL      unset by default; set a GUI editor via local.fish (the edit
 SUDO_EDITOR same as EDITOR
 PAGER       ov (falls back to less)</code></pre>
 <h2 data-number="5.4" id="scrollback-history">Scrollback History</h2>
-<pre><code>SCROLLBACK_HISTORY_DIR        ~/.terminal_history
-SCROLLBACK_HISTORY_MAX_FILES  100</code></pre>
+<pre><code>__fish_scrollback_history_dir        (unset → ~/.terminal_history)
+__fish_scrollback_history_max_files  (unset → 100)
+SCROLLBACK_HISTORY_DIR        ~/.terminal_history    (exported mirror)
+SCROLLBACK_HISTORY_MAX_FILES  100                    (exported mirror)</code></pre>
+<p>The <em><em>fish_scrollback_history</em>* universal variables are the
+fish-style source of truth — set them via <code>config-settings</code> →
+Paths, or <code>set -U</code> directly. config.fish exports the
+SCROLLBACK_HISTORY</em>* mirrors from them, because the POSIX wrapper
+scripts (paru/yay/tmux/zellij logging and _prune_terminal_logs) read the
+exported names from the environment. When the _<em>fish</em> vars are
+unset, the documented defaults are exported. config.fish deliberately
+does not create a global source var, which would shadow the universal
+and stop live edits from taking effect.</p>
 <p>Scrollback logs accumulate in SCROLLBACK_HISTORY_DIR as timestamped
 files. When the count exceeds SCROLLBACK_HISTORY_MAX_FILES the oldest
 are pruned automatically on exit. Use <code>logs</code> to browse them
