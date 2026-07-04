@@ -1695,6 +1695,75 @@ config-help pkg --man
 Also available as: help config [SECTION] [FLAGS]
 \f[R]
 .fi
+.SS open-url
+.IP
+.nf
+\f[C]
+Synopsis:  open-url [-s|--silent] [-v|--verbose] <url>
+           open-url -h | --help
+
+Opens a URL or file:// URI in the best available graphical web browser,
+backgrounded so it never blocks the terminal. Resolves a real browser
+binary rather than deferring to xdg-open, whose MIME dispatch can hand
+local text/html files to non-browser apps (e.g. ebook readers).
+
+Silent by default: prints nothing on success (errors always go to
+stderr). Pass --verbose / -v to report which browser is launched;
+--silent / -s is accepted for explicitness.
+
+Resolution order:
+  1. $fish_help_browser  (explicit override)
+  2. $BROWSER            (validated; errors if not a command)
+  3. xdg-mime default handler for x-scheme-handler/https
+  4. First known browser binary found in a built-in list
+  5. xdg-open            (last resort)
+
+open-url https://git.rootiest.dev/rootiest/fish-config
+open-url \[dq]file://$HOME/.config/fish/docs/html/index.html\[dq]
+
+Used internally by config-help --html.
+
+Typo abbreviation: url-open (expands to open-url on space/enter).
+\f[R]
+.fi
+.SS repo-open
+.IP
+.nf
+\f[C]
+Synopsis:  repo-open [-p|--print] [-r|--root]
+           repo-open -h | --help
+
+Opens the web page for the current repository\[aq]s \[ga]origin\[ga] remote in a
+browser (via open-url). Deep-links to the current branch when it exists
+on the remote \[em] falling back to the remote\[aq]s default branch (main/master)
+otherwise \[em] and to the current sub-directory when run below the repo root.
+
+The remote URL is normalized from HTTPS and SSH/scp forms
+(git\[at]host:owner/repo.git, ssh://\&..., https://\&...). The web path layout is
+provider-specific; the provider is resolved in order:
+
+  1. git config browse.provider   (per-repo or --global override)
+  2. Hostname heuristic           (github / gitlab / gitea / bitbucket;
+                                    codeberg → gitea)
+  3. Default: github-style layout
+
+Self-hosted hosts the heuristic can\[aq]t classify (a Gitea/GitLab instance
+on a custom domain) need a one-time override:
+
+  git config browse.provider gitea
+
+Flags:
+  --print / -p   Print the resolved URL instead of opening it.
+  --root  / -r   Ignore the current sub-directory; link to the repo root.
+  --help  / -h   Show usage.
+
+repo-open
+repo-open --print
+repo-open --root
+
+Typo abbreviation: open-repo (expands to repo-open on space/enter).
+\f[R]
+.fi
 .SS config-update
 .IP
 .nf

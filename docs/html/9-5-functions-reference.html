@@ -1138,7 +1138,66 @@ config-help --man
 config-help pkg --man
 
 Also available as: help config [SECTION] [FLAGS]</code></pre>
-<h3 data-number="9.14.2" id="config-update">config-update</h3>
+<h3 data-number="9.14.2" id="open-url">open-url</h3>
+<pre><code>Synopsis:  open-url [-s|--silent] [-v|--verbose] &lt;url&gt;
+           open-url -h | --help
+
+Opens a URL or file:// URI in the best available graphical web browser,
+backgrounded so it never blocks the terminal. Resolves a real browser
+binary rather than deferring to xdg-open, whose MIME dispatch can hand
+local text/html files to non-browser apps (e.g. ebook readers).
+
+Silent by default: prints nothing on success (errors always go to
+stderr). Pass --verbose / -v to report which browser is launched;
+--silent / -s is accepted for explicitness.
+
+Resolution order:
+  1. $fish_help_browser  (explicit override)
+  2. $BROWSER            (validated; errors if not a command)
+  3. xdg-mime default handler for x-scheme-handler/https
+  4. First known browser binary found in a built-in list
+  5. xdg-open            (last resort)
+
+open-url https://git.rootiest.dev/rootiest/fish-config
+open-url &quot;file://$HOME/.config/fish/docs/html/index.html&quot;
+
+Used internally by config-help --html.
+
+Typo abbreviation: url-open (expands to open-url on space/enter).</code></pre>
+<h3 data-number="9.14.3" id="repo-open">repo-open</h3>
+<pre><code>Synopsis:  repo-open [-p|--print] [-r|--root]
+           repo-open -h | --help
+
+Opens the web page for the current repository&#39;s `origin` remote in a
+browser (via open-url). Deep-links to the current branch when it exists
+on the remote — falling back to the remote&#39;s default branch (main/master)
+otherwise — and to the current sub-directory when run below the repo root.
+
+The remote URL is normalized from HTTPS and SSH/scp forms
+(git@host:owner/repo.git, ssh://…, https://…). The web path layout is
+provider-specific; the provider is resolved in order:
+
+  1. git config browse.provider   (per-repo or --global override)
+  2. Hostname heuristic           (github / gitlab / gitea / bitbucket;
+                                    codeberg → gitea)
+  3. Default: github-style layout
+
+Self-hosted hosts the heuristic can&#39;t classify (a Gitea/GitLab instance
+on a custom domain) need a one-time override:
+
+  git config browse.provider gitea
+
+Flags:
+  --print / -p   Print the resolved URL instead of opening it.
+  --root  / -r   Ignore the current sub-directory; link to the repo root.
+  --help  / -h   Show usage.
+
+repo-open
+repo-open --print
+repo-open --root
+
+Typo abbreviation: open-repo (expands to repo-open on space/enter).</code></pre>
+<h3 data-number="9.14.4" id="config-update">config-update</h3>
 <pre><code>Synopsis:  config-update [-h] [-n] [-f]
 
 Pulls the latest fish configuration from the upstream repository
@@ -1156,7 +1215,7 @@ Flags:
 config-update
 config-update --dry-run
 config-update --force</code></pre>
-<h3 data-number="9.14.3" id="config-settings">config-settings</h3>
+<h3 data-number="9.14.5" id="config-settings">config-settings</h3>
 <pre><code>Synopsis:  config-settings [-h]
 
 Opens an interactive TUI for managing fish configuration settings across
@@ -1209,50 +1268,50 @@ Flags:
   --help / -h   Show usage.
 
 config-settings</code></pre>
-<h3 data-number="9.14.4" id="config-toggle-deprecated">config-toggle
+<h3 data-number="9.14.6" id="config-toggle-deprecated">config-toggle
 (deprecated)</h3>
 <pre><code>Deprecated alias for config-settings. Prints a deprecation notice to
 stderr, then delegates all arguments to config-settings.
 
 config-toggle</code></pre>
-<h3 data-number="9.14.5" id="bash">bash</h3>
+<h3 data-number="9.14.7" id="bash">bash</h3>
 <pre><code>Synopsis:  bash [args...]
 Switches to bash, with XDG config applied. On exit, $SHELL is reset
 back to fish.</code></pre>
-<h3 data-number="9.14.6" id="bd-pull">bd-pull</h3>
+<h3 data-number="9.14.8" id="bd-pull">bd-pull</h3>
 <pre><code>Synopsis:  bd-pull &lt;owner/repo&gt;
 Fetches unlinked Gitea issues and creates local Beads entries, updating
 issue titles with the assigned Beads IDs.
 Requires $GITEA_TOKEN and $GITEA_URL to be set.
 
 bd-pull rootiest/fish-config</code></pre>
-<h3 data-number="9.14.7" id="cheat">cheat</h3>
+<h3 data-number="9.14.9" id="cheat">cheat</h3>
 <pre><code>Synopsis:  cheat &lt;topic&gt; [args...]
 Displays a colorized cheatsheet using cheat -c, falls back to tldr,
 then man.
 
 cheat tar
 cheat git</code></pre>
-<h3 data-number="9.14.8" id="cffetch--ffetch">cffetch / ffetch</h3>
+<h3 data-number="9.14.10" id="cffetch--ffetch">cffetch / ffetch</h3>
 <pre><code>Synopsis:  cffetch [args...]  /  ffetch [args...]
 Clears the screen and displays system information via fastfetch with
 the custom config at ~/.fastfetch.jsonc. Falls back to neofetch.</code></pre>
-<h3 data-number="9.14.9" id="dockup">dockup</h3>
+<h3 data-number="9.14.11" id="dockup">dockup</h3>
 <pre><code>Synopsis:  dockup [-h] [directory]
 Pulls latest Docker images, restarts services in the given Docker
 Compose project, and prunes dangling images.
 
 dockup ~/myapp</code></pre>
-<h3 data-number="9.14.10" id="joplin">joplin</h3>
+<h3 data-number="9.14.12" id="joplin">joplin</h3>
 <pre><code>Synopsis:  joplin [args...]
 Runs the Joplin CLI with Node.js deprecation warnings suppressed.
 
 joplin ls</code></pre>
-<h3 data-number="9.14.11" id="ld-1">ld</h3>
+<h3 data-number="9.14.13" id="ld-1">ld</h3>
 <pre><code>Synopsis:  ld
 Launches lazydocker targeting the currently active Docker context,
 detected via docker context inspect.</code></pre>
-<h3 data-number="9.14.12" id="replay">replay</h3>
+<h3 data-number="9.14.14" id="replay">replay</h3>
 <pre><code>Synopsis:  replay &lt;commands&gt;
 Runs Bash commands and replays any resulting changes to environment
 variables, aliases, and the working directory back into the current
@@ -1260,7 +1319,7 @@ Fish session. Useful for sourcing Bash scripts.
 
 replay &quot;source ~/.bashrc&quot;
 replay &quot;export FOO=bar&quot;</code></pre>
-<h3 data-number="9.14.13" id="kitty-logging">kitty-logging</h3>
+<h3 data-number="9.14.15" id="kitty-logging">kitty-logging</h3>
 <pre><code>Synopsis:  kitty-logging [install|uninstall|status|dismiss] [-h]
 
 Manages the Kitty scrollback watcher that powers C5 logging. Ships a
@@ -1281,11 +1340,11 @@ uninstalling. Install affects new Kitty windows only.
 Example:
   kitty-logging install
   kitty-logging status</code></pre>
-<h3 data-number="9.14.14" id="tmux-clean">tmux-clean</h3>
+<h3 data-number="9.14.16" id="tmux-clean">tmux-clean</h3>
 <pre><code>Synopsis:  tmux-clean
 Kills all detached (unattached) tmux sessions, leaving attached ones
 running.</code></pre>
-<h3 data-number="9.14.15" id="wake-lock">wake-lock</h3>
+<h3 data-number="9.14.17" id="wake-lock">wake-lock</h3>
 <pre><code>Synopsis:  wake-lock &lt;command&gt; [args...]
 Runs a command under systemd-inhibit, preventing the system from going
 idle or sleeping until the command completes.
