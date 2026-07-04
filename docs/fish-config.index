@@ -24,6 +24,9 @@ toolhomes=## Tool Homes (XDG-compliant)
 editor=## Editor and Pager
 pager=## Editor and Pager
 scrollback=## Scrollback History
+__fish_scrollback_history_dir=## Scrollback History
+__fish_scrollback_history_max_files=## Scrollback History
+scrollback-dir=## Scrollback History
 
 # ── Section 2: PATH ───────────────────────────────────────────
 path=# 2. PATH SETUP
@@ -258,6 +261,9 @@ sponge=## Fisher-Managed Plugins
 sponge-filtering=## Sponge History Filtering
 history-filtering=## Sponge History Filtering
 privacy=## Sponge History Filtering
+__fish_sponge_extra_sensitive=## Sponge History Filtering
+extra-sensitive=## Sponge History Filtering
+sponge-settings=### config-settings
 bundled-plugins=## Bundled Plugin Functionality
 fish-plugins-manifest=## fish_plugins Manifest
 

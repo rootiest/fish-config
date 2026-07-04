@@ -24,7 +24,7 @@
 # RETURNS
 #   0  A key was read; one of these tokens is printed to stdout:
 #        up down left right   arrow keys
-#        space tab enter escape
+#        space tab backtab enter escape backspace
 #        quit                 Ctrl-C (byte 3) in raw mode
 #        <char>               any other single printable character
 #        ""                   nothing decodable was read
@@ -64,6 +64,8 @@ function __config_settings_read_key
             echo right
         case '27 91 68'
             echo left
+        case '27 91 90'
+            echo backtab
         case 27
             echo escape
         case 9
@@ -72,6 +74,8 @@ function __config_settings_read_key
             echo space
         case 10 13
             echo enter
+        case 8 127
+            echo backspace
         case 3
             echo quit
         case ''

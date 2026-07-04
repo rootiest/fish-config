@@ -95,8 +95,19 @@ function __sponge_register_secret_values --on-event fish_prompt
 
     set -l secret_values
 
-    set -l sensitive_vars (set --names --export | string match --regex -- \
-        '(?i)(?:TOKEN|PASSWORD|PASSWD|SECRET|API[_-]KEY|PRIVATE[_-]KEY|ACCESS[_-]KEY|AUTH[_-]KEY|CREDENTIAL|KOPIA_PASSWORD)')
+    # Base credential-name tokens, plus any user-supplied extras from
+    # __fish_sponge_extra_sensitive (set via config-settings → Sponge page).
+    set -l _sensitive_names \
+        TOKEN PASSWORD PASSWD SECRET 'API[_-]KEY' 'PRIVATE[_-]KEY' \
+        'ACCESS[_-]KEY' 'AUTH[_-]KEY' CREDENTIAL KOPIA_PASSWORD \
+        $__fish_sponge_extra_sensitive
+    set -l _sensitive_alt (string join '|' $_sensitive_names)
+
+    # --entire returns the full matching variable NAME (e.g. GITHUB_TOKEN), not
+    # just the matched token substring (TOKEN) — required so $$var below
+    # dereferences the real variable instead of an unset partial name.
+    set -l sensitive_vars (set --names --export | string match --regex --entire -- \
+        "(?i)(?:$_sensitive_alt)")
 
     for var in $sensitive_vars
         # Take only the first element — array vars yield multiple values.
