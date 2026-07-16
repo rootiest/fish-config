@@ -21,7 +21,7 @@ function ls --description 'List all files'
     end
 
     if which eza >/dev/null 2>&1
-        eza -l -a --icons --color=auto --hyperlink $argv
+        eza -l -a --icons --color=auto --hyperlink=auto $argv
 
     else if which lsd >/dev/null 2>&1
         lsd -l -a --hyperlink=auto $argv
