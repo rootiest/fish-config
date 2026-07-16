@@ -1568,13 +1568,14 @@ Add -i (interactive confirmation) to destructive commands:
     Synopsis:  kitty-logging [install|uninstall|status|dismiss] [-h]
 
     Manages the Kitty scrollback watcher that powers C5 logging. Ships a
-    canonical, version-marked watcher and installs it into the Kitty config
-    directory, wiring it into kitty.conf through a sentinel-marked managed
-    block. Commenting out any conflicting watcher line avoids double-capture.
+    canonical watcher and symlinks it into the Kitty config directory (so it
+    always tracks the source), wiring it into kitty.conf through a
+    sentinel-marked managed block. Commenting out any conflicting watcher line
+    avoids double-capture.
 
     Commands:
-      install    Copy/refresh the watcher and add the managed block
-      uninstall  Remove the managed block and the watcher file
+      install    Symlink the watcher and add the managed block
+      uninstall  Remove the managed block and the watcher symlink
       status     Show wiring, installed watcher version, and C5 state
       dismiss    Stop the per-session setup reminder
 
@@ -1985,9 +1986,9 @@ snapshot point from the shell is a clean exit. To guarantee a zellij pane is
 logged, end the session with `exit` or Ctrl-D rather than zellij's close-pane
 or quit actions.
 
-The Kitty watcher is managed by the kitty-logging command: it installs a
-version-marked watcher (fish-config-watcher.py) into the Kitty config directory
-and wires it into kitty.conf via a managed block. Inside Kitty, a non-blocking
+The Kitty watcher is managed by the kitty-logging command: it symlinks the
+watcher (fish-config-watcher.py) into the Kitty config directory and wires it
+into kitty.conf via a managed block. Inside Kitty, a non-blocking
 per-session reminder points first-time users at `kitty-logging install` until
 they install or run `kitty-logging dismiss`. Install affects new Kitty windows
 only; runtime disable is still handled by the .logging_disabled sentinel.

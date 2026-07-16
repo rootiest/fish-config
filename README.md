@@ -104,8 +104,8 @@ one-time-per-session reminder. Manage it with:
 
 | Command | Action |
 |---|---|
-| `kitty-logging install` | Copy the watcher into your Kitty config and wire it into `kitty.conf` |
-| `kitty-logging uninstall` | Remove the managed block and the watcher file |
+| `kitty-logging install` | Symlink the watcher into your Kitty config and wire it into `kitty.conf` |
+| `kitty-logging uninstall` | Remove the managed block and the watcher symlink |
 | `kitty-logging status` | Show whether it's wired, the watcher version, and C5 state |
 | `kitty-logging dismiss` | Stop the per-session reminder without installing |
 

@@ -319,9 +319,9 @@ snapshot point from the shell is a clean exit. To guarantee a zellij pane is
 logged, end the session with `exit` or Ctrl-D rather than zellij's close-pane
 or quit actions.
 
-The Kitty watcher is managed by the kitty-logging command: it installs a
-version-marked watcher (fish-config-watcher.py) into the Kitty config directory
-and wires it into kitty.conf via a managed block. Inside Kitty, a non-blocking
+The Kitty watcher is managed by the kitty-logging command: it symlinks the
+watcher (fish-config-watcher.py) into the Kitty config directory and wires it
+into kitty.conf via a managed block. Inside Kitty, a non-blocking
 per-session reminder points first-time users at `kitty-logging install` until
 they install or run `kitty-logging dismiss`. Install affects new Kitty windows
 only; runtime disable is still handled by the .logging_disabled sentinel.

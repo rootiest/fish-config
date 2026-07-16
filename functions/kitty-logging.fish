@@ -69,7 +69,7 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
 
     set -l kitty_dir (__kitty_logging_dir)
     set -l conf "$kitty_dir/kitty.conf"
-    set -l src "$__fish_config_dir/kitty/fish-config-watcher.py"
+    set -l src "$__fish_config_dir/scripts/kitty-fish-config-watcher.py"
     set -l dst "$kitty_dir/fish-config-watcher.py"
     set -l blk_begin "# >>> fish-config logging (managed — do not edit) >>>"
     set -l blk_end "# <<< fish-config logging (managed) <<<"
@@ -107,25 +107,19 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
                 return 1
             end
 
-            # Copy/refresh the watcher when missing or stale. A failed copy must
-            # abort: otherwise we would wire a managed block pointing at a watcher
-            # file that does not exist and report success.
-            set -l copied 0
-            if not test -f $dst; or test (__kitty_logging_version $src) -gt (__kitty_logging_version $dst)
-                if not command cp $src $dst
-                    echo "$c_err""kitty-logging: failed to copy watcher to $dst$c_reset" >&2
-                    return 1
-                end
-                set copied 1
+            # Symlink the watcher into the kitty config dir so it always tracks
+            # the canonical source (no copy, no staleness). ln -sfn replaces a
+            # stale link or a legacy copied file. A failed link must abort:
+            # otherwise we would wire a managed block pointing at a missing
+            # watcher and report success.
+            if not command ln -sfn $src $dst
+                echo "$c_err""kitty-logging: failed to symlink watcher to $dst$c_reset" >&2
+                return 1
             end
 
-            # Already wired: idempotent no-op (watcher may still have refreshed).
+            # Already wired: idempotent no-op.
             if test -f $conf; and command grep -qF -- "$blk_begin" $conf
-                if test $copied -eq 1
-                    echo "$c_ok""→ Watcher updated.$c_reset Already wired in $conf."
-                else
-                    echo "$c_ok""→ Already installed.$c_reset"
-                end
+                echo "$c_ok""→ Already installed.$c_reset"
                 return 0
             end
 
@@ -158,7 +152,8 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
             else
                 echo "$c_dim""→ No managed block found in $conf$c_reset"
             end
-            if test -f $dst
+            # -L catches the symlink (even if dangling); -f catches a legacy copy.
+            if test -L $dst; or test -f $dst
                 command rm -f $dst
                 echo "$c_ok""→ Removed $dst$c_reset"
             end

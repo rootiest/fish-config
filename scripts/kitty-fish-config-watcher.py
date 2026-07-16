@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # fish-config-watcher-version: 1
 #
-# Managed by fish-config `kitty-logging`. Do not edit in place — edit the
-# canonical copy at ~/.config/fish/kitty/fish-config-watcher.py and re-run
-# `kitty-logging install`.
+# Managed by fish-config `kitty-logging`, which symlinks this file into the
+# Kitty config directory. The canonical source lives at
+# ~/.config/fish/scripts/kitty-fish-config-watcher.py.
 
 import datetime
 import os
