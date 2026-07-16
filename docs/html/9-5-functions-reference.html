@@ -1061,7 +1061,22 @@ README.md, ensuring all documented features and examples are accurate.</code></p
 Invokes Claude Code to run the full PR workflow: create branch,
 conventional commit, verification, push, and open a PR with a manual
 verification checklist.</code></pre>
-<h3 data-number="9.12.7" id="superpowers">superpowers</h3>
+<h3 data-number="9.12.7" id="qc">qc</h3>
+<pre><code>Synopsis:  qc [prompt...]
+Quick-chat wrapper around the aichat LLM CLI that defaults to the &quot;cli&quot;
+role - a system prompt tuned for concise, terminal-friendly output. On
+first use it installs the bundled role by symlinking
+scripts/cli-agent.md to $XDG_CONFIG_HOME/aichat/roles/cli.md (creating
+the directory if needed). Inherits every aichat flag and tab completion
+(--wraps aichat); passing --role/-r overrides the default role, so qc
+forwards to aichat unchanged. The function is only defined when aichat
+is installed. Run qc --help for aichat&#39;s full flag reference with the
+command name rewritten to qc.
+
+qc &quot;how do I list open ports on linux?&quot;
+qc -m ollama:llama3 &quot;explain this error&quot;
+qc --role coder &quot;refactor this function&quot;</code></pre>
+<h3 data-number="9.12.8" id="superpowers">superpowers</h3>
 <pre><code>Synopsis:  superpowers [on|off] [-g]
 Enables or disables the Superpowers plugin for Antigravity and Claude
 Code at workspace/project scope (default) or user scope (-g/--global).
