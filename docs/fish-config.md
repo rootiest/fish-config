@@ -1247,6 +1247,23 @@ Add -i (interactive confirmation) to destructive commands:
     conventional commit, verification, push, and open a PR with a manual
     verification checklist.
 
+### qc
+
+    Synopsis:  qc [prompt...]
+    Quick-chat wrapper around the aichat LLM CLI that defaults to the "cli"
+    role - a system prompt tuned for concise, terminal-friendly output. On
+    first use it installs the bundled role by symlinking
+    scripts/cli-agent.md to $XDG_CONFIG_HOME/aichat/roles/cli.md (creating
+    the directory if needed). Inherits every aichat flag and tab completion
+    (--wraps aichat); passing --role/-r overrides the default role, so qc
+    forwards to aichat unchanged. The function is only defined when aichat
+    is installed. Run qc --help for aichat's full flag reference with the
+    command name rewritten to qc.
+
+    qc "how do I list open ports on linux?"
+    qc -m ollama:llama3 "explain this error"
+    qc --role coder "refactor this function"
+
 ### superpowers
 
     Synopsis:  superpowers [on|off] [-g]
