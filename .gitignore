@@ -300,3 +300,10 @@ docs/devlogs
 #   ────────────────────────────────────────────────────────
 /.cache_ggshield
 user-dots
+
+#   ──────────────────── Generated Docs Site ───────────────────
+docs/site/node_modules/
+docs/site/dist/
+docs/site/.astro/
+docs/site/src/content/docs/
+docs/site/src/sidebar.json

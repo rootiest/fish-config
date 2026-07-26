@@ -5,7 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "docs/fish-config.md"
+      - "docs/manual/**"
+      - "docs/build-manual.py"
+      - "docs/manualtools.py"
+      - "docs/verify-manual.py"
+      - "docs/site/**"
 
 jobs:
   build-docs:
@@ -16,8 +20,24 @@ jobs:
         with:
           token: ${{ secrets.GITEA_TOKEN }}
 
-      - name: Install pandoc
-        run: sudo apt-get update -qq && sudo apt-get install -y pandoc
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y pandoc python3-yaml
+
+      - name: Generate concatenated markdown
+        run: python3 docs/build-manual.py --concat -o docs/fish-config.md
+
+      # Regeneration MUST run before verification: verify-manual.py's
+      # test_concat_roundtrips_original compares a freshly-built concat
+      # against docs/fish-config.md on disk. Before this step ran, that
+      # file was still the stale pre-push copy, so any ordinary edit under
+      # docs/manual/** failed the round-trip check before anything was
+      # regenerated. Do not reorder this back — verification still gates
+      # pandoc and the auto-commit below, it just no longer requires a
+      # contributor to hand-sync the generated file before pushing.
+      - name: Verify manual integrity
+        run: python3 docs/verify-manual.py
 
       - name: Compile man page
         run: |
@@ -27,22 +47,33 @@ jobs:
                  docs/fish-config.md \
                  -o docs/fish-config.1
 
-      - name: Generate chunked HTML docs
-        run: |
-          rm -rf docs/html/
-          pandoc -f gfm -t chunkedhtml --split-level=1 --toc \
-                 --include-in-header docs/html-style.html \
-                 docs/fish-config.md \
-                 -o docs/html/
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
 
-      - name: Generate wiki markdown
-        run: python3 docs/split-wiki.py
+      - name: Build documentation site
+        run: |
+          python3 docs/build-manual.py --site
+          cd docs/site
+          npm ci
+          npx astro build
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          cd docs/site
+          npx --yes wrangler pages deploy dist/ \
+            --project-name=fish-config-docs \
+            --branch=main
 
       - name: Commit generated docs
         run: |
           git config user.name  "Gitea Actions"
           git config user.email "actions@gitea"
-          git add docs/fish-config.1 docs/html/ docs/wiki/
+          git add docs/fish-config.md docs/fish-config.1
           git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore(docs): regenerate man page, HTML docs, and wiki"
+          git commit -m "chore(docs): regenerate manual and man page"
           git push

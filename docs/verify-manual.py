@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Verification checks for the docs/manual SSOT pipeline."""
+
+import importlib.util
+import sys
+import tempfile
+from pathlib import Path
+
+import manualtools as mt
+
+# docs/build-manual.py follows this repo's hyphenated CLI-script naming
+# convention (matching verify-manual.py), which means it
+# cannot satisfy a plain `import build_manual` on its own — Python's import
+# statement never treats a hyphen as an underscore. Load it explicitly under
+# the name the tests expect and register it in sys.modules; every later
+# `import build_manual` (including the one inside test_concat_roundtrips_
+# original below) then finds the cached module instead of touching the path
+# finder.
+_build_manual_path = Path(__file__).parent / "build-manual.py"
+_spec = importlib.util.spec_from_file_location("build_manual", _build_manual_path)
+_build_manual = importlib.util.module_from_spec(_spec)
+sys.modules["build_manual"] = _build_manual
+_spec.loader.exec_module(_build_manual)
+
+
+def test_parse_roundtrip():
+    fm = {"title": "Git", "sidebar": {"order": 4}, "helpKeywords": ["git", "gi"]}
+    body = "## gitig\n\nManages ignore files."
+    text = mt.serialize(fm, body)
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "t.md"
+        p.write_text(text)
+        got_fm, got_body = mt.parse(p)
+    assert got_fm == fm, f"frontmatter mismatch: {got_fm!r}"
+    assert got_body == body, f"body mismatch: {got_body!r}"
+
+
+def test_parse_no_frontmatter():
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "t.md"
+        p.write_text("# Plain\n\ntext\n")
+        fm, body = mt.parse(p)
+    assert fm == {}, f"expected empty frontmatter, got {fm!r}"
+    assert body == "# Plain\n\ntext", f"body mismatch: {body!r}"
+
+
+def test_shift_headings():
+    body = "## a\n\ntext\n\n### b"
+    assert mt.shift_headings(body, 1) == "### a\n\ntext\n\n#### b"
+
+
+def test_shift_headings_skips_code_fences():
+    body = "## a\n\n```\n# not a heading\n```\n\n## b"
+    got = mt.shift_headings(body, 1)
+    assert "# not a heading" in got, "code fence content was modified"
+    assert got.startswith("### a"), f"heading not shifted: {got[:10]!r}"
+
+
+def test_walk_orders_by_sidebar_order_then_filename():
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "b.md").write_text(mt.serialize({"title": "B", "sidebar": {"order": 1}}, ""))
+        (root / "a.md").write_text(mt.serialize({"title": "A", "sidebar": {"order": 2}}, ""))
+        (root / "c.md").write_text(mt.serialize({"title": "C"}, ""))
+        got = [p.name for p, _ in mt.walk(root)]
+    assert got == ["b.md", "a.md", "c.md"], f"wrong order: {got}"
+
+
+def test_walk_nests_directory_after_its_index():
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "01-first.md").write_text(mt.serialize({"title": "First"}, ""))
+        sub = root / "02-group"
+        sub.mkdir()
+        (sub / "index.md").write_text(mt.serialize({"title": "Group"}, ""))
+        (sub / "01-child.md").write_text(mt.serialize({"title": "Child"}, ""))
+        (root / "03-last.md").write_text(mt.serialize({"title": "Last"}, ""))
+        got = [(p.name, depth) for p, depth in mt.walk(root)]
+    expected = [
+        ("01-first.md", 0),
+        ("index.md", 0),
+        ("01-child.md", 1),
+        ("03-last.md", 0),
+    ]
+    assert got == expected, f"wrong nesting: {got}"
+
+
+def test_parse_roundtrip_body_with_leading_blank_line():
+    fm = {"title": "Test"}
+    body = "\nContent starts after blank line."
+    text = mt.serialize(fm, body)
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "t.md"
+        p.write_text(text)
+        got_fm, got_body = mt.parse(p)
+    assert got_fm == fm, f"frontmatter mismatch: {got_fm!r}"
+    assert got_body == body, f"body mismatch: expected {body!r}, got {got_body!r}"
+
+
+def test_manual_tree_exists():
+    root = Path(__file__).parent / "manual"
+    assert root.is_dir(), "docs/manual/ not generated"
+    assert (root / "index.md").exists(), "docs/manual/index.md missing"
+    fn = root / "05-functions"
+    assert fn.is_dir(), "docs/manual/05-functions/ missing"
+    cats = sorted(p.name for p in fn.glob("*.md") if p.name != "index.md")
+    assert len(cats) == 14, f"expected 14 function categories, got {len(cats)}: {cats}"
+
+
+def test_function_entries_promoted_to_h2():
+    root = Path(__file__).parent / "manual" / "05-functions"
+    for path in root.glob("*.md"):
+        if path.name == "index.md":
+            continue
+        _, body = mt.parse(path)
+        assert "\n### " not in f"\n{body}", f"{path.name} still has H3 entries"
+        assert "\n## " in f"\n{body}", f"{path.name} has no H2 function entries"
+
+
+def _normalise(text: str) -> str:
+    """Collapse whitespace so only content differences survive."""
+    lines = [ln.rstrip() for ln in text.strip().split("\n")]
+    return "\n".join(ln for ln in lines if ln != "")
+
+
+def test_concat_roundtrips_original():
+    """The concat of manual/ must reproduce the original fish-config.md exactly.
+
+    Prefers docs/fish-config.md.orig (a snapshot of the pre-migration file)
+    when present. Once that snapshot is deleted post-migration,
+    docs/fish-config.md IS the concat output regenerated in Step 5, so
+    falling back to it turns this into an idempotency regression check
+    instead of going red for a missing file.
+
+    The pass/fail decision is an exact (raw-text) comparison, not a
+    whitespace-normalised one. Blank lines are load-bearing for pandoc
+    (`blank_before_header` is on by default): losing them merges paragraphs
+    and stops headings being headings, so a test that tolerated blank-line
+    or line-joining drift would stay green while the man page silently
+    broke. `_normalise` is used only afterwards, to build a readable diff.
+    """
+    import build_manual
+
+    docs = Path(__file__).parent
+    original = docs / "fish-config.md.orig"
+    label = "original"
+    if not original.exists():
+        original = docs / "fish-config.md"
+        label = "fish-config.md"
+    got = build_manual.build_concat(docs / "manual")
+    want = original.read_text()
+    if got != want:
+        norm_got = _normalise(got)
+        norm_want = _normalise(want)
+        if norm_got == norm_want:
+            raise AssertionError(
+                "concat differs from original only in whitespace/blank lines "
+                "(exact comparison failed, normalised comparison passed) — "
+                "blank lines are load-bearing for pandoc, this is a real regression"
+            )
+        import difflib
+
+        diff = list(
+            difflib.unified_diff(
+                norm_want.split("\n"), norm_got.split("\n"), label, "concat", lineterm="", n=1
+            )
+        )[:40]
+        raise AssertionError("concat differs from original:\n" + "\n".join(diff))
+
+
+def test_every_index_keyword_resolves():
+    """Every keyword in fish-config.index must match a heading in the concat."""
+    import build_manual
+
+    docs = Path(__file__).parent
+    index = docs / "fish-config.index"
+    if not index.exists():
+        print("  SKIP  test_every_index_keyword_resolves (no index file)")
+        return
+    concat = build_manual.build_concat(docs / "manual")
+    headings = {ln.strip() for ln in concat.split("\n") if ln.startswith("#")}
+    missing = []
+    for line in index.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        keyword, heading = line.split("=", 1)
+        if heading.strip() not in headings:
+            missing.append(f"{keyword.strip()} -> {heading.strip()}")
+    assert not missing, "unresolvable index keywords:\n  " + "\n  ".join(missing)
+
+
+def test_site_build_produces_function_pages():
+    import tempfile
+
+    import build_manual
+
+    docs = Path(__file__).parent
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d)
+        sidebar = build_manual.build_site(docs / "manual", out)
+        pages = list(out.rglob("*.md*"))
+        assert (out / "index.md").exists(), "landing page missing"
+        fn_pages = [p for p in pages if "functions" in p.parts and p.name != "index.mdx"]
+        assert len(fn_pages) > 80, f"expected >80 function pages, got {len(fn_pages)}"
+        assert not (out / "00-name.md").exists(), "site:false page was published"
+        assert sidebar, "sidebar structure is empty"
+        for page in pages:
+            fm, _ = mt.parse(page)
+            assert "manTitle" not in fm, f"{page.name} leaked manTitle into site output"
+            assert "title" in fm, f"{page.name} has no title"
+
+
+def test_prettify_splits_an_entry_block():
+    """A man-page-style entry becomes fenced code, prose, and a table."""
+    import build_manual
+
+    body = "\n".join(
+        [
+            "    Synopsis:  rm [-e | args...]",
+            "    Safe rm wrapper routing to trash:",
+            "",
+            "      (no args)   List current trash contents",
+            "      -e/--empty  Empty the trash",
+            "",
+            "    Falls back to /usr/bin/rm when trash is unavailable.",
+            "",
+            "    rm file.txt           # moves to trash",
+            "    rm -e                 # empty trash",
+        ]
+    )
+    out = build_manual.prettify(body, "rm")
+
+    assert "```fish\nrm [-e | args...]\n```" in out, "synopsis was not fenced as fish"
+    assert "```fish\nrm file.txt" in out, "examples were not fenced as fish"
+    assert out.count("```") == 4, f"expected exactly two fences, got:\n{out}"
+    assert "\nSafe rm wrapper routing to trash:" in out, "description stayed indented"
+    assert (
+        "\n      (no args)   List current trash contents" in out
+    ), "option table lost its indentation"
+    assert (
+        "\nFalls back to /usr/bin/rm when trash is unavailable." in out
+    ), "trailing prose stayed indented"
+
+
+def test_prettify_leaves_reference_tables_alone():
+    """Column-aligned blocks are data, not shell, and must not be fenced."""
+    import build_manual
+
+    table = "    XDG_CONFIG_HOME    ~/.config\n    XDG_CACHE_HOME     ~/.cache"
+    assert "```" not in build_manual.prettify(table), "a reference table got fenced"
+
+    binds = "    n / nv / neovim    nvim\n    e                  edit"
+    assert "```" not in build_manual.prettify(binds), "an abbreviation table got fenced"
+
+    shell = "    set -U __fish_user_dots_path /path/to/dots"
+    assert "```fish" in build_manual.prettify(shell), "a shell block was not fenced"
+
+
+def test_prettify_is_site_only():
+    """The SSOT keeps the indented form the man-page pipeline depends on."""
+    import build_manual
+
+    manual = Path(__file__).parent / "manual"
+    for path in manual.rglob("*.md"):
+        assert "```" not in path.read_text(), (
+            f"{path.name} contains a fence: prettify must run at site-build "
+            "time, never be written back to the SSOT"
+        )
+
+
+def test_sidebar_has_no_duplicate_functions_entry():
+    """The functions group must not also list itself as one of its children."""
+    import build_manual
+
+    docs = Path(__file__).parent
+    with tempfile.TemporaryDirectory() as d:
+        sidebar = build_manual.build_site(docs / "manual", Path(d))
+
+    groups = [e for e in sidebar if "items" in e]
+    assert len(groups) == 1, f"expected one sidebar group, got {len(groups)}"
+    group = groups[0]
+    labels = [item["label"] for item in group["items"]]
+    assert group["label"] not in labels[1:], (
+        f"'{group['label']}' is repeated inside its own group: {labels}"
+    )
+    assert labels[0] == "Overview", f"group should lead with Overview, got {labels[0]}"
+    assert not any(
+        "autogenerate" in item for item in group["items"]
+    ), "categories should be listed explicitly, not autogenerated from slugs"
+    assert len(labels) == 15, f"expected Overview + 14 categories, got {len(labels)}"
+
+
+TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
+
+
+def main() -> int:
+    failed = 0
+    for t in TESTS:
+        try:
+            t()
+            print(f"  PASS  {t.__name__}")
+        except AssertionError as e:
+            print(f"  FAIL  {t.__name__}: {e}", file=sys.stderr)
+            failed += 1
+    print(f"\n{len(TESTS) - failed}/{len(TESTS)} passed")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).parent))
+    raise SystemExit(main())

@@ -1328,7 +1328,7 @@ Add -i (interactive confirmation) to destructive commands:
 ### config-help
 
     Synopsis:  config-help [SECTION]
-               config-help [SECTION] --html
+               config-help --html
                config-help [SECTION] --man
                config-help -h | --help
 
@@ -1338,11 +1338,11 @@ Add -i (interactive confirmation) to destructive commands:
     keyword (case-insensitive; checks fish-config.index aliases first).
 
     Flags:
-      --html / -w   Open docs/html/index.html in the default browser.
-                    If SECTION is given, opens at the matching anchor.
-                    Detects the browser via xdg-mime x-scheme-handler/https,
-                    then known binaries, then xdg-open as last resort.
-                    Respects $fish_help_browser and $BROWSER.
+      --html / -w   Open the published documentation website
+                    (https://fish-config-docs.pages.dev/) in the default
+                    browser via xdg-open. Deep links to a section aren't
+                    supported; if SECTION is given, a note points you to the
+                    site's search box instead.
       --man  / -m   Open docs/fish-config.1 via man -l directly.
                     If SECTION is given, jumps to the nearest match.
       --help / -h   Print usage and navigation key reference.
@@ -1350,7 +1350,6 @@ Add -i (interactive confirmation) to destructive commands:
     config-help keybindings
     config-help pkg
     config-help --html
-    config-help pkg --html
     config-help --man
     config-help pkg --man
 
@@ -1378,7 +1377,7 @@ Add -i (interactive confirmation) to destructive commands:
       5. xdg-open            (last resort)
 
     open-url https://git.rootiest.dev/rootiest/fish-config
-    open-url "file://$HOME/.config/fish/docs/html/index.html"
+    open-url -v https://fish-config-docs.pages.dev/
 
     Used internally by config-help --html.
 
@@ -2299,25 +2298,17 @@ local.fish in turn sources secrets.fish when it exists.
 
 # 11. VIEWING THIS MANUAL
 
-## With ov (recommended)
+There are four ways to read this manual.
 
-    help config
+## The documentation website
 
-ov renders the Markdown with syntax highlighting and section-based
-navigation.
+    help config --html
 
-    Space       next section
-    ^           previous section
-    Alt+u       toggle section list sidebar
-    /           search forward
-    n / N       next / previous search match
-    g           go to line number
-    j           interactive jump target (line, %, or 'section')
-    q           quit
-
-## With bat
-
-    bat --language=markdown --paging=always ~/.config/fish/docs/fish-config.md
+Opens https://fish-config-docs.pages.dev/ in the default browser — the
+Starlight-powered site built from `docs/manual/**` on every push to `main`.
+It has a section sidebar and full-text search. Deep links to a specific
+section aren't supported from the command line; once the site opens, use
+its search box to jump straight to what you need.
 
 ## As a man page
 
@@ -2336,29 +2327,36 @@ NOTE: fish-config (hyphen) is this config's man page. fish_config
 (underscore) is fish's built-in browser-based configuration tool —
 a completely separate command. Do not mix them up.
 
-## In the browser (HTML)
+## In the terminal
 
-    help config --html
-    help config pkg --html
+    help config
+    help config keybindings
 
-Opens docs/html/index.html in the default web browser. If a section
-keyword is given, the browser opens directly at the matching anchor
-(resolved via docs/html/sitemap.json). Browser detection queries the
-system's x-scheme-handler/https MIME entry (via xdg-mime) to find the
-real browser binary, then falls back through known browser binaries
-(firefox, chromium, vivaldi, etc.), and finally xdg-open as a last
-resort. Set $fish_help_browser or $BROWSER to override.
+Without a pager available beyond the basics, `help config [SECTION]` opens
+the Markdown manual in the best available viewer, falling back through:
 
-## As a wiki
+    1. ov + bat   section navigation + syntax highlighting (best)
+    2. ov alone   section navigation, raw Markdown
+    3. bat alone  syntax highlighting, use / to search
+    4. man -l     pre-compiled man page (if available)
+    5. less       plain text with line-jump
+    6. cat        plain output
 
-The generated Markdown wiki lives in docs/wiki/. index.md provides the
-project overview and a full table of contents. Each section page has a
-navigation bar at the top linking to every other section.
+With ov, the Markdown renders with syntax highlighting and section-based
+navigation:
 
-The wiki is auto-generated from this file by the CI pipeline on every
-push to main that changes docs/fish-config.md.
+    Space       next section
+    ^           previous section
+    Alt+u       toggle section list sidebar
+    /           search forward
+    n / N       next / previous search match
+    g           go to line number
+    j           interactive jump target (line, %, or 'section')
+    q           quit
 
-## Jumping to a section
+If SECTION is given, the pager opens at the first heading that matches the
+keyword (case-insensitive; checks `docs/fish-config.index` aliases first,
+then falls back to a normalized heading scan):
 
     help config keybindings
     help config abbreviations
@@ -2366,4 +2364,12 @@ push to main that changes docs/fish-config.md.
     help config logs
     help config fish-deps
 
-The keyword is matched case-insensitively against section headings.
+## Reading the source directly
+
+`docs/manual/**` is the single source of truth this manual, the man page,
+and the website are all generated from. Numbered files and directories
+correspond to the numbered sections in this manual — browse them in any
+editor, or from a shell:
+
+    cd ~/.config/fish/docs/manual
+    grep -rn "keybindings" .
