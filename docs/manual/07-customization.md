@@ -2,7 +2,7 @@
 title: Customization
 manTitle: 7. CUSTOMIZATION
 sidebar:
-  order: 7
+  order: 11
 helpKeywords:
 - customization
 - customize

@@ -2,7 +2,7 @@
 title: Installation
 manTitle: 9. INSTALLATION
 sidebar:
-  order: 9
+  order: 13
 helpKeywords:
 - installation
 - install

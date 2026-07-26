@@ -2,7 +2,7 @@
 title: Viewing This Manual
 manTitle: 11. VIEWING THIS MANUAL
 sidebar:
-  order: 11
+  order: 15
 helpKeywords:
 - viewing
 - manual

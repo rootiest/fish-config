@@ -2,7 +2,7 @@
 title: Personalization
 manTitle: 10. PERSONALIZATION
 sidebar:
-  order: 10
+  order: 14
 helpKeywords:
 - personalization
 - personalize

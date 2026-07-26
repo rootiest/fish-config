@@ -50,15 +50,34 @@ def load_keywords() -> dict[str, list[str]]:
     return mapping
 
 
+def _trim_blank_lines(text: str) -> str:
+    """Drop leading/trailing blank lines without touching interior indentation.
+
+    Plain `.strip()` also eats leading spaces on the first line, which
+    destroys 4-space-indented code blocks that start immediately after a
+    heading (e.g. the SYNOPSIS and TABLE OF CONTENTS sections).
+    """
+    lines = text.split("\n")
+    while lines and lines[0].strip() == "":
+        lines.pop(0)
+    while lines and lines[-1].strip() == "":
+        lines.pop()
+    return "\n".join(lines)
+
+
 def split_h1(text: str) -> list[tuple[str, str]]:
     parts = re.split(r"^# (.+)$", text, flags=re.MULTILINE)
-    return [(parts[i].strip(), parts[i + 1].strip()) for i in range(1, len(parts), 2)]
+    return [
+        (parts[i].strip(), _trim_blank_lines(parts[i + 1])) for i in range(1, len(parts), 2)
+    ]
 
 
 def split_h2(body: str) -> tuple[str, list[tuple[str, str]]]:
     parts = re.split(r"^## (.+)$", body, flags=re.MULTILINE)
-    intro = parts[0].strip()
-    subs = [(parts[i].strip(), parts[i + 1].strip()) for i in range(1, len(parts), 2)]
+    intro = _trim_blank_lines(parts[0])
+    subs = [
+        (parts[i].strip(), _trim_blank_lines(parts[i + 1])) for i in range(1, len(parts), 2)
+    ]
     return intro, subs
 
 
@@ -71,10 +90,23 @@ def main() -> int:
     OUT.mkdir(parents=True)
 
     keywords = load_keywords()
-    sections = split_h1(SRC.read_text())
+    # SRC starts with a pandoc metadata block (title/section/header/date/
+    # author) consumed by the man-page build. mt.parse() peels it off so it
+    # isn't silently dropped; it gets stashed on the LANDING (index.md) page
+    # under "pandoc" and re-emitted verbatim by build-manual.py --concat.
+    pandoc_meta, src_body = mt.parse(SRC)
+    sections = split_h1(src_body)
     order = 0
+    # `position` tracks each heading's place in the *original* document,
+    # including NAME/SYNOPSIS/DESCRIPTION/TABLE OF CONTENTS. It is what
+    # `sidebar.order` gets set to, so that manualtools.walk() (and thus
+    # build-manual.py --concat) reproduces the source order exactly.
+    # `order` (below) is unrelated: it only numbers the *numbered* sections
+    # (1. CONFIGURATION VARIABLES, 2. PATH SETUP, ...) for filenames.
+    position = 0
 
     for heading, body in sections:
+        position += 1
         kw = keywords.get(heading, [])
         if heading in MAN_ONLY:
             path = OUT / f"00-{slugify(heading)}.md"
@@ -83,6 +115,7 @@ def main() -> int:
                 "manTitle": heading,
                 "man": True,
                 "site": False,
+                "sidebar": {"order": position},
             }
             path.write_text(mt.serialize(fm, body))
             continue
@@ -92,8 +125,10 @@ def main() -> int:
                 "title": "Fish Shell Configuration",
                 "description": "Reference manual for the rootiest fish configuration.",
                 "manTitle": heading,
-                "sidebar": {"order": 0},
+                "sidebar": {"order": position},
             }
+            if pandoc_meta:
+                fm["pandoc"] = pandoc_meta
             if kw:
                 fm["helpKeywords"] = kw
             (OUT / "index.md").write_text(mt.serialize(fm, body))
@@ -108,7 +143,7 @@ def main() -> int:
             fm = {
                 "title": display_title(heading),
                 "manTitle": heading,
-                "sidebar": {"order": order},
+                "sidebar": {"order": position},
             }
             if kw:
                 fm["helpKeywords"] = kw
@@ -133,7 +168,7 @@ def main() -> int:
         fm = {
             "title": display_title(heading),
             "manTitle": heading,
-            "sidebar": {"order": order},
+            "sidebar": {"order": position},
         }
         if kw:
             fm["helpKeywords"] = kw

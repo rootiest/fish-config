@@ -2,7 +2,7 @@
 title: Path Setup
 manTitle: 2. PATH SETUP
 sidebar:
-  order: 2
+  order: 6
 helpKeywords:
 - path
 ---

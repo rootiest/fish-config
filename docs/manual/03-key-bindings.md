@@ -2,7 +2,7 @@
 title: Key Bindings
 manTitle: 3. KEY BINDINGS
 sidebar:
-  order: 3
+  order: 7
 helpKeywords:
 - keybindings
 - bindings

@@ -2,7 +2,7 @@
 title: Abbreviations
 manTitle: 4. ABBREVIATIONS
 sidebar:
-  order: 4
+  order: 8
 helpKeywords:
 - abbreviations
 - abbr

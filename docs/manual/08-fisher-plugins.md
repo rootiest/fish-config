@@ -2,7 +2,7 @@
 title: Fisher Plugins
 manTitle: 8. FISHER PLUGINS
 sidebar:
-  order: 8
+  order: 12
 helpKeywords:
 - plugins
 - fisher

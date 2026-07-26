@@ -3,9 +3,11 @@ title: Table Of Contents
 manTitle: TABLE OF CONTENTS
 man: true
 site: false
+sidebar:
+  order: 4
 ---
 
-1.  Configuration Variables
+    1.  Configuration Variables
     2.  PATH Setup
     3.  Key Bindings
     4.  Abbreviations

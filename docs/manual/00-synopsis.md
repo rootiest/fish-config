@@ -3,9 +3,11 @@ title: Synopsis
 manTitle: SYNOPSIS
 man: true
 site: false
+sidebar:
+  order: 2
 ---
 
-help config [SECTION]
+    help config [SECTION]
 
 Open this manual in the best available pager. Optionally jump to a section
 by keyword:

@@ -2,7 +2,7 @@
 title: Configuration Variables
 manTitle: 1. CONFIGURATION VARIABLES
 sidebar:
-  order: 1
+  order: 5
 helpKeywords:
 - variables
 - config

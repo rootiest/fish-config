@@ -2,7 +2,7 @@
 title: Dependency Catalog
 manTitle: 6. DEPENDENCY CATALOG
 sidebar:
-  order: 6
+  order: 10
 helpKeywords:
 - catalog
 - deps-catalog
