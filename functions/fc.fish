@@ -1,4 +1,28 @@
-# Edit and execute the last command (Bash-style fc)
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# CATEGORY
+#   03-editors-and-viewers
+#
+# SYNOPSIS
+#   fc [command_prefix]
+#
+# DESCRIPTION
+#   Edits the last shell command -- or the most recent one matching a
+#   prefix -- in $EDITOR, then executes the result. Bash-style fc
+#   behaviour. Falls back to vi when $EDITOR is unset, and aborts without
+#   executing if the buffer is left empty.
+#
+# ARGUMENTS
+#   command_prefix   Search history for the newest command matching this
+#
+# RETURNS
+#   The edited command's exit status, or a message when history lookup
+#   found nothing.
+#
+# EXAMPLE
+#   fc
+#   fc git
 function fc --description 'Edit and execute the last command (Bash-style fc)'
     set -l tmpfile (mktemp /tmp/fish_fc.XXXXXX).fish
 
