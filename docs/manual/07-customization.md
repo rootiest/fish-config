@@ -68,7 +68,7 @@ switch: setting __fish_config_opinionated=0 disables all unset categories,
 but a category with an explicit truthy value remains enabled regardless.
 
     Variable                        Disables
-    ------------------------------  ------------------------------------
+    ────────────────────────────────────────
     __fish_config_op_aliases        Command shadows and flag injection:
                                     ls->eza, cat->bat, cd->zoxide,
                                     rm->trash, less->ov, top->btop,
