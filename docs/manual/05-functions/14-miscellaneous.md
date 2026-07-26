@@ -105,9 +105,8 @@ helpKeywords:
     Synopsis:  config-update [-h] [-n] [-f]
 
     Pulls the latest fish configuration from the upstream repository
-    (https://git.rootiest.dev/rootiest/fish-config.git) into ~/.config/fish.
-    The remote URL is hard-coded, so this works on fresh clones with no git
-    remote configured. All git output is suppressed; colored messages report
+    into ~/.config/fish.
+    All git output is suppressed; colored messages report
     fetch and merge status. After a successful pull, run `exec fish` to
     reload.
 
