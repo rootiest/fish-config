@@ -126,13 +126,20 @@ def _normalise(text: str) -> str:
 
 
 def test_concat_roundtrips_original():
-    """The concat of manual/ must reproduce the original fish-config.md.
+    """The concat of manual/ must reproduce the original fish-config.md exactly.
 
     Prefers docs/fish-config.md.orig (a snapshot of the pre-migration file)
     when present. Once that snapshot is deleted post-migration,
     docs/fish-config.md IS the concat output regenerated in Step 5, so
     falling back to it turns this into an idempotency regression check
     instead of going red for a missing file.
+
+    The pass/fail decision is an exact (raw-text) comparison, not a
+    whitespace-normalised one. Blank lines are load-bearing for pandoc
+    (`blank_before_header` is on by default): losing them merges paragraphs
+    and stops headings being headings, so a test that tolerated blank-line
+    or line-joining drift would stay green while the man page silently
+    broke. `_normalise` is used only afterwards, to build a readable diff.
     """
     import build_manual
 
@@ -142,14 +149,22 @@ def test_concat_roundtrips_original():
     if not original.exists():
         original = docs / "fish-config.md"
         label = "fish-config.md"
-    got = _normalise(build_manual.build_concat(docs / "manual"))
-    want = _normalise(original.read_text())
+    got = build_manual.build_concat(docs / "manual")
+    want = original.read_text()
     if got != want:
+        norm_got = _normalise(got)
+        norm_want = _normalise(want)
+        if norm_got == norm_want:
+            raise AssertionError(
+                "concat differs from original only in whitespace/blank lines "
+                "(exact comparison failed, normalised comparison passed) — "
+                "blank lines are load-bearing for pandoc, this is a real regression"
+            )
         import difflib
 
         diff = list(
             difflib.unified_diff(
-                want.split("\n"), got.split("\n"), label, "concat", lineterm="", n=1
+                norm_want.split("\n"), norm_got.split("\n"), label, "concat", lineterm="", n=1
             )
         )[:40]
         raise AssertionError("concat differs from original:\n" + "\n".join(diff))
