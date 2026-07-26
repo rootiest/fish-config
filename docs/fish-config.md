@@ -527,8 +527,14 @@ Add -i (interactive confirmation) to destructive commands:
 ### cat
 
     Synopsis:  cat [args...]
-    Wraps bat for files with syntax highlighting and line numbers.
-    Passes directories to ls. Falls back to /usr/bin/cat.
+
+    Enhanced cat replacement. Wraps bat for files, giving syntax highlighting
+    and line numbers; passes directories to ls; falls back to raw cat for
+    ANSI-colored log files, and finally to /usr/bin/cat if bat is not
+    installed.
+
+    Arguments:
+      args...  Files or directories to display
 
     cat README.md
     cat ~/projects/myapp
@@ -536,19 +542,30 @@ Add -i (interactive confirmation) to destructive commands:
 ### copy
 
     Synopsis:  copy <source> <dest>
-    Wraps cp, stripping trailing slashes from source directories to
-    prevent unintended nesting inside the destination.
 
+    Wrapper for cp that strips trailing slashes from source directories,
+    preventing unwanted nested copies when the destination already exists.
+
+    Arguments:
+      source  Source file or directory
+      dest    Destination path
+
+    copy ./mydir/ ~/backup
     copy ./mydir/ ~/backup    # copies mydir INTO backup, not backup/mydir/
 
 ### du
 
     Synopsis:  du [--disk|--dir|--dua] [args...]
-    Smart disk-usage dispatcher:
-      --disk  force duf  (disk-level free/used overview)
-      --dir   force dust (per-directory tree breakdown)
-      --dua   force dua  (fast space analyzer)
-    Without flags, routes to the most appropriate tool by context.
+
+    Smart disk-usage dispatcher. Without flags, routes to the most appropriate
+    tool by context; explicit flags force one. Falls back to system du when the
+    preferred tool is not installed.
+
+    Arguments:
+      --disk   Force duf  (disk-level free/used overview)
+      --dir    Force dust (per-directory tree breakdown)
+      --dua    Force dua  (fast interactive space analyzer)
+      args...  Files/directories or flags forwarded to the selected tool
 
     du ~/Downloads
     du --disk
@@ -556,155 +573,281 @@ Add -i (interactive confirmation) to destructive commands:
 ### dusize
 
     Synopsis:  dusize [dir]
-    Human-readable disk usage for a directory via du -sh. Defaults to cwd.
 
+    Shows a human-readable disk usage summary using du -sh. Defaults to the
+    current directory if no argument is given.
+
+    Arguments:
+      dir  Directory to summarize (defaults to current directory)
+
+    dusize ~/Downloads
     dusize ~/Videos
 
 ### lD
 
     Synopsis:  lD [args...]
-    Lists directories only in long format with icons. Uses eza, falls back
-    to lsd, then system ls.
+
+    Lists only directories in long format with icons and hyperlinks. Uses eza,
+    falls back to lsd, then to system ls.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
 
     lD ~/projects
 
 ### ls
 
     Synopsis:  ls [args...]
-    Lists files in long format with icons and hyperlinks. Uses eza, falls
-    back to lsd, then system ls.
 
+    Lists all files in long format with icons and hyperlinks. Uses eza,
+    falls back to lsd, then to system ls.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
+
+    ls ~/projects
     ls
     ls -a ~/projects
 
 ### lsr
 
     Synopsis:  lsr [args...]
-    Lists files sorted by modification time, oldest first. Uses eza.
+
+    Lists files sorted by modification time in reverse (oldest first), one
+    per line with icons. Uses eza, falls back to lsd, then to system ls.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
+
+    lsr ~/projects
 
 ### lss
 
     Synopsis:  lss [args...]
-    Lists files sorted by size with gradient color scaling. Uses eza.
+
+    Lists all files sorted by size in long format with gradient color scaling.
+    Uses eza, falls back to lsd, then to system ls.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
+
+    lss ~/downloads
 
 ### lstree
 
     Synopsis:  lstree [args...]
-    Full recursive tree view with icons. Uses eza.
+
+    Displays a full recursive tree of the current directory with icons.
+    Uses eza, falls back to lsd, then to system ls -R.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
 
     lstree ~/projects/myapp
 
 ### lt
 
     Synopsis:  lt [args...]
-    Tree view limited to depth 2 with icons. Uses eza.
+
+    Displays a directory tree limited to depth 2 with icons. Uses eza,
+    falls back to lsd, then to system ls -R.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
 
     lt ~/projects
 
 ### ltr
 
     Synopsis:  ltr [args...]
-    Lists files sorted by modification time, oldest first, long format with
-    age-based gradient scaling. Uses eza.
+
+    Lists all files sorted by modification time in reverse (oldest first) in
+    long format with age-based gradient color scaling. Uses eza, falls back
+    to lsd, then to system ls.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
+
+    ltr ~/projects
 
 ### lx
 
     Synopsis:  lx [args...]
-    Lists files sorted by extension, long format. Uses eza.
+
+    Lists all files sorted by file extension in long format with icons. Uses
+    eza, falls back to lsd, then to system ls -lX.
+
+    Arguments:
+      args...  Arguments forwarded to the listing command
+
+    lx ~/projects
+
+### mkcd
+
+    Synopsis:  mkcd [-s | --silent] <dir>
+
+    Creates a directory (including any missing parent directories) and
+    immediately changes into it. Prints a tree of created directories by
+    default, or suppresses output with -s. Delegates creation to
+    _fish_mkdir_p.
+
+    Arguments:
+      -h, --help    Show usage help
+      -s, --silent  Suppress directory creation output
+      <dir>         Directory to create and enter
+
+    Returns:
+      0  Directory created (or already existed) and entered successfully
+      1  Directory creation or cd failed
+
+    mkcd ~/projects/myapp
+    mkcd ~/projects/newapp/src
 
 ### mkdir
 
     Synopsis:  mkdir [args...]
-    Interactive mkdir that prints a tree of created directories.
-    Falls back to mkdir -p silently.
+
+    Interactive wrapper around mkdir that calls _fish_mkdir_p for each
+    directory argument to display created path components. Falls back to
+    command mkdir -p when flags (e.g. -m 755) are present, and to plain
+    command mkdir in non-interactive contexts.
+
+    Arguments:
+      args...  Directories to create, or flags passed through to command mkdir
 
     mkdir ~/projects/myapp/src
-
-### mkcd
-
-    Synopsis:  mkcd [-s] <dir>
-    Creates a directory (including parents) and cd into it. Prints a tree
-    of created dirs by default; -s/--silent suppresses output.
-
-    mkcd ~/projects/newapp/src
 
 ### poke
 
     Synopsis:  poke <file> [file...]
-    Creates files via touch, automatically creating any missing parent
-    directories first.
+
+    Creates files using touch, automatically creating any missing parent
+    directories via _fish_mkdir_p with tree output.
+
+    Arguments:
+      file  One or more file paths to create
+
+    Returns:
+      0  Files created
+      1  No file argument provided
 
     poke ~/projects/new/src/main.fish
-
-### rm
-
-    Synopsis:  rm [-e [opts] | -S | args...]
-    Safe rm wrapper routing to trash:
-
-      (no args)   List current trash contents
-      -e/--empty  Empty the trash (pass options to trash-empty)
-      -S/--secure Permanently delete via rm -rf + fstrim (irreversible)
-      -r/-R/--recursive  Move to trash
-      <paths>     Move to trash (safe delete)
-
-    Falls back to /usr/bin/rm when trash is unavailable.
-
-    rm file.txt           # moves to trash
-    rm -e                 # empty trash
-    rm -S sensitive.pem   # permanent delete
 
 ### rg
 
     Synopsis:  rg [args...]
-    In Kitty, wraps ripgrep with --hyperlink-format=kitty so search
-    results are clickable file links in the terminal. Falls back to
-    system rg in any other terminal. All other arguments pass through
-    unchanged.
 
+    Wraps ripgrep with --hyperlink-format=kitty when running inside Kitty
+    terminal, enabling clickable file links in search results. Falls back
+    to plain rg on other terminals.
+
+    Arguments:
+      args...  Arguments forwarded to ripgrep
+
+    rg "TODO" src/
     rg "fish_greeting" ~/.config/fish/
     rg -l "TODO" ~/projects/myapp
+
+### rm
+
+    Synopsis:  rm [-e [options] | -S | args...]
+
+    Enhanced rm that routes deletions through trash when safe. With no
+    arguments, lists current trash contents. -e/--empty empties the trash
+    (with optional trash-empty sub-arguments). -S/--secure permanently
+    deletes via rm -rf and triggers fstrim. Plain paths and -r/-R are sent
+    to trash put; any other flags fall back to system rm.
+
+    Opinionated component (C1): when disabled via __fish_config_op_aliases
+    (or the __fish_config_opinionated master), behaves exactly like bare
+    command rm — no wrapper, no trash, no trapping.
+
+    Arguments:
+      (none)              List current trash contents
+      -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
+      -S, --secure        Permanently delete targets and run fstrim (irreversible)
+      -r, -R, --recursive Forwarded to trash put alongside path arguments
+      args...             Files or paths to trash or remove
+
+    Returns:
+      0  Operation succeeded
+      1  trash put failed or file not found
+
+    Notes:
+      Falls back to /usr/bin/rm when trash is unavailable.
+
+    rm file.txt
+    rm -e
+    rm -S sensitive_key.pem
 
 ### scrub
 
     Synopsis:  scrub [-a] [-d] [-h]
-    Recursively removes OS metadata, editor artifacts, compiler output,
-    and dev caches using fd.
 
-      -a/--aggressive  Also removes node_modules, logs, .cache, IDE dirs,
-                       AI session artifacts
-      -d/--dry-run     Print what would be removed without deleting
+    Recursively finds and removes OS metadata, editor artifacts, compiler
+    garbage, and dev caches from the current directory using fd. Routes
+    deletions through the custom rm function, trashy, trash-cli, or system
+    rm -rf in that priority order. Aggressive mode adds node_modules, logs,
+    IDE directories, and AI tool artifacts.
+
+    Arguments:
+      -a, --aggressive  Also purge node_modules, *.log, .cache, .idea, AI artifacts
+      -d, --dry-run     Show targets without deleting
+      -h, --help        Show usage help
+
+    Returns:
+      0  Sweep completed (or dry run shown)
+      1  fd not found, or unknown argument provided
 
     scrub
     scrub -a
     scrub -d
-
----
 
 ## 5.2 Navigation
 
 ### cdi
 
     Synopsis:  cdi [query]
-    Interactive directory picker combining zoxide frecency with fzf.
-    Equivalent to zi.
+
+    Alias for zi — opens zoxide's interactive directory picker for jumping to
+    frequently-visited directories using fzf.
+
+    Arguments:
+      query  Optional search term to pre-filter the directory list
 
     cdi myproject
 
 ### clone
 
     Synopsis:  clone [args...]
-    Clone a git repository into a new Kitty window. Kitty-only.
+
+    Alias for clone-in-kitty that clones a repository into a new Kitty terminal
+    window. Only works inside the Kitty terminal.
+
+    Arguments:
+      args...  Arguments forwarded to clone-in-kitty (typically a repo URL)
+
+    Returns:
+      0  Repository cloned
+      1  Not running inside Kitty terminal
 
     clone https://github.com/user/repo.git
 
 ### clonet
 
     Synopsis:  clonet [args...]
-    Clone a git repository into a new Kitty tab. Kitty-only.
+
+    Alias for clone-in-kitty --type=tab that clones a repository into a new
+    Kitty terminal tab. Only works inside the Kitty terminal.
+
+    Arguments:
+      args...  Arguments forwarded to clone-in-kitty (typically a repo URL)
+
+    Returns:
+      0  Repository cloned
+      1  Not running inside Kitty terminal
 
     clonet https://github.com/user/repo.git
-
----
 
 ## 5.3 Editors and Viewers
 
@@ -714,8 +857,8 @@ Add -i (interactive confirmation) to destructive commands:
 
     Opens files in a text editor, choosing a terminal or GUI editor and
     resolving a rich chain of fallbacks. With no --visual/--terminal flag the
-    mode is auto-detected: interactive terminals use the terminal editor
-    ($EDITOR), while detached invocations (e.g. desktop shortcuts) use the GUI
+    mode is auto-detected: interactive terminals get the terminal editor
+    ($EDITOR), while detached invocations (desktop shortcuts) get the GUI
     editor ($VISUAL). Clipboard contents and literal strings can be opened as
     throwaway temp files. Editor output is suppressed unless --verbose.
 
@@ -723,19 +866,24 @@ Add -i (interactive confirmation) to destructive commands:
                              gnome-text-editor → gedit
     Terminal fallback chain: nvim → vim → micro → nano → vi
 
-    Options:
+    Arguments:
+      FILE...           Files to open (any number)
       -V, --visual      Force the GUI editor ($VISUAL or fallbacks)
       -t, --terminal    Force the terminal editor ($EDITOR or fallbacks)
       -e, --editor=X    Use a specific editor binary X
       -c, --clipboard   Open the clipboard contents (as a temp file)
       -x, --text=STR    Open STR as the contents of a new temp file
-      -n, --new         Force a new window/instance (best-effort)
-      -v, --verbose     Print the launch command and editor output
+      -n, --new         Force a new window/instance (best-effort, where supported)
+      -v, --verbose     Print the launch command and let editor output through
       -s, --silent      Suppress all output, including the editor's
       -h, --help        Show this help message
 
-    edit ~/.config/fish/config.fish
-    edit --visual notes.txt
+    Returns:
+      0  Editor launched successfully
+      1  Conflicting flags, no editor found, or clipboard read failed
+
+    edit notes.txt
+    edit --visual ~/.config/fish/config.fish
     edit --terminal --new todo.md
     edit --editor=code --clipboard
     edit --text="hello world"
@@ -743,8 +891,18 @@ Add -i (interactive confirmation) to destructive commands:
 ### fc
 
     Synopsis:  fc [command_prefix]
-    Edit the last shell command (or one matching a prefix) in $EDITOR,
-    then execute the result. Bash-style fc behaviour.
+
+    Edits the last shell command -- or the most recent one matching a
+    prefix -- in $EDITOR, then executes the result. Bash-style fc
+    behaviour. Falls back to vi when $EDITOR is unset, and aborts without
+    executing if the buffer is left empty.
+
+    Arguments:
+      command_prefix   Search history for the newest command matching this
+
+    Returns:
+      The edited command's exit status, or a message when history lookup
+      found nothing.
 
     fc
     fc git
@@ -752,24 +910,38 @@ Add -i (interactive confirmation) to destructive commands:
 ### less
 
     Synopsis:  less [args...]
-    Pager wrapper with fallback chain: $PAGER -> ov -> less -> more -> cat.
+
+    Pager wrapper that tries $PAGER, then ov, then less, then more, then cat
+    as fallbacks in that order.
+
+    Arguments:
+      args...  Files or options forwarded to the pager
 
     less /var/log/syslog
 
 ### rawfish
 
     Synopsis:  rawfish [args...]
-    Launches Fish with NO_TMUX=1, bypassing any tmux auto-attach logic.
-    Useful when you need a clean shell without session management.
+
+    Launches a Fish shell with NO_TMUX=1 set, bypassing any tmux
+    auto-attach or session management hooks.
+
+    Arguments:
+      args...  Arguments forwarded to fish
+
+    rawfish
 
 ### view
 
     Synopsis:  view [args...]
-    Opens files in nvim read-only mode (-R). Falls back to less.
+
+    Opens files in nvim read-only mode (-R). Falls back to less if nvim
+    is not installed.
+
+    Arguments:
+      args...  Files or options forwarded to nvim -R or less
 
     view /etc/fstab
-
----
 
 ## 5.4 Git and Version Control
 
@@ -780,18 +952,27 @@ Add -i (interactive confirmation) to destructive commands:
                auto-pull remove <NAME|PATH>
                auto-pull status
 
-    Manages the registry of repositories that are background fast-forwarded
-    when you enter them (see "Auto-pull fast-forward" under the C2 component
-    reference). The fish-config repo is always covered as a baseline. The
-    registry is machine-local at `$__fish_user_dots_path/auto-pull.list` (defaults
-    to `~/.config/.user-dots/fish/auto-pull.list`), one absolute path per line,
-    and is never committed. Registry management works
-    even when C2 auto-execution is disabled; only the background sync is gated.
+    Manages the auto-pull registry: the list of repositories that are
+    background fast-forwarded when you enter them (see conf.d/auto-pull.fish
+    and _auto_pull_sync). The fish-config repo is always covered as a baseline
+    and does not need to be added. The registry is a plain text file, one
+    absolute git-toplevel path per line, stored machine-locally at
+    $__fish_user_dots_path/auto-pull.list (defaults to
+    ~/.config/.user-dots/fish/auto-pull.list) and never committed.
 
-      list               Show registered repos (default)
-      add [PATH]         Register PATH's git root (default: current repo)
+    Registry management works regardless of the C2 auto-execution guard; only
+    the background sync itself is gated by __fish_config_op_autoexec.
+
+    Arguments:
+      list               Show registered repos (default when no subcommand given)
+      add [PATH]         Register PATH's git root; defaults to the current repo
       remove <NAME|PATH> Unregister by basename or exact path
-      status             Show enabled/disabled state, repo count, list path
+      status             Show enabled/disabled state, repo count, and registry path
+      -h, --help         Show this help message
+
+    Returns:
+      0  Subcommand succeeded
+      1  Bad usage, target is not a git repo, or target not registered
 
     cd ~/src/qmk_firmware; and auto-pull add
     auto-pull add ~/work/api
@@ -801,21 +982,40 @@ Add -i (interactive confirmation) to destructive commands:
 ### branch
 
     Synopsis:  branch <branch_name>
-    Switches to a local branch, or creates it if it does not exist.
+
+    Switches to a local git branch, creating it if it does not already
+    exist. Extra arguments are forwarded to git checkout.
+
+    Arguments:
+      branch_name   Branch to switch to or create
+
+    Returns:
+      0  Branch checked out or created
+      1  Not inside a git work tree
 
     branch feature/new-ui
 
 ### gi
 
     Synopsis:  gi [-h] [-b] [-p] [-s] [-l] [targets...]
-    Generates .gitignore content from the gitignore.io API with MD5-based
-    deduplication (patterns already present are not re-appended).
 
-      -b/--boilerplate  Append generic boilerplate first
-      -p/--prompt       Prompt interactively for targets
-      -s/--stdout       Print to stdout instead of appending to .gitignore
-      -l/--list         List all available targets
-      targets           Comma-separated or space-separated target names
+    Generates .gitignore content by querying the gitignore.io API. Appends
+    results to the repository's .gitignore with MD5-based deduplication —
+    patterns already present are not re-appended — or prints to stdout with
+    -s. Supports generic boilerplate and interactive prompt modes.
+
+    Arguments:
+      -h, --help         Show help message
+      -d, --description  Show the function description
+      -l, --list         List all supported targets from the API
+      -b, --boilerplate  Append boilerplate from $GITIGNORE_BOILERPLATE
+      -p, --prompt       Prompt for patterns to append
+      -s, --stdout       Print API output to stdout instead of .gitignore
+      targets            Comma- or space-separated list of language/tool names
+
+    Returns:
+      0  Patterns appended or printed
+      1  Not in a git repository or API fetch failed
 
     gi python,venv
     gi -b -p
@@ -823,102 +1023,164 @@ Add -i (interactive confirmation) to destructive commands:
 
 ### git-clean
 
-    Synopsis:  git-clean [-f]
-    Fetches and prunes the remote, fast-forwards the current branch, then
-    deletes local branches whose remote tracking branch has been deleted.
-    Switches to main/master automatically if the current branch is orphaned.
+    Synopsis:  git-clean [-h] [-f]
 
-      -f/--force  Force-delete unmerged branches too
+    Fetches and prunes the remote, fast-forwards the current branch, and
+    deletes local branches whose tracking remote has been deleted. Switches to
+    main/master automatically if the current branch is orphaned.
 
-    git-clean
+    Arguments:
+      -h, --help   Show help message
+      -f, --force  Force-delete unmerged orphaned branches (git branch -D)
+
+    Returns:
+      0  Cleanup complete
+      1  Argument parsing failed
+
     git-clean --force
-
-### gitup
-
-    Synopsis:  gitup [args...]
-    Fetches updates from the remote and shows git status. Extra args are
-    forwarded to git fetch.
-
-    gitup
-    gitup --all
+    git-clean
 
 ### gitui
 
     Synopsis:  gitui [args...]
-    Launches gitui with the Catppuccin Frappe theme pre-applied.
+
+    Launches gitui with the Catppuccin Frappe theme (frappe.ron), passing any
+    additional arguments through to the gitui command.
+
+    Arguments:
+      args...  Arguments forwarded to the gitui command
+
+    gitui
+
+### gitup
+
+    Synopsis:  gitup [args...]
+
+    Fetches updates from the remote and shows git status. Extra arguments
+    are forwarded to git fetch.
+
+    Arguments:
+      args...   Forwarded verbatim to git fetch
+
+    Returns:
+      0  Fetch and status succeeded
+      1  Not inside a git work tree
+
+    gitup
+    gitup --all
 
 ### hist
 
     Synopsis:  hist
-    Searches shell history with fzf, inserts the selection into the command
-    line, and copies it to the clipboard via wl-copy.
 
----
+    Searches fish history interactively using fzf, inserts the selected command
+    into the command line, and copies it to the clipboard via wl-copy.
+
+    hist
 
 ## 5.5 Package Management
+
+### cleanup
+
+    Synopsis:  cleanup
+
+    Identifies and removes Arch Linux orphan packages using pacman. Logs
+    package names and versions to ~/.removed_orphans before removal.
+
+    cleanup
+
+### parur
+
+    Synopsis:  parur
+
+    Presents an fzf picker of all installed packages (via pacman -Qqs) with
+    pacman -Qi previews, then removes the selected packages using paru or yay.
+    Arch Linux only.
+
+    Returns:
+      0  Packages removed or none selected
+      1  No AUR helper (paru or yay) found
+
+    parur
 
 ### pkg
 
     Synopsis:  pkg [-h] [-i|-u] <package> [package...]
-    Installs or removes packages using the detected system package manager.
-    Supports: paru, yay, pacman, apt, dnf, zypper, yum, brew, pkg.
 
-      (no flag)    Auto mode: installs missing packages, removes installed ones
-      -i/--install  Force install
-      -u/--uninstall  Force uninstall
+    Installs or removes packages using the system's available package manager.
+    Supports paru, yay, pacman, apt, dnf, zypper, yum, brew, and pkg.
+    In auto mode (no flag), detects whether each package is installed and
+    toggles it — installing if absent, removing if present.
 
-    pkg firefox             # auto: install if missing, remove if present
-    pkg -i ripgrep fd       # force install
-    pkg -u cowsay           # force uninstall
+    The package-installed check uses the correct query for each manager:
 
-    The package-installed check uses the correct query for each PM:
       pacman/paru/yay  pacman -Qi
       apt              dpkg -s
       dnf/zypper/yum   rpm -q
       brew             brew list
       pkg              pkg info
 
+    Arguments:
+      -h, --help       Show help message
+      -i, --install    Force install mode
+      -u, --uninstall  Force uninstall mode
+      package          One or more package names to install or remove
+
+    Returns:
+      0  Operation completed
+      1  No supported package manager found, unknown flag, or package operation failed
+
+    pkg firefox
+    pkg -i ripgrep fd-find
+    pkg -u cowsay
+
 ### search
 
     Synopsis:  search [args...]
-    Interactive AUR package search and install via paru or yay.
-    Arch Linux only.
+
+    Delegates to paru or yay for interactive AUR package search and
+    installation. Falls back to yay if paru is not installed. Arch Linux only.
+
+    Arguments:
+      args...  Arguments forwarded to paru or yay
+
+    Returns:
+      0  AUR helper ran successfully
+      1  No AUR helper (paru or yay) found
 
     search neovim
 
 ### upgrade
 
     Synopsis:  upgrade
-    Full system upgrade via paru -Syu --noconfirm or yay -Syu --noconfirm.
-    Arch Linux only.
 
-### cleanup
+    Runs a full system upgrade via paru or yay with --noconfirm. Falls
+    back to yay if paru is not installed. Arch Linux only.
 
-    Synopsis:  cleanup
-    Lists and removes orphan packages via pacman, logging their names to
-    ~/.removed_orphans. Arch Linux only.
+    Returns:
+      0  Upgrade completed successfully
+      1  No AUR helper (paru or yay) found
 
-### parur
-
-    Synopsis:  parur
-    Opens an fzf picker of all installed packages (with pacman -Qi previews),
-    then removes the selected packages via paru or yay. Arch Linux only.
-
-    parur
-
----
+    upgrade
 
 ## 5.6 Dependency Management
+
+### check_fish_deps
+
+    Synopsis:  check_fish_deps
+
+    Backwards-compatibility wrapper that delegates to fish-deps status to
+    report which fish shell dependencies are installed or missing.
+
+    check_fish_deps
 
 ### fish-deps
 
     Synopsis:  fish-deps [status|install|update|sync]
-    Unified command for managing all tools this configuration depends on.
 
-      status   (default) Show installed/missing status grouped by tier
-      install  Interactively install each missing dependency
-      update   Update all installed dependencies
-      sync     Install missing deps, then update all
+    Unified command for managing all tools this configuration depends on,
+    dispatching to subcommand handlers. Defaults to status when no subcommand
+    is given.
 
     Install method priority (highest to lowest):
       1. git+cargo source build (fish shell itself)
@@ -937,93 +1199,172 @@ Add -i (interactive confirmation) to destructive commands:
                     btop, dust, duf, prettyping, ov, ripgrep, lazygit,
                     lazydocker, trash, kitty, wezterm, python3, yt-dlp
 
+    Arguments:
+      status   Report installed/missing deps (default)
+      install  Install missing deps interactively
+      update   Update all installed deps
+      sync     Install missing deps, then update all
+
+    Returns:
+      0  Subcommand completed
+      1  Unknown subcommand
+
+    fish-deps sync
     fish-deps
     fish-deps install
     fish-deps update
-    fish-deps sync
-
-### check_fish_deps
-
-    Synopsis:  check_fish_deps
-    Backwards-compatibility alias for `fish-deps status`.
-
----
 
 ## 5.7 System and Monitoring
-
-### top
-
-    Synopsis:  top [args...]
-    Launches btop as a modern resource monitor. Falls back to system top.
-
-### swapstat
-
-    Synopsis:  swapstat
-    Displays a colorized memory report: kernel swappiness, zRAM compression
-    ratio, zRAM device details, and active swap priorities.
-
-### sbver
-
-    Synopsis:  sbver [--brief]
-    Verifies Secure Boot signatures on all EFI binaries tracked by sbctl.
-    Color-codes results: green checkmark (verified), red X (unsigned).
-    Prints a pass/fail summary.
-
-      --brief  Suppress per-file output, show only the summary
-
-    sbver
-    sbver --brief
-
-### ports
-
-    Synopsis:  ports
-    Lists active TCP listeners with lsof, showing port/address without
-    hostname resolution.
-
-### screensleep
-
-    Synopsis:  screensleep
-    Turns off the display via KDE PowerDevil's "Turn Off Screen" action,
-    invoked through busctl.
-
-### lock
-
-    Synopsis:  lock
-    Locks the current desktop session using loginctl lock-session.
-
-### sudo-toggle
-
-    Synopsis:  sudo-toggle
-    Toggles the sudo NOPASSWD rule on/off via /etc/sudoers.d/nofail-toggle.
-    Useful for automated tasks that would otherwise require password entry.
 
 ### limine-edit
 
     Synopsis:  limine-edit
-    Opens /boot/limine.conf in sudoedit, then automatically re-enrolls the
-    config hash, runs CachyOS boot hooks, and re-signs Secure Boot files.
-    Combines the edit and sign steps into a single command.
 
----
+    Opens /boot/limine.conf in sudoedit, then re-enrolls the config hash,
+    runs CachyOS boot hooks (limine-mkinitcpio), and re-signs all Secure Boot
+    files tracked by sbctl. Combines the edit and sign steps into a single
+    command.
+
+    limine-edit
+
+### lock
+
+    Synopsis:  lock
+
+    Locks the current desktop session using loginctl lock-session.
+
+    lock
+
+### ports
+
+    Synopsis:  ports
+
+    Lists all active TCP listeners on the system using lsof, showing
+    port numbers and addresses without hostname resolution.
+
+    ports
+
+### sbver
+
+    Synopsis:  sbver [--brief]
+
+    Verifies Secure Boot signatures on all EFI binaries tracked by sbctl,
+    filtering out "invalid PE header" noise. Color-codes each file as
+    verified (green ✓) or unsigned (red ✗) and prints a final summary
+    count.
+
+    Arguments:
+      --brief  Suppress per-file output; show only the final summary
+
+    Returns:
+      0  All binaries verified (or summary shown)
+      1  sbctl is not installed
+
+    sbver
+    sbver --brief
+
+### screensleep
+
+    Synopsis:  screensleep
+
+    Turns off the display after a 1-second delay by invoking the KDE
+    PowerDevil "Turn Off Screen" global shortcut via busctl.
+
+    screensleep
+
+### sudo-toggle
+
+    Synopsis:  sudo-toggle
+
+    Toggles the sudo NOPASSWD rule on and off via
+    /etc/sudoers.d/nofail-toggle. Useful for automated tasks that would
+    otherwise require a password entry. Clears the sudo credential cache
+    when re-enabling, so the lockdown takes effect immediately.
+
+    Returns:
+      0  Rule toggled
+
+    sudo-toggle
+
+### swapstat
+
+    Synopsis:  swapstat
+
+    Displays a colorized memory report showing kernel swappiness,
+    zRAM compression ratio, zRAM device details (via zramctl), and
+    active swap priority (via swapon).
+
+    swapstat
+
+### top
+
+    Synopsis:  top [args...]
+
+    Wraps btop as a modern replacement for top. Falls back to system top
+    if btop is not installed.
+
+    Arguments:
+      args...  Arguments forwarded to btop or system top
+
+    top
 
 ## 5.8 Terminal Management
 
-### tab
+### bkg
 
-    Synopsis:  tab [args...]
-    Opens a new tab in Kitty (kitty @ launch --type=tab), WezTerm
-    (wezterm cli spawn), or Konsole. Uses current working directory,
-    or $cdto if set.
+    Synopsis:  bkg <command> [args...]
 
-    tab
+    Launches a command in the background, fully detached from the terminal
+    using nohup. All stdout and stderr output is discarded. Simpler than
+    detach; no --version flag.
+
+    Arguments:
+      command  The command to run detached
+      args...  Additional arguments for the command
+
+    Returns:
+      0  Command launched successfully
+      1  No command provided
+
+    bkg firefox
+
+### detach
+
+    Synopsis:  detach [-h] [--version] <command> [args...]
+
+    Runs a command in the background using nohup, fully detached from the
+    terminal with stdout/stderr discarded. The command survives the current
+    session.
+
+    Arguments:
+      -h, --help   Show help message
+      --version    Show version information
+      command      The command to run detached
+      args...      Additional arguments for the command
+
+    Returns:
+      0  Command launched or help/version shown
+      1  No command provided or unknown option
+
+    detach rsync -a ./data remote:/backup/
 
 ### split
 
-    Synopsis:  split [-h|-v] [command...]
-    Opens a new pane in Kitty or WezTerm, optionally running a command.
+    Synopsis:  split [-h | -v] [command...]
 
-      -h/--horizontal  (default) Split below
-      -v/--vertical    Split to the right
+    Opens a new pane split in Kitty or WezTerm, optionally running a
+    command in it. Defaults to a horizontal (bottom) split. The new pane
+    inherits the current working directory.
+
+    Arguments:
+      -h, --horizontal  Open a horizontal split (default)
+      -v, --vertical    Open a vertical split
+      command...        Command to run in the new pane; opens a bare fish
+                        shell if omitted
+
+    Returns:
+      0  Pane opened successfully
+      1  Not running inside Kitty or WezTerm
 
     split
     split -v nvim README.md
@@ -1031,107 +1372,173 @@ Add -i (interactive confirmation) to destructive commands:
 ### spwin
 
     Synopsis:  spwin [args...]
-    Spawns a new terminal OS window in Kitty (via spawn-window.sh or
-    kitty @ launch --type=os-window) or WezTerm (wezterm cli spawn --new-window).
 
-### detach
+    Spawns a new terminal OS window in Kitty (via spawn-window.sh if
+    present, otherwise kitty @ launch) or WezTerm (via wezterm cli spawn).
 
-    Synopsis:  detach [-h] [--version] <command> [args...]
-    Runs a command fully detached via nohup with stdout/stderr discarded.
-    The command survives the current session.
+    Arguments:
+      args...  Arguments forwarded to the spawn command
 
-    detach rsync -a ./data remote:/backup/
+    Returns:
+      0  Window opened successfully
+      1  Not running inside Kitty or WezTerm
 
-### bkg
-
-    Synopsis:  bkg <command> [args...]
-    Launches a command in the background via nohup with output discarded.
-    Simpler than detach; no version flag.
-
-    bkg firefox
+    spwin
 
 ### ssh
 
     Synopsis:  ssh [args...]
-    In Kitty, wraps ssh with kitten ssh for better terminal integration
-    (multiplexing, copy/paste support). Falls back to system ssh elsewhere.
+
+    Wraps ssh with kitten ssh inside Kitty terminal for better terminal
+    integration (terminfo forwarding, multiplexing, copy/paste support).
+    Falls back to system ssh on
+    other terminals.
+
+    Arguments:
+      args...  Arguments forwarded to kitten ssh or system ssh
 
     ssh user@host
 
----
+### tab
+
+    Synopsis:  tab [args...]
+
+    Opens a new tab in Kitty, WezTerm, or Konsole using the current
+    working directory (or $cdto if set). Arguments are forwarded to the
+    terminal's tab-open command.
+
+    Arguments:
+      args...  Arguments forwarded to the terminal's launch command
+
+    Returns:
+      0  Tab opened successfully
+      1  No supported terminal found
+
+    tab
 
 ## 5.9 Clipboard
-
-### y
-
-    Synopsis:  y [text...]
-    Copies text to the clipboard via wl-copy (Wayland) or xclip (X11).
-    Reads from stdin if no arguments given.
-
-    y "hello world"
-    ls | y
-    cat file.txt | y
 
 ### p
 
     Synopsis:  p [args...]
-    Outputs clipboard contents to stdout.
+
+    Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
+    falls back to xclip on X11. Supports -h/--help for usage info.
+
+    Arguments:
+      -h, --help  Show usage help
+      args...     Arguments forwarded to the clipboard tool
+
+    Returns:
+      0  Clipboard contents printed successfully
+      1  No supported clipboard tool found
 
     p | grep foo
     p > file.txt
 
 ### paste
 
-    Alias for p. Identical behaviour.
+    Synopsis:  paste [args...]
 
----
+    Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
+    falls back to xclip on X11.
+
+    Arguments:
+      args...  Arguments forwarded to the clipboard tool
+
+    Returns:
+      0  Clipboard contents printed successfully
+      1  No supported clipboard tool found
+
+    paste > file.txt
+
+### y
+
+    Synopsis:  y [text...]
+
+    Copies text to the system clipboard using wl-copy (Wayland) or xclip (X11).
+    Reads from stdin when no arguments are given.
+
+    Arguments:
+      text  Text to copy; reads from stdin if omitted
+
+    Returns:
+      0  Text copied to clipboard
+      1  No clipboard provider found
+
+    y "hello world"
+    ls | y
+    cat file.txt | y
 
 ## 5.10 Network
 
 ### gip
 
     Synopsis:  gip
-    Fetches and prints both the public IPv4 and IPv6 address via
-    icanhazip.com.
+
+    Fetches and prints both the public IPv4 and IPv6 addresses using
+    icanhazip.com. Shows "Not detected" for any address that times out.
+
+    gip
 
 ### gip4
 
     Synopsis:  gip4
-    Fetches and prints the public IPv4 address.
+
+    Fetches and prints the machine's public IPv4 address using icanhazip.com.
+
+    gip4
 
 ### gip6
 
     Synopsis:  gip6
-    Fetches and prints the public IPv6 address. Returns 1 if IPv6 is
-    unavailable.
+
+    Fetches and prints the machine's public IPv6 address using icanhazip.com.
+    Prints an error message if IPv6 is unavailable on the current network.
+
+    Returns:
+      0  IPv6 address printed
+      1  IPv6 unavailable or not supported on this network
+
+    gip6
 
 ### ping
 
     Synopsis:  ping [args...]
-    Wraps prettyping with --nolegend. Pass --legend to show the legend.
-    Falls back to system ping.
+
+    Wraps prettyping with --nolegend by default for a cleaner display.
+    Pass --legend to show the legend. Falls back to system ping if
+    prettyping is not installed.
+
+    Arguments:
+      --legend  Show the prettyping legend (overrides default --nolegend)
+      args...   Arguments forwarded to prettyping or system ping
 
     ping google.com
+    ping --legend google.com
 
 ### qr
 
     Synopsis:  qr [text...]
-    Generates a UTF-8 QR code from text or stdin. Uses qrencode locally;
-    falls back to the qrenco.de API.
+
+    Generates a UTF-8 QR code from the given text or from stdin if no
+    argument is provided. Uses qrencode locally if available, otherwise
+    falls back to the qrenco.de API via curl.
+
+    Arguments:
+      text...  Text to encode; reads from stdin if omitted
 
     qr "https://example.com"
-    echo "https://example.com" | qr
-
----
+    echo "hello" | qr
 
 ## 5.11 Pager and Logging
 
 ### logs
 
-    Synopsis:  logs [-c <category>]
-    Interactively browses terminal log files sorted newest-first using fzf.
+    Synopsis:  logs [-h] [-c <category>]
 
-      -c/--category  Filter to: scrollback, paru, or yay
+    Interactively browses terminal log files (scrollback, paru, yay) sorted
+    newest-first using fzf. Supports viewing in $PAGER, editing, and deletion.
 
     Keybindings inside the fzf browser:
       Enter    Open in $PAGER
@@ -1143,122 +1550,223 @@ Add -i (interactive confirmation) to destructive commands:
     headers. Scrollback logs open in ov with per-command sticky prompt headers
     based on OSC 133 markers.
 
-    logs
+    Arguments:
+      -h, --help           Show help message
+      -c, --category cat   Filter to one category: scrollback, paru, or yay
+
+    Returns:
+      0  File viewed or no file selected
+      1  No log files found
+
     logs -c paru
+    logs
     logs -c scrollback
 
 ### smart_exit
 
-    Synopsis:  smart_exit [-n]
-    Closes the shell session. In Kitty, captures the terminal scrollback to
-    a timestamped log file in $SCROLLBACK_HISTORY_DIR before exiting.
-    Automatically prunes the oldest logs when the count exceeds
+    Synopsis:  smart_exit [-h] [-n]
+
+    Closes the shell session. In Kitty, captures the terminal scrollback to a
+    timestamped log file in $SCROLLBACK_HISTORY_DIR before exiting.
+    Automatically prunes junk and the oldest logs when the count exceeds
     $SCROLLBACK_HISTORY_MAX_FILES.
 
-      -n/--no-log  Exit without saving a scrollback log
+    Arguments:
+      -h, --help    Show help message
+      -n, --no-log  Exit without saving a scrollback log
 
-    The exit builtin is wired to smart_exit for interactive sessions.
-    Typing exit or Ctrl+D behaves identically to smart_exit.
+    Returns:
+      0  Shell session exited
+      1  Argument parsing failed
+
+    Notes:
+      The exit builtin is wired to smart_exit for interactive sessions. Typing
+      `exit` or Ctrl+D behaves identically to calling smart_exit directly.
 
     smart_exit
     smart_exit --no-log
 
----
-
 ## 5.12 AI and Developer Tools
-
-### agy
-
-    Synopsis:  agy [args...]
-    Wrapper for the agy Antigravity AI CLI. Before launching, delegates to
-    agents-init --agents to ensure AGENTS/ is scaffolded and CLAUDE.md is
-    symlinked to AGENTS/AGENTS.md in the current project, then forwards all
-    arguments verbatim to the real agy binary. Command shadow (C1): when
-    __fish_config_op_aliases (or the master) is disabled, the call is
-    passed through to the real agy binary unchanged.
-
-    agy chat
-    agy resume
-
-### antigravity-ide
-
-    Synopsis:  antigravity-ide [args...]
-    Runs the antigravity-ide editor with warnings filtered.
 
 ### agents-init
 
-    Synopsis:  agents-init [--agents | --plugins]
-    Scaffold an AGENTS/ sub-repository for tracking agent specs, plans, specs,
-    and dev logs. Creates AGENTS/ as a standalone git repo, moves any existing
-    AGENTS.md into it, and replaces it with a relative symlink (plus
-    CLAUDE.md -> AGENTS/AGENTS.md so Claude Code picks up the shared agent
-    instructions). Consolidates plans/ and specs/ directly under AGENTS/
-    (merging any legacy docs/plans, docs/superpowers/plans, or old
-    AGENTS/plugins/ locations into the canonical AGENTS/<tgt>), creates
-    AGENTS/devlogs/, and wires docs/superpowers/{plans,specs} symlinks back to
-    them. Adds managed paths to .gitignore and auto-commits every change inside
-    the AGENTS/ sub-repo; pulls first when the sub-repo has an upstream.
-    Fully idempotent: a second run produces no output and no new commits.
-    Flags: --agents re-runs only the AGENTS.md / symlink step; --plugins
-    re-runs only the plans/specs/devlogs wiring step. Called automatically by
-    the claude and agy wrappers on every invocation.
+    Synopsis:  agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
+                           [-q | --quiet] [-s | --silent] [-h | --help]
 
-    Structure versioning: each AGENTS/ repo carries a self-contained version
-    bumper. AGENTS/.version holds MAJOR.MINOR.PATCH (seeded 1.0.0). Committed
-    git hooks under AGENTS/.agents-tools/ (wired via core.hooksPath) bump it on
-    every commit: MINOR (resetting PATCH) when the tracked directory set
-    changes, PATCH otherwise; MAJOR is manual-only. A prepare-commit-msg hook
-    appends "(vX.Y.Z)" to the commit subject. Downstream tooling can read
-    AGENTS/.version - a changed MINOR field signals a structure change. Because
-    core.hooksPath is a single setting, the local override would otherwise
-    shadow your global hooks; after bumping the version, each shim chains
-    (execs) to the global/system core.hooksPath hook of the same name so global
-    pre-commit / prepare-commit-msg hooks (e.g. ggshield, Git LFS) still run.
-    The script and hooks are shipped from scripts/agents-tools/ and refreshed
-    when their version marker is stale.
+    Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
+    a self-contained git repo for agent specifications, moves any existing
+    agent-related files into it, and replaces them with symlinks so the outer
+    project never tracks agent files directly.
+
+    File layout after setup:
+      AGENTS/AGENTS.md          canonical agent spec (real file)
+      AGENTS/CLAUDE.md          real file (if CLAUDE.md existed separately)
+                                or symlink → AGENTS.md (single-source case)
+      <root>/AGENTS.md          → AGENTS/AGENTS.md
+      <root>/CLAUDE.md          → AGENTS/CLAUDE.md
+      AGENTS/plans              superpowers plans      (real dir, .gitkeep)
+      AGENTS/specs              superpowers specs      (real dir, .gitkeep)
+      AGENTS/devlogs            agent development logs (real dir, .gitkeep)
+      AGENTS/.version           MAJOR.MINOR.PATCH structure version (seed 1.0.0)
+      AGENTS/.agents-tools/     committed version-bump script + git hook shims
+      docs/superpowers/plans    → ../../AGENTS/plans   (always)
+      docs/superpowers/specs    → ../../AGENTS/specs   (always)
+      docs/plans                → ../AGENTS/plans   (only if docs/plans existed)
+      docs/specs                → ../AGENTS/specs   (only if docs/specs existed)
+      docs/devlogs              → ../AGENTS/devlogs (only if docs/devlogs existed)
+
+    plans/ and specs/ are merged from every legacy location (docs/<tgt>,
+    docs/superpowers/<tgt>, and the old AGENTS/plugins/ layout) into the
+    canonical AGENTS/<tgt>; the AGENTS/plugins/ layer is removed.
+
+    Each AGENTS repo carries a self-contained version bumper wired via
+    core.hooksPath: a pre-commit hook bumps AGENTS/.version on every commit
+    (MINOR when the tracked directory set changes, PATCH otherwise; MAJOR is
+    manual-only), and a prepare-commit-msg hook appends "(vX.Y.Z)" to the
+    commit subject. Each shim then chains (execs) to the global/system
+    core.hooksPath hook of the same name, so this local override does not
+    shadow global hooks (e.g. ggshield, Git LFS). The script/hooks are
+    version-managed from scripts/agents-tools/ and refreshed when their marker
+    is stale.
+
+    Downstream tooling can read AGENTS/.version directly — a changed MINOR
+    field signals a structure change.
+
+    With no flags, runs both --agents and --plugins setup; --agents re-runs
+    only the AGENTS.md / symlink step and --plugins only the plans/specs/
+    devlogs wiring step. Managed paths are added to .gitignore. The sub-repo
+    is pulled first when it has an upstream, and at the end of every
+    invocation any uncommitted changes inside it are auto-committed so
+    agent-made edits are captured automatically. Fully idempotent: a second
+    run produces no output and no new commits.
+
+    Called automatically by the claude and agy wrappers on every invocation.
+
+    Arguments:
+      -a, --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only
+      -p, --plugins  Set up AGENTS/ repo + plans/specs/devlogs dirs + docs/ symlinks only
+      -v, --verbose  Print all per-step output (default)
+      -q, --quiet    Print one summary line only if changes were made
+      -s, --silent   Suppress all output; errors only (standard UNIX convention)
+      -h, --help     Show this help message and exit
+
+    Returns:
+      0  Setup completed successfully
+      1  Fatal error (git init failed, move failed, etc.)
 
     agents-init
     agents-init --agents
     agents-init --plugins
+    agents-init --quiet
+
+**Used by:** `agy`, `claude`
+
+### agy
+
+    Synopsis:  agy [ARGS...]
+
+    Wrapper for the agy Antigravity AI CLI that ensures the AGENTS/
+    sub-repository is initialized and any agent-made changes are committed
+    before launch. Delegates all scaffold and commit logic to agents-init
+    --quiet (full setup), which ensures AGENTS/ is scaffolded and CLAUDE.md
+    is symlinked to AGENTS/AGENTS.md in the current project. All arguments
+    are forwarded verbatim to the real agy binary.
+
+    Opinionated component (C1): when disabled via __fish_config_op_aliases
+    (or the __fish_config_opinionated master), the command is passed through
+    to the real agy binary unchanged.
+
+    Arguments:
+      ARGS  Any arguments forwarded verbatim to the underlying agy binary
+
+    Returns:
+      Exit status of the underlying agy binary
+
+    agy
+    agy chat
+    agy resume
+
+**Dependencies:** `agents-init`
+
+### antigravity-ide
+
+    Synopsis:  antigravity-ide [args...]
+
+    Wrapper for the antigravity-ide command that filters a known noisy warning
+    about an unrecognized 'app' option from stderr.
+
+    Arguments:
+      args...  Arguments passed through to the antigravity-ide command
+
+    antigravity-ide
 
 ### claude
 
-    Synopsis:  claude [args...]
-    Wrapper for the claude CLI. Before launching, delegates to agents-init
-    --agents to ensure AGENTS/ is scaffolded and CLAUDE.md is symlinked to
-    AGENTS/AGENTS.md in the current project, then forwards all arguments
-    verbatim to the real claude binary. Command shadow (C1): when
-    __fish_config_op_aliases (or the master) is disabled, the call is
-    passed through to the real claude binary unchanged.
+    Synopsis:  claude [ARGS...]
+
+    Wrapper for the claude CLI that ensures the AGENTS/ sub-repository is
+    initialized and any agent-made changes are committed before launch.
+    Delegates all scaffold and commit logic to agents-init --quiet (full
+    setup), which ensures AGENTS/ is scaffolded and CLAUDE.md is symlinked
+    to AGENTS/AGENTS.md in the current project.
+    All arguments are forwarded verbatim to the real claude binary.
+
+    Opinionated component (C1): when disabled via __fish_config_op_aliases
+    (or the __fish_config_opinionated master), the command is passed through
+    to the real claude binary unchanged.
+
+    Arguments:
+      ARGS  Any arguments forwarded verbatim to the underlying claude binary
+
+    Returns:
+      Exit status of the underlying claude binary
 
     claude
     claude --resume
+    claude "Explain the recent changes"
+
+**Dependencies:** `agents-init`
 
 ### claude-docs
 
     Synopsis:  claude-docs
+
     Invokes Claude Code to analyze recent repository changes and update
-    README.md, ensuring all documented features and examples are accurate.
+    README.md, ensuring all features and examples are accurate and pruning
+    obsolete content.
+
+    claude-docs
 
 ### claude-pr
 
     Synopsis:  claude-pr
-    Invokes Claude Code to run the full PR workflow: create branch,
-    conventional commit, verification, push, and open a PR with a manual
-    verification checklist.
+
+    Invokes Claude Code to perform a full PR workflow: create a kebab-case
+    branch, write a Conventional Commit, run verification, push, and open a
+    pull request with a manual verification checklist.
+
+    claude-pr
 
 ### qc
 
     Synopsis:  qc [prompt...]
+
     Quick-chat wrapper around the aichat LLM CLI that defaults to the "cli"
-    role - a system prompt tuned for concise, terminal-friendly output. On
-    first use it installs the bundled role by symlinking
-    scripts/cli-agent.md to $XDG_CONFIG_HOME/aichat/roles/cli.md (creating
-    the directory if needed). Inherits every aichat flag and tab completion
-    (--wraps aichat); passing --role/-r overrides the default role, so qc
-    forwards to aichat unchanged. The function is only defined when aichat
-    is installed. Run qc --help for aichat's full flag reference with the
-    command name rewritten to qc.
+    role — a system prompt tuned for concise, terminal-friendly output.
+    Resolves the aichat config directory (honoring $XDG_CONFIG_HOME), creates
+    it if missing, and on first use installs the bundled role by symlinking
+    scripts/cli-agent.md to $XDG_CONFIG_HOME/aichat/roles/cli.md. Inherits
+    every aichat flag and tab completion (--wraps aichat); passing --role/-r
+    overrides the default role, so qc forwards to aichat unchanged. The
+    function is only defined when aichat is installed. Run `qc --help` for
+    aichat's full flag reference with the command name rewritten to qc.
+
+    Arguments:
+      prompt...     Prompt forwarded to aichat
+      -h, --help    Show usage help
+
+    Returns:
+      aichat's exit status.
 
     qc "how do I list open ports on linux?"
     qc -m ollama:llama3 "explain this error"
@@ -1267,202 +1775,227 @@ Add -i (interactive confirmation) to destructive commands:
 ### superpowers
 
     Synopsis:  superpowers [on|off] [-g]
-    Enables or disables the Superpowers plugin for Antigravity and Claude
-    Code at workspace/project scope (default) or user scope (-g/--global).
+
+    Enables or disables the superpowers plugin for both antigravity-cli
+    (workspace scope) and Claude (project scope). Use -g/--global to apply
+    at the user scope instead of workspace/project.
+
+    Arguments:
+      on            Enable superpowers for both tools
+      off           Disable superpowers for both tools
+      -g, --global  Apply at user/global scope instead of workspace/project
+      -h, --help    Show usage help
+
+    Returns:
+      0  Mode applied successfully
+      1  No on/off mode specified
 
     superpowers on
     superpowers off -g
-
----
 
 ## 5.13 Media and Utilities
 
 ### dng2avif
 
-    Synopsis:  dng2avif [-i <file>] [-o <file>] [-q <n>] [-s <n>] [input.dng]
-    Converts a DNG raw image to a 10-bit HDR AVIF using an ImageMagick,
-    ffmpeg, avifenc pipeline with metadata sync via exiftool.
+    Synopsis:  dng2avif [-h] [-i <file>] [-o <file>] [-q <n>] [-s <n>] [input.dng]
 
-      -i/--input    Input file (or positional arg)
-      -o/--output   Output file (default: same name, .avif extension)
-      -q/--quality  Quality 0-100 (default 92)
-      -s/--speed    Encoding speed 0-10 (default 3)
+    Converts a DNG raw image to a 10-bit HDR AVIF using a three-step pipeline:
+    develop with ImageMagick, encode with ffmpeg+avifenc, sync metadata with
+    exiftool. Requires magick, ffmpeg, avifenc, and exiftool.
+
+    Arguments:
+      -i, --input FILE    Input DNG file
+      -o, --output FILE   Output AVIF file (defaults to input basename)
+      -q, --quality N     Encoding quality 0-100 (default: 92)
+      -s, --speed N       Encoder speed 0-10 (default: 3, 0 = slowest)
+      -h, --help          Show help message
+
+    Returns:
+      0  Conversion complete
+      1  File not found, missing dependency, or encode step failed
 
     dng2avif photo.dng
     dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 
-### steam-dl
-
-    Synopsis:  steam-dl
-    Launches Steam under systemd-inhibit, preventing the system from going
-    idle or sleeping while a download is in progress.
-
 ### spark
 
     Synopsis:  spark [--min=<n>] [--max=<n>] [numbers...]
+
     Renders a Unicode sparkline bar chart for a sequence of numbers.
-    Reads from stdin if no numbers are given.
+    Reads numbers from arguments or from stdin if none are provided.
+    Optional --min and --max clamp the scale range.
+
+    Arguments:
+      --min=<n>   Minimum value for scale (default: list minimum)
+      --max=<n>   Maximum value for scale (default: list maximum)
+      numbers...  Space-separated numbers to chart; reads stdin if omitted
+      -v, --version  Print version
+      -h, --help     Show usage help
 
     spark 1 1 2 5 14 42
+    seq 64 | sort --random-sort | spark
     echo "3 7 2 9 1" | spark
+
+### steam-dl
+
+    Synopsis:  steam-dl
+
+    Launches Steam with systemd-inhibit to prevent the system from idling
+    or sleeping during active downloads.
+
+    steam-dl
 
 ### yt-dlp
 
     Synopsis:  yt-dlp [args...] URL [URL...]
-    Wraps yt-dlp, prepending sane defaults: --sponsorblock-remove all,
-    --embed-subs, --embed-metadata, and --embed-thumbnail. Each default
-    is suppressed when you already pass that flag, its alias, or its
-    negation (e.g. --no-embed-thumbnail drops the thumbnail default;
-    --no-sponsorblock or your own --sponsorblock-remove drops ours). All
-    other arguments pass through unchanged, and --help falls through to
-    real yt-dlp. Opinionated component (C1 aliases); when disabled it
-    passes straight through to the system yt-dlp.
+
+    Wraps yt-dlp, injecting sane embedding + SponsorBlock defaults
+    (--sponsorblock-remove all, --embed-subs, --embed-metadata,
+    --embed-thumbnail). Each default is suppressed if the user already
+    passes that flag, its alias, or its negation (e.g. --no-embed-thumbnail
+    drops our --embed-thumbnail; --no-sponsorblock or your own
+    --sponsorblock-remove drops ours). All other arguments pass through
+    untouched. --help and friends fall through to real yt-dlp.
+
+    Opinionated component (C1): when disabled via __fish_config_op_aliases
+    (or the __fish_config_opinionated master), passes straight through to
+    the system yt-dlp with no defaults injected.
+
+    Arguments:
+      args...  Arguments forwarded to yt-dlp (defaults prepended)
+      --no-embed-thumbnail  Skip thumbnail embedding for this run
 
     yt-dlp dQw4w9WgXcQ
-    yt-dlp --no-embed-thumbnail dQw4w9WgXcQ
-
----
+    yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
 
 ## 5.14 Miscellaneous
 
+### bash
+
+    Synopsis:  bash [args...]
+
+    Switches the current shell session to bash, loading config from the XDG
+    config directory. Resets $SHELL back to fish on exit.
+
+    Arguments:
+      args...  Arguments passed through to the bash command
+
+    bash
+
+### bd-pull
+
+    Synopsis:  bd-pull <owner/repo>
+
+    Fetches unlinked issues from a Gitea repository, creates corresponding local
+    Beads entries, and updates the Gitea issue titles to include the new Bead IDs.
+    Requires $GITEA_TOKEN and $GITEA_URL to be set.
+
+    Arguments:
+      owner/repo  The repository path in owner/name format
+
+    Returns:
+      0  Issues linked and synced (or no unlinked issues found)
+      1  Missing required argument or environment variables
+
+    bd-pull myuser/myproject
+    bd-pull rootiest/fish-config
+
+### cffetch
+
+    Synopsis:  cffetch [args...]
+
+    Clears the screen and displays system information using fastfetch with a
+    custom config if available. Falls back to neofetch if fastfetch is not installed.
+
+    Arguments:
+      args...  Additional arguments forwarded to fastfetch or neofetch
+
+    cffetch
+
+### cheat
+
+    Synopsis:  cheat <topic> [args...]
+
+    Displays colorized cheatsheets using cheat -c. Falls back to tldr, then
+    man, if cheat is not installed.
+
+    Arguments:
+      topic   The command or topic to look up
+      args... Additional arguments forwarded to cheat, tldr, or man
+
+    cheat tar
+    cheat git
+
 ### config-help
 
-    Synopsis:  config-help [SECTION]
+    Synopsis:  config-help [section]
                config-help --html
-               config-help [SECTION] --man
-               config-help -h | --help
+               config-help [section] --man
+               config-help --help
 
-    Opens the offline fish shell configuration manual. Without flags, opens
-    the Markdown source in the best available pager (ov > bat > man > less >
-    cat). If SECTION is given, jumps to the first heading matching that
-    keyword (case-insensitive; checks fish-config.index aliases first).
+    Opens the offline fish shell configuration manual in the best available
+    pager. Falls back through ov -> bat -> man -> less -> cat.
+    If a section keyword is provided, the pager opens at the first heading
+    that matches the keyword. Lookup order: docs/fish-config.index (exact
+    keyword aliases), then a normalized heading scan as fallback.
+    When opened with ov a sticky navigation hint is shown at the top of the
+    screen. Section matching is case-insensitive. Pass --html / -w to open
+    the published documentation website (https://fish-config-docs.pages.dev/)
+    in the default browser via xdg-open — deep links to a section aren't
+    supported there, so if a keyword is given a note points you to the site's
+    search box instead. Pass --man / -m to open the compiled man page
+    (docs/fish-config.1) via `man -l`; if a section keyword is given, the
+    pager opens at the nearest match. Pass --help or -h for usage and the
+    navigation key reference.
 
-    Flags:
-      --html / -w   Open the published documentation website
-                    (https://fish-config-docs.pages.dev/) in the default
-                    browser via xdg-open. Deep links to a section aren't
-                    supported; if SECTION is given, a note points you to the
-                    site's search box instead.
-      --man  / -m   Open docs/fish-config.1 via man -l directly.
-                    If SECTION is given, jumps to the nearest match.
-      --help / -h   Print usage and navigation key reference.
+    Arguments:
+      section     Optional keyword to jump to a matching section heading
+      -w, --html  Open the published documentation website in the default browser
+      -m, --man   Open the compiled man page via man -l
+      -h, --help  Print usage and navigation reference, then exit
 
+    Returns:
+      0  Manual displayed (or --help printed)
+      1  Documentation file not found, or required tool not available
+
+    Notes:
+      The preferred invocation is `help config [...]` — this function is
+      registered as a handler in the help wrapper so that syntax works
+      transparently. Direct `config-help` calls are also valid.
+
+    config-help
     config-help keybindings
     config-help pkg
+    config-help fish-deps
     config-help --html
     config-help --man
+    config-help keys --man
+    config-help --help
     config-help pkg --man
-
-    Also available as: help config [SECTION] [FLAGS]
-
-### open-url
-
-    Synopsis:  open-url [-s|--silent] [-v|--verbose] <url>
-               open-url -h | --help
-
-    Opens a URL or file:// URI in the best available graphical web browser,
-    backgrounded so it never blocks the terminal. Resolves a real browser
-    binary rather than deferring to xdg-open, whose MIME dispatch can hand
-    local text/html files to non-browser apps (e.g. ebook readers).
-
-    Silent by default: prints nothing on success (errors always go to
-    stderr). Pass --verbose / -v to report which browser is launched;
-    --silent / -s is accepted for explicitness.
-
-    Resolution order:
-      1. $fish_help_browser  (explicit override)
-      2. $BROWSER            (validated; errors if not a command)
-      3. xdg-mime default handler for x-scheme-handler/https
-      4. First known browser binary found in a built-in list
-      5. xdg-open            (last resort)
-
-    open-url https://git.rootiest.dev/rootiest/fish-config
-    open-url -v https://fish-config-docs.pages.dev/
-
-    Used internally by config-help --html.
-
-    Typo abbreviation: url-open (expands to open-url on space/enter).
-
-### repo-open
-
-    Synopsis:  repo-open [-p|--print] [-r|--root]
-               repo-open -h | --help
-
-    Opens the web page for the current repository's `origin` remote in a
-    browser (via open-url). Deep-links to the current branch when it exists
-    on the remote — falling back to the remote's default branch (main/master)
-    otherwise — and to the current sub-directory when run below the repo root.
-
-    The remote URL is normalized from HTTPS and SSH/scp forms
-    (git@host:owner/repo.git, ssh://…, https://…). The web path layout is
-    provider-specific; the provider is resolved in order:
-
-      1. git config browse.provider   (per-repo or --global override)
-      2. Hostname heuristic           (github / gitlab / gitea / bitbucket;
-                                        codeberg → gitea)
-      3. Default: github-style layout
-
-    Self-hosted hosts the heuristic can't classify (a Gitea/GitLab instance
-    on a custom domain) need a one-time override:
-
-      git config browse.provider gitea
-
-    Flags:
-      --print / -p   Print the resolved URL instead of opening it.
-      --root  / -r   Ignore the current sub-directory; link to the repo root.
-      --help  / -h   Show usage.
-
-    repo-open
-    repo-open --print
-    repo-open --root
-
-    Typo abbreviation: open-repo (expands to repo-open on space/enter).
-
-### config-update
-
-    Synopsis:  config-update [-h] [-n] [-f]
-
-    Pulls the latest fish configuration from the upstream repository
-    (https://git.rootiest.dev/rootiest/fish-config.git) into ~/.config/fish.
-    The remote URL is hard-coded, so this works on fresh clones with no git
-    remote configured. All git output is suppressed; colored messages report
-    fetch and merge status. After a successful pull, run `exec fish` to
-    reload.
-
-    Flags:
-      --dry-run / -n   Fetch and show available commits without applying them.
-      --force  / -f    Stash local changes, pull, then restore the stash.
-      --help   / -h    Show usage.
-
-    config-update
-    config-update --dry-run
-    config-update --force
 
 ### config-settings
 
-    Synopsis:  config-settings [-h]
+    Synopsis:  config-settings [-h | --help]
 
-    Opens an interactive TUI for managing fish configuration settings across
-    four pages, without having to type or remember variable names. Tab cycles
-    forward through the pages; Shift-Tab cycles backward.
+    Opens an interactive full-screen TUI for managing fish config settings
+    across four pages, without having to type or remember variable names:
 
-      Universal — opinionated category toggles (C1–C6) + master, persistent (set -U)
+      Universal — opinionated-category toggles (C1–C6) + master, persistent (set -U)
       Session   — the same toggles, current shell only (set -g)
       Sponge    — sponge history-scrubbing settings: delay, successful exit
                   codes, purge-only-on-exit, allow-previously-successful, and
                   extra sensitive variable-name tokens
-      Paths     — scrollback log directory, scrollback max files, the
-                  user-dots path, and the user-dots convenience symlink toggle
-                  (Dots link)
+      Paths     — scrollback log directory, scrollback max files, the user-dots
+                  path, and the user-dots convenience symlink toggle (Dots link)
 
-    Toggle rows use ← → (or h/l) along an OFF ← DEFAULT → ON scale; DEFAULT
-    erases the variable so the master switch / built-in default applies. Value
-    rows (the path/int/list settings on the Sponge and Paths pages) use Enter to
-    edit inline; ← / h clears the value back to its default. List rows (e.g.
-    Extra secret, OK codes) accept values separated by commas and/or whitespace
-    — "A, B", "A,B" and "A B" all yield the same two entries. Changes apply
-    immediately. Always available regardless of the __fish_config_opinionated
-    master state.
+    Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON; DEFAULT erases
+    the variable so the master switch / built-in default applies. Value rows
+    (Sponge, Paths) use Enter to edit inline; ← / h clears to default. List rows
+    (e.g. Extra secret, OK codes) accept values separated by commas and/or
+    whitespace — "A, B", "A,B" and "A B" all yield the same two entries.
+    Tab / Shift-Tab cycle forward / backward through pages.
+    Changes apply immediately — no confirm step. Always available regardless of
+    __fish_config_opinionated state.
 
     The Sponge and Paths pages always write universal variables — these are
     persistent, set-and-forget settings with no per-session scope. Editing a
@@ -1471,10 +2004,10 @@ Add -i (interactive confirmation) to destructive commands:
     zellij log wrappers (which read the exported names) see the change in the
     running session.
 
-    The panel adapts to the terminal width automatically, selecting from
-    four layout tiers (with a 6-column buffer on each side before stepping
-    up to the next tier) and horizontally centering the box. The panel
-    redraws within ~0.3 s of a terminal resize with no keypress required.
+    The panel adapts to the terminal width automatically, selecting from four
+    layout tiers (with a 6-column buffer on each side before stepping up to the
+    next tier) and horizontally centering the box. The panel redraws within
+    ~0.3 s of a terminal resize with no keypress required.
 
       COLUMNS >= 90  →  78-wide panel (most detail)
       COLUMNS >= 86  →  74-wide panel
@@ -1489,118 +2022,266 @@ Add -i (interactive confirmation) to destructive commands:
       Tab / S-Tab   Next / previous page
       q / Escape    Exit
 
-    Flags:
-      --help / -h   Show usage.
+    Arguments:
+      -h, --help  Print usage and exit
+
+    Returns:
+      0  Exited normally (q or Escape pressed)
+      1  Unknown flag passed
 
     config-settings
 
-### config-toggle (deprecated)
+**Used by:** `config-toggle`
 
-    Deprecated alias for config-settings. Prints a deprecation notice to
-    stderr, then delegates all arguments to config-settings.
+### config-toggle
 
-    config-toggle
+    Synopsis:  config-toggle [args...]
 
-### bash
+    Deprecated alias for config-settings. Prints a one-line deprecation
+    notice to stderr, then delegates all arguments to config-settings.
 
-    Synopsis:  bash [args...]
-    Switches to bash, with XDG config applied. On exit, $SHELL is reset
-    back to fish.
+    Arguments:
+      args  Passed through verbatim to config-settings
 
-### bd-pull
+    Returns:
+      Same as config-settings
 
-    Synopsis:  bd-pull <owner/repo>
-    Fetches unlinked Gitea issues and creates local Beads entries, updating
-    issue titles with the assigned Beads IDs.
-    Requires $GITEA_TOKEN and $GITEA_URL to be set.
+    config-toggle        # opens config-settings with a deprecation notice
 
-    bd-pull rootiest/fish-config
+**Dependencies:** `config-settings`
 
-### cheat
+### config-update
 
-    Synopsis:  cheat <topic> [args...]
-    Displays a colorized cheatsheet using cheat -c, falls back to tldr,
-    then man.
+    Synopsis:  config-update [-h | --help] [-f | --force] [-n | --dry-run]
 
-    cheat tar
-    cheat git
+    Pulls the latest fish shell configuration from the upstream repository
+    (https://git.rootiest.dev/rootiest/fish-config.git) into ~/.config/fish.
+    The remote URL is hard-coded so the update works even if the local clone
+    has no configured remote. Git output is suppressed; status is reported
+    through colored messages. After a successful pull the function prints a
+    short summary of changed files; run `exec fish` to reload the shell.
 
-### cffetch / ffetch
+    Arguments:
+      -h, --help      Show this help message and exit
+      -f, --force     Stash local changes before pulling, then pop the stash
+      -n, --dry-run   Check for upstream changes without applying them
 
-    Synopsis:  cffetch [args...]  /  ffetch [args...]
-    Clears the screen and displays system information via fastfetch with
-    the custom config at ~/.fastfetch.jsonc. Falls back to neofetch.
+    Returns:
+      0  Config updated (or already up to date)
+      1  Update failed (network error, merge conflict, or not a git repo)
+
+    config-update
+    config-update --dry-run
+    config-update --force
 
 ### dockup
 
     Synopsis:  dockup [-h] [directory]
-    Pulls latest Docker images, restarts services in the given Docker
-    Compose project, and prunes dangling images.
+
+    Pulls the latest Docker images and restarts all services in a Docker Compose
+    project, then prunes dangling images. Accepts an optional target directory.
+
+    Arguments:
+      -h, --help   Show help message
+      directory    Path to the compose project (defaults to current directory)
+
+    Returns:
+      0  Services updated and running
+      1  Directory not found or no docker-compose.yml present
 
     dockup ~/myapp
+
+### ffetch
+
+    Synopsis:  ffetch [args...]
+
+    Alias for fastfetch that loads a custom config from ~/.fastfetch.jsonc when
+    present. Falls back to neofetch if fastfetch is not installed.
+
+    Arguments:
+      args...  Arguments forwarded to fastfetch or neofetch
+
+    ffetch
 
 ### joplin
 
     Synopsis:  joplin [args...]
-    Runs the Joplin CLI with Node.js deprecation warnings suppressed.
+
+    Runs the Joplin CLI with Node deprecation warnings suppressed via
+    NODE_OPTIONS=--no-deprecation.
+
+    Arguments:
+      args...  Arguments forwarded to the joplin command
+
+    Returns:
+      0  Joplin ran successfully
+      1  joplin binary not found in PATH
 
     joplin ls
 
-### ld
-
-    Synopsis:  ld
-    Launches lazydocker targeting the currently active Docker context,
-    detected via docker context inspect.
-
-### replay
-
-    Synopsis:  replay <commands>
-    Runs Bash commands and replays any resulting changes to environment
-    variables, aliases, and the working directory back into the current
-    Fish session. Useful for sourcing Bash scripts.
-
-    replay "source ~/.bashrc"
-    replay "export FOO=bar"
-
 ### kitty-logging
 
-    Synopsis:  kitty-logging [install|uninstall|status|dismiss] [-h]
+    Synopsis:  kitty-logging [install | uninstall | status | dismiss] [-h]
 
-    Manages the Kitty scrollback watcher that powers C5 logging. Ships a
-    canonical watcher and symlinks it into the Kitty config directory (so it
-    always tracks the source), wiring it into kitty.conf through a
-    sentinel-marked managed block. Commenting out any conflicting watcher line
-    avoids double-capture.
-
-    Commands:
-      install    Symlink the watcher and add the managed block
-      uninstall  Remove the managed block and the watcher symlink
-      status     Show wiring, installed watcher version, and C5 state
-      dismiss    Stop the per-session setup reminder
+    Manages the fish-config Kitty scrollback watcher that powers C5 logging.
+    `install` symlinks the canonical watcher into the Kitty config dir (so it
+    always tracks the source) and wires it into kitty.conf via a
+    sentinel-marked managed block, commenting out any conflicting active
+    watcher line to avoid double-capture. `uninstall` reverses it. `status`
+    reports wiring, installed watcher version, and C5 logging state. `dismiss`
+    silences the per-session setup reminder.
 
     Runtime capture stays governed by the C5 .logging_disabled sentinel, so
     disabling __fish_config_op_logging makes the watcher inert without
     uninstalling. Install affects new Kitty windows only.
 
-    Example:
-      kitty-logging install
-      kitty-logging status
+    Arguments:
+      install    Symlink the watcher and add the managed block to kitty.conf
+      uninstall  Remove the managed block and the watcher symlink
+      status     Report wiring, watcher version, and C5 logging state
+      dismiss    Stop the per-session reminder
+      -h, --help Show this help
+
+    Returns:
+      0  Success
+      1  Unknown subcommand/flag, kitty missing, or a write failure
+
+    kitty-logging install
+    kitty-logging status
+
+### ld
+
+    Synopsis:  ld
+
+    Launches lazydocker targeting the currently active Docker context by
+    resolving the host endpoint from docker context inspect.
+
+    ld
+
+### open-url
+
+    Synopsis:  open-url [-s|--silent] [-v|--verbose] <url>
+               open-url --help
+
+    Opens a URL (or file:// URI) in the best available graphical web browser,
+    backgrounded so it never blocks the terminal. Resolves a real browser
+    binary rather than deferring to xdg-open, whose MIME dispatch can hand
+    local text/html files to non-browser apps (e.g. ebook readers).
+
+    Silent by default: prints nothing on success (errors always go to stderr);
+    --silent / -s is accepted for explicitness.
+
+    Resolution order:
+      1. $fish_help_browser  (explicit override)
+      2. $BROWSER            (validated; errors if not a command)
+      3. xdg-mime default handler for x-scheme-handler/https
+      4. First known browser binary found in a built-in list
+      5. xdg-open            (last resort)
+
+    Arguments:
+      url            The URL or file:// URI to open (required)
+      -s, --silent   Suppress success output (the default)
+      -v, --verbose  Print which browser is being launched
+      -h, --help     Print usage and exit
+
+    Returns:
+      0  Browser launched
+      1  No URL given, invalid $BROWSER, or no browser found
+
+    Notes:
+      Typo abbreviation: url-open (expands to open-url on space/enter).
+
+    open-url https://git.rootiest.dev/rootiest/fish-config
+    open-url -v https://fish-config-docs.pages.dev/
+
+**Used by:** `repo-open`
+
+### replay
+
+    Synopsis:  replay <commands>
+
+    Runs the given commands in Bash and replays any resulting environment
+    variable, alias, and directory changes back into the current Fish
+    session. Useful for sourcing Bash-only scripts.
+
+    Arguments:
+      commands  Bash command string to execute and replay
+
+    Returns:
+      0  Commands ran successfully and changes were replayed
+      1  Bash command exited with a non-zero status
+
+    replay "source ~/.bashrc"
+    replay "export FOO=bar"
+
+### repo-open
+
+    Synopsis:  repo-open [-p|--print] [-r|--root]
+               repo-open --help
+
+    Opens the web page for the current repository's `origin` remote in a
+    browser (via open-url). Deep-links to the current branch when it exists
+    on the remote, falling back to the remote's default branch (main/master)
+    otherwise, and to the current sub-directory when invoked below the repo
+    root.
+
+    The remote URL is normalized from both HTTPS and SSH/scp forms
+    (git@host:owner/repo.git, ssh://…, https://…). The web path layout is
+    provider-specific; the provider is resolved in this order:
+
+      1. git config browse.provider   (per-repo or --global override)
+      2. Hostname heuristic           (github / gitlab / gitea / bitbucket;
+                                        codeberg → gitea)
+      3. Default: github-style layout
+
+    For a self-hosted host the heuristic can't classify (e.g. a Gitea or
+    GitLab instance on a custom domain), set the provider once:
+
+      git config browse.provider gitea
+
+    Arguments:
+      -p, --print  Print the resolved URL instead of opening it
+      -r, --root   Ignore the current sub-directory; link to the repo root
+      -h, --help   Print usage and exit
+
+    Returns:
+      0  URL opened (or printed)
+      1  Not a git repo, no origin remote, or browser launch failed
+
+    Notes:
+      Typo abbreviation: open-repo (expands to repo-open on space/enter).
+
+    repo-open              # open current branch (+ subdir) in browser
+    repo-open --print      # just print the URL
+    repo-open --root       # repo home page for the current branch
+
+**Dependencies:** `open-url`
 
 ### tmux-clean
 
     Synopsis:  tmux-clean
-    Kills all detached (unattached) tmux sessions, leaving attached ones
-    running.
+
+    Kills all detached (unattached) tmux sessions, leaving any currently
+    attached sessions running.
+
+    tmux-clean
 
 ### wake-lock
 
     Synopsis:  wake-lock <command> [args...]
-    Runs a command under systemd-inhibit, preventing the system from going
-    idle or sleeping until the command completes.
+
+    Runs a command under systemd-inhibit to prevent the system from idling
+    or sleeping for the duration of the command.
+
+    Arguments:
+      command  Command to run with sleep inhibition active
+      args...  Arguments forwarded to the command
+
+    Returns:
+      0  Command ran and completed
+      1  No command provided
 
     wake-lock rsync -avz src/ dest/
-
----
 
 # 6. DEPENDENCY CATALOG
 

@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   open-url
+#
 # SYNOPSIS
 #   repo-open [-p|--print] [-r|--root]
 #   repo-open --help

@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Shared helpers for the docs/manual SSOT pipeline.
 
-Frontmatter parsing, deterministic tree ordering, and heading level shifts.
+Frontmatter parsing, deterministic tree ordering, heading level shifts, and
+the `functions/*.fish` comment-header parser that is the SSOT for Section 5.
 Used by build-manual.py and verify-manual.py.
 """
 
@@ -55,6 +56,88 @@ def shift_headings(body: str, by: int) -> str:
             )
         out.append(line)
     return "\n".join(out)
+
+
+HEADER_LABEL = re.compile(r"^#\s+([A-Z][A-Z ]*[A-Z])\s*$")
+FUNC_DEF = re.compile(r"^\s*function\s+(\S+)")
+SECTIONS = (
+    "CATEGORY",
+    "DEPENDENCIES",
+    "SYNOPSIS",
+    "DESCRIPTION",
+    "ARGUMENTS",
+    "RETURNS",
+    "EXAMPLE",
+    "NOTES",
+)
+
+
+def _header_blocks(lines: list[str]) -> list[tuple[int, dict[str, list[str]]]]:
+    """Find every man-page comment header in a file's lines.
+
+    Yields (index of the line that ended the block, {LABEL: body lines}).
+    Body lines keep any indentation deeper than the standard `#   ` prefix,
+    which is what lets nested option tables survive into the rendered entry.
+    Comment runs carrying no `# LABEL` line at all (the copyright preamble,
+    ordinary inline comments) produce nothing.
+    """
+    out: list[tuple[int, dict[str, list[str]]]] = []
+    cur: dict[str, list[str]] = {}
+    label: str | None = None
+    for i, line in enumerate(lines + [""]):
+        if not line.startswith("#"):
+            if cur:
+                out.append((i, cur))
+            cur, label = {}, None
+            continue
+        m = HEADER_LABEL.match(line)
+        if m:
+            label = m.group(1)
+            cur.setdefault(label, [])
+        elif label is not None:
+            body = line[1:]
+            cur[label].append(body[3:] if body.startswith("   ") else body.strip())
+    return out
+
+
+def _trailing_blanks(lines: list[str]) -> int:
+    """Count the blank `#` separator lines closing a section."""
+    n = 0
+    while n < len(lines) and not lines[len(lines) - 1 - n].strip():
+        n += 1
+    return n
+
+
+def parse_functions(root: Path) -> dict[str, dict[str, list[str]]]:
+    """Parse the comment header above every documented public function.
+
+    `root` is the repository's `functions/` directory. Returns
+    `{name: {LABEL: [lines]}}`.
+
+    `# CATEGORY` is the opt-in: a header without one produces no entry. That
+    keeps bundled-plugin and prompt internals (`fish_prompt`, `sponge_filter_*`,
+    `fisher`, …) out of the manual with no exclusion list to maintain.
+
+    A file carrying exactly one header is associated with its own stem, so a
+    `function` nested inside a `type -q` guard still resolves. Only files with
+    several headers walk forward to the next `function` definition.
+    """
+    out: dict[str, dict[str, list[str]]] = {}
+    for path in sorted(root.glob("*.fish")):
+        lines = path.read_text(encoding="utf-8").split("\n")
+        blocks = _header_blocks(lines)
+        for end, sections in blocks:
+            if len(blocks) == 1:
+                name = path.stem
+            else:
+                after = (m.group(1) for ln in lines[end:] if (m := FUNC_DEF.match(ln)))
+                name = next(after, path.stem)
+            if name.startswith("_") or "CATEGORY" not in sections:
+                continue
+            out[name] = {
+                k: v[: len(v) - _trailing_blanks(v)] for k, v in sections.items()
+            }
+    return out
 
 
 def _sort_key(entry: Path) -> tuple:

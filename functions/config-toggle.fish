@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   config-settings
+#
 # SYNOPSIS
 #   config-toggle [args...]
 #

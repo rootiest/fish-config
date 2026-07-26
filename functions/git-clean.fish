@@ -13,8 +13,7 @@
 #   main/master automatically if the current branch is orphaned.
 #
 # ARGUMENTS
-#   -h, --help    Show help message
-#   -f, --force   Force-delete unmerged branches too
+#   -h, --help   Show help message
 #   -f, --force  Force-delete unmerged orphaned branches (git branch -D)
 #
 # RETURNS
