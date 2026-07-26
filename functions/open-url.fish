@@ -32,7 +32,7 @@
 #
 # EXAMPLE
 #   open-url https://git.rootiest.dev/rootiest/fish-config
-#   open-url -v "file://$HOME/.config/fish/docs/html/index.html"
+#   open-url -v https://fish-config-docs.pages.dev/
 function open-url --description 'Open a URL in the best available web browser'
     argparse h/help s/silent v/verbose -- $argv
     or return 1

@@ -5,6 +5,8 @@ built around a Catppuccin Mocha aesthetic with a curated set of modern
 CLI tool integrations, smart shell functions, and a heavily customized
 abbreviation system for keyboard-driven workflows.
 
+📖 **[Documentation site](https://fish-config-docs.pages.dev/)**
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -118,11 +120,16 @@ the watcher inert without uninstalling it.
 
 ## Documentation
 
-### [📖 Full Documentation Wiki](docs/wiki/index.md)
+### [📖 Documentation Site](https://fish-config-docs.pages.dev/)
 
-A multi-page Markdown wiki auto-generated from the single source file `docs/fish-config.md`
-on every push to `main`. It covers configuration variables, key bindings, abbreviations,
-all functions, the dependency catalog, customization, and more.
+A Starlight-powered site generated from `docs/manual/**` — the single source
+of truth — on every push to `main`. It covers configuration variables, key
+bindings, abbreviations, all functions, the dependency catalog, customization,
+and more, with full-text search.
+
+Contributing to the docs? Edit files under `docs/manual/**`, never the
+generated `docs/fish-config.md` — it's rebuilt from the manual tree and any
+hand-edits are discarded.
 
 To browse the docs from the terminal:
 
@@ -130,8 +137,7 @@ To browse the docs from the terminal:
 |---|---|
 | `help config` | Open the terminal manual in the best available pager |
 | `help config <keyword>` | Jump directly to a section matching the keyword |
-| `help config --html` | Open the pre-built HTML docs in the default browser |
-| `help config <keyword> --html` | Open HTML docs at the matching section anchor |
+| `help config --html` | Open the documentation site in the default browser |
 | `help config --man` | Open the compiled man page via `man -l` |
 | `help config <keyword> --man` | Open the man page jumping to the nearest match |
 | `repo-open` | Open this repo's web page in the browser (deep-links to the current branch and sub-directory) |
@@ -298,7 +304,7 @@ Command shadows react immediately; bindings, prompt, and abbreviations take effe
 
 ## Attribution
 
-The core of the [Zoxide integration](docs/wiki/2-path-setup.md) in this repository was originally adapted from the [icezyclon/zoxide.fish](https://github.com/icezyclon/zoxide.fish) plugin (MIT Licensed) and has since been heavily customized for performance and Fish 4.x compatibility.
+The core of the [Zoxide integration](https://fish-config-docs.pages.dev/02-path-setup/) in this repository was originally adapted from the [icezyclon/zoxide.fish](https://github.com/icezyclon/zoxide.fish) plugin (MIT Licensed) and has since been heavily customized for performance and Fish 4.x compatibility.
 
 ---
 

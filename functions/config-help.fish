@@ -3,7 +3,7 @@
 
 # SYNOPSIS
 #   config-help [section]
-#   config-help [section] --html
+#   config-help --html
 #   config-help [section] --man
 #   config-help --help
 #
@@ -14,14 +14,15 @@
 #   that matches the keyword. Lookup order: docs/fish-config.index (exact
 #   keyword aliases), then a normalized heading scan as fallback.
 #   When opened with ov a sticky navigation hint is shown at the top of the
-#   screen. Pass --html / -w to open the pre-built HTML version in the
-#   default browser, jumping to the matching section anchor when possible.
-#   Pass --man / -m to open the compiled man page; if a section keyword is
-#   given, the pager opens at the nearest match. Pass --help or -h for usage.
+#   screen. Pass --html / -w to open the published documentation website in
+#   the default browser (deep links to a section aren't supported there —
+#   use the site's search box). Pass --man / -m to open the compiled man
+#   page; if a section keyword is given, the pager opens at the nearest
+#   match. Pass --help or -h for usage.
 #
 # ARGUMENTS
 #   section     Optional keyword to jump to a matching section heading
-#   -w, --html  Open the offline HTML docs in the default browser
+#   -w, --html  Open the published documentation website in the default browser
 #   -m, --man   Open the compiled man page via man -l
 #   -h, --help  Print usage and navigation reference, then exit
 #
@@ -35,7 +36,6 @@
 #   config-help pkg
 #   config-help fish-deps
 #   config-help --html
-#   config-help keys --html
 #   config-help --man
 #   config-help keys --man
 #   config-help --help
@@ -48,8 +48,7 @@ function config-help --description 'Open the offline fish shell configuration ma
     set -l doc_file "$__fish_config_dir/docs/fish-config.md"
     set -l idx_file "$__fish_config_dir/docs/fish-config.index"
     set -l man_file "$__fish_config_dir/docs/fish-config.1"
-    set -l html_dir "$__fish_config_dir/docs/html"
-    set -l sitemap  "$html_dir/sitemap.json"
+    set -l site_url "https://fish-config-docs.pages.dev/"
 
     # ── Extract section keyword (first non-flag argument) ────────
     set -l section_kw ""
@@ -97,49 +96,22 @@ function config-help --description 'Open the offline fish shell configuration ma
 
     # ── --html / -w ──────────────────────────────────────────────
     if contains -- --html $argv; or contains -- -w $argv
-        if not test -f "$html_dir/index.html"
+        if test -n "$section_kw"
+            set_color yellow
+            echo "note: deep links aren't available on the website — opening the site root; use its search box to find '$section_kw'" >&2
+            set_color normal
+        end
+
+        if type -q xdg-open
+            xdg-open "$site_url" &>/dev/null &
+            disown
+        else
             set_color red
-            echo "error: HTML docs not found at $html_dir/index.html" >&2
+            echo "error: no opener found — visit $site_url" >&2
             set_color normal
             return 1
         end
-
-        # Default to the index page; resolve a section fragment when possible.
-        set -l html_path "index.html"
-        if test -n "$found_text"; and test -f "$sitemap"
-            # Convert heading text → pandoc anchor ID:
-            # lowercase → strip non-alphanumeric (keep spaces and hyphens)
-            # → spaces to hyphens → collapse runs → strip edge hyphens.
-            set -l anchor (string lower -- $found_text \
-                | string replace -ra '[^a-z0-9 -]' '' \
-                | string replace -ra ' +' '-' \
-                | string replace -ra -- '-+' '-' \
-                | string trim -c '-')
-            # 1. Sub-section: path stored as "filename.html#anchor"
-            set -l match (grep -o "\"path\":\"[^\"]*#$anchor\"" "$sitemap" | head -1)
-            if test -n "$match"
-                set html_path (string replace -r '"path":"([^"]+)"' '$1' -- $match)
-            else
-                # 2. Top-level section: own page — "id":"anchor"..."path":"filename.html"
-                set -l id_match (grep -o "\"id\":\"$anchor\"[^}]*\"path\":\"[^\"]*\"" "$sitemap" | head -1)
-                if test -n "$id_match"
-                    set html_path (string replace -r '.*"path":"([^"]+)"' '$1' -- $id_match)
-                else
-                    set_color yellow
-                    echo "note: no HTML anchor found for '$section_kw' — opening at top" >&2
-                    set_color normal
-                end
-            end
-        else if test -n "$section_kw"
-            set_color yellow
-            echo "note: no section matching '$section_kw' — opening at top" >&2
-            set_color normal
-        end
-
-        set -l page_url "file://$html_dir/$html_path"
-
-        open-url $page_url
-        return $status
+        return 0
     end
 
     # ── --man / -m ───────────────────────────────────────────────
@@ -197,8 +169,8 @@ function config-help --description 'Open the offline fish shell configuration ma
         echo "               Searches docs/fish-config.index for aliases first, then"
         echo "               falls back to a normalized (case- and punctuation-insensitive)"
         echo "               scan of heading lines."
-        echo "  "(set_color yellow)"-w, --html"(set_color normal)"   Open the offline HTML docs in the default browser."
-        echo "               If a section keyword is given, opens at the matching anchor."
+        echo "  "(set_color yellow)"-w, --html"(set_color normal)"   Open the published documentation website in the default browser."
+        echo "               Deep links aren't supported — use the site's search box."
         echo "  "(set_color yellow)"-m, --man"(set_color normal)"    Open the compiled man page via man -l."
         echo "               If a section keyword is given, jumps to the nearest match."
         echo ""
@@ -210,8 +182,7 @@ function config-help --description 'Open the offline fish shell configuration ma
         echo "  "(set_color green)"help config pkg"(set_color normal)"                   jump to the pkg function entry"
         echo "  "(set_color green)"help config fish-deps"(set_color normal)"             jump to fish-deps"
         echo "  "(set_color green)"help config abbreviations"(set_color normal)"         jump to Abbreviations section"
-        echo "  "(set_color green)"help config --html"(set_color normal)"                open HTML docs in browser"
-        echo "  "(set_color green)"help config keybindings --html"(set_color normal)"    open HTML at Key Bindings"
+        echo "  "(set_color green)"help config --html"(set_color normal)"                open the documentation website"
         echo "  "(set_color green)"help config --man"(set_color normal)"                 open compiled man page"
         echo "  "(set_color green)"help config pkg --man"(set_color normal)"             open man page at pkg section"
         echo ""

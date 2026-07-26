@@ -10,7 +10,7 @@ helpKeywords:
 ## config-help
 
     Synopsis:  config-help [SECTION]
-               config-help [SECTION] --html
+               config-help --html
                config-help [SECTION] --man
                config-help -h | --help
 
@@ -20,11 +20,11 @@ helpKeywords:
     keyword (case-insensitive; checks fish-config.index aliases first).
 
     Flags:
-      --html / -w   Open docs/html/index.html in the default browser.
-                    If SECTION is given, opens at the matching anchor.
-                    Detects the browser via xdg-mime x-scheme-handler/https,
-                    then known binaries, then xdg-open as last resort.
-                    Respects $fish_help_browser and $BROWSER.
+      --html / -w   Open the published documentation website
+                    (https://fish-config-docs.pages.dev/) in the default
+                    browser via xdg-open. Deep links to a section aren't
+                    supported; if SECTION is given, a note points you to the
+                    site's search box instead.
       --man  / -m   Open docs/fish-config.1 via man -l directly.
                     If SECTION is given, jumps to the nearest match.
       --help / -h   Print usage and navigation key reference.
@@ -32,7 +32,6 @@ helpKeywords:
     config-help keybindings
     config-help pkg
     config-help --html
-    config-help pkg --html
     config-help --man
     config-help pkg --man
 
@@ -60,7 +59,7 @@ helpKeywords:
       5. xdg-open            (last resort)
 
     open-url https://git.rootiest.dev/rootiest/fish-config
-    open-url "file://$HOME/.config/fish/docs/html/index.html"
+    open-url -v https://fish-config-docs.pages.dev/
 
     Used internally by config-help --html.
 

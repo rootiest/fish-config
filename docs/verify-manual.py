@@ -11,7 +11,7 @@ from pathlib import Path
 import manualtools as mt
 
 # docs/build-manual.py follows this repo's hyphenated CLI-script naming
-# convention (matching split-manual.py, verify-manual.py), which means it
+# convention (matching verify-manual.py), which means it
 # cannot satisfy a plain `import build_manual` on its own — Python's import
 # statement never treats a hyphen as an underscore. Load it explicitly under
 # the name the tests expect and register it in sys.modules; every later

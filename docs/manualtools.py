@@ -4,7 +4,7 @@
 """Shared helpers for the docs/manual SSOT pipeline.
 
 Frontmatter parsing, deterministic tree ordering, and heading level shifts.
-Used by build-manual.py, split-manual.py, and verify-manual.py.
+Used by build-manual.py and verify-manual.py.
 """
 
 import re
