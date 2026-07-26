@@ -1686,7 +1686,7 @@ yt-dlp --no-embed-thumbnail dQw4w9WgXcQ
 .nf
 \f[C]
 Synopsis:  config-help [SECTION]
-           config-help [SECTION] --html
+           config-help --html
            config-help [SECTION] --man
            config-help -h | --help
 
@@ -1696,11 +1696,11 @@ cat). If SECTION is given, jumps to the first heading matching that
 keyword (case-insensitive; checks fish-config.index aliases first).
 
 Flags:
-  --html / -w   Open docs/html/index.html in the default browser.
-                If SECTION is given, opens at the matching anchor.
-                Detects the browser via xdg-mime x-scheme-handler/https,
-                then known binaries, then xdg-open as last resort.
-                Respects $fish_help_browser and $BROWSER.
+  --html / -w   Open the published documentation website
+                (https://fish-config-docs.pages.dev/) in the default
+                browser via xdg-open. Deep links to a section aren\[aq]t
+                supported; if SECTION is given, a note points you to the
+                site\[aq]s search box instead.
   --man  / -m   Open docs/fish-config.1 via man -l directly.
                 If SECTION is given, jumps to the nearest match.
   --help / -h   Print usage and navigation key reference.
@@ -1708,7 +1708,6 @@ Flags:
 config-help keybindings
 config-help pkg
 config-help --html
-config-help pkg --html
 config-help --man
 config-help pkg --man
 
@@ -1739,7 +1738,7 @@ Resolution order:
   5. xdg-open            (last resort)
 
 open-url https://git.rootiest.dev/rootiest/fish-config
-open-url \[dq]file://$HOME/.config/fish/docs/html/index.html\[dq]
+open-url -v https://fish-config-docs.pages.dev/
 
 Used internally by config-help --html.
 
@@ -2880,36 +2879,23 @@ local.fish in turn sources secrets.fish when it exists.
 .PP
    *   *   *   *   *
 .SH 11. VIEWING THIS MANUAL
-.SS With ov (recommended)
+.PP
+There are four ways to read this manual.
+.SS The documentation website
 .IP
 .nf
 \f[C]
-help config
+help config --html
 \f[R]
 .fi
 .PP
-ov renders the Markdown with syntax highlighting and section-based
-navigation.
-.IP
-.nf
-\f[C]
-Space       next section
-\[ha]           previous section
-Alt+u       toggle section list sidebar
-/           search forward
-n / N       next / previous search match
-g           go to line number
-j           interactive jump target (line, %, or \[aq]section\[aq])
-q           quit
-\f[R]
-.fi
-.SS With bat
-.IP
-.nf
-\f[C]
-bat --language=markdown --paging=always \[ti]/.config/fish/docs/fish-config.md
-\f[R]
-.fi
+Opens https://fish-config-docs.pages.dev/ in the default browser \[em]
+the Starlight-powered site built from \f[V]docs/manual/**\f[R] on every
+push to \f[V]main\f[R].
+It has a section sidebar and full-text search.
+Deep links to a specific section aren\[cq]t supported from the command
+line; once the site opens, use its search box to jump straight to what
+you need.
 .SS As a man page
 .IP
 .nf
@@ -2936,33 +2922,49 @@ NOTE: fish-config (hyphen) is this config\[cq]s man page.
 fish_config (underscore) is fish\[cq]s built-in browser-based
 configuration tool \[em] a completely separate command.
 Do not mix them up.
-.SS In the browser (HTML)
+.SS In the terminal
 .IP
 .nf
 \f[C]
-help config --html
-help config pkg --html
+help config
+help config keybindings
 \f[R]
 .fi
 .PP
-Opens docs/html/index.html in the default web browser.
-If a section keyword is given, the browser opens directly at the
-matching anchor (resolved via docs/html/sitemap.json).
-Browser detection queries the system\[cq]s x-scheme-handler/https MIME
-entry (via xdg-mime) to find the real browser binary, then falls back
-through known browser binaries (firefox, chromium, vivaldi, etc.), and
-finally xdg-open as a last resort.
-Set $fish_help_browser or $BROWSER to override.
-.SS As a wiki
+Without a pager available beyond the basics,
+\f[V]help config [SECTION]\f[R] opens the Markdown manual in the best
+available viewer, falling back through:
+.IP
+.nf
+\f[C]
+1. ov + bat   section navigation + syntax highlighting (best)
+2. ov alone   section navigation, raw Markdown
+3. bat alone  syntax highlighting, use / to search
+4. man -l     pre-compiled man page (if available)
+5. less       plain text with line-jump
+6. cat        plain output
+\f[R]
+.fi
 .PP
-The generated Markdown wiki lives in docs/wiki/.
-index.md provides the project overview and a full table of contents.
-Each section page has a navigation bar at the top linking to every other
-section.
+With ov, the Markdown renders with syntax highlighting and section-based
+navigation:
+.IP
+.nf
+\f[C]
+Space       next section
+\[ha]           previous section
+Alt+u       toggle section list sidebar
+/           search forward
+n / N       next / previous search match
+g           go to line number
+j           interactive jump target (line, %, or \[aq]section\[aq])
+q           quit
+\f[R]
+.fi
 .PP
-The wiki is auto-generated from this file by the CI pipeline on every
-push to main that changes docs/fish-config.md.
-.SS Jumping to a section
+If SECTION is given, the pager opens at the first heading that matches
+the keyword (case-insensitive; checks \f[V]docs/fish-config.index\f[R]
+aliases first, then falls back to a normalized heading scan):
 .IP
 .nf
 \f[C]
@@ -2973,7 +2975,18 @@ help config logs
 help config fish-deps
 \f[R]
 .fi
+.SS Reading the source directly
 .PP
-The keyword is matched case-insensitively against section headings.
+\f[V]docs/manual/**\f[R] is the single source of truth this manual, the
+man page, and the website are all generated from.
+Numbered files and directories correspond to the numbered sections in
+this manual \[em] browse them in any editor, or from a shell:
+.IP
+.nf
+\f[C]
+cd \[ti]/.config/fish/docs/manual
+grep -rn \[dq]keybindings\[dq] .
+\f[R]
+.fi
 .SH AUTHORS
 Rootiest.
