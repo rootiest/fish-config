@@ -1,0 +1,28 @@
+/* Catppuccin Mocha (dark) / Latte (light) mapped onto Starlight tokens. */
+:root {
+  --sl-color-accent-low: #1e1e2e;
+  --sl-color-accent: #89b4fa;
+  --sl-color-accent-high: #b4befe;
+  --sl-color-white: #cdd6f4;
+  --sl-color-gray-1: #bac2de;
+  --sl-color-gray-2: #a6adc8;
+  --sl-color-gray-3: #7f849c;
+  --sl-color-gray-4: #585b70;
+  --sl-color-gray-5: #45475a;
+  --sl-color-gray-6: #313244;
+  --sl-color-black: #181825;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #dce0e8;
+  --sl-color-accent: #1e66f5;
+  --sl-color-accent-high: #7287fd;
+  --sl-color-white: #4c4f69;
+  --sl-color-gray-1: #5c5f77;
+  --sl-color-gray-2: #6c6f85;
+  --sl-color-gray-3: #7c7f93;
+  --sl-color-gray-4: #9ca0b0;
+  --sl-color-gray-5: #bcc0cc;
+  --sl-color-gray-6: #ccd0da;
+  --sl-color-black: #eff1f5;
+}
