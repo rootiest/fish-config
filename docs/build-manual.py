@@ -385,6 +385,32 @@ def _prettify_block(block: list[str], entry_name: str | None) -> str:
     return "\n\n".join(chunk for chunk in out if chunk.strip())
 
 
+ASIDE_LABELS: dict[str, tuple[str, str, str | None]] = {
+    "NOTE": ("note", "Note", None),
+    "IMPORTANT": ("note", "Important", "star"),
+    "TIP": ("tip", "Tip", None),
+    "HINT": ("tip", "Hint", "question-circle"),
+    "WARNING": ("caution", "Warning", "warning"),
+    "CAUTION": ("caution", "Caution", None),
+    "DANGER": ("danger", "Danger", None),
+}
+ASIDE_RE = re.compile(rf"^({'|'.join(ASIDE_LABELS)}):\s*(.*)$")
+
+
+def _as_aside(para: list[str]) -> str | None:
+    """Render a `LABEL: ...` flat paragraph as a Starlight <Aside>, else None."""
+    m = ASIDE_RE.match(para[0])
+    if not m:
+        return None
+    label, rest = m.groups()
+    aside_type, title, icon = ASIDE_LABELS[label]
+    body = "\n".join(([rest] if rest else []) + para[1:])
+    attrs = f'type="{aside_type}" title="{title}"'
+    if icon:
+        attrs += f' icon="{icon}"'
+    return f"<Aside {attrs}>\n{body}\n</Aside>"
+
+
 def prettify(body: str, entry_name: str | None = None) -> str:
     """Rewrite a body's indented code blocks for the website.
 

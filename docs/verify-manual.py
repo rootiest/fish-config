@@ -538,6 +538,60 @@ def test_prettify_titles_paths_and_commented_examples():
     )
 
 
+def test_as_aside_converts_a_single_line_label():
+    """A `LABEL: text` line becomes a titled <Aside> with the label's type."""
+    import build_manual
+
+    out = build_manual._as_aside(["TIP: Use `-h` on any function for its help text."])
+    assert out == (
+        '<Aside type="tip" title="Tip">\n'
+        "Use `-h` on any function for its help text.\n"
+        "</Aside>"
+    ), f"unexpected aside output:\n{out}"
+
+
+def test_as_aside_converts_a_label_and_list():
+    """A label line immediately followed by a list becomes one aside body."""
+    import build_manual
+
+    out = build_manual._as_aside(
+        [
+            "NOTE:",
+            "  - Command shadows react immediately.",
+            "  - conf.d-level components take effect in new shells.",
+        ]
+    )
+    assert out == (
+        '<Aside type="note" title="Note">\n'
+        "  - Command shadows react immediately.\n"
+        "  - conf.d-level components take effect in new shells.\n"
+        "</Aside>"
+    ), f"unexpected aside output:\n{out}"
+
+
+def test_as_aside_adds_icon_only_where_types_collide():
+    """WARNING and CAUTION share the `caution` type; only WARNING gets an icon."""
+    import build_manual
+
+    warning = build_manual._as_aside(["WARNING: Deletes files permanently."])
+    caution = build_manual._as_aside(["CAUTION: Slow on large trees."])
+    assert 'icon="warning"' in warning, f"WARNING lost its icon override:\n{warning}"
+    assert "icon=" not in caution, f"CAUTION should use its type's default icon:\n{caution}"
+
+
+def test_as_aside_rejects_non_label_paragraphs():
+    """Only the closed set of 7 labels triggers an aside; other WORD: prose does not."""
+    import build_manual
+
+    cases = {
+        "Example prefix": ["Example:", "rm file.txt"],
+        "sentence with a colon": ["Options: pass one of the flags below."],
+        "lowercase label": ["note: this should not become an aside"],
+    }
+    for label, para in cases.items():
+        assert build_manual._as_aside(para) is None, f"{label} was wrongly asided"
+
+
 def test_prettify_is_site_only():
     """The SSOT keeps the indented form the man-page pipeline depends on."""
     import build_manual
