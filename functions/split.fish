@@ -18,7 +18,7 @@
 #   command...        Command to run in the new pane; opens a bare fish
 #                     shell if omitted
 #
-# RETURNS
+# EXIT STATUS
 #   0  Pane opened successfully
 #   1  Not running inside Kitty or WezTerm
 #

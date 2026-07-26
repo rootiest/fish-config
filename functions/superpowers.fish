@@ -18,7 +18,7 @@
 #   -g, --global  Apply at user/global scope instead of workspace/project
 #   -h, --help    Show usage help
 #
-# RETURNS
+# EXIT STATUS
 #   0  Mode applied successfully
 #   1  No on/off mode specified
 #

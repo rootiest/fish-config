@@ -14,9 +14,12 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the clipboard tool
 #
-# RETURNS
-#   0  Clipboard contents printed successfully
+# EXIT STATUS
+#   0  Clipboard contents read successfully
 #   1  No supported clipboard tool found
+#
+# RETURNS
+#   The clipboard contents, printed to stdout
 #
 # EXAMPLE
 #   paste > file.txt

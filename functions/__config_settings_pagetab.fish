@@ -15,8 +15,11 @@
 #   active_idx  0–3, the active page index
 #   iw          inner width in columns to pad the strip to
 #
+# EXIT STATUS
+#   0  Always
+#
 # RETURNS
-#   0  Always; prints the tab strip (no trailing newline beyond printf's)
+#   The rendered tab strip, printed to stdout (no trailing newline beyond printf's)
 #
 # EXAMPLE
 #   set strip (__config_settings_pagetab 2 76)

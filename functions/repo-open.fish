@@ -37,9 +37,12 @@
 #   -r, --root   Ignore the current sub-directory; link to the repo root
 #   -h, --help   Print usage and exit
 #
-# RETURNS
-#   0  URL opened (or printed)
+# EXIT STATUS
+#   0  URL opened, or resolved with -p/--print
 #   1  Not a git repo, no origin remote, or browser launch failed
+#
+# RETURNS
+#   With -p/--print, the resolved repository URL, printed to stdout
 #
 # EXAMPLE
 #   repo-open              # open current branch (+ subdir) in browser

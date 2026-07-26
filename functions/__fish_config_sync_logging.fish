@@ -14,7 +14,7 @@
 #   Safe to call at any time; wrapper removal only affects files bearing
 #   the generated version-marker comment.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

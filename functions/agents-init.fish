@@ -66,7 +66,7 @@
 #   -s, --silent   Suppress all output; errors only (standard UNIX convention)
 #   -h, --help     Show this help message and exit
 #
-# RETURNS
+# EXIT STATUS
 #   0  Setup completed successfully
 #   1  Fatal error (git init failed, move failed, etc.)
 #

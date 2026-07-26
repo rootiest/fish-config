@@ -21,14 +21,17 @@
 # ARGUMENTS
 #   (none)
 #
-# RETURNS
-#   0  A key was read; one of these tokens is printed to stdout:
-#        up down left right   arrow keys
-#        space tab backtab enter escape backspace
-#        quit                 Ctrl-C (byte 3) in raw mode
-#        <char>               any other single printable character
-#        ""                   nothing decodable was read
+# EXIT STATUS
+#   0  A key was read
 #   1  The terminal could not be put into raw mode (stdin is not a TTY)
+#
+# RETURNS
+#   One token, printed to stdout:
+#     up down left right   arrow keys
+#     space tab backtab enter escape backspace
+#     quit                 Ctrl-C (byte 3) in raw mode
+#     <char>               any other single printable character
+#     ""                   nothing decodable was read
 #
 # EXAMPLE
 #   set -l key (__config_settings_read_key)

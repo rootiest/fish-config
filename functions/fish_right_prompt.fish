@@ -11,7 +11,7 @@
 #   context (if non-default) — that block is paired with the starship prompt
 #   which already guards on both conditions.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

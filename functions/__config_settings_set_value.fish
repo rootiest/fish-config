@@ -17,7 +17,7 @@
 #   type     "list" (whitespace-split) or any other tag (single value)
 #   value    The new value; empty string erases (reset to default)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

@@ -15,7 +15,7 @@
 # ARGUMENTS
 #   owner/repo  The repository path in owner/name format
 #
-# RETURNS
+# EXIT STATUS
 #   0  Issues linked and synced (or no unlinked issues found)
 #   1  Missing required argument or environment variables
 #

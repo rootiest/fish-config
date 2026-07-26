@@ -13,7 +13,7 @@
 #   otherwise require a password entry. Clears the sudo credential cache
 #   when re-enabling, so the lockdown takes effect immediately.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Rule toggled
 #
 # EXAMPLE

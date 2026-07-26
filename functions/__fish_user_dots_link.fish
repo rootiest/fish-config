@@ -23,7 +23,7 @@
 # ARGUMENTS
 #   (none)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   args...   Forwarded verbatim to git fetch
 #
-# RETURNS
+# EXIT STATUS
 #   0  Fetch and status succeeded
 #   1  Not inside a git work tree
 #

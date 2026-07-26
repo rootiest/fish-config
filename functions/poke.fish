@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   file  One or more file paths to create
 #
-# RETURNS
+# EXIT STATUS
 #   0  Files created
 #   1  No file argument provided
 #

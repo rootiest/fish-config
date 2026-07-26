@@ -15,7 +15,7 @@
 # ARGUMENTS
 #   commands  Bash command string to execute and replay
 #
-# RETURNS
+# EXIT STATUS
 #   0  Commands ran successfully and changes were replayed
 #   1  Bash command exited with a non-zero status
 #

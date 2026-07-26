@@ -572,6 +572,43 @@ def test_sidebar_has_no_duplicate_functions_entry():
     assert len(labels) == 15, f"expected Overview + 14 categories, got {len(labels)}"
 
 
+def test_exit_status_never_describes_stdout_content():
+    """EXIT STATUS documents $status; stdout/printed content belongs in RETURNS.
+
+    Regression guard for the RETURNS -> EXIT STATUS split: a row like
+    "0  Patterns appended, or the requested content printed" re-introduces
+    the exact ambiguity (exit code vs. printed output) the split exists to
+    remove. A `--stdout`-style flag name is not itself an offense — only
+    "stdout" used as a bare word (not part of a flag) counts.
+    """
+    offenders = []
+    for name, fn in _parsed_functions().items():
+        for line in fn.get("EXIT STATUS", []):
+            if re.search(r"(?<!-)\bstdout\b|\bprinted\b", line, re.IGNORECASE):
+                offenders.append(f"{name}: {line.strip()}")
+    assert not offenders, "stdout/printed language leaked into EXIT STATUS:\n  " + "\n  ".join(
+        offenders
+    )
+
+
+def test_returns_renders_after_exit_status():
+    """When a function has both, Exit Status: must render before Returns:."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["thing"],
+        "DESCRIPTION": ["Does a thing."],
+        "EXIT STATUS": ["0  Always"],
+        "RETURNS": ["The thing, printed to stdout"],
+        "EXAMPLE": ["thing"],
+    }
+    out = build_manual.render_entry(fn, [])
+    exit_pos = out.find("Exit Status:")
+    returns_pos = out.find("Returns:")
+    assert exit_pos != -1 and returns_pos != -1, f"missing a section head:\n{out}"
+    assert exit_pos < returns_pos, f"Returns: rendered before Exit Status::\n{out}"
+
+
 def test_site_avoids_reserved_dir():
     """No output directory may collide with a Cloudflare Pages reserved name.
 

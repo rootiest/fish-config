@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the joplin command
 #
-# RETURNS
+# EXIT STATUS
 #   0  Joplin ran successfully
 #   1  joplin binary not found in PATH
 #

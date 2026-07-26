@@ -416,7 +416,12 @@ def prettify(body: str, entry_name: str | None = None) -> str:
     return "\n".join(out)
 
 
-ENTRY_HEADS = {"ARGUMENTS": "Arguments:", "RETURNS": "Returns:", "NOTES": "Notes:"}
+ENTRY_HEADS = {
+    "ARGUMENTS": "Arguments:",
+    "EXIT STATUS": "Exit Status:",
+    "RETURNS": "Returns:",
+    "NOTES": "Notes:",
+}
 
 
 def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str:

@@ -35,7 +35,7 @@
 #   update   Update all installed deps
 #   sync     Install missing deps, then update all
 #
-# RETURNS
+# EXIT STATUS
 #   0  Subcommand completed
 #   1  Unknown subcommand
 #

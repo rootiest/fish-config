@@ -19,7 +19,7 @@
 #   scope    "universal" or "session"
 #   value    "on", "off", "DEFAULT", or any arbitrary string (universal scope only)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

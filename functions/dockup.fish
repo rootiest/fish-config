@@ -15,7 +15,7 @@
 #   -h, --help   Show help message
 #   directory    Path to the compose project (defaults to current directory)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Services updated and running
 #   1  Directory not found or no docker-compose.yml present
 #

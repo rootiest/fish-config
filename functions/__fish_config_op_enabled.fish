@@ -23,7 +23,7 @@
 #                      __fish_config_op_logging, or
 #                      __fish_config_op_greeting
 #
-# RETURNS
+# EXIT STATUS
 #   0  Component enabled (category explicitly truthy; or category unset and master not falsy)
 #   1  Component disabled (category explicitly falsy; or category unset and master falsy; or no argument with falsy master)
 #

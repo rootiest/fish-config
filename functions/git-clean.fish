@@ -16,7 +16,7 @@
 #   -h, --help   Show help message
 #   -f, --force  Force-delete unmerged orphaned branches (git branch -D)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Cleanup complete
 #   1  Argument parsing failed
 #

@@ -27,7 +27,7 @@
 #   dismiss    Stop the per-session reminder
 #   -h, --help Show this help
 #
-# RETURNS
+# EXIT STATUS
 #   0  Success
 #   1  Unknown subcommand/flag, kitty missing, or a write failure
 #

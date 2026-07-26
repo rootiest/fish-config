@@ -24,7 +24,7 @@
 #   cur_scope  "universal" or "session"
 #   var1–var7  Variable names for rows 0–6 (6 categories + master)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

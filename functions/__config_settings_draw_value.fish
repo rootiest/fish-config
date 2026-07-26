@@ -20,7 +20,7 @@
 #   cur_row  0-based highlighted row within the page
 #   page     "sponge" or "paths"
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

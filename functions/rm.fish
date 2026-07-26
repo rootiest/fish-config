@@ -25,7 +25,7 @@
 #   -r, -R, --recursive Forwarded to trash put alongside path arguments
 #   args...             Files or paths to trash or remove
 #
-# RETURNS
+# EXIT STATUS
 #   0  Operation succeeded
 #   1  trash put failed or file not found
 #

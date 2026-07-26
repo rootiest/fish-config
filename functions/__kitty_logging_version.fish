@@ -11,8 +11,11 @@
 # ARGUMENTS
 #   file  Path to a watcher script
 #
+# EXIT STATUS
+#   0  Always
+#
 # RETURNS
-#   0  Always (integer printed to stdout)
+#   The watcher version as an integer (0 if absent), printed to stdout
 #
 # EXAMPLE
 #   __kitty_logging_version ~/.config/kitty/fish-config-watcher.py

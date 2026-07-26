@@ -22,7 +22,7 @@
 #   prompt...     Prompt forwarded to aichat
 #   -h, --help    Show usage help
 #
-# RETURNS
+# EXIT STATUS
 #   aichat's exit status.
 #
 # EXAMPLE

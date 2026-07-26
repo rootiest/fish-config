@@ -9,8 +9,11 @@
 #   order: $KITTY_CONFIG_DIRECTORY, else $XDG_CONFIG_HOME/kitty, else
 #   ~/.config/kitty.
 #
+# EXIT STATUS
+#   0  Always
+#
 # RETURNS
-#   0  Always (path printed to stdout)
+#   The Kitty configuration directory path, printed to stdout
 #
 # EXAMPLE
 #   set -l dir (__kitty_logging_dir)

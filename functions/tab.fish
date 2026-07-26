@@ -15,7 +15,7 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the terminal's launch command
 #
-# RETURNS
+# EXIT STATUS
 #   0  Tab opened successfully
 #   1  No supported terminal found
 #

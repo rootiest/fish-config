@@ -25,7 +25,7 @@
 # ARGUMENTS
 #   ARGS  Any arguments forwarded verbatim to the underlying agy binary
 #
-# RETURNS
+# EXIT STATUS
 #   Exit status of the underlying agy binary
 #
 # EXAMPLE

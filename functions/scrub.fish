@@ -19,7 +19,7 @@
 #   -d, --dry-run     Show targets without deleting
 #   -h, --help        Show usage help
 #
-# RETURNS
+# EXIT STATUS
 #   0  Sweep completed (or dry run shown)
 #   1  fd not found, or unknown argument provided
 #

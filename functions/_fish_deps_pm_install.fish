@@ -12,7 +12,7 @@
 # ARGUMENTS
 #   pkg  The package name to install
 #
-# RETURNS
+# EXIT STATUS
 #   0  Package installed successfully
 #   1  No supported package manager found
 #

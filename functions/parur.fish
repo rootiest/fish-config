@@ -12,7 +12,7 @@
 #   pacman -Qi previews, then removes the selected packages using paru or yay.
 #   Arch Linux only.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Packages removed or none selected
 #   1  No AUR helper (paru or yay) found
 #

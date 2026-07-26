@@ -27,7 +27,7 @@
 #   -u, --uninstall  Force uninstall mode
 #   package          One or more package names to install or remove
 #
-# RETURNS
+# EXIT STATUS
 #   0  Operation completed
 #   1  No supported package manager found, unknown flag, or package operation failed
 #

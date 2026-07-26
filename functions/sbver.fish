@@ -16,7 +16,7 @@
 # ARGUMENTS
 #   --brief  Suppress per-file output; show only the final summary
 #
-# RETURNS
+# EXIT STATUS
 #   0  All binaries verified (or summary shown)
 #   1  sbctl is not installed
 #

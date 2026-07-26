@@ -12,7 +12,7 @@
 #   unset) or tmux is missing. Shared by conf.d/tmux-logging.fish (shell
 #   startup) and __fish_config_sync_logging (C5 re-enable) so both stay in sync.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

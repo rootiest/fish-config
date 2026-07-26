@@ -12,7 +12,7 @@
 # ARGUMENTS
 #   variable_name  Name of the variable to check (without $ prefix)
 #
-# RETURNS
+# EXIT STATUS
 #   0  True (opt-in): value matches 1, true, yes, on, or y
 #   1  False (opt-out): value matches 0, false, no, off, or n
 #   2  Empty: variable is unset or empty

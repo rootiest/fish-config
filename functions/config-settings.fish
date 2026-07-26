@@ -56,7 +56,7 @@
 # ARGUMENTS
 #   -h, --help  Print usage and exit
 #
-# RETURNS
+# EXIT STATUS
 #   0  Exited normally (q or Escape pressed)
 #   1  Unknown flag passed
 #

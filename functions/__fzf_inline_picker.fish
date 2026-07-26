@@ -9,7 +9,7 @@
 #   into the command line at the cursor position. Bound to @@ by default.
 #   Repaints the prompt after selection or cancellation.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always; no-op if fzf is cancelled
 #
 # EXAMPLE

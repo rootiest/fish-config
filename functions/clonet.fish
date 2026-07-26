@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to clone-in-kitty (typically a repo URL)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Repository cloned
 #   1  Not running inside Kitty terminal
 #

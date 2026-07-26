@@ -20,7 +20,7 @@
 # ARGUMENTS
 #   prefix  Log-name prefix to prune (e.g. tmux, zellij)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE
