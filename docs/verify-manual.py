@@ -437,6 +437,23 @@ def test_as_ruled_table_converts_header_rule_rows():
     assert "| `spwin` | Kitty or WezTerm |" in out
 
 
+def test_as_ruled_table_converts_per_column_dash_rule():
+    """RST-style rule (one dash run per column, gapped like the header) tables too."""
+    import build_manual
+
+    out = build_manual._as_ruled_table(
+        [
+            "Variable                        Disables",
+            "------------------------------  ------------------------------------",
+            "__fish_config_op_aliases        Command shadows and flag injection",
+            "__fish_config_op_autoexec       Startup side-effects",
+        ]
+    )
+    assert out is not None, "a per-column dashed rule was rejected"
+    assert out.splitlines()[0] == "| Variable | Disables |"
+    assert "| `__fish_config_op_aliases` | Command shadows and flag injection |" in out
+
+
 def test_as_ruled_table_folds_wrapped_continuations():
     """A row that splits into one cell continues the previous row's last column."""
     import build_manual

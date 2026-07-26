@@ -214,11 +214,11 @@ FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([\w-]+\.\w+)\s*$")
 
 CELL_SPLIT = re.compile(r"\s{2,}")
 
-# A solid rule line under a header row — the "Component Reference" tables'
+# A rule line under a header row — the "Component Reference" tables'
 # authoring convention (header, dashes, data rows all at the same indent,
-# no ":"-terminated label). Distinct enough from CELL_SPLIT-based prose that
-# it needs its own check rather than overloading _as_table's indent rule.
-RULE_RE = re.compile(r"^[─\-]{10,}$")
+# no ":"-terminated label). Either one solid run of dashes, or (RST-style)
+# one dash run per column, gapped the same way CELL_SPLIT splits cells.
+RULE_CELL_RE = re.compile(r"^[─\-]{3,}$")
 
 
 def _cell(text: str, code: bool) -> str:
@@ -280,7 +280,10 @@ def _as_ruled_table(para: list[str]) -> str | None:
     else that doesn't match the header's column count is a source alignment
     bug, so bail out to the code-block fallback rather than guess.
     """
-    if len(para) < 4 or not RULE_RE.match(para[1].strip()):
+    if len(para) < 4:
+        return None
+    rule_cells = CELL_SPLIT.split(para[1].strip())
+    if not all(RULE_CELL_RE.match(cell) for cell in rule_cells):
         return None
     header = CELL_SPLIT.split(para[0].strip())
     n = len(header)
