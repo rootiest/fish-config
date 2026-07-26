@@ -679,6 +679,7 @@ installed.
 Arguments:
   args...  Files or directories to display
 
+Example:
 cat README.md
 cat \[ti]/projects/myapp
 \f[R]
@@ -696,6 +697,7 @@ Arguments:
   source  Source file or directory
   dest    Destination path
 
+Example:
 copy ./mydir/ \[ti]/backup
 copy ./mydir/ \[ti]/backup    # copies mydir INTO backup, not backup/mydir/
 \f[R]
@@ -716,6 +718,7 @@ Arguments:
   --dua    Force dua  (fast interactive space analyzer)
   args...  Files/directories or flags forwarded to the selected tool
 
+Example:
 du \[ti]/Downloads
 du --disk
 \f[R]
@@ -732,6 +735,7 @@ current directory if no argument is given.
 Arguments:
   dir  Directory to summarize (defaults to current directory)
 
+Example:
 dusize \[ti]/Downloads
 dusize \[ti]/Videos
 \f[R]
@@ -748,6 +752,7 @@ falls back to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 lD \[ti]/projects
 \f[R]
 .fi
@@ -763,6 +768,7 @@ falls back to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 ls \[ti]/projects
 ls
 ls -a \[ti]/projects
@@ -780,6 +786,7 @@ per line with icons. Uses eza, falls back to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 lsr \[ti]/projects
 \f[R]
 .fi
@@ -795,6 +802,7 @@ Uses eza, falls back to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 lss \[ti]/downloads
 \f[R]
 .fi
@@ -810,6 +818,7 @@ Uses eza, falls back to lsd, then to system ls -R.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 lstree \[ti]/projects/myapp
 \f[R]
 .fi
@@ -825,6 +834,7 @@ falls back to lsd, then to system ls -R.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 lt \[ti]/projects
 \f[R]
 .fi
@@ -841,6 +851,7 @@ to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 ltr \[ti]/projects
 \f[R]
 .fi
@@ -856,6 +867,7 @@ eza, falls back to lsd, then to system ls -lX.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Example:
 lx \[ti]/projects
 \f[R]
 .fi
@@ -879,6 +891,7 @@ Returns:
   0  Directory created (or already existed) and entered successfully
   1  Directory creation or cd failed
 
+Example:
 mkcd \[ti]/projects/myapp
 mkcd \[ti]/projects/newapp/src
 \f[R]
@@ -897,6 +910,7 @@ command mkdir in non-interactive contexts.
 Arguments:
   args...  Directories to create, or flags passed through to command mkdir
 
+Example:
 mkdir \[ti]/projects/myapp/src
 \f[R]
 .fi
@@ -916,6 +930,7 @@ Returns:
   0  Files created
   1  No file argument provided
 
+Example:
 poke \[ti]/projects/new/src/main.fish
 \f[R]
 .fi
@@ -932,6 +947,7 @@ to plain rg on other terminals.
 Arguments:
   args...  Arguments forwarded to ripgrep
 
+Example:
 rg \[dq]TODO\[dq] src/
 rg \[dq]fish_greeting\[dq] \[ti]/.config/fish/
 rg -l \[dq]TODO\[dq] \[ti]/projects/myapp
@@ -967,6 +983,7 @@ Returns:
 Notes:
   Falls back to /usr/bin/rm when trash is unavailable.
 
+Example:
 rm file.txt
 rm -e
 rm -S sensitive_key.pem
@@ -993,6 +1010,7 @@ Returns:
   0  Sweep completed (or dry run shown)
   1  fd not found, or unknown argument provided
 
+Example:
 scrub
 scrub -a
 scrub -d
@@ -1011,6 +1029,7 @@ frequently-visited directories using fzf.
 Arguments:
   query  Optional search term to pre-filter the directory list
 
+Example:
 cdi myproject
 \f[R]
 .fi
@@ -1030,6 +1049,7 @@ Returns:
   0  Repository cloned
   1  Not running inside Kitty terminal
 
+Example:
 clone https://github.com/user/repo.git
 \f[R]
 .fi
@@ -1049,6 +1069,7 @@ Returns:
   0  Repository cloned
   1  Not running inside Kitty terminal
 
+Example:
 clonet https://github.com/user/repo.git
 \f[R]
 .fi
@@ -1086,6 +1107,7 @@ Returns:
   0  Editor launched successfully
   1  Conflicting flags, no editor found, or clipboard read failed
 
+Example:
 edit notes.txt
 edit --visual \[ti]/.config/fish/config.fish
 edit --terminal --new todo.md
@@ -1111,6 +1133,7 @@ Returns:
   The edited command\[aq]s exit status, or a message when history lookup
   found nothing.
 
+Example:
 fc
 fc git
 \f[R]
@@ -1127,6 +1150,7 @@ as fallbacks in that order.
 Arguments:
   args...  Files or options forwarded to the pager
 
+Example:
 less /var/log/syslog
 \f[R]
 .fi
@@ -1142,6 +1166,7 @@ auto-attach or session management hooks.
 Arguments:
   args...  Arguments forwarded to fish
 
+Example:
 rawfish
 \f[R]
 .fi
@@ -1157,6 +1182,7 @@ is not installed.
 Arguments:
   args...  Files or options forwarded to nvim -R or less
 
+Example:
 view /etc/fstab
 \f[R]
 .fi
@@ -1192,6 +1218,7 @@ Returns:
   0  Subcommand succeeded
   1  Bad usage, target is not a git repo, or target not registered
 
+Example:
 cd \[ti]/src/qmk_firmware; and auto-pull add
 auto-pull add \[ti]/work/api
 auto-pull list
@@ -1214,6 +1241,7 @@ Returns:
   0  Branch checked out or created
   1  Not inside a git work tree
 
+Example:
 branch feature/new-ui
 \f[R]
 .fi
@@ -1241,6 +1269,7 @@ Returns:
   0  Patterns appended or printed
   1  Not in a git repository or API fetch failed
 
+Example:
 gi python,venv
 gi -b -p
 gi -s node > .gitignore
@@ -1264,6 +1293,7 @@ Returns:
   0  Cleanup complete
   1  Argument parsing failed
 
+Example:
 git-clean --force
 git-clean
 \f[R]
@@ -1280,6 +1310,7 @@ additional arguments through to the gitui command.
 Arguments:
   args...  Arguments forwarded to the gitui command
 
+Example:
 gitui
 \f[R]
 .fi
@@ -1299,6 +1330,7 @@ Returns:
   0  Fetch and status succeeded
   1  Not inside a git work tree
 
+Example:
 gitup
 gitup --all
 \f[R]
@@ -1312,6 +1344,7 @@ Synopsis:  hist
 Searches fish history interactively using fzf, inserts the selected command
 into the command line, and copies it to the clipboard via wl-copy.
 
+Example:
 hist
 \f[R]
 .fi
@@ -1325,6 +1358,7 @@ Synopsis:  cleanup
 Identifies and removes Arch Linux orphan packages using pacman. Logs
 package names and versions to \[ti]/.removed_orphans before removal.
 
+Example:
 cleanup
 \f[R]
 .fi
@@ -1342,6 +1376,7 @@ Returns:
   0  Packages removed or none selected
   1  No AUR helper (paru or yay) found
 
+Example:
 parur
 \f[R]
 .fi
@@ -1374,6 +1409,7 @@ Returns:
   0  Operation completed
   1  No supported package manager found, unknown flag, or package operation failed
 
+Example:
 pkg firefox
 pkg -i ripgrep fd-find
 pkg -u cowsay
@@ -1395,6 +1431,7 @@ Returns:
   0  AUR helper ran successfully
   1  No AUR helper (paru or yay) found
 
+Example:
 search neovim
 \f[R]
 .fi
@@ -1411,6 +1448,7 @@ Returns:
   0  Upgrade completed successfully
   1  No AUR helper (paru or yay) found
 
+Example:
 upgrade
 \f[R]
 .fi
@@ -1424,6 +1462,7 @@ Synopsis:  check_fish_deps
 Backwards-compatibility wrapper that delegates to fish-deps status to
 report which fish shell dependencies are installed or missing.
 
+Example:
 check_fish_deps
 \f[R]
 .fi
@@ -1464,6 +1503,7 @@ Returns:
   0  Subcommand completed
   1  Unknown subcommand
 
+Example:
 fish-deps sync
 fish-deps
 fish-deps install
@@ -1479,6 +1519,7 @@ Synopsis:  fzf-update
 Installs or upgrades fzf from git HEAD into \[ti]/.fzf. Pulls the latest
 changes if \[ti]/.fzf already exists, or clones the repository if not.
 
+Example:
 fzf-update
 \f[R]
 .fi
@@ -1494,6 +1535,7 @@ runs CachyOS boot hooks (limine-mkinitcpio), and re-signs all Secure Boot
 files tracked by sbctl. Combines the edit and sign steps into a single
 command.
 
+Example:
 limine-edit
 \f[R]
 .fi
@@ -1505,6 +1547,7 @@ Synopsis:  lock
 
 Locks the current desktop session using loginctl lock-session.
 
+Example:
 lock
 \f[R]
 .fi
@@ -1517,6 +1560,7 @@ Synopsis:  ports
 Lists all active TCP listeners on the system using lsof, showing
 port numbers and addresses without hostname resolution.
 
+Example:
 ports
 \f[R]
 .fi
@@ -1538,6 +1582,7 @@ Returns:
   0  All binaries verified (or summary shown)
   1  sbctl is not installed
 
+Example:
 sbver
 sbver --brief
 \f[R]
@@ -1551,6 +1596,7 @@ Synopsis:  screensleep
 Turns off the display after a 1-second delay by invoking the KDE
 PowerDevil \[dq]Turn Off Screen\[dq] global shortcut via busctl.
 
+Example:
 screensleep
 \f[R]
 .fi
@@ -1568,6 +1614,7 @@ when re-enabling, so the lockdown takes effect immediately.
 Returns:
   0  Rule toggled
 
+Example:
 sudo-toggle
 \f[R]
 .fi
@@ -1581,6 +1628,7 @@ Displays a colorized memory report showing kernel swappiness,
 zRAM compression ratio, zRAM device details (via zramctl), and
 active swap priority (via swapon).
 
+Example:
 swapstat
 \f[R]
 .fi
@@ -1596,6 +1644,7 @@ if btop is not installed.
 Arguments:
   args...  Arguments forwarded to btop or system top
 
+Example:
 top
 \f[R]
 .fi
@@ -1618,6 +1667,7 @@ Returns:
   0  Command launched successfully
   1  No command provided
 
+Example:
 bkg firefox
 \f[R]
 .fi
@@ -1641,6 +1691,7 @@ Returns:
   0  Command launched or help/version shown
   1  No command provided or unknown option
 
+Example:
 detach rsync -a ./data remote:/backup/
 \f[R]
 .fi
@@ -1664,6 +1715,7 @@ Returns:
   0  Pane opened successfully
   1  Not running inside Kitty or WezTerm
 
+Example:
 split
 split -v nvim README.md
 \f[R]
@@ -1684,6 +1736,7 @@ Returns:
   0  Window opened successfully
   1  Not running inside Kitty or WezTerm
 
+Example:
 spwin
 \f[R]
 .fi
@@ -1701,6 +1754,7 @@ other terminals.
 Arguments:
   args...  Arguments forwarded to kitten ssh or system ssh
 
+Example:
 ssh user\[at]host
 \f[R]
 .fi
@@ -1721,6 +1775,7 @@ Returns:
   0  Tab opened successfully
   1  No supported terminal found
 
+Example:
 tab
 \f[R]
 .fi
@@ -1742,6 +1797,7 @@ Returns:
   0  Clipboard contents printed successfully
   1  No supported clipboard tool found
 
+Example:
 p | grep foo
 p > file.txt
 \f[R]
@@ -1762,6 +1818,7 @@ Returns:
   0  Clipboard contents printed successfully
   1  No supported clipboard tool found
 
+Example:
 paste > file.txt
 \f[R]
 .fi
@@ -1781,6 +1838,7 @@ Returns:
   0  Text copied to clipboard
   1  No clipboard provider found
 
+Example:
 y \[dq]hello world\[dq]
 ls | y
 cat file.txt | y
@@ -1796,6 +1854,7 @@ Synopsis:  gip
 Fetches and prints both the public IPv4 and IPv6 addresses using
 icanhazip.com. Shows \[dq]Not detected\[dq] for any address that times out.
 
+Example:
 gip
 \f[R]
 .fi
@@ -1807,6 +1866,7 @@ Synopsis:  gip4
 
 Fetches and prints the machine\[aq]s public IPv4 address using icanhazip.com.
 
+Example:
 gip4
 \f[R]
 .fi
@@ -1823,6 +1883,7 @@ Returns:
   0  IPv6 address printed
   1  IPv6 unavailable or not supported on this network
 
+Example:
 gip6
 \f[R]
 .fi
@@ -1840,6 +1901,7 @@ Arguments:
   --legend  Show the prettyping legend (overrides default --nolegend)
   args...   Arguments forwarded to prettyping or system ping
 
+Example:
 ping google.com
 ping --legend google.com
 \f[R]
@@ -1857,6 +1919,7 @@ falls back to the qrenco.de API via curl.
 Arguments:
   text...  Text to encode; reads from stdin if omitted
 
+Example:
 qr \[dq]https://example.com\[dq]
 echo \[dq]hello\[dq] | qr
 \f[R]
@@ -1889,6 +1952,7 @@ Returns:
   0  File viewed or no file selected
   1  No log files found
 
+Example:
 logs -c paru
 logs
 logs -c scrollback
@@ -1917,6 +1981,7 @@ Notes:
   The exit builtin is wired to smart_exit for interactive sessions. Typing
   \[ga]exit\[ga] or Ctrl+D behaves identically to calling smart_exit directly.
 
+Example:
 smart_exit
 smart_exit --no-log
 \f[R]
@@ -1990,6 +2055,7 @@ Returns:
   0  Setup completed successfully
   1  Fatal error (git init failed, move failed, etc.)
 
+Example:
 agents-init
 agents-init --agents
 agents-init --plugins
@@ -2021,6 +2087,7 @@ Arguments:
 Returns:
   Exit status of the underlying agy binary
 
+Example:
 agy
 agy chat
 agy resume
@@ -2040,6 +2107,7 @@ about an unrecognized \[aq]app\[aq] option from stderr.
 Arguments:
   args...  Arguments passed through to the antigravity-ide command
 
+Example:
 antigravity-ide
 \f[R]
 .fi
@@ -2066,6 +2134,7 @@ Arguments:
 Returns:
   Exit status of the underlying claude binary
 
+Example:
 claude
 claude --resume
 claude \[dq]Explain the recent changes\[dq]
@@ -2083,6 +2152,7 @@ Invokes Claude Code to analyze recent repository changes and update
 README.md, ensuring all features and examples are accurate and pruning
 obsolete content.
 
+Example:
 claude-docs
 \f[R]
 .fi
@@ -2096,6 +2166,7 @@ Invokes Claude Code to perform a full PR workflow: create a kebab-case
 branch, write a Conventional Commit, run verification, push, and open a
 pull request with a manual verification checklist.
 
+Example:
 claude-pr
 \f[R]
 .fi
@@ -2113,6 +2184,7 @@ Arguments:
   subcommand  Docker subcommand (ps is redirected to dops)
   args...     Arguments forwarded to docker or dops
 
+Example:
 docker ps
 \f[R]
 .fi
@@ -2139,6 +2211,7 @@ Arguments:
 Returns:
   aichat\[aq]s exit status.
 
+Example:
 qc \[dq]how do I list open ports on linux?\[dq]
 qc -m ollama:llama3 \[dq]explain this error\[dq]
 qc --role coder \[dq]refactor this function\[dq]
@@ -2164,6 +2237,7 @@ Returns:
   0  Mode applied successfully
   1  No on/off mode specified
 
+Example:
 superpowers on
 superpowers off -g
 \f[R]
@@ -2190,6 +2264,7 @@ Returns:
   0  Conversion complete
   1  File not found, missing dependency, or encode step failed
 
+Example:
 dng2avif photo.dng
 dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 \f[R]
@@ -2211,6 +2286,7 @@ Arguments:
   -v, --version  Print version
   -h, --help     Show usage help
 
+Example:
 spark 1 1 2 5 14 42
 seq 64 | sort --random-sort | spark
 echo \[dq]3 7 2 9 1\[dq] | spark
@@ -2225,6 +2301,7 @@ Synopsis:  steam-dl
 Launches Steam with systemd-inhibit to prevent the system from idling
 or sleeping during active downloads.
 
+Example:
 steam-dl
 \f[R]
 .fi
@@ -2250,6 +2327,7 @@ Arguments:
   args...  Arguments forwarded to yt-dlp (defaults prepended)
   --no-embed-thumbnail  Skip thumbnail embedding for this run
 
+Example:
 yt-dlp dQw4w9WgXcQ
 yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
 \f[R]
@@ -2267,6 +2345,7 @@ config directory. Resets $SHELL back to fish on exit.
 Arguments:
   args...  Arguments passed through to the bash command
 
+Example:
 bash
 \f[R]
 .fi
@@ -2287,6 +2366,7 @@ Returns:
   0  Issues linked and synced (or no unlinked issues found)
   1  Missing required argument or environment variables
 
+Example:
 bd-pull myuser/myproject
 bd-pull rootiest/fish-config
 \f[R]
@@ -2303,6 +2383,7 @@ custom config if available. Falls back to neofetch if fastfetch is not installed
 Arguments:
   args...  Additional arguments forwarded to fastfetch or neofetch
 
+Example:
 cffetch
 \f[R]
 .fi
@@ -2319,6 +2400,7 @@ Arguments:
   topic   The command or topic to look up
   args... Additional arguments forwarded to cheat, tldr, or man
 
+Example:
 cheat tar
 cheat git
 \f[R]
@@ -2362,6 +2444,7 @@ Notes:
   registered as a handler in the help wrapper so that syntax works
   transparently. Direct \[ga]config-help\[ga] calls are also valid.
 
+Example:
 config-help
 config-help keybindings
 config-help pkg
@@ -2431,6 +2514,7 @@ Returns:
   0  Exited normally (q or Escape pressed)
   1  Unknown flag passed
 
+Example:
 config-settings
 \f[R]
 .fi
@@ -2451,6 +2535,7 @@ Arguments:
 Returns:
   Same as config-settings
 
+Example:
 config-toggle        # opens config-settings with a deprecation notice
 \f[R]
 .fi
@@ -2476,6 +2561,7 @@ Returns:
   0  Config updated (or already up to date)
   1  Update failed (network error, merge conflict, or not a git repo)
 
+Example:
 config-update
 config-update --dry-run
 config-update --force
@@ -2498,6 +2584,7 @@ Returns:
   0  Services updated and running
   1  Directory not found or no docker-compose.yml present
 
+Example:
 dockup \[ti]/myapp
 \f[R]
 .fi
@@ -2513,6 +2600,7 @@ present. Falls back to neofetch if fastfetch is not installed.
 Arguments:
   args...  Arguments forwarded to fastfetch or neofetch
 
+Example:
 ffetch
 \f[R]
 .fi
@@ -2532,6 +2620,7 @@ Returns:
   0  Joplin ran successfully
   1  joplin binary not found in PATH
 
+Example:
 joplin ls
 \f[R]
 .fi
@@ -2564,6 +2653,7 @@ Returns:
   0  Success
   1  Unknown subcommand/flag, kitty missing, or a write failure
 
+Example:
 kitty-logging install
 kitty-logging status
 \f[R]
@@ -2577,6 +2667,7 @@ Synopsis:  ld
 Launches lazydocker targeting the currently active Docker context by
 resolving the host endpoint from docker context inspect.
 
+Example:
 ld
 \f[R]
 .fi
@@ -2615,6 +2706,7 @@ Returns:
 Notes:
   Typo abbreviation: url-open (expands to open-url on space/enter).
 
+Example:
 open-url https://git.rootiest.dev/rootiest/fish-config
 open-url -v https://fish-config-docs.pages.dev/
 \f[R]
@@ -2638,6 +2730,7 @@ Returns:
   0  Commands ran successfully and changes were replayed
   1  Bash command exited with a non-zero status
 
+Example:
 replay \[dq]source \[ti]/.bashrc\[dq]
 replay \[dq]export FOO=bar\[dq]
 \f[R]
@@ -2681,6 +2774,7 @@ Returns:
 Notes:
   Typo abbreviation: open-repo (expands to repo-open on space/enter).
 
+Example:
 repo-open              # open current branch (+ subdir) in browser
 repo-open --print      # just print the URL
 repo-open --root       # repo home page for the current branch
@@ -2697,6 +2791,7 @@ Synopsis:  tmux-clean
 Kills all detached (unattached) tmux sessions, leaving any currently
 attached sessions running.
 
+Example:
 tmux-clean
 \f[R]
 .fi
@@ -2717,6 +2812,7 @@ Returns:
   0  Command ran and completed
   1  No command provided
 
+Example:
 wake-lock rsync -avz src/ dest/
 \f[R]
 .fi
@@ -3548,6 +3644,7 @@ tokens, passwords, and personal identifiers.
 .IP
 .nf
 \f[C]
+# secrets.fish
 set -gx MY_NAME \[dq]Your Name\[dq]
 set -gx MY_EMAIL \[dq]you\[at]example.com\[dq]
 set -gx GPG_RECIPIENT \[dq]you\[at]example.com\[dq]
