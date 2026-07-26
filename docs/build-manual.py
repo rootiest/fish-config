@@ -140,6 +140,58 @@ def _is_shell(para: list[str], entry_name: str | None) -> bool:
     return True
 
 
+CELL_SPLIT = re.compile(r"\s{2,}")
+
+
+def _cell(text: str, code: bool) -> str:
+    """Render one table cell. `|` must be escaped even inside a code span."""
+    text = text.strip().replace("|", r"\|")
+    return f"`{text}`" if code and text else text
+
+
+def _as_table(para: list[str]) -> str | None:
+    """Render an aligned two-column block as a markdown table, else None.
+
+    Option and subcommand tables are the one thing in this manual that is
+    genuinely tabular, and the indented-code fallback renders them as a grey
+    slab. Everything else stays in that fallback: returning None is always
+    safe, so every check here is free to be conservative.
+
+    The rows must form one contiguous indented run, optionally introduced by
+    a label line (`Options:`) and closed by a sentence. Lines indented deeper
+    than the run are wrapped descriptions and fold into the row above.
+    """
+    starts = [i for i, ln in enumerate(para) if ln.startswith(" ")]
+    if len(starts) < 2 or starts != list(range(starts[0], starts[-1] + 1)):
+        return None
+    head = para[: starts[0]]
+    body = para[starts[0] : starts[-1] + 1]
+    tail = para[starts[-1] + 1 :]
+    if head and not head[-1].rstrip().endswith(":"):
+        return None  # a head that isn't a label means mixed content
+
+    indent = min(len(ln) - len(ln.lstrip()) for ln in body)
+    rows: list[list[str]] = []
+    for line in body:
+        if len(line) - len(line.lstrip()) > indent and rows:
+            rows[-1][1] += " " + line.strip()
+            continue
+        parts = CELL_SPLIT.split(line.strip(), 1)
+        if len(parts) != 2 or not parts[1].strip():
+            return None  # not column-aligned; a numbered list, or prose
+        rows.append([parts[0], parts[1].strip()])
+    if len(rows) < 2:
+        return None
+    if any("<" in value or "{" in value for _, value in rows):
+        return None  # live markdown in the prose column
+
+    out = [line.strip() for line in head]
+    out += ["| | |", "|---|---|"]
+    out += [f"| {_cell(k, True)} | {_cell(v, False)} |" for k, v in rows]
+    out += [line.strip() for line in tail]
+    return "\n".join(out)
+
+
 def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
     """Render one paragraph of a former indented block.
 
@@ -152,6 +204,9 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
         if _is_shell(para, entry_name):
             body = "\n".join(para)
             return f"```fish\n{body}\n```"
+    table = _as_table(para)
+    if table is not None:
+        return table
     return "\n".join(INDENT + line for line in para)
 
 

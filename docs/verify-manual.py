@@ -237,12 +237,77 @@ def test_prettify_splits_an_entry_block():
     assert "```fish\nrm file.txt" in out, "examples were not fenced as fish"
     assert out.count("```") == 4, f"expected exactly two fences, got:\n{out}"
     assert "\nSafe rm wrapper routing to trash:" in out, "description stayed indented"
-    assert (
-        "\n      (no args)   List current trash contents" in out
-    ), "option table lost its indentation"
+    assert "| `(no args)` | List current trash contents |" in out, (
+        "option table was not converted to a markdown table"
+    )
     assert (
         "\nFalls back to /usr/bin/rm when trash is unavailable." in out
     ), "trailing prose stayed indented"
+
+
+def test_as_table_converts_option_blocks():
+    """A labelled, column-aligned block becomes a table; wrapped rows fold in."""
+    import build_manual
+
+    out = build_manual._as_table(
+        [
+            "Options:",
+            "  -a/--aggressive  Also removes node_modules, logs,",
+            "                   and IDE dirs",
+            "  -d/--dry-run     Print what would be removed",
+            "Pass neither to run interactively.",
+        ]
+    )
+    assert out is not None, "a plain option table was rejected"
+    assert out.splitlines()[0] == "Options:", "the label line was dropped"
+    assert out.splitlines()[-1] == "Pass neither to run interactively.", (
+        "the trailing sentence was dropped"
+    )
+    assert (
+        "| `-a/--aggressive` | Also removes node_modules, logs, and IDE dirs |" in out
+    ), "a wrapped description did not fold into the row above"
+
+
+def test_as_table_escapes_pipes():
+    """`|` splits table cells even inside a code span, so it must be escaped."""
+    import build_manual
+
+    out = build_manual._as_table(
+        ["  -r/-R  Recurse into it", "  -e|-E  Empty it"]
+    )
+    assert out is not None and r"`-e\|-E`" in out, f"pipe was not escaped:\n{out}"
+
+
+def test_as_table_rejects_non_tables():
+    """Returning None is always safe, so every ambiguous shape must return it."""
+    import build_manual
+
+    cases = {
+        "single row": ["  -f/--force  Force-delete unmerged branches too"],
+        "numbered list": [
+            "  1. git+cargo source build (fish shell itself)",
+            "  2. cargo (Rust tools — gets latest crate version)",
+        ],
+        "misaligned rows": [
+            "  -e/--empty  Empty the trash",
+            "  -S/--secure Permanently delete (single space, not a column)",
+        ],
+        "synopsis continuation": [
+            "           auto-pull add [PATH]",
+            "           auto-pull status",
+        ],
+        "unlabelled head": [
+            "Routes to the best tool by context.",
+            "  --disk  force duf",
+            "  --dir   force dust",
+        ],
+        "live markdown in prose column": [
+            "  add     Register <PATH>'s git root",
+            "  remove  Unregister by basename",
+        ],
+    }
+    for label, para in cases.items():
+        assert build_manual._as_table(para) is None, f"{label} was wrongly tabled"
 
 
 def test_prettify_leaves_reference_tables_alone():
