@@ -84,6 +84,26 @@ def test_parse_roundtrip_body_with_leading_blank_line():
     assert got_body == body, f"body mismatch: expected {body!r}, got {got_body!r}"
 
 
+def test_manual_tree_exists():
+    root = Path(__file__).parent / "manual"
+    assert root.is_dir(), "docs/manual/ not generated"
+    assert (root / "index.md").exists(), "docs/manual/index.md missing"
+    fn = root / "05-functions"
+    assert fn.is_dir(), "docs/manual/05-functions/ missing"
+    cats = sorted(p.name for p in fn.glob("*.md") if p.name != "index.md")
+    assert len(cats) == 14, f"expected 14 function categories, got {len(cats)}: {cats}"
+
+
+def test_function_entries_promoted_to_h2():
+    root = Path(__file__).parent / "manual" / "05-functions"
+    for path in root.glob("*.md"):
+        if path.name == "index.md":
+            continue
+        _, body = mt.parse(path)
+        assert "\n### " not in f"\n{body}", f"{path.name} still has H3 entries"
+        assert "\n## " in f"\n{body}", f"{path.name} has no H2 function entries"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 

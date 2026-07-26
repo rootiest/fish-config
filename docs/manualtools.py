@@ -39,7 +39,10 @@ def serialize(fm: dict, body: str) -> str:
 
 
 def shift_headings(body: str, by: int) -> str:
-    """Add `by` levels to every ATX heading, ignoring fenced code blocks."""
+    """Add `by` levels to every ATX heading, ignoring fenced code blocks.
+
+    Negative values promote headings. Level is clamped to [1, 6].
+    """
     if by == 0:
         return body
     out, in_fence = [], False
@@ -47,7 +50,9 @@ def shift_headings(body: str, by: int) -> str:
         if FENCE_RE.match(line):
             in_fence = not in_fence
         if not in_fence:
-            line = HEADING_RE.sub(lambda m: "#" * (len(m.group(1)) + by) + m.group(2), line)
+            line = HEADING_RE.sub(
+                lambda m: "#" * max(1, min(6, len(m.group(1)) + by)) + m.group(2), line
+            )
         out.append(line)
     return "\n".join(out)
 
