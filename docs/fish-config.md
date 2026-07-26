@@ -2078,9 +2078,7 @@ Add -i (interactive confirmation) to destructive commands:
     Synopsis:  config-update [-h | --help] [-f | --force] [-n | --dry-run]
 
     Pulls the latest fish shell configuration from the upstream repository
-    (https://git.rootiest.dev/rootiest/fish-config.git) into ~/.config/fish.
-    The remote URL is hard-coded so the update works even if the local clone
-    has no configured remote. Git output is suppressed; status is reported
+    into ~/.config/fish. Git output is suppressed; status is reported
     through colored messages. After a successful pull the function prints a
     short summary of changed files; run `exec fish` to reload the shell.
 
@@ -2933,9 +2931,7 @@ configured git remote:
     config-update --dry-run    Preview available changes without applying them
     config-update --force      Stash local changes, pull, then restore the stash
 
-The remote URL (https://git.rootiest.dev/rootiest/fish-config.git) is
-hard-coded, so this works on a fresh clone with no origin configured. All
-git output is suppressed. Run exec fish after a successful update to reload.
+All git output is suppressed. Run exec fish after a successful update to reload.
 
 ---
 
