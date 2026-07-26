@@ -71,14 +71,146 @@ def _jsx_attr_escape(value: str) -> str:
 
 
 def _first_sentence(body: str) -> str:
-    """Extract a one-line description from the start of an entry body."""
+    """Extract a one-line description from the start of an entry body.
+
+    `Synopsis:` lines are skipped: they restate the calling convention,
+    which the card already shows as its title, so using one as the card
+    description wastes the line.
+    """
     for line in body.split("\n"):
         line = line.strip()
         if not line or line.startswith(("#", "```", "|", "-", "*", ">")):
             continue
+        if line.startswith("Synopsis:"):
+            continue
         m = SENTENCE_RE.match(line)
         return (m.group(1) if m else line)[:160]
     return ""
+
+
+# Commands common enough in this manual that a block whose every line starts
+# with one is certainly shell, not prose or a two-column reference table.
+SHELL_HEADS = frozenset(
+    """
+    abbr alias apt bg bind brew builtin cargo cat cd chmod code command cp curl
+    dnf echo end env exec export fg fish fisher for funcsave function git help
+    if jobs kitty ls man math mkdir mv nvim npm pacman paru pip pip3 pkg printf
+    python python3 rm set shutdown source string sudo switch systemctl test time
+    tmux touch trash type wget wezterm while yay zellij zypper
+    """.split()
+)
+
+SYNOPSIS_PREFIX = "Synopsis:"
+INDENT = "    "
+
+
+def _is_prose(para: list[str]) -> bool:
+    """True when a paragraph reads as sentences rather than as code or a table.
+
+    Column-aligned reference tables are the main thing to keep out of a
+    syntax-highlighted fence, and internal runs of two-or-more spaces are
+    what distinguishes them from prose. `<` and `{` are excluded because
+    the emitted paragraph is live markdown, where both would be parsed.
+    """
+    text = " ".join(para)
+    if "<" in text or "{" in text:
+        return False
+    if not para or para[-1].rstrip()[-1:] not in ".:":
+        return False
+    return all(
+        len(line.split()) >= 3 and "  " not in line.strip() for line in para
+    )
+
+
+def _is_shell(para: list[str], entry_name: str | None) -> bool:
+    """True when every line of a paragraph looks like a shell command."""
+    name_re = (
+        re.compile(rf"(?<![\w-]){re.escape(entry_name)}(?![\w-])")
+        if entry_name
+        else None
+    )
+    for line in para:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if name_re and name_re.search(stripped):
+            continue
+        if stripped.split()[0].lstrip("$").rstrip(";") not in SHELL_HEADS:
+            return False
+    return True
+
+
+def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
+    """Render one paragraph of a former indented block.
+
+    `deeper` marks paragraphs carrying their own extra indentation — nested
+    option tables, whose alignment only survives inside a code block.
+    """
+    if not deeper:
+        if _is_prose(para):
+            return "\n".join(line.strip() for line in para)
+        if _is_shell(para, entry_name):
+            body = "\n".join(para)
+            return f"```fish\n{body}\n```"
+    return "\n".join(INDENT + line for line in para)
+
+
+def _prettify_block(block: list[str], entry_name: str | None) -> str:
+    """Convert one indented block into fenced code, prose, and tables.
+
+    The manual is authored man-page style: every example, table, and
+    description sits in a single 4-space-indented block, which renders on
+    the site as one unhighlighted grey slab. Splitting a block into its
+    paragraphs recovers the structure the indentation flattened.
+    """
+    lines = [line[len(INDENT) :] if line.startswith(INDENT) else line for line in block]
+
+    out: list[str] = []
+    if lines and lines[0].startswith(SYNOPSIS_PREFIX):
+        synopsis = lines.pop(0)[len(SYNOPSIS_PREFIX) :].strip()
+        out.append(f"```fish\n{synopsis}\n```")
+
+    para: list[str] = []
+    for line in lines + [""]:
+        if line.strip():
+            para.append(line)
+            continue
+        if para:
+            deeper = any(line.startswith(" ") for line in para)
+            out.append(_render_para(para, entry_name, deeper))
+            para = []
+    return "\n\n".join(chunk for chunk in out if chunk.strip())
+
+
+def prettify(body: str, entry_name: str | None = None) -> str:
+    """Rewrite a body's indented code blocks for the website.
+
+    Site-only: the man page and `config-help` keep reading the untouched
+    SSOT, where the indented form is exactly what pandoc wants.
+    """
+    out: list[str] = []
+    block: list[str] = []
+    in_fence = False
+
+    for line in body.split("\n"):
+        if mt.FENCE_RE.match(line):
+            in_fence = not in_fence
+        if not in_fence and (line.startswith(INDENT) or (not line.strip() and block)):
+            block.append(line)
+            continue
+        if block:
+            while block and not block[-1].strip():
+                block.pop()
+            out.append(_prettify_block(block, entry_name))
+            out.append("")
+            block = []
+        out.append(line)
+
+    if block:
+        while block and not block[-1].strip():
+            block.pop()
+        out.append(_prettify_block(block, entry_name))
+    return "\n".join(out)
 
 
 def _page_fm(fm: dict) -> dict:
@@ -114,7 +246,10 @@ def _split_entries(body: str) -> tuple[str, list[tuple[str, str]]]:
     for idx, (line_no, title) in enumerate(boundaries):
         start = line_no + 1
         end = boundaries[idx + 1][0] if idx + 1 < len(boundaries) else len(lines)
-        entry_body = "\n".join(lines[start:end]).strip()
+        # Strip newlines only: a bare .strip() would eat the leading
+        # indentation of the entry's first line, detaching the `Synopsis:`
+        # line from the indented block it opens.
+        entry_body = "\n".join(lines[start:end]).strip("\n")
         entries.append((title.strip(), entry_body))
     return intro, entries
 
@@ -126,6 +261,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
     out.mkdir(parents=True)
 
     sidebar: list[dict] = []
+    functions_group: dict = {}
     for path, _depth in mt.walk(root):
         fm, body = mt.parse(path)
         if not fm.get("site", True):
@@ -137,7 +273,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
         if not is_function_dir:
             target = out / rel
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(mt.serialize(_page_fm(fm), body))
+            target.write_text(mt.serialize(_page_fm(fm), prettify(body)))
             if rel.name != "index.md":
                 sidebar.append({"label": fm["title"], "link": "/" + rel.stem + "/"})
             continue
@@ -147,17 +283,16 @@ def build_site(root: Path, out: Path) -> list[dict]:
         if rel.name == "index.md":
             target = out / slug_dir / "index.md"
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(mt.serialize(_page_fm(fm), body))
-            sidebar.append(
-                {
-                    "label": fm["title"],
-                    "collapsed": True,
-                    # Starlight >=0.39 rejects a bare `autogenerate` sibling
-                    # of `label` on a top-level group (removed in v0.39.0);
-                    # the autogenerate config must be nested inside `items`.
-                    "items": [{"autogenerate": {"directory": slug_dir}}],
-                }
-            )
+            target.write_text(mt.serialize(_page_fm(fm), prettify(body)))
+            # Built explicitly rather than by `autogenerate`, which labels
+            # each group with its raw directory slug and republishes this
+            # index as a child of the group it already titles.
+            functions_group = {
+                "label": fm["title"],
+                "collapsed": True,
+                "items": [{"label": "Overview", "link": f"/{slug_dir}/"}],
+            }
+            sidebar.append(functions_group)
             continue
 
         category = re.sub(r"^\d+-", "", rel.stem)
@@ -166,6 +301,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
         intro, entries = _split_entries(body)
 
         cards = []
+        links = []
         for title, entry_body in entries:
             entry_slug = re.sub(r"[^\w-]+", "-", title.strip().lower()).strip("-")
             desc = _first_sentence(entry_body)
@@ -173,9 +309,10 @@ def build_site(root: Path, out: Path) -> list[dict]:
             if desc:
                 entry_fm["description"] = desc
             (cat_dir / f"{entry_slug}.md").write_text(
-                mt.serialize(entry_fm, entry_body)
+                mt.serialize(entry_fm, prettify(entry_body, title.split()[0]))
             )
             href = f"/{slug_dir}/{category}/{entry_slug}/"
+            links.append({"label": title, "link": href})
             safe_title = _jsx_attr_escape(title)
             safe_desc = _jsx_attr_escape(desc)
             cards.append(
@@ -192,6 +329,17 @@ def build_site(root: Path, out: Path) -> list[dict]:
             + "\n</CardGrid>\n"
         )
         (cat_dir / "index.mdx").write_text(mt.serialize(_page_fm(fm), overview))
+
+        functions_group.setdefault("items", []).append(
+            {
+                "label": fm["title"],
+                "collapsed": True,
+                "items": [
+                    {"label": "Overview", "link": f"/{slug_dir}/{category}/"},
+                    *links,
+                ],
+            }
+        )
 
     return sidebar
 

@@ -16,6 +16,16 @@ export default defineConfig({
         },
       ],
       customCss: ['./src/styles/catppuccin.css'],
+      expressiveCode: {
+        // Shiki ships both Catppuccin flavours; Starlight picks by the
+        // reader's colour scheme, matching the palette in catppuccin.css.
+        themes: ['catppuccin-mocha', 'catppuccin-latte'],
+        styleOverrides: {
+          borderRadius: '0.4rem',
+          borderColor: 'var(--sl-color-gray-5)',
+          codeFontSize: '0.875rem',
+        },
+      },
       sidebar,
     }),
   ],

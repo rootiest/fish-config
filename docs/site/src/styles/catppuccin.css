@@ -1,5 +1,18 @@
 /* Catppuccin Mocha (dark) / Latte (light) mapped onto Starlight tokens. */
 :root {
+  --ctp-rosewater: #f5e0dc;
+  --ctp-pink: #f5c2e7;
+  --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1;
+  --ctp-teal: #94e2d5;
+  --ctp-sky: #89dceb;
+  --ctp-blue: #89b4fa;
+  --ctp-lavender: #b4befe;
+  --ctp-surface: #313244;
+
   --sl-color-accent-low: #1e1e2e;
   --sl-color-accent: #89b4fa;
   --sl-color-accent-high: #b4befe;
@@ -14,6 +27,19 @@
 }
 
 :root[data-theme='light'] {
+  --ctp-rosewater: #dc8a78;
+  --ctp-pink: #ea76cb;
+  --ctp-mauve: #8839ef;
+  --ctp-red: #d20f39;
+  --ctp-peach: #fe640b;
+  --ctp-yellow: #df8e1d;
+  --ctp-green: #40a02b;
+  --ctp-teal: #179299;
+  --ctp-sky: #04a5e5;
+  --ctp-blue: #1e66f5;
+  --ctp-lavender: #7287fd;
+  --ctp-surface: #ccd0da;
+
   --sl-color-accent-low: #dce0e8;
   --sl-color-accent: #1e66f5;
   --sl-color-accent-high: #7287fd;
@@ -25,4 +51,98 @@
   --sl-color-gray-5: #bcc0cc;
   --sl-color-gray-6: #ccd0da;
   --sl-color-black: #eff1f5;
+}
+
+/* ── Headings ──────────────────────────────────────────────────────── */
+/* The manual is one long reference; tinting each level makes the
+   hierarchy scannable without relying on size alone. */
+.sl-markdown-content h1 {
+  color: var(--ctp-lavender);
+}
+
+.sl-markdown-content h2 {
+  color: var(--ctp-mauve);
+  border-bottom: 1px solid var(--sl-color-gray-5);
+  padding-bottom: 0.2em;
+}
+
+.sl-markdown-content h3 {
+  color: var(--ctp-blue);
+}
+
+.sl-markdown-content h4 {
+  color: var(--ctp-teal);
+}
+
+/* ── Inline code ───────────────────────────────────────────────────── */
+/* Function names, variables, and flags appear inline constantly; peach
+   separates them from prose the way the fenced blocks separate examples. */
+.sl-markdown-content :not(pre) > code {
+  color: var(--ctp-peach);
+  background: var(--ctp-surface);
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.3em;
+  padding: 0.1em 0.35em;
+}
+
+.sl-markdown-content a > code {
+  color: var(--ctp-sky);
+}
+
+/* ── Links ─────────────────────────────────────────────────────────── */
+.sl-markdown-content a:not(:where(.not-content *)) {
+  color: var(--ctp-sky);
+  text-decoration-color: var(--sl-color-gray-4);
+}
+
+.sl-markdown-content a:not(:where(.not-content *)):hover {
+  color: var(--ctp-teal);
+  text-decoration-color: currentColor;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────── */
+/* Each function category is a grid of LinkCards; a hover accent makes the
+   grid feel navigable rather than like a wall of boxes. */
+.card {
+  border-color: var(--sl-color-gray-5);
+  transition:
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.card:hover {
+  border-color: var(--ctp-mauve);
+  transform: translateY(-2px);
+}
+
+.card .title {
+  color: var(--ctp-lavender);
+}
+
+/* ── Asides ────────────────────────────────────────────────────────── */
+.starlight-aside--note {
+  --sl-color-asides-text-accent: var(--ctp-blue);
+}
+
+.starlight-aside--tip {
+  --sl-color-asides-text-accent: var(--ctp-green);
+}
+
+.starlight-aside--caution {
+  --sl-color-asides-text-accent: var(--ctp-yellow);
+}
+
+.starlight-aside--danger {
+  --sl-color-asides-text-accent: var(--ctp-red);
+}
+
+/* ── Site chrome ───────────────────────────────────────────────────── */
+.site-title {
+  color: var(--ctp-mauve);
+}
+
+/* Table headers carry the accent so the many reference tables in the
+   manual read as structured data at a glance. */
+.sl-markdown-content th {
+  color: var(--ctp-yellow);
 }
