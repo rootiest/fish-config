@@ -338,7 +338,9 @@ def test_prettify_splits_an_entry_block():
     )
     out = build_manual.prettify(body, "rm")
 
-    assert "```fish\nrm [-e | args...]\n```" in out, "synopsis was not fenced as fish"
+    assert '```fish title="rm.fish"\nrm [-e | args...]\n```' in out, (
+        "synopsis was not fenced as fish with a filename title"
+    )
     assert "```fish\nrm file.txt" in out, "examples were not fenced as fish"
     assert out.count("```") == 4, f"expected exactly two fences, got:\n{out}"
     assert "\nSafe rm wrapper routing to trash:" in out, "description stayed indented"

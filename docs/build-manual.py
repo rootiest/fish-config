@@ -288,7 +288,11 @@ def _prettify_block(block: list[str], entry_name: str | None) -> str:
         # keep the whole thing in one fence rather than orphaning the rest.
         while lines and lines[0].startswith(" "):
             synopsis.append(lines.pop(0).strip())
-        out.append("```fish\n" + "\n".join(synopsis) + "\n```")
+        # Titling the fence with the source file name (Starlight's
+        # filename-title convention) makes the synopsis read as a snippet
+        # of the function it documents rather than a bare command example.
+        info = f'fish title="{entry_name}.fish"' if entry_name else "fish"
+        out.append(f"```{info}\n" + "\n".join(synopsis) + "\n```")
 
     para: list[str] = []
     for line in lines + [""]:
