@@ -5,7 +5,9 @@ on:
     branches:
       - main
     paths:
-      - "docs/fish-config.md"
+      - "docs/manual/**"
+      - "docs/build-manual.py"
+      - "docs/manualtools.py"
 
 jobs:
   build-docs:
@@ -16,8 +18,16 @@ jobs:
         with:
           token: ${{ secrets.GITEA_TOKEN }}
 
-      - name: Install pandoc
-        run: sudo apt-get update -qq && sudo apt-get install -y pandoc
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y pandoc python3-yaml
+
+      - name: Verify manual integrity
+        run: python3 docs/verify-manual.py
+
+      - name: Generate concatenated markdown
+        run: python3 docs/build-manual.py --concat -o docs/fish-config.md
 
       - name: Compile man page
         run: |
@@ -27,22 +37,11 @@ jobs:
                  docs/fish-config.md \
                  -o docs/fish-config.1
 
-      - name: Generate chunked HTML docs
-        run: |
-          rm -rf docs/html/
-          pandoc -f gfm -t chunkedhtml --split-level=1 --toc \
-                 --include-in-header docs/html-style.html \
-                 docs/fish-config.md \
-                 -o docs/html/
-
-      - name: Generate wiki markdown
-        run: python3 docs/split-wiki.py
-
       - name: Commit generated docs
         run: |
           git config user.name  "Gitea Actions"
           git config user.email "actions@gitea"
-          git add docs/fish-config.1 docs/html/ docs/wiki/
+          git add docs/fish-config.md docs/fish-config.1
           git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore(docs): regenerate man page, HTML docs, and wiki"
+          git commit -m "chore(docs): regenerate manual and man page"
           git push
