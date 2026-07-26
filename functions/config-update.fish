@@ -13,7 +13,7 @@
 #   The remote URL is hard-coded so the update works even if the local clone
 #   has no configured remote. Git output is suppressed; status is reported
 #   through colored messages. After a successful pull the function prints a
-#   short summary of changed files.
+#   short summary of changed files; run `exec fish` to reload the shell.
 #
 # ARGUMENTS
 #   -h, --help      Show this help message and exit

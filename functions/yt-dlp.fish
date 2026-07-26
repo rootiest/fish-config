@@ -15,6 +15,10 @@
 #   drops our --embed-thumbnail). All other arguments pass through
 #   untouched. --help and friends fall through to real yt-dlp.
 #
+#   Opinionated component (C1): when disabled via __fish_config_op_aliases
+#   (or the __fish_config_opinionated master), passes straight through to
+#   the system yt-dlp with no defaults injected.
+#
 # ARGUMENTS
 #   args...  Arguments forwarded to yt-dlp (defaults prepended)
 #   --no-embed-thumbnail  Skip thumbnail embedding for this run

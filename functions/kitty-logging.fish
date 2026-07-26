@@ -8,17 +8,21 @@
 #   kitty-logging [install | uninstall | status | dismiss] [-h]
 #
 # DESCRIPTION
-#   Manages the fish-config Kitty scrollback watcher. `install` copies the
-#   canonical watcher into the Kitty config dir and wires it into kitty.conf via
-#   a sentinel-marked managed block (commenting out any conflicting active
-#   watcher line to avoid double-capture). `uninstall` reverses it. `status`
-#   reports wiring, watcher version, and C5 logging state. `dismiss` silences the
-#   per-session setup reminder. Runtime capture remains gated by the C5
-#   .logging_disabled sentinel; install affects future Kitty instances only.
+#   Manages the fish-config Kitty scrollback watcher that powers C5 logging.
+#   `install` symlinks the canonical watcher into the Kitty config dir (so it
+#   always tracks the source) and wires it into kitty.conf via a
+#   sentinel-marked managed block, commenting out any conflicting active
+#   watcher line to avoid double-capture. `uninstall` reverses it. `status`
+#   reports wiring, installed watcher version, and C5 logging state. `dismiss`
+#   silences the per-session setup reminder.
+#
+#   Runtime capture stays governed by the C5 .logging_disabled sentinel, so
+#   disabling __fish_config_op_logging makes the watcher inert without
+#   uninstalling. Install affects new Kitty windows only.
 #
 # ARGUMENTS
-#   install    Copy the watcher and add the managed block to kitty.conf
-#   uninstall  Remove the managed block and the installed watcher
+#   install    Symlink the watcher and add the managed block to kitty.conf
+#   uninstall  Remove the managed block and the watcher symlink
 #   status     Report wiring, watcher version, and C5 logging state
 #   dismiss    Stop the per-session reminder
 #   -h, --help Show this help

@@ -41,8 +41,6 @@
 #   edit --terminal --new todo.md
 #   edit --editor=code --clipboard
 #   edit --text="hello world"
-#   edit ~/.config/fish/config.fish
-#   edit --visual notes.txt
 function edit --description 'Open files in a terminal or GUI editor with fallbacks'
     set -l c_head (set_color --bold cyan)
     set -l c_cmd (set_color --bold white)

@@ -11,6 +11,16 @@
 #   Interactively browses terminal log files (scrollback, paru, yay) sorted
 #   newest-first using fzf. Supports viewing in $PAGER, editing, and deletion.
 #
+#   Keybindings inside the fzf browser:
+#     Enter    Open in $PAGER
+#     Ctrl+E   Open in $EDITOR
+#     Ctrl+D   Delete (with confirmation)
+#     ?        Toggle keybind help overlay
+#
+#   Paru and yay logs open in ov with syntax highlighting and sticky section
+#   headers. Scrollback logs open in ov with per-command sticky prompt headers
+#   based on OSC 133 markers.
+#
 # ARGUMENTS
 #   -h, --help           Show help message
 #   -c, --category cat   Filter to one category: scrollback, paru, or yay

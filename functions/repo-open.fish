@@ -42,9 +42,6 @@
 #   repo-open              # open current branch (+ subdir) in browser
 #   repo-open --print      # just print the URL
 #   repo-open --root       # repo home page for the current branch
-#   repo-open
-#   repo-open --print
-#   repo-open --root
 #
 # NOTES
 #   Typo abbreviation: open-repo (expands to repo-open on space/enter).
