@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   du [--disk|--dir|--dua] [args...]
 #
