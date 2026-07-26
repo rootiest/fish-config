@@ -214,6 +214,12 @@ FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([\w-]+\.\w+)\s*$")
 
 CELL_SPLIT = re.compile(r"\s{2,}")
 
+# A solid rule line under a header row — the "Component Reference" tables'
+# authoring convention (header, dashes, data rows all at the same indent,
+# no ":"-terminated label). Distinct enough from CELL_SPLIT-based prose that
+# it needs its own check rather than overloading _as_table's indent rule.
+RULE_RE = re.compile(r"^[─\-]{10,}$")
+
 
 def _cell(text: str, code: bool) -> str:
     """Render one table cell. `|` must be escaped even inside a code span."""
@@ -264,6 +270,47 @@ def _as_table(para: list[str]) -> str | None:
     return "\n".join(out)
 
 
+def _as_ruled_table(para: list[str]) -> str | None:
+    """Render a header + solid-rule + rows block as an N-column table, else None.
+
+    This is the "Component Reference" tables' convention: header row, a
+    dashed rule, then data rows at the same indent (no ":"-label, no extra
+    nesting — the two things _as_table looks for). A row that splits into
+    just one cell is a word-wrapped continuation of the row above; anything
+    else that doesn't match the header's column count is a source alignment
+    bug, so bail out to the code-block fallback rather than guess.
+    """
+    if len(para) < 4 or not RULE_RE.match(para[1].strip()):
+        return None
+    header = CELL_SPLIT.split(para[0].strip())
+    n = len(header)
+    if n < 2:
+        return None
+    rows: list[list[str]] = []
+    for line in para[2:]:
+        parts = CELL_SPLIT.split(line.strip(), n - 1)
+        if len(parts) == n:
+            rows.append(parts)
+        elif len(parts) == 1 and rows:
+            rows[-1][-1] += " " + parts[0].strip()
+        else:
+            return None
+    if len(rows) < 2:
+        return None
+
+    # Unlike _as_table's prose column, these tables legitimately contain
+    # placeholders like <session> or brace globs — code-span protects them
+    # instead of rejecting the whole table.
+    def cell(text: str, code: bool) -> str:
+        return _cell(text, code or "<" in text or "{" in text)
+
+    out = [f"| {' | '.join(header)} |", "|" + "|".join(["---"] * n) + "|"]
+    for row in rows:
+        cells = [cell(row[0], True)] + [cell(c, False) for c in row[1:]]
+        out.append(f"| {' | '.join(cells)} |")
+    return "\n".join(out)
+
+
 def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
     """Render one paragraph of a former indented block.
 
@@ -285,7 +332,7 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
                 title, body = m.group(1), para[1:]
             info = f'fish title="{title}"' if title else "fish"
             return f"```{info}\n" + "\n".join(body) + "\n```"
-    table = _as_table(para)
+    table = _as_ruled_table(para) or _as_table(para)
     if table is not None:
         return table
     return "\n".join(INDENT + line for line in para)

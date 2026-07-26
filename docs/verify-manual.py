@@ -420,6 +420,75 @@ def test_as_table_rejects_non_tables():
         assert build_manual._as_table(para) is None, f"{label} was wrongly tabled"
 
 
+def test_as_ruled_table_converts_header_rule_rows():
+    """A header + dashed-rule + rows block (Component Reference style) tables."""
+    import build_manual
+
+    out = build_manual._as_ruled_table(
+        [
+            "Component               Requires",
+            "─────────────────────────────────────────",
+            "spwin                   Kitty or WezTerm",
+            "hist                    fzf + wl-copy (Wayland clipboard)",
+        ]
+    )
+    assert out is not None, "a header+rule+rows block was rejected"
+    assert out.splitlines()[0] == "| Component | Requires |"
+    assert "| `spwin` | Kitty or WezTerm |" in out
+
+
+def test_as_ruled_table_folds_wrapped_continuations():
+    """A row that splits into one cell continues the previous row's last column."""
+    import build_manual
+
+    out = build_manual._as_ruled_table(
+        [
+            "Component               What it captures",
+            "─────────────────────────────────────────",
+            "Scrollback capture      Terminal output saved to:",
+            "                        ~/.terminal_history/scrollback.log",
+            "tmux pane capture       Streamed via pipe-pane",
+        ]
+    )
+    assert out is not None
+    assert (
+        "| `Scrollback capture` | Terminal output saved to: ~/.terminal_history/scrollback.log |"
+        in out
+    ), "a wrapped continuation line did not fold into the row above"
+
+
+def test_as_ruled_table_code_spans_angle_brackets_and_braces():
+    """<placeholder> / brace-glob cells get backtick-protected, not rejected."""
+    import build_manual
+
+    out = build_manual._as_ruled_table(
+        [
+            "Component               What it captures",
+            "─────────────────────────────────────────",
+            "tmux pane capture       saved to tmux_<session>-w<win>.log",
+            "Autopair                auto-close to (), [], {}",
+        ]
+    )
+    assert out is not None, "angle brackets/braces caused the table to be rejected"
+    assert "`saved to tmux_<session>-w<win>.log`" in out
+    assert "`auto-close to (), [], {}`" in out
+
+
+def test_as_ruled_table_rejects_ambiguous_columns():
+    """A row with fewer delimited columns than the header is a source bug, not a guess."""
+    import build_manual
+
+    out = build_manual._as_ruled_table(
+        [
+            "Command    Active behavior             Disabled fallback",
+            "─────────────────────────────────────────────────────────",
+            "ls         eza -l -a --icons            system ls",
+            "du         duf (disk overview) system du",
+        ]
+    )
+    assert out is None, "an under-delimited row should fall back to a code block"
+
+
 def test_prettify_leaves_reference_tables_alone():
     """Column-aligned blocks are data, not shell, and must not be fenced."""
     import build_manual
