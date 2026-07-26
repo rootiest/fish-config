@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
 # SYNOPSIS
 #   config-update [-h | --help] [-f | --force] [-n | --dry-run]
 #
@@ -8,7 +11,7 @@
 #   Pulls the latest fish shell configuration from the upstream repository
 #   into ~/.config/fish. Git output is suppressed; status is reported
 #   through colored messages. After a successful pull the function prints a
-#   short summary of changed files.
+#   short summary of changed files; run `exec fish` to reload the shell.
 #
 # ARGUMENTS
 #   -h, --help      Show this help message and exit

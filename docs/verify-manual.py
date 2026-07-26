@@ -4,6 +4,7 @@
 """Verification checks for the docs/manual SSOT pipeline."""
 
 import importlib.util
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -109,14 +110,113 @@ def test_manual_tree_exists():
     assert len(cats) == 14, f"expected 14 function categories, got {len(cats)}: {cats}"
 
 
-def test_function_entries_promoted_to_h2():
+def test_function_stubs_carry_no_entries():
+    """Category files are stubs: entries come from functions/*.fish headers.
+
+    An authored `##` entry here would be a second copy of a function's
+    documentation — exactly the duplication the header-SSOT migration
+    removed — and the generator would emit its own entry alongside it.
+    """
     root = Path(__file__).parent / "manual" / "05-functions"
     for path in root.glob("*.md"):
         if path.name == "index.md":
             continue
         _, body = mt.parse(path)
-        assert "\n### " not in f"\n{body}", f"{path.name} still has H3 entries"
-        assert "\n## " in f"\n{body}", f"{path.name} has no H2 function entries"
+        stray = [ln for ln in body.split("\n") if ln.startswith(("## ", "### "))]
+        assert not stray, f"{path.name} has authored entries: {stray}"
+
+
+def _parsed_functions() -> dict[str, dict[str, list[str]]]:
+    return mt.parse_functions(Path(__file__).parent.parent / "functions")
+
+
+def test_every_categorised_function_produces_one_entry():
+    import build_manual
+
+    functions = _parsed_functions()
+    entries = build_manual.build_entries(functions)
+    got = [name for names in entries.values() for name, _ in names]
+    assert sorted(got) == sorted(functions), (
+        f"entry/function mismatch: "
+        f"{sorted(set(functions) ^ set(got))}"
+    )
+    assert len(got) == len(set(got)), "a function produced more than one entry"
+
+
+def test_entries_carry_the_required_sections():
+    missing = []
+    for name, fn in _parsed_functions().items():
+        absent = [s for s in ("SYNOPSIS", "DESCRIPTION", "EXAMPLE") if not fn.get(s)]
+        if absent:
+            missing.append(f"{name}: {', '.join(absent)}")
+    assert not missing, "headers missing required sections:\n  " + "\n  ".join(missing)
+
+
+def test_every_category_resolves_to_a_stub():
+    root = Path(__file__).parent / "manual" / "05-functions"
+    stubs = {p.stem for p in root.glob("*.md") if p.name != "index.md"}
+    used = {}
+    for name, fn in _parsed_functions().items():
+        used.setdefault(" ".join(fn.get("CATEGORY", [])).strip(), []).append(name)
+    unknown = {c: v for c, v in used.items() if c not in stubs}
+    assert not unknown, f"# CATEGORY values with no stub: {unknown}"
+    empty = sorted(stubs - set(used))
+    assert not empty, f"category stubs generating zero entries: {empty}"
+
+
+def test_dependencies_resolve():
+    """Every declared # DEPENDENCIES name must be a real function or binary.
+
+    Catches typos, and catches stale entries when a dependency is renamed
+    or deleted. External binaries are accepted when some file in the tree
+    guards them with `type -q`, which is this repo's convention.
+    """
+    repo = Path(__file__).parent.parent
+    functions = _parsed_functions()
+    known = {p.stem for p in (repo / "functions").glob("*.fish")} | set(functions)
+    for path in list(repo.glob("conf.d/*.fish")) + list((repo / "functions").glob("*.fish")):
+        known |= set(re.findall(r"type -q\s+(\S+)", path.read_text(encoding="utf-8")))
+    dangling = []
+    for name, fn in functions.items():
+        for dep in (d for d in re.split(r"[,\s]+", " ".join(fn.get("DEPENDENCIES", []))) if d):
+            if dep not in known:
+                dangling.append(f"{name} -> {dep}")
+    assert not dangling, "unresolvable # DEPENDENCIES:\n  " + "\n  ".join(dangling)
+
+
+def warn_public_functions_without_category():
+    """Warn — never fail — on a public function carrying no `# CATEGORY`.
+
+    Bundled plugin and prompt internals will always lack one, so this
+    cannot be a hard failure; a genuinely new user-facing function going
+    undocumented still needs to be visible in CI output.
+    """
+    repo = Path(__file__).parent.parent
+    documented = set(_parsed_functions())
+    orphans = sorted(
+        p.stem
+        for p in (repo / "functions").glob("*.fish")
+        if not p.stem.startswith("_")
+        and p.stem not in documented
+        and "# SYNOPSIS" in p.read_text(encoding="utf-8")
+    )
+    if orphans:
+        print(f"  WARN  {len(orphans)} documented function(s) lack # CATEGORY:")
+        print("        " + ", ".join(orphans))
+
+
+def _without_section_5(text: str) -> str:
+    """Drop `# 5. FUNCTIONS REFERENCE` through the start of section 6.
+
+    Section 5 is generated from `functions/*.fish` headers, so it
+    legitimately differs from the pre-migration snapshot. The round-trip
+    guard covers the authored sections either side of it.
+    """
+    start = text.find("\n# 5. ")
+    if start == -1:
+        return text
+    end = text.find("\n# 6. ", start)
+    return text[:start] + (text[end:] if end != -1 else "")
 
 
 def _normalise(text: str) -> str:
@@ -127,6 +227,11 @@ def _normalise(text: str) -> str:
 
 def test_concat_roundtrips_original():
     """The concat of manual/ must reproduce the original fish-config.md exactly.
+
+    Section 5 is excluded: it is generated from `functions/*.fish` headers
+    and so legitimately differs from the snapshot. This test guarded the
+    *format* migration; the header-SSOT change is a *content* migration,
+    covered instead by the structural checks above.
 
     Prefers docs/fish-config.md.orig (a snapshot of the pre-migration file)
     when present. Once that snapshot is deleted post-migration,
@@ -149,8 +254,8 @@ def test_concat_roundtrips_original():
     if not original.exists():
         original = docs / "fish-config.md"
         label = "fish-config.md"
-    got = build_manual.build_concat(docs / "manual")
-    want = original.read_text()
+    got = _without_section_5(build_manual.build_concat(docs / "manual"))
+    want = _without_section_5(original.read_text())
     if got != want:
         norm_got = _normalise(got)
         norm_want = _normalise(want)
@@ -237,12 +342,77 @@ def test_prettify_splits_an_entry_block():
     assert "```fish\nrm file.txt" in out, "examples were not fenced as fish"
     assert out.count("```") == 4, f"expected exactly two fences, got:\n{out}"
     assert "\nSafe rm wrapper routing to trash:" in out, "description stayed indented"
-    assert (
-        "\n      (no args)   List current trash contents" in out
-    ), "option table lost its indentation"
+    assert "| `(no args)` | List current trash contents |" in out, (
+        "option table was not converted to a markdown table"
+    )
     assert (
         "\nFalls back to /usr/bin/rm when trash is unavailable." in out
     ), "trailing prose stayed indented"
+
+
+def test_as_table_converts_option_blocks():
+    """A labelled, column-aligned block becomes a table; wrapped rows fold in."""
+    import build_manual
+
+    out = build_manual._as_table(
+        [
+            "Options:",
+            "  -a/--aggressive  Also removes node_modules, logs,",
+            "                   and IDE dirs",
+            "  -d/--dry-run     Print what would be removed",
+            "Pass neither to run interactively.",
+        ]
+    )
+    assert out is not None, "a plain option table was rejected"
+    assert out.splitlines()[0] == "Options:", "the label line was dropped"
+    assert out.splitlines()[-1] == "Pass neither to run interactively.", (
+        "the trailing sentence was dropped"
+    )
+    assert (
+        "| `-a/--aggressive` | Also removes node_modules, logs, and IDE dirs |" in out
+    ), "a wrapped description did not fold into the row above"
+
+
+def test_as_table_escapes_pipes():
+    """`|` splits table cells even inside a code span, so it must be escaped."""
+    import build_manual
+
+    out = build_manual._as_table(
+        ["  -r/-R  Recurse into it", "  -e|-E  Empty it"]
+    )
+    assert out is not None and r"`-e\|-E`" in out, f"pipe was not escaped:\n{out}"
+
+
+def test_as_table_rejects_non_tables():
+    """Returning None is always safe, so every ambiguous shape must return it."""
+    import build_manual
+
+    cases = {
+        "single row": ["  -f/--force  Force-delete unmerged branches too"],
+        "numbered list": [
+            "  1. git+cargo source build (fish shell itself)",
+            "  2. cargo (Rust tools — gets latest crate version)",
+        ],
+        "misaligned rows": [
+            "  -e/--empty  Empty the trash",
+            "  -S/--secure Permanently delete (single space, not a column)",
+        ],
+        "synopsis continuation": [
+            "           auto-pull add [PATH]",
+            "           auto-pull status",
+        ],
+        "unlabelled head": [
+            "Routes to the best tool by context.",
+            "  --disk  force duf",
+            "  --dir   force dust",
+        ],
+        "live markdown in prose column": [
+            "  add     Register <PATH>'s git root",
+            "  remove  Unregister by basename",
+        ],
+    }
+    for label, para in cases.items():
+        assert build_manual._as_table(para) is None, f"{label} was wrongly tabled"
 
 
 def test_prettify_leaves_reference_tables_alone():
@@ -328,6 +498,7 @@ def main() -> int:
         except AssertionError as e:
             print(f"  FAIL  {t.__name__}: {e}", file=sys.stderr)
             failed += 1
+    warn_public_functions_without_category()
     print(f"\n{len(TESTS) - failed}/{len(TESTS)} passed")
     return 1 if failed else 0
 

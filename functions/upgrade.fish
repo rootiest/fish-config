@@ -1,12 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   05-package-management
+#
 # SYNOPSIS
 #   upgrade
 #
 # DESCRIPTION
 #   Runs a full system upgrade via paru or yay with --noconfirm. Falls
-#   back to yay if paru is not installed.
+#   back to yay if paru is not installed. Arch Linux only.
 #
 # RETURNS
 #   0  Upgrade completed successfully

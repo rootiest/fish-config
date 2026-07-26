@@ -1,6 +1,12 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
+# DEPENDENCIES
+#   open-url
+#
 # SYNOPSIS
 #   repo-open [-p|--print] [-r|--root]
 #   repo-open --help
@@ -39,6 +45,9 @@
 #   repo-open              # open current branch (+ subdir) in browser
 #   repo-open --print      # just print the URL
 #   repo-open --root       # repo home page for the current branch
+#
+# NOTES
+#   Typo abbreviation: open-repo (expands to repo-open on space/enter).
 function repo-open --description 'Open the origin remote of the current repo in a browser'
     argparse -X 0 h/help p/print r/root -- $argv
     or return 1

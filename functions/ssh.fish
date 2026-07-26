@@ -1,12 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   08-terminal-management
+#
 # SYNOPSIS
 #   ssh [args...]
 #
 # DESCRIPTION
 #   Wraps ssh with kitten ssh inside Kitty terminal for better terminal
-#   integration (e.g. terminfo forwarding). Falls back to system ssh on
+#   integration (terminfo forwarding, multiplexing, copy/paste support).
+#   Falls back to system ssh on
 #   other terminals.
 #
 # ARGUMENTS

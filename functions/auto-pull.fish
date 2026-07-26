@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   04-git-and-version-control
+#
 # SYNOPSIS
 #   auto-pull [list]
 #   auto-pull add [PATH]
@@ -12,8 +15,9 @@
 #   background fast-forwarded when you enter them (see conf.d/auto-pull.fish
 #   and _auto_pull_sync). The fish-config repo is always covered as a baseline
 #   and does not need to be added. The registry is a plain text file, one
-#   absolute git-toplevel path per line, stored machine-locally in
-#   ~/.config/.user-dots/fish/auto-pull.list (never committed to the config).
+#   absolute git-toplevel path per line, stored machine-locally at
+#   $__fish_user_dots_path/auto-pull.list (defaults to
+#   ~/.config/.user-dots/fish/auto-pull.list) and never committed.
 #
 #   Registry management works regardless of the C2 auto-execution guard; only
 #   the background sync itself is gated by __fish_config_op_autoexec.
@@ -22,7 +26,7 @@
 #   list               Show registered repos (default when no subcommand given)
 #   add [PATH]         Register PATH's git root; defaults to the current repo
 #   remove <NAME|PATH> Unregister by basename or exact path
-#   status             Show whether auto-pull is enabled and the registry path
+#   status             Show enabled/disabled state, repo count, and registry path
 #   -h, --help         Show this help message
 #
 # RETURNS

@@ -1,19 +1,24 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   cat [args...]
 #
 # DESCRIPTION
-#   Enhanced cat replacement that uses bat for file display, runs ls when given
-#   a directory, falls back to raw cat for ANSI-colored log files, and finally
-#   falls back to standard cat if bat is not installed.
+#   Enhanced cat replacement. Wraps bat for files, giving syntax highlighting
+#   and line numbers; passes directories to ls; falls back to raw cat for
+#   ANSI-colored log files, and finally to /usr/bin/cat if bat is not
+#   installed.
 #
 # ARGUMENTS
 #   args...  Files or directories to display
 #
 # EXAMPLE
 #   cat README.md
+#   cat ~/projects/myapp
 function cat --wraps='bat' --description 'Use bat for files, ls for directories, and raw cat for ANSI logs'
     # Opinionated guard (C1): fall back to bare command cat when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

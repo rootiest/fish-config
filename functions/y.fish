@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   09-clipboard
+#
 # SYNOPSIS
 #   y [text...]
 #
@@ -17,6 +20,8 @@
 #
 # EXAMPLE
 #   y "hello world"
+#   ls | y
+#   cat file.txt | y
 function y --description 'Yank to clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv

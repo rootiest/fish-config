@@ -1,13 +1,17 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   04-git-and-version-control
+#
 # SYNOPSIS
-#   gi [-h] [-b] [-p] [-s] [targets...]
+#   gi [-h] [-b] [-p] [-s] [-l] [targets...]
 #
 # DESCRIPTION
 #   Generates .gitignore content by querying the gitignore.io API. Appends
-#   results to the repository's .gitignore with MD5-based deduplication, or
-#   prints to stdout with -s. Supports boilerplate and interactive prompt modes.
+#   results to the repository's .gitignore with MD5-based deduplication —
+#   patterns already present are not re-appended — or prints to stdout with
+#   -s. Supports generic boilerplate and interactive prompt modes.
 #
 # ARGUMENTS
 #   -h, --help         Show help message
@@ -16,7 +20,7 @@
 #   -b, --boilerplate  Append boilerplate from $GITIGNORE_BOILERPLATE
 #   -p, --prompt       Prompt for patterns to append
 #   -s, --stdout       Print API output to stdout instead of .gitignore
-#   targets            Comma-separated list of language/tool names
+#   targets            Comma- or space-separated list of language/tool names
 #
 # RETURNS
 #   0  Patterns appended or printed
@@ -24,6 +28,8 @@
 #
 # EXAMPLE
 #   gi python,venv
+#   gi -b -p
+#   gi -s node > .gitignore
 function gi --description 'Generate .gitignore files using the gitignore.io API'
     argparse h/help d/description l/list b/boilerplate p/prompt s/stdout -- $argv
     or return 1

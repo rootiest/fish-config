@@ -1,22 +1,26 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   du [--disk|--dir|--dua] [args...]
 #
 # DESCRIPTION
-#   Smart disk-usage wrapper that routes to duf (disk overview), dust (directory
-#   tree), or dua based on context or explicit flags. Falls back to system du
-#   when the preferred tool is not installed.
+#   Smart disk-usage dispatcher. Without flags, routes to the most appropriate
+#   tool by context; explicit flags force one. Falls back to system du when the
+#   preferred tool is not installed.
 #
 # ARGUMENTS
-#   --disk   Force duf for disk-level overview
-#   --dir    Force dust for directory-level breakdown
-#   --dua    Force dua interactive mode
+#   --disk   Force duf  (disk-level free/used overview)
+#   --dir    Force dust (per-directory tree breakdown)
+#   --dua    Force dua  (fast interactive space analyzer)
 #   args...  Files/directories or flags forwarded to the selected tool
 #
 # EXAMPLE
 #   du ~/Downloads
+#   du --disk
 function du --description 'Execute du'
     # Opinionated guard (C1): fall back to bare command du when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

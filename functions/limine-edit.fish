@@ -1,13 +1,17 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   07-system-and-monitoring
+#
 # SYNOPSIS
 #   limine-edit
 #
 # DESCRIPTION
 #   Opens /boot/limine.conf in sudoedit, then re-enrolls the config hash,
 #   runs CachyOS boot hooks (limine-mkinitcpio), and re-signs all Secure Boot
-#   files tracked by sbctl.
+#   files tracked by sbctl. Combines the edit and sign steps into a single
+#   command.
 #
 # EXAMPLE
 #   limine-edit

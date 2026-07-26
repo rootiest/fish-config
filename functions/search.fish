@@ -1,12 +1,15 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   05-package-management
+#
 # SYNOPSIS
 #   search [args...]
 #
 # DESCRIPTION
 #   Delegates to paru or yay for interactive AUR package search and
-#   installation. Falls back to yay if paru is not installed.
+#   installation. Falls back to yay if paru is not installed. Arch Linux only.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to paru or yay

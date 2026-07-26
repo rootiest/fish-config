@@ -1,16 +1,22 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   12-ai-and-developer-tools
+#
 # SYNOPSIS
 #   qc [prompt...]
 #
 # DESCRIPTION
-#   Quick-chat wrapper around aichat using the "cli" role. Resolves the
-#   aichat config directory (honoring $XDG_CONFIG_HOME), creates it if
-#   missing, and installs the bundled cli-agent role as a symlink at
-#   roles/cli.md on first use. Inherits aichat's own flags and tab
-#   completions (--wraps). The function is only defined when aichat is
-#   installed.
+#   Quick-chat wrapper around the aichat LLM CLI that defaults to the "cli"
+#   role — a system prompt tuned for concise, terminal-friendly output.
+#   Resolves the aichat config directory (honoring $XDG_CONFIG_HOME), creates
+#   it if missing, and on first use installs the bundled role by symlinking
+#   scripts/cli-agent.md to $XDG_CONFIG_HOME/aichat/roles/cli.md. Inherits
+#   every aichat flag and tab completion (--wraps aichat); passing --role/-r
+#   overrides the default role, so qc forwards to aichat unchanged. The
+#   function is only defined when aichat is installed. Run `qc --help` for
+#   aichat's full flag reference with the command name rewritten to qc.
 #
 # ARGUMENTS
 #   prompt...     Prompt forwarded to aichat
@@ -21,6 +27,8 @@
 #
 # EXAMPLE
 #   qc "how do I list open ports on linux?"
+#   qc -m ollama:llama3 "explain this error"
+#   qc --role coder "refactor this function"
 if type -q aichat
     function qc --wraps aichat --description 'Quick-chat wrapper around aichat (cli role)'
         if contains -- -h $argv; or contains -- --help $argv

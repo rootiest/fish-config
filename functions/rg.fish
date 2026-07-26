@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   rg [args...]
 #
@@ -14,6 +17,8 @@
 #
 # EXAMPLE
 #   rg "TODO" src/
+#   rg "fish_greeting" ~/.config/fish/
+#   rg -l "TODO" ~/projects/myapp
 function rg --description 'alias rg=rg --hyperlink-format=kitty'
     # Opinionated guard (C1): fall back to bare command rg when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

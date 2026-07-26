@@ -1,12 +1,25 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   11-pager-and-logging
+#
 # SYNOPSIS
 #   logs [-h] [-c <category>]
 #
 # DESCRIPTION
 #   Interactively browses terminal log files (scrollback, paru, yay) sorted
 #   newest-first using fzf. Supports viewing in $PAGER, editing, and deletion.
+#
+#   Keybindings inside the fzf browser:
+#     Enter    Open in $PAGER
+#     Ctrl+E   Open in $EDITOR
+#     Ctrl+D   Delete (with confirmation)
+#     ?        Toggle keybind help overlay
+#
+#   Paru and yay logs open in ov with syntax highlighting and sticky section
+#   headers. Scrollback logs open in ov with per-command sticky prompt headers
+#   based on OSC 133 markers.
 #
 # ARGUMENTS
 #   -h, --help           Show help message
@@ -18,6 +31,8 @@
 #
 # EXAMPLE
 #   logs -c paru
+#   logs
+#   logs -c scrollback
 function logs --description 'Browse terminal log files interactively with fzf'
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled __fish_config_op_integrations

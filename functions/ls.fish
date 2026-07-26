@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   ls [args...]
 #
@@ -13,6 +16,8 @@
 #
 # EXAMPLE
 #   ls ~/projects
+#   ls
+#   ls -a ~/projects
 function ls --description 'List all files'
     # Opinionated guard (C1): fall back to bare command ls when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   13-media-and-utilities
+#
 # SYNOPSIS
 #   yt-dlp [args...] URL [URL...]
 #
@@ -9,11 +12,17 @@
 #   (--sponsorblock-remove all, --embed-subs, --embed-metadata,
 #   --embed-thumbnail). Each default is suppressed if the user already
 #   passes that flag, its alias, or its negation (e.g. --no-embed-thumbnail
-#   drops our --embed-thumbnail). All other arguments pass through
+#   drops our --embed-thumbnail; --no-sponsorblock or your own
+#   --sponsorblock-remove drops ours). All other arguments pass through
 #   untouched. --help and friends fall through to real yt-dlp.
+#
+#   Opinionated component (C1): when disabled via __fish_config_op_aliases
+#   (or the __fish_config_opinionated master), passes straight through to
+#   the system yt-dlp with no defaults injected.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to yt-dlp (defaults prepended)
+#   --no-embed-thumbnail  Skip thumbnail embedding for this run
 #
 # EXAMPLE
 #   yt-dlp dQw4w9WgXcQ

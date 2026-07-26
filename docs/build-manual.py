@@ -18,6 +18,37 @@ import manualtools as mt
 
 DOCS = Path(__file__).parent
 MANUAL = DOCS / "manual"
+FUNCTIONS = DOCS.parent / "functions"
+SLUG_DIR = "reference"
+
+
+def _is_function_page(path: Path, root: Path) -> bool:
+    """True for a Section 5 category stub (not its index)."""
+    rel = path.relative_to(root)
+    return bool(rel.parts) and rel.parts[0].endswith("-functions") and rel.name != "index.md"
+
+
+def _entry_slug(title: str) -> str:
+    """The site's page slug for an entry heading."""
+    return re.sub(r"[^\w-]+", "-", title.strip().lower()).strip("-")
+
+
+def _entry_link(name: str, functions: dict) -> str:
+    """Link a dependency name to its entry page; plain code span if unknown."""
+    fn = functions.get(name)
+    if not fn:
+        return f"`{name}`"
+    category = re.sub(r"^\d+-", "", fn["CATEGORY"][0])
+    return f"[`{name}`](/{SLUG_DIR}/{category}/{_entry_slug(name)}/)"
+
+
+def _with_entries(body: str, path: Path, entries: dict) -> str:
+    """Append this category's generated `## name` entries to its stub body."""
+    generated = entries.get(path.stem, [])
+    if not generated:
+        return body
+    blocks = [f"## {name}\n\n{entry}" for name, entry in generated]
+    return "\n\n".join(([body] if body.strip() else []) + blocks)
 
 
 def build_concat(root: Path) -> str:
@@ -32,6 +63,7 @@ def build_concat(root: Path) -> str:
     present, its contents are re-emitted byte-for-byte as the leading
     `---`-fenced block, ahead of every heading.
     """
+    entries = build_entries(mt.parse_functions(FUNCTIONS))
     chunks: list[str] = []
     pandoc_path = root / "_pandoc.yml"
     if pandoc_path.exists():
@@ -43,6 +75,8 @@ def build_concat(root: Path) -> str:
             continue
         heading = fm.get("manTitle") or fm.get("title", path.stem)
         chunks.append("#" * (depth + 1) + " " + heading)
+        if _is_function_page(path, root):
+            body = _with_entries(body, path, entries)
         if body:
             chunks.append(mt.shift_headings(body, depth))
     return "\n\n".join(chunks) + "\n"
@@ -73,19 +107,46 @@ def _jsx_attr_escape(value: str) -> str:
 def _first_sentence(body: str) -> str:
     """Extract a one-line description from the start of an entry body.
 
-    `Synopsis:` lines are skipped: they restate the calling convention,
+    The `Synopsis:` block is skipped whole — label line plus its
+    deeper-indented continuation lines. It restates the calling convention,
     which the card already shows as its title, so using one as the card
     description wastes the line.
+
+    Source prose is hard-wrapped, so the leading paragraph is unwrapped
+    before the sentence match — otherwise a card truncates at the first
+    line break, mid-clause.
     """
-    for line in body.split("\n"):
-        line = line.strip()
-        if not line or line.startswith(("#", "```", "|", "-", "*", ">")):
+    para: list[str] = []
+    in_fence = False
+    syn_indent: int | None = None
+    for raw in body.split("\n"):
+        line = raw.strip()
+        indent = len(raw) - len(raw.lstrip())
+        if syn_indent is not None:
+            if line and indent <= syn_indent:
+                syn_indent = None
+            else:
+                continue
+        if line.startswith("```"):
+            in_fence = not in_fence
+            if para:
+                break
+            continue
+        if in_fence:
+            continue
+        if not line or line.startswith(("#", "|", "-", "*", ">")):
+            if para:
+                break
             continue
         if line.startswith("Synopsis:"):
+            syn_indent = indent
             continue
-        m = SENTENCE_RE.match(line)
-        return (m.group(1) if m else line)[:160]
-    return ""
+        para.append(line)
+    if not para:
+        return ""
+    text = " ".join(para)
+    m = SENTENCE_RE.match(text)
+    return (m.group(1) if m else text)[:160]
 
 
 # Commands common enough in this manual that a block whose every line starts
@@ -140,6 +201,58 @@ def _is_shell(para: list[str], entry_name: str | None) -> bool:
     return True
 
 
+CELL_SPLIT = re.compile(r"\s{2,}")
+
+
+def _cell(text: str, code: bool) -> str:
+    """Render one table cell. `|` must be escaped even inside a code span."""
+    text = text.strip().replace("|", r"\|")
+    return f"`{text}`" if code and text else text
+
+
+def _as_table(para: list[str]) -> str | None:
+    """Render an aligned two-column block as a markdown table, else None.
+
+    Option and subcommand tables are the one thing in this manual that is
+    genuinely tabular, and the indented-code fallback renders them as a grey
+    slab. Everything else stays in that fallback: returning None is always
+    safe, so every check here is free to be conservative.
+
+    The rows must form one contiguous indented run, optionally introduced by
+    a label line (`Options:`) and closed by a sentence. Lines indented deeper
+    than the run are wrapped descriptions and fold into the row above.
+    """
+    starts = [i for i, ln in enumerate(para) if ln.startswith(" ")]
+    if len(starts) < 2 or starts != list(range(starts[0], starts[-1] + 1)):
+        return None
+    head = para[: starts[0]]
+    body = para[starts[0] : starts[-1] + 1]
+    tail = para[starts[-1] + 1 :]
+    if head and not head[-1].rstrip().endswith(":"):
+        return None  # a head that isn't a label means mixed content
+
+    indent = min(len(ln) - len(ln.lstrip()) for ln in body)
+    rows: list[list[str]] = []
+    for line in body:
+        if len(line) - len(line.lstrip()) > indent and rows:
+            rows[-1][1] += " " + line.strip()
+            continue
+        parts = CELL_SPLIT.split(line.strip(), 1)
+        if len(parts) != 2 or not parts[1].strip():
+            return None  # not column-aligned; a numbered list, or prose
+        rows.append([parts[0], parts[1].strip()])
+    if len(rows) < 2:
+        return None
+    if any("<" in value or "{" in value for _, value in rows):
+        return None  # live markdown in the prose column
+
+    out = [line.strip() for line in head]
+    out += ["| | |", "|---|---|"]
+    out += [f"| {_cell(k, True)} | {_cell(v, False)} |" for k, v in rows]
+    out += [line.strip() for line in tail]
+    return "\n".join(out)
+
+
 def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
     """Render one paragraph of a former indented block.
 
@@ -152,6 +265,9 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
         if _is_shell(para, entry_name):
             body = "\n".join(para)
             return f"```fish\n{body}\n```"
+    table = _as_table(para)
+    if table is not None:
+        return table
     return "\n".join(INDENT + line for line in para)
 
 
@@ -167,8 +283,12 @@ def _prettify_block(block: list[str], entry_name: str | None) -> str:
 
     out: list[str] = []
     if lines and lines[0].startswith(SYNOPSIS_PREFIX):
-        synopsis = lines.pop(0)[len(SYNOPSIS_PREFIX) :].strip()
-        out.append(f"```fish\n{synopsis}\n```")
+        synopsis = [lines.pop(0)[len(SYNOPSIS_PREFIX) :].strip()]
+        # A multi-line synopsis is authored aligned under the first line;
+        # keep the whole thing in one fence rather than orphaning the rest.
+        while lines and lines[0].startswith(" "):
+            synopsis.append(lines.pop(0).strip())
+        out.append("```fish\n" + "\n".join(synopsis) + "\n```")
 
     para: list[str] = []
     for line in lines + [""]:
@@ -211,6 +331,76 @@ def prettify(body: str, entry_name: str | None = None) -> str:
             block.pop()
         out.append(_prettify_block(block, entry_name))
     return "\n".join(out)
+
+
+ENTRY_HEADS = {"ARGUMENTS": "Arguments:", "RETURNS": "Returns:", "NOTES": "Notes:"}
+
+
+def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str:
+    """Render one parsed function header as a manual entry body.
+
+    Emits the same man-page shape Section 5 was authored in — one 4-space
+    indented block opening with `Synopsis:` — so `prettify` keeps handling it
+    for the site and pandoc keeps handling it for the man page, with no
+    special case on either side.
+
+    `link` maps a function name to its markdown link, or is None for the man
+    page, where a URL in the middle of a sentence is noise.
+    """
+    out: list[str] = []
+    syn = fn.get("SYNOPSIS", [])
+    if syn:
+        pad = " " * len(SYNOPSIS_PREFIX + "  ")
+        out.append(f"{SYNOPSIS_PREFIX}  {syn[0]}")
+        out += [pad + line for line in syn[1:]]
+        out.append("")
+    for line in fn.get("DESCRIPTION", []):
+        out.append(line)
+    for label, head in ENTRY_HEADS.items():
+        body = fn.get(label)
+        if not body:
+            continue
+        out += ["", head] + ["  " + line for line in body]
+    if fn.get("EXAMPLE"):
+        out += [""] + fn["EXAMPLE"]
+
+    block = "\n".join((INDENT + line).rstrip() for line in out)
+
+    def names(raw: list[str]) -> list[str]:
+        return [n for n in re.split(r"[,\s]+", " ".join(raw)) if n]
+
+    refs = []
+    for label, values in (
+        ("Dependencies", names(fn.get("DEPENDENCIES", []))),
+        ("Used by", sorted(used_by)),
+    ):
+        if values:
+            rendered = ", ".join(link(v) if link else f"`{v}`" for v in values)
+            refs.append(f"**{label}:** {rendered}")
+    if refs:
+        block += "\n\n" + "\n\n".join(refs)
+    return block
+
+
+def build_entries(functions: dict[str, dict], link=None) -> dict[str, list[tuple[str, str]]]:
+    """Group rendered entries by category stem, ordered by function name.
+
+    The `Used by` reverse index is computed here in one pass rather than
+    authored: a bidirectional link maintained by hand drifts the moment one
+    side is edited.
+    """
+    used_by: dict[str, list[str]] = {}
+    for name, fn in functions.items():
+        for dep in re.split(r"[,\s]+", " ".join(fn.get("DEPENDENCIES", []))):
+            if dep in functions:
+                used_by.setdefault(dep, []).append(name)
+
+    out: dict[str, list[tuple[str, str]]] = {}
+    for name in sorted(functions):
+        fn = functions[name]
+        body = render_entry(fn, used_by.get(name, []), link)
+        out.setdefault(fn["CATEGORY"][0], []).append((name, body))
+    return out
 
 
 def _page_fm(fm: dict) -> dict:
@@ -260,6 +450,9 @@ def build_site(root: Path, out: Path) -> list[dict]:
         shutil.rmtree(out)
     out.mkdir(parents=True)
 
+    functions = mt.parse_functions(FUNCTIONS)
+    entries = build_entries(functions, link=lambda n: _entry_link(n, functions))
+
     sidebar: list[dict] = []
     functions_group: dict = {}
     for path, _depth in mt.walk(root):
@@ -286,7 +479,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
         # upload. The pages build fine and never arrive — every entry 404s in
         # production while working locally. test_site_avoids_reserved_dir
         # guards this.
-        slug_dir = "reference"
+        slug_dir = SLUG_DIR
         if rel.name == "index.md":
             target = out / slug_dir / "index.md"
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -305,12 +498,12 @@ def build_site(root: Path, out: Path) -> list[dict]:
         category = re.sub(r"^\d+-", "", rel.stem)
         cat_dir = out / slug_dir / category
         cat_dir.mkdir(parents=True, exist_ok=True)
-        intro, entries = _split_entries(body)
+        intro, page_entries = _split_entries(_with_entries(body, path, entries))
 
         cards = []
         links = []
-        for title, entry_body in entries:
-            entry_slug = re.sub(r"[^\w-]+", "-", title.strip().lower()).strip("-")
+        for title, entry_body in page_entries:
+            entry_slug = _entry_slug(title)
             desc = _first_sentence(entry_body)
             entry_fm = {"title": title}
             if desc:

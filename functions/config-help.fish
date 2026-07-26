@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
 # SYNOPSIS
 #   config-help [section]
 #   config-help --html
@@ -14,11 +17,14 @@
 #   that matches the keyword. Lookup order: docs/fish-config.index (exact
 #   keyword aliases), then a normalized heading scan as fallback.
 #   When opened with ov a sticky navigation hint is shown at the top of the
-#   screen. Pass --html / -w to open the published documentation website in
-#   the default browser (deep links to a section aren't supported there —
-#   use the site's search box). Pass --man / -m to open the compiled man
-#   page; if a section keyword is given, the pager opens at the nearest
-#   match. Pass --help or -h for usage.
+#   screen. Section matching is case-insensitive. Pass --html / -w to open
+#   the published documentation website (https://fish-config-docs.pages.dev/)
+#   in the default browser via xdg-open — deep links to a section aren't
+#   supported there, so if a keyword is given a note points you to the site's
+#   search box instead. Pass --man / -m to open the compiled man page
+#   (docs/fish-config.1) via `man -l`; if a section keyword is given, the
+#   pager opens at the nearest match. Pass --help or -h for usage and the
+#   navigation key reference.
 #
 # ARGUMENTS
 #   section     Optional keyword to jump to a matching section heading
@@ -39,6 +45,7 @@
 #   config-help --man
 #   config-help keys --man
 #   config-help --help
+#   config-help pkg --man
 #
 # NOTES
 #   The preferred invocation is `help config [...]` — this function is

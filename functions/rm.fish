@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   rm [-e [options] | -S | args...]
 #
@@ -18,7 +21,7 @@
 # ARGUMENTS
 #   (none)              List current trash contents
 #   -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
-#   -S, --secure        Permanently delete targets and run fstrim
+#   -S, --secure        Permanently delete targets and run fstrim (irreversible)
 #   -r, -R, --recursive Forwarded to trash put alongside path arguments
 #   args...             Files or paths to trash or remove
 #
@@ -30,6 +33,9 @@
 #   rm file.txt
 #   rm -e
 #   rm -S sensitive_key.pem
+#
+# NOTES
+#   Falls back to /usr/bin/rm when trash is unavailable.
 function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
     # Opinionated guard (C1): fall back to bare command rm when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

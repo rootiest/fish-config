@@ -1,13 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   04-git-and-version-control
+#
 # SYNOPSIS
 #   git-clean [-h] [-f]
 #
 # DESCRIPTION
-#   Fetches and prunes the remote, updates the current branch, and deletes
-#   local branches whose tracking remote has been deleted. Automatically moves
-#   to main if currently on an orphaned branch.
+#   Fetches and prunes the remote, fast-forwards the current branch, and
+#   deletes local branches whose tracking remote has been deleted. Switches to
+#   main/master automatically if the current branch is orphaned.
 #
 # ARGUMENTS
 #   -h, --help   Show help message
@@ -19,6 +22,7 @@
 #
 # EXAMPLE
 #   git-clean --force
+#   git-clean
 function git-clean --description 'Sync main, prune remotes, and delete orphaned branches'
     set -l options h/help f/force
     argparse $options -- $argv

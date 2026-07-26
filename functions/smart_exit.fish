@@ -1,13 +1,17 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   11-pager-and-logging
+#
 # SYNOPSIS
 #   smart_exit [-h] [-n]
 #
 # DESCRIPTION
-#   Closes the shell session, capturing and archiving the terminal scrollback
-#   log before exit (Kitty only). Automatically prunes junk and excess log
-#   files according to $SCROLLBACK_HISTORY_MAX_FILES.
+#   Closes the shell session. In Kitty, captures the terminal scrollback to a
+#   timestamped log file in $SCROLLBACK_HISTORY_DIR before exiting.
+#   Automatically prunes junk and the oldest logs when the count exceeds
+#   $SCROLLBACK_HISTORY_MAX_FILES.
 #
 # ARGUMENTS
 #   -h, --help    Show help message
@@ -18,7 +22,12 @@
 #   1  Argument parsing failed
 #
 # EXAMPLE
+#   smart_exit
 #   smart_exit --no-log
+#
+# NOTES
+#   The exit builtin is wired to smart_exit for interactive sessions. Typing
+#   `exit` or Ctrl+D behaves identically to calling smart_exit directly.
 function smart_exit --description 'Capture colorized scrollback before exiting, with pruning and safe overrides'
     # Opinionated guard (C3): exit plainly when overrides are disabled.
     # This composes with Task #4's __fish_config_enable_logging, which will

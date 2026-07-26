@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   scrub [-a] [-d] [-h]
 #
@@ -12,7 +15,7 @@
 #   IDE directories, and AI tool artifacts.
 #
 # ARGUMENTS
-#   -a, --aggressive  Also purge node_modules, *.log, .idea, AI artifacts
+#   -a, --aggressive  Also purge node_modules, *.log, .cache, .idea, AI artifacts
 #   -d, --dry-run     Show targets without deleting
 #   -h, --help        Show usage help
 #

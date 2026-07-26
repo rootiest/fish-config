@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   13-media-and-utilities
+#
 # SYNOPSIS
 #   spark [--min=<n>] [--max=<n>] [numbers...]
 #
@@ -19,6 +22,7 @@
 # EXAMPLE
 #   spark 1 1 2 5 14 42
 #   seq 64 | sort --random-sort | spark
+#   echo "3 7 2 9 1" | spark
 function spark --description 'Sparklines'
     argparse --ignore-unknown --name=spark v/version h/help m/min= M/max= -- $argv || return
 

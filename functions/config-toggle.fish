@@ -1,6 +1,12 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
+# DEPENDENCIES
+#   config-settings
+#
 # SYNOPSIS
 #   config-toggle [args...]
 #

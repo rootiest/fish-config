@@ -1,12 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   05-package-management
+#
 # SYNOPSIS
 #   parur
 #
 # DESCRIPTION
 #   Presents an fzf picker of all installed packages (via pacman -Qqs) with
 #   pacman -Qi previews, then removes the selected packages using paru or yay.
+#   Arch Linux only.
 #
 # RETURNS
 #   0  Packages removed or none selected

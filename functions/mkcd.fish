@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   mkcd [-s | --silent] <dir>
 #
@@ -21,6 +24,7 @@
 #
 # EXAMPLE
 #   mkcd ~/projects/myapp
+#   mkcd ~/projects/newapp/src
 function mkcd --description 'Create a directory (with parents) and cd into it'
     set -l c_head (set_color --bold cyan)
     set -l c_cmd  (set_color --bold white)

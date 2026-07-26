@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   01-file-and-directory
+#
 # SYNOPSIS
 #   copy <source> <dest>
 #
@@ -14,6 +17,7 @@
 #
 # EXAMPLE
 #   copy ./mydir/ ~/backup
+#   copy ./mydir/ ~/backup    # copies mydir INTO backup, not backup/mydir/
 function copy
     set count (count $argv)
     if test "$count" = 2; and test -d "$argv[1]"

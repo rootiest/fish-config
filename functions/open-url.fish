@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
 # SYNOPSIS
 #   open-url [-s|--silent] [-v|--verbose] <url>
 #   open-url --help
@@ -11,7 +14,8 @@
 #   binary rather than deferring to xdg-open, whose MIME dispatch can hand
 #   local text/html files to non-browser apps (e.g. ebook readers).
 #
-#   Silent by default: prints nothing on success (errors always go to stderr).
+#   Silent by default: prints nothing on success (errors always go to stderr);
+#   --silent / -s is accepted for explicitness.
 #
 #   Resolution order:
 #     1. $fish_help_browser  (explicit override)
@@ -33,6 +37,9 @@
 # EXAMPLE
 #   open-url https://git.rootiest.dev/rootiest/fish-config
 #   open-url -v https://fish-config-docs.pages.dev/
+#
+# NOTES
+#   Typo abbreviation: url-open (expands to open-url on space/enter).
 function open-url --description 'Open a URL in the best available web browser'
     argparse h/help s/silent v/verbose -- $argv
     or return 1

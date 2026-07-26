@@ -1,23 +1,57 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
 # SYNOPSIS
 #   config-settings [-h | --help]
 #
 # DESCRIPTION
 #   Opens an interactive full-screen TUI for managing fish config settings
-#   across four pages:
+#   across four pages, without having to type or remember variable names:
 #
-#     Universal — opinionated-category toggles, persistent (set -U / set -Ue)
-#     Session   — opinionated-category toggles, this shell only (set -g / set -eg)
-#     Sponge    — sponge history-scrubbing settings (delay, codes, secrets …)
-#     Paths     — scrollback log dir, log max, and user-dots path
+#     Universal — opinionated-category toggles (C1–C6) + master, persistent (set -U)
+#     Session   — the same toggles, current shell only (set -g)
+#     Sponge    — sponge history-scrubbing settings: delay, successful exit
+#                 codes, purge-only-on-exit, allow-previously-successful, and
+#                 extra sensitive variable-name tokens
+#     Paths     — scrollback log directory, scrollback max files, the user-dots
+#                 path, and the user-dots convenience symlink toggle (Dots link)
 #
-#   Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON.
-#   Value rows (Sponge, Paths) use Enter to edit inline; ← / h clears to default.
+#   Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON; DEFAULT erases
+#   the variable so the master switch / built-in default applies. Value rows
+#   (Sponge, Paths) use Enter to edit inline; ← / h clears to default. List rows
+#   (e.g. Extra secret, OK codes) accept values separated by commas and/or
+#   whitespace — "A, B", "A,B" and "A B" all yield the same two entries.
 #   Tab / Shift-Tab cycle forward / backward through pages.
 #   Changes apply immediately — no confirm step. Always available regardless of
 #   __fish_config_opinionated state.
+#
+#   The Sponge and Paths pages always write universal variables — these are
+#   persistent, set-and-forget settings with no per-session scope. Editing a
+#   scrollback row updates both the __fish_scrollback_history_* source-of-truth
+#   variables and the exported SCROLLBACK_HISTORY_* mirrors, so the AUR/tmux/
+#   zellij log wrappers (which read the exported names) see the change in the
+#   running session.
+#
+#   The panel adapts to the terminal width automatically, selecting from four
+#   layout tiers (with a 6-column buffer on each side before stepping up to the
+#   next tier) and horizontally centering the box. The panel redraws within
+#   ~0.3 s of a terminal resize with no keypress required.
+#
+#     COLUMNS >= 90  →  78-wide panel (most detail)
+#     COLUMNS >= 86  →  74-wide panel
+#     COLUMNS >= 82  →  70-wide panel
+#     COLUMNS  < 82  →  52-wide panel (default)
+#
+#   Navigation:
+#     ↑ ↓ / k j     Move cursor
+#     ← → / h l     Toggle rows: OFF ← DEFAULT → ON
+#     ←  / h        Value rows: clear to default
+#     Enter         Value rows: edit inline (Sponge / Paths pages)
+#     Tab / S-Tab   Next / previous page
+#     q / Escape    Exit
 #
 # ARGUMENTS
 #   -h, --help  Print usage and exit

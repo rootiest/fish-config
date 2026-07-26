@@ -1,12 +1,33 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   06-dependency-management
+#
 # SYNOPSIS
 #   fish-deps [status|install|update|sync]
 #
 # DESCRIPTION
-#   Manages fish shell dependencies by dispatching to subcommand handlers.
-#   Defaults to status when no subcommand is given.
+#   Unified command for managing all tools this configuration depends on,
+#   dispatching to subcommand handlers. Defaults to status when no subcommand
+#   is given.
+#
+#   Install method priority (highest to lowest):
+#     1. git+cargo source build (fish shell itself)
+#     2. cargo (Rust tools — gets latest crate version)
+#     3. system PM (paru/apt/brew/etc.)
+#     4. git clone (fzf)
+#     5. curl installer (starship, fisher, uv)
+#
+#   When multiple methods are available you are prompted to choose.
+#
+#   Dependencies are grouped into three tiers:
+#
+#     Required      fish, fzf, zoxide
+#     Integrations  wakatime, tailscale
+#     Recommended   cargo, starship, uv, direnv, paru, yay, eza, lsd, bat,
+#                   btop, dust, duf, prettyping, ov, ripgrep, lazygit,
+#                   lazydocker, trash, kitty, wezterm, python3, yt-dlp
 #
 # ARGUMENTS
 #   status   Report installed/missing deps (default)
@@ -20,6 +41,9 @@
 #
 # EXAMPLE
 #   fish-deps sync
+#   fish-deps
+#   fish-deps install
+#   fish-deps update
 function fish-deps --description 'Manage fish shell dependencies'
     set -l subcmd $argv[1]
 
