@@ -1790,9 +1790,8 @@ Typo abbreviation: open-repo (expands to repo-open on space/enter).
 Synopsis:  config-update [-h] [-n] [-f]
 
 Pulls the latest fish configuration from the upstream repository
-(https://git.rootiest.dev/rootiest/fish-config.git) into \[ti]/.config/fish.
-The remote URL is hard-coded, so this works on fresh clones with no git
-remote configured. All git output is suppressed; colored messages report
+into \[ti]/.config/fish.
+All git output is suppressed; colored messages report
 fetch and merge status. After a successful pull, run \[ga]exec fish\[ga] to
 reload.
 
@@ -2794,8 +2793,6 @@ config-update --force      Stash local changes, pull, then restore the stash
 \f[R]
 .fi
 .PP
-The remote URL (https://git.rootiest.dev/rootiest/fish-config.git) is
-hard-coded, so this works on a fresh clone with no origin configured.
 All git output is suppressed.
 Run exec fish after a successful update to reload.
 .PP

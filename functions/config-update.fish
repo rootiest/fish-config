@@ -6,9 +6,7 @@
 #
 # DESCRIPTION
 #   Pulls the latest fish shell configuration from the upstream repository
-#   (https://git.rootiest.dev/rootiest/fish-config.git) into ~/.config/fish.
-#   The remote URL is hard-coded so the update works even if the local clone
-#   has no configured remote. Git output is suppressed; status is reported
+#   into ~/.config/fish. Git output is suppressed; status is reported
 #   through colored messages. After a successful pull the function prints a
 #   short summary of changed files.
 #

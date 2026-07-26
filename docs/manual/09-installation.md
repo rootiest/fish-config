@@ -36,8 +36,6 @@ configured git remote:
     config-update --dry-run    Preview available changes without applying them
     config-update --force      Stash local changes, pull, then restore the stash
 
-The remote URL (https://git.rootiest.dev/rootiest/fish-config.git) is
-hard-coded, so this works on a fresh clone with no origin configured. All
-git output is suppressed. Run exec fish after a successful update to reload.
+All git output is suppressed. Run exec fish after a successful update to reload.
 
 ---
