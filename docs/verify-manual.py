@@ -72,6 +72,18 @@ def test_walk_nests_directory_after_its_index():
     assert got == expected, f"wrong nesting: {got}"
 
 
+def test_parse_roundtrip_body_with_leading_blank_line():
+    fm = {"title": "Test"}
+    body = "\nContent starts after blank line."
+    text = mt.serialize(fm, body)
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "t.md"
+        p.write_text(text)
+        got_fm, got_body = mt.parse(p)
+    assert got_fm == fm, f"frontmatter mismatch: {got_fm!r}"
+    assert got_body == body, f"body mismatch: expected {body!r}, got {got_body!r}"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 

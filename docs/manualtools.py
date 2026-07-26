@@ -29,7 +29,7 @@ def parse(path: Path) -> tuple[dict, str]:
     if end == -1:
         return {}, text.rstrip()
     fm = yaml.safe_load(text[4:end]) or {}
-    return fm, text[end + 5 :].lstrip('\n').rstrip()
+    return fm, text[end + 5 :].removeprefix("\n").rstrip()
 
 
 def serialize(fm: dict, body: str) -> str:
