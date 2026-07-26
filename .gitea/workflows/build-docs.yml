@@ -8,6 +8,7 @@ on:
       - "docs/manual/**"
       - "docs/build-manual.py"
       - "docs/manualtools.py"
+      - "docs/verify-manual.py"
 
 jobs:
   build-docs:
@@ -23,11 +24,19 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y pandoc python3-yaml
 
-      - name: Verify manual integrity
-        run: python3 docs/verify-manual.py
-
       - name: Generate concatenated markdown
         run: python3 docs/build-manual.py --concat -o docs/fish-config.md
+
+      # Regeneration MUST run before verification: verify-manual.py's
+      # test_concat_roundtrips_original compares a freshly-built concat
+      # against docs/fish-config.md on disk. Before this step ran, that
+      # file was still the stale pre-push copy, so any ordinary edit under
+      # docs/manual/** failed the round-trip check before anything was
+      # regenerated. Do not reorder this back — verification still gates
+      # pandoc and the auto-commit below, it just no longer requires a
+      # contributor to hand-sync the generated file before pushing.
+      - name: Verify manual integrity
+        run: python3 docs/verify-manual.py
 
       - name: Compile man page
         run: |
