@@ -9,8 +9,9 @@
 #
 # DESCRIPTION
 #   Generates .gitignore content by querying the gitignore.io API. Appends
-#   results to the repository's .gitignore with MD5-based deduplication, or
-#   prints to stdout with -s. Supports boilerplate and interactive prompt modes.
+#   results to the repository's .gitignore with MD5-based deduplication —
+#   patterns already present are not re-appended — or prints to stdout with
+#   -s. Supports generic boilerplate and interactive prompt modes.
 #
 # ARGUMENTS
 #   -h, --help         Show help message
@@ -19,7 +20,7 @@
 #   -b, --boilerplate  Append boilerplate from $GITIGNORE_BOILERPLATE
 #   -p, --prompt       Prompt for patterns to append
 #   -s, --stdout       Print API output to stdout instead of .gitignore
-#   targets            Comma-separated list of language/tool names
+#   targets            Comma- or space-separated list of language/tool names
 #
 # RETURNS
 #   0  Patterns appended or printed

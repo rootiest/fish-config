@@ -8,12 +8,13 @@
 #   git-clean [-h] [-f]
 #
 # DESCRIPTION
-#   Fetches and prunes the remote, updates the current branch, and deletes
-#   local branches whose tracking remote has been deleted. Automatically moves
-#   to main if currently on an orphaned branch.
+#   Fetches and prunes the remote, fast-forwards the current branch, and
+#   deletes local branches whose tracking remote has been deleted. Switches to
+#   main/master automatically if the current branch is orphaned.
 #
 # ARGUMENTS
-#   -h, --help   Show help message
+#   -h, --help    Show help message
+#   -f, --force   Force-delete unmerged branches too
 #   -f, --force  Force-delete unmerged orphaned branches (git branch -D)
 #
 # RETURNS

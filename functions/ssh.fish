@@ -9,7 +9,8 @@
 #
 # DESCRIPTION
 #   Wraps ssh with kitten ssh inside Kitty terminal for better terminal
-#   integration (e.g. terminfo forwarding). Falls back to system ssh on
+#   integration (terminfo forwarding, multiplexing, copy/paste support).
+#   Falls back to system ssh on
 #   other terminals.
 #
 # ARGUMENTS

@@ -10,7 +10,9 @@
 # DESCRIPTION
 #   Wrapper for the claude CLI that ensures the AGENTS/ sub-repository is
 #   initialized and any agent-made changes are committed before launch.
-#   Delegates all scaffold and commit logic to agents-init (full setup).
+#   Delegates all scaffold and commit logic to agents-init --quiet (full
+#   setup), which ensures AGENTS/ is scaffolded and CLAUDE.md is symlinked
+#   to AGENTS/AGENTS.md in the current project.
 #   All arguments are forwarded verbatim to the real claude binary.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases

@@ -9,7 +9,7 @@
 #
 # DESCRIPTION
 #   Opens an interactive full-screen TUI for managing fish config settings
-#   across four pages:
+#   across four pages, without having to type or remember variable names:
 #
 #     Universal — opinionated-category toggles (C1–C6) + master, persistent (set -U)
 #     Session   — the same toggles, current shell only (set -g)

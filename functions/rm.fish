@@ -21,7 +21,7 @@
 # ARGUMENTS
 #   (none)              List current trash contents
 #   -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
-#   -S, --secure        Permanently delete targets and run fstrim
+#   -S, --secure        Permanently delete targets and run fstrim (irreversible)
 #   -r, -R, --recursive Forwarded to trash put alongside path arguments
 #   args...             Files or paths to trash or remove
 #

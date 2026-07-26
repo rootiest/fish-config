@@ -9,7 +9,7 @@
 #
 # DESCRIPTION
 #   Delegates to paru or yay for interactive AUR package search and
-#   installation. Falls back to yay if paru is not installed.
+#   installation. Falls back to yay if paru is not installed. Arch Linux only.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to paru or yay

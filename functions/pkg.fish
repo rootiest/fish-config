@@ -13,6 +13,14 @@
 #   In auto mode (no flag), detects whether each package is installed and
 #   toggles it — installing if absent, removing if present.
 #
+#   The package-installed check uses the correct query for each manager:
+#
+#     pacman/paru/yay  pacman -Qi
+#     apt              dpkg -s
+#     dnf/zypper/yum   rpm -q
+#     brew             brew list
+#     pkg              pkg info
+#
 # ARGUMENTS
 #   -h, --help       Show help message
 #   -i, --install    Force install mode

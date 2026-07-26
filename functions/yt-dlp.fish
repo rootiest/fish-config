@@ -12,7 +12,8 @@
 #   (--sponsorblock-remove all, --embed-subs, --embed-metadata,
 #   --embed-thumbnail). Each default is suppressed if the user already
 #   passes that flag, its alias, or its negation (e.g. --no-embed-thumbnail
-#   drops our --embed-thumbnail). All other arguments pass through
+#   drops our --embed-thumbnail; --no-sponsorblock or your own
+#   --sponsorblock-remove drops ours). All other arguments pass through
 #   untouched. --help and friends fall through to real yt-dlp.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases

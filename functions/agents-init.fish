@@ -45,9 +45,18 @@
 #   version-managed from scripts/agents-tools/ and refreshed when their marker
 #   is stale.
 #
-#   With no flags, runs both --agents and --plugins setup. At the end of
-#   every invocation, commits any uncommitted changes in the AGENTS/ sub-repo
-#   so that agent-made edits are captured automatically.
+#   Downstream tooling can read AGENTS/.version directly — a changed MINOR
+#   field signals a structure change.
+#
+#   With no flags, runs both --agents and --plugins setup; --agents re-runs
+#   only the AGENTS.md / symlink step and --plugins only the plans/specs/
+#   devlogs wiring step. Managed paths are added to .gitignore. The sub-repo
+#   is pulled first when it has an upstream, and at the end of every
+#   invocation any uncommitted changes inside it are auto-committed so
+#   agent-made edits are captured automatically. Fully idempotent: a second
+#   run produces no output and no new commits.
+#
+#   Called automatically by the claude and agy wrappers on every invocation.
 #
 # ARGUMENTS
 #   -a, --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only

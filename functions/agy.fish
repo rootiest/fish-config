@@ -11,7 +11,9 @@
 #   Wrapper for the agy Antigravity AI CLI that ensures the AGENTS/
 #   sub-repository is initialized and any agent-made changes are committed
 #   before launch. Delegates all scaffold and commit logic to agents-init
-#   (full setup). All arguments are forwarded verbatim to the real agy binary.
+#   --quiet (full setup), which ensures AGENTS/ is scaffolded and CLAUDE.md
+#   is symlinked to AGENTS/AGENTS.md in the current project. All arguments
+#   are forwarded verbatim to the real agy binary.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases
 #   (or the __fish_config_opinionated master), the command is passed through

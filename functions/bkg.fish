@@ -9,7 +9,8 @@
 #
 # DESCRIPTION
 #   Launches a command in the background, fully detached from the terminal
-#   using nohup. All stdout and stderr output is discarded.
+#   using nohup. All stdout and stderr output is discarded. Simpler than
+#   detach; no --version flag.
 #
 # ARGUMENTS
 #   command  The command to run detached

@@ -9,7 +9,8 @@
 #
 # DESCRIPTION
 #   Runs a command in the background using nohup, fully detached from the
-#   terminal with all output discarded.
+#   terminal with stdout/stderr discarded. The command survives the current
+#   session.
 #
 # ARGUMENTS
 #   -h, --help   Show help message
