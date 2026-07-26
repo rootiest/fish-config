@@ -5,7 +5,7 @@
 #   04-git-and-version-control
 #
 # SYNOPSIS
-#   gi [-h] [-b] [-p] [-s] [targets...]
+#   gi [-h] [-b] [-p] [-s] [-l] [targets...]
 #
 # DESCRIPTION
 #   Generates .gitignore content by querying the gitignore.io API. Appends
@@ -27,6 +27,8 @@
 #
 # EXAMPLE
 #   gi python,venv
+#   gi -b -p
+#   gi -s node > .gitignore
 function gi --description 'Generate .gitignore files using the gitignore.io API'
     argparse h/help d/description l/list b/boilerplate p/prompt s/stdout -- $argv
     or return 1

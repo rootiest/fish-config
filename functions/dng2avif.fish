@@ -25,6 +25,7 @@
 #
 # EXAMPLE
 #   dng2avif photo.dng
+#   dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
     set -l options (fish_opt -s h -l help)
     set -a options (fish_opt -s i -l input -r)

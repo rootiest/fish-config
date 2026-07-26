@@ -33,6 +33,9 @@
 #   rm file.txt
 #   rm -e
 #   rm -S sensitive_key.pem
+#
+# NOTES
+#   Falls back to /usr/bin/rm when trash is unavailable.
 function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
     # Opinionated guard (C1): fall back to bare command rm when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

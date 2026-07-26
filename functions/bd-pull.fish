@@ -21,6 +21,7 @@
 #
 # EXAMPLE
 #   bd-pull myuser/myproject
+#   bd-pull rootiest/fish-config
 function bd-pull --description 'Pull new Gitea issues into local Beads and link them'
     if not set -q argv[1]; echo "Need repo owner/name"; return 1; end
     if not set -q GITEA_TOKEN; echo "\$GITEA_TOKEN not set"; return 1; end

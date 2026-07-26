@@ -22,6 +22,7 @@
 #
 # EXAMPLE
 #   git-clean --force
+#   git-clean
 function git-clean --description 'Sync main, prune remotes, and delete orphaned branches'
     set -l options h/help f/force
     argparse $options -- $argv

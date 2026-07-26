@@ -23,6 +23,9 @@
 #
 # EXAMPLE
 #   fish-deps sync
+#   fish-deps
+#   fish-deps install
+#   fish-deps update
 function fish-deps --description 'Manage fish shell dependencies'
     set -l subcmd $argv[1]
 

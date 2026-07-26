@@ -17,6 +17,7 @@
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to yt-dlp (defaults prepended)
+#   --no-embed-thumbnail  Skip thumbnail embedding for this run
 #
 # EXAMPLE
 #   yt-dlp dQw4w9WgXcQ

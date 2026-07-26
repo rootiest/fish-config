@@ -16,6 +16,7 @@
 #
 # EXAMPLE
 #   dusize ~/Downloads
+#   dusize ~/Videos
 function dusize --wraps='du' --description 'alias dusize=du'
     du -sh (test -n "$argv[1]"; and echo $argv[1]; or echo .)
 end

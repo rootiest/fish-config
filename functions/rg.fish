@@ -17,6 +17,8 @@
 #
 # EXAMPLE
 #   rg "TODO" src/
+#   rg "fish_greeting" ~/.config/fish/
+#   rg -l "TODO" ~/projects/myapp
 function rg --description 'alias rg=rg --hyperlink-format=kitty'
     # Opinionated guard (C1): fall back to bare command rg when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

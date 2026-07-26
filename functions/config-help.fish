@@ -42,6 +42,7 @@
 #   config-help --man
 #   config-help keys --man
 #   config-help --help
+#   config-help pkg --man
 #
 # NOTES
 #   The preferred invocation is `help config [...]` — this function is

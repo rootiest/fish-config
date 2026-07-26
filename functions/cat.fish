@@ -17,6 +17,7 @@
 #
 # EXAMPLE
 #   cat README.md
+#   cat ~/projects/myapp
 function cat --wraps='bat' --description 'Use bat for files, ls for directories, and raw cat for ANSI logs'
     # Opinionated guard (C1): fall back to bare command cat when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

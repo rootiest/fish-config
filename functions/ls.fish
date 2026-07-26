@@ -16,6 +16,8 @@
 #
 # EXAMPLE
 #   ls ~/projects
+#   ls
+#   ls -a ~/projects
 function ls --description 'List all files'
     # Opinionated guard (C1): fall back to bare command ls when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases

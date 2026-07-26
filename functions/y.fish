@@ -20,6 +20,8 @@
 #
 # EXAMPLE
 #   y "hello world"
+#   ls | y
+#   cat file.txt | y
 function y --description 'Yank to clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv

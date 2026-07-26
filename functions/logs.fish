@@ -21,6 +21,8 @@
 #
 # EXAMPLE
 #   logs -c paru
+#   logs
+#   logs -c scrollback
 function logs --description 'Browse terminal log files interactively with fzf'
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled __fish_config_op_integrations

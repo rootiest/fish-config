@@ -24,6 +24,7 @@
 #
 # EXAMPLE
 #   mkcd ~/projects/myapp
+#   mkcd ~/projects/newapp/src
 function mkcd --description 'Create a directory (with parents) and cd into it'
     set -l c_head (set_color --bold cyan)
     set -l c_cmd  (set_color --bold white)

@@ -17,6 +17,7 @@
 #
 # EXAMPLE
 #   copy ./mydir/ ~/backup
+#   copy ./mydir/ ~/backup    # copies mydir INTO backup, not backup/mydir/
 function copy
     set count (count $argv)
     if test "$count" = 2; and test -d "$argv[1]"

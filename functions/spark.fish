@@ -22,6 +22,7 @@
 # EXAMPLE
 #   spark 1 1 2 5 14 42
 #   seq 64 | sort --random-sort | spark
+#   echo "3 7 2 9 1" | spark
 function spark --description 'Sparklines'
     argparse --ignore-unknown --name=spark v/version h/help m/min= M/max= -- $argv || return
 

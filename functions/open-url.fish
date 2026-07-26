@@ -36,6 +36,9 @@
 # EXAMPLE
 #   open-url https://git.rootiest.dev/rootiest/fish-config
 #   open-url -v https://fish-config-docs.pages.dev/
+#
+# NOTES
+#   Typo abbreviation: url-open (expands to open-url on space/enter).
 function open-url --description 'Open a URL in the best available web browser'
     argparse h/help s/silent v/verbose -- $argv
     or return 1

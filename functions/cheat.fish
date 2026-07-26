@@ -17,6 +17,7 @@
 #
 # EXAMPLE
 #   cheat tar
+#   cheat git
 function cheat --wraps='cheat' --description 'alias cheat=cheat -c'
     if type -q cheat
         command cheat -c $argv
