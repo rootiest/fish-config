@@ -2613,7 +2613,7 @@ all of these commands.
     cd                 zoxide frecency-based navigation        fish builtin cd
     rm                 moves files to trash (recoverable)     command rm (permanent)
     less               $PAGER → ov → less → more → cat       system less
-    du                 duf (disk overview) or dust (dir tree) system du
+    du                 duf (disk overview) or dust (dir tree)  system du
     top                btop resource monitor                  system top
     ping               prettyping --nolegend animation        system ping
     ssh                kitten ssh in Kitty terminal           system ssh
@@ -2625,8 +2625,8 @@ all of these commands.
     wget               forced --continue (resume downloads)   system wget
     grep/fgrep/egrep   forced --color=auto                    system grep variants
     dir / vdir         forced --color=auto                    system dir / vdir
-    help config        intercepts "help config" → config-help fish builtin help
-    claude             auto-links AGENTS.md as CLAUDE.md before launch command claude
+    help config        intercepts "help config" → config-help  fish builtin help
+    claude             auto-links AGENTS.md as CLAUDE.md before launch  command claude
     edit               multi-editor launcher (GUI/term + fallbacks)  $EDITOR/nvim/nano/vi
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
@@ -2714,7 +2714,7 @@ __fish_config_op_integrations disables all of them.
     ───────────────────────────────────────────────────────────────────────────
     ~60 Kitty/WezTerm abbrs    Active Kitty or WezTerm session
       (:w, :wv, :wh, :t, etc.)
-    Done desktop notifications Graphical desktop with a notification daemon
+    Done desktop notifications  Graphical desktop with a notification daemon
     spwin                      Kitty or WezTerm
     tab                        Kitty, WezTerm, or Konsole
     split                      Kitty or WezTerm
