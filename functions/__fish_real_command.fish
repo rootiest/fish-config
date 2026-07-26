@@ -18,9 +18,12 @@
 # ARGUMENTS
 #   name  Command name to resolve (e.g. paru, yay)
 #
+# EXIT STATUS
+#   0  A non-wrapper binary was found
+#   1  No non-wrapper binary found on PATH
+#
 # RETURNS
-#   0  Real binary path printed to stdout
-#   1  No non-wrapper binary found on PATH (nothing printed)
+#   The resolved binary's real path, printed to stdout (nothing on failure)
 #
 # EXAMPLE
 #   set -l real (__fish_real_command paru)   # -> /usr/bin/paru, not the shim

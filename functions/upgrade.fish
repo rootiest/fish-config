@@ -11,7 +11,7 @@
 #   Runs a full system upgrade via paru or yay with --noconfirm. Falls
 #   back to yay if paru is not installed. Arch Linux only.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Upgrade completed successfully
 #   1  No AUR helper (paru or yay) found
 #

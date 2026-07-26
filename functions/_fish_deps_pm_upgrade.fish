@@ -12,7 +12,7 @@
 # ARGUMENTS
 #   pkg  The package name to upgrade
 #
-# RETURNS
+# EXIT STATUS
 #   0  Package upgraded successfully
 #   1  No supported package manager found
 #

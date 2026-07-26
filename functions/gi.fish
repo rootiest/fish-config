@@ -22,9 +22,13 @@
 #   -s, --stdout       Print API output to stdout instead of .gitignore
 #   targets            Comma- or space-separated list of language/tool names
 #
-# RETURNS
-#   0  Patterns appended or printed
+# EXIT STATUS
+#   0  Patterns appended, or resolved with -s/--stdout or -l/--list
 #   1  Not in a git repository or API fetch failed
+#
+# RETURNS
+#   With -s/--stdout, the fetched .gitignore pattern text, printed to stdout.
+#   With -l/--list, the supported target list, printed to stdout.
 #
 # EXAMPLE
 #   gi python,venv

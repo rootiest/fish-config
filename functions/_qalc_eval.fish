@@ -10,7 +10,7 @@
 #   after evaluation. No-ops if qalc is not installed or the buffer
 #   is empty. Intended to be bound to a key in key_bindings.fish.
 #
-# RETURNS
+# EXIT STATUS
 #   1  qalc not found in PATH
 #
 # EXAMPLE

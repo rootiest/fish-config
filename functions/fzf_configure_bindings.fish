@@ -19,7 +19,7 @@
 #   --variables=key   Override the variables search binding (default: Ctrl-V)
 #   -h, --help        Show help message
 #
-# RETURNS
+# EXIT STATUS
 #   0  Bindings installed or help shown
 #   22 Invalid option or positional argument provided
 #

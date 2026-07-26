@@ -19,7 +19,7 @@
 # ARGUMENTS
 #   dir  Absolute path to the git repository to fast-forward
 #
-# RETURNS
+# EXIT STATUS
 #   0  Fast-forward applied (or already up to date)
 #   1  A precondition failed; nothing was changed
 #

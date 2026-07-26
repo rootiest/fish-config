@@ -16,7 +16,7 @@
 # ARGUMENTS
 #   command_prefix   Search history for the newest command matching this
 #
-# RETURNS
+# EXIT STATUS
 #   The edited command's exit status, or a message when history lookup
 #   found nothing.
 #

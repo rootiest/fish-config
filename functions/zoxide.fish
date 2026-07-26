@@ -60,7 +60,7 @@ end
 # ARGUMENTS
 #   check  The string to compare against the first non-switch token
 #
-# RETURNS
+# EXIT STATUS
 #   0  First token equals check
 #   1  No token or token does not match
 #

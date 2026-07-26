@@ -66,6 +66,7 @@ SECTIONS = (
     "SYNOPSIS",
     "DESCRIPTION",
     "ARGUMENTS",
+    "EXIT STATUS",
     "RETURNS",
     "EXAMPLE",
     "NOTES",

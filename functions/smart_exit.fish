@@ -17,7 +17,7 @@
 #   -h, --help    Show help message
 #   -n, --no-log  Exit without saving a scrollback log
 #
-# RETURNS
+# EXIT STATUS
 #   0  Shell session exited
 #   1  Argument parsing failed
 #

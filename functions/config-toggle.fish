@@ -17,7 +17,7 @@
 # ARGUMENTS
 #   args  Passed through verbatim to config-settings
 #
-# RETURNS
+# EXIT STATUS
 #   Same as config-settings
 #
 # EXAMPLE

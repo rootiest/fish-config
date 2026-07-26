@@ -12,8 +12,11 @@
 # ARGUMENTS
 #   varname  Variable name without the $ prefix
 #
+# EXIT STATUS
+#   0  Always
+#
 # RETURNS
-#   0  Always; prints the value or "DEFAULT" to stdout
+#   The value, or "DEFAULT" if unset, printed to stdout
 #
 # EXAMPLE
 #   set v (__config_settings_get_raw sponge_delay)   # "2" or "DEFAULT"

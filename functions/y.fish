@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   text  Text to copy; reads from stdin if omitted
 #
-# RETURNS
+# EXIT STATUS
 #   0  Text copied to clipboard
 #   1  No clipboard provider found
 #

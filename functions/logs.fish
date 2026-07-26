@@ -25,7 +25,7 @@
 #   -h, --help           Show help message
 #   -c, --category cat   Filter to one category: scrollback, paru, or yay
 #
-# RETURNS
+# EXIT STATUS
 #   0  File viewed or no file selected
 #   1  No log files found
 #

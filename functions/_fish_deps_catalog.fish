@@ -49,9 +49,12 @@ end
 # ARGUMENTS
 #   bin  The binary name to look up in the catalog
 #
+# EXIT STATUS
+#   0  Binary found in the catalog
+#   1  Binary not found
+#
 # RETURNS
-#   0  Index printed to stdout
-#   1  Binary not found (empty output)
+#   The binary's 1-based catalog index, printed to stdout (nothing on failure)
 #
 # EXAMPLE
 #   _fish_deps_catalog_idx fzf

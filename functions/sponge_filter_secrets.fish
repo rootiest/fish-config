@@ -21,7 +21,7 @@
 #   exit_code               Exit code of the command (unused)
 #   previously_in_history   "true"/"false" flag (unused)
 #
-# RETURNS
+# EXIT STATUS
 #   0  Command contains a secret value — filter out of history
 #   1  No secret value found — keep in history
 #

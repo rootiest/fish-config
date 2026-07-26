@@ -19,7 +19,7 @@
 #   -s, --speed N       Encoder speed 0-10 (default: 3, 0 = slowest)
 #   -h, --help          Show help message
 #
-# RETURNS
+# EXIT STATUS
 #   0  Conversion complete
 #   1  File not found, missing dependency, or encode step failed
 #

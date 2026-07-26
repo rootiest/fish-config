@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   branch_name   Branch to switch to or create
 #
-# RETURNS
+# EXIT STATUS
 #   0  Branch checked out or created
 #   1  Not inside a git work tree
 #

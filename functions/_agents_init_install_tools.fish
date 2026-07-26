@@ -15,7 +15,7 @@
 # ARGUMENTS
 #   agents_dir  Absolute path to the AGENTS/ sub-repo root
 #
-# RETURNS
+# EXIT STATUS
 #   0  Tooling is current or was installed/updated successfully
 #   1  Canonical source missing or a copy failed
 #

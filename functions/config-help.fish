@@ -32,9 +32,13 @@
 #   -m, --man   Open the compiled man page via man -l
 #   -h, --help  Print usage and navigation reference, then exit
 #
-# RETURNS
-#   0  Manual displayed (or --help printed)
+# EXIT STATUS
+#   0  Manual displayed
 #   1  Documentation file not found, or required tool not available
+#
+# RETURNS
+#   With -h/--help, the usage and navigation reference, printed to stdout.
+#   Otherwise, the manual is shown via the resolved pager (not captured stdout).
 #
 # EXAMPLE
 #   config-help

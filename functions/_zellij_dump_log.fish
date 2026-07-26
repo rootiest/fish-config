@@ -17,7 +17,7 @@
 #   No-op when logging is disabled, not inside Zellij ($ZELLIJ unset), or the
 #   zellij binary is missing.
 #
-# RETURNS
+# EXIT STATUS
 #   0  Always
 #
 # EXAMPLE

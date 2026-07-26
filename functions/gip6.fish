@@ -11,9 +11,12 @@
 #   Fetches and prints the machine's public IPv6 address using icanhazip.com.
 #   Prints an error message if IPv6 is unavailable on the current network.
 #
-# RETURNS
-#   0  IPv6 address printed
+# EXIT STATUS
+#   0  IPv6 address resolved
 #   1  IPv6 unavailable or not supported on this network
+#
+# RETURNS
+#   The machine's public IPv6 address, printed to stdout
 #
 # EXAMPLE
 #   gip6

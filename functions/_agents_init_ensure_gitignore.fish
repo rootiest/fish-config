@@ -24,7 +24,7 @@
 #   label     Short description used in the block comment header
 #   pattern   One or more gitignore patterns to ensure are present
 #
-# RETURNS
+# EXIT STATUS
 #   0  All patterns already ignored or successfully appended
 #   1  Could not write to .gitignore
 #

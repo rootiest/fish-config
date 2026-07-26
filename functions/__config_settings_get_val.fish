@@ -14,8 +14,11 @@
 #   varname  Variable name without $ prefix
 #   scope    "universal" or "session"
 #
+# EXIT STATUS
+#   0  Always
+#
 # RETURNS
-#   0  Always; prints "on", "off", or "DEFAULT" to stdout
+#   "on", "off", or "DEFAULT", printed to stdout
 #
 # EXAMPLE
 #   set result (__config_settings_get_val __fish_config_op_aliases universal)

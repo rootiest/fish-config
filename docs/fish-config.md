@@ -708,7 +708,7 @@ Add -i (interactive confirmation) to destructive commands:
       -s, --silent  Suppress directory creation output
       <dir>         Directory to create and enter
 
-    Returns:
+    Exit Status:
       0  Directory created (or already existed) and entered successfully
       1  Directory creation or cd failed
 
@@ -741,7 +741,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       file  One or more file paths to create
 
-    Returns:
+    Exit Status:
       0  Files created
       1  No file argument provided
 
@@ -785,7 +785,7 @@ Add -i (interactive confirmation) to destructive commands:
       -r, -R, --recursive Forwarded to trash put alongside path arguments
       args...             Files or paths to trash or remove
 
-    Returns:
+    Exit Status:
       0  Operation succeeded
       1  trash put failed or file not found
 
@@ -812,7 +812,7 @@ Add -i (interactive confirmation) to destructive commands:
       -d, --dry-run     Show targets without deleting
       -h, --help        Show usage help
 
-    Returns:
+    Exit Status:
       0  Sweep completed (or dry run shown)
       1  fd not found, or unknown argument provided
 
@@ -846,7 +846,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to clone-in-kitty (typically a repo URL)
 
-    Returns:
+    Exit Status:
       0  Repository cloned
       1  Not running inside Kitty terminal
 
@@ -863,7 +863,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to clone-in-kitty (typically a repo URL)
 
-    Returns:
+    Exit Status:
       0  Repository cloned
       1  Not running inside Kitty terminal
 
@@ -899,7 +899,7 @@ Add -i (interactive confirmation) to destructive commands:
       -s, --silent      Suppress all output, including the editor's
       -h, --help        Show this help message
 
-    Returns:
+    Exit Status:
       0  Editor launched successfully
       1  Conflicting flags, no editor found, or clipboard read failed
 
@@ -922,7 +922,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       command_prefix   Search history for the newest command matching this
 
-    Returns:
+    Exit Status:
       The edited command's exit status, or a message when history lookup
       found nothing.
 
@@ -996,7 +996,7 @@ Add -i (interactive confirmation) to destructive commands:
       status             Show enabled/disabled state, repo count, and registry path
       -h, --help         Show this help message
 
-    Returns:
+    Exit Status:
       0  Subcommand succeeded
       1  Bad usage, target is not a git repo, or target not registered
 
@@ -1016,7 +1016,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       branch_name   Branch to switch to or create
 
-    Returns:
+    Exit Status:
       0  Branch checked out or created
       1  Not inside a git work tree
 
@@ -1041,9 +1041,13 @@ Add -i (interactive confirmation) to destructive commands:
       -s, --stdout       Print API output to stdout instead of .gitignore
       targets            Comma- or space-separated list of language/tool names
 
-    Returns:
-      0  Patterns appended or printed
+    Exit Status:
+      0  Patterns appended, or resolved with -s/--stdout or -l/--list
       1  Not in a git repository or API fetch failed
+
+    Returns:
+      With -s/--stdout, the fetched .gitignore pattern text, printed to stdout.
+      With -l/--list, the supported target list, printed to stdout.
 
     Example:
     gi python,venv
@@ -1062,7 +1066,7 @@ Add -i (interactive confirmation) to destructive commands:
       -h, --help   Show help message
       -f, --force  Force-delete unmerged orphaned branches (git branch -D)
 
-    Returns:
+    Exit Status:
       0  Cleanup complete
       1  Argument parsing failed
 
@@ -1093,7 +1097,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...   Forwarded verbatim to git fetch
 
-    Returns:
+    Exit Status:
       0  Fetch and status succeeded
       1  Not inside a git work tree
 
@@ -1131,7 +1135,7 @@ Add -i (interactive confirmation) to destructive commands:
     pacman -Qi previews, then removes the selected packages using paru or yay.
     Arch Linux only.
 
-    Returns:
+    Exit Status:
       0  Packages removed or none selected
       1  No AUR helper (paru or yay) found
 
@@ -1161,7 +1165,7 @@ Add -i (interactive confirmation) to destructive commands:
       -u, --uninstall  Force uninstall mode
       package          One or more package names to install or remove
 
-    Returns:
+    Exit Status:
       0  Operation completed
       1  No supported package manager found, unknown flag, or package operation failed
 
@@ -1180,7 +1184,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to paru or yay
 
-    Returns:
+    Exit Status:
       0  AUR helper ran successfully
       1  No AUR helper (paru or yay) found
 
@@ -1194,7 +1198,7 @@ Add -i (interactive confirmation) to destructive commands:
     Runs a full system upgrade via paru or yay with --noconfirm. Falls
     back to yay if paru is not installed. Arch Linux only.
 
-    Returns:
+    Exit Status:
       0  Upgrade completed successfully
       1  No AUR helper (paru or yay) found
 
@@ -1244,7 +1248,7 @@ Add -i (interactive confirmation) to destructive commands:
       update   Update all installed deps
       sync     Install missing deps, then update all
 
-    Returns:
+    Exit Status:
       0  Subcommand completed
       1  Unknown subcommand
 
@@ -1309,7 +1313,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       --brief  Suppress per-file output; show only the final summary
 
-    Returns:
+    Exit Status:
       0  All binaries verified (or summary shown)
       1  sbctl is not installed
 
@@ -1336,7 +1340,7 @@ Add -i (interactive confirmation) to destructive commands:
     otherwise require a password entry. Clears the sudo credential cache
     when re-enabling, so the lockdown takes effect immediately.
 
-    Returns:
+    Exit Status:
       0  Rule toggled
 
     Example:
@@ -1380,7 +1384,7 @@ Add -i (interactive confirmation) to destructive commands:
       command  The command to run detached
       args...  Additional arguments for the command
 
-    Returns:
+    Exit Status:
       0  Command launched successfully
       1  No command provided
 
@@ -1401,7 +1405,7 @@ Add -i (interactive confirmation) to destructive commands:
       command      The command to run detached
       args...      Additional arguments for the command
 
-    Returns:
+    Exit Status:
       0  Command launched or help/version shown
       1  No command provided or unknown option
 
@@ -1422,7 +1426,7 @@ Add -i (interactive confirmation) to destructive commands:
       command...        Command to run in the new pane; opens a bare fish
                         shell if omitted
 
-    Returns:
+    Exit Status:
       0  Pane opened successfully
       1  Not running inside Kitty or WezTerm
 
@@ -1440,7 +1444,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the spawn command
 
-    Returns:
+    Exit Status:
       0  Window opened successfully
       1  Not running inside Kitty or WezTerm
 
@@ -1473,7 +1477,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the terminal's launch command
 
-    Returns:
+    Exit Status:
       0  Tab opened successfully
       1  No supported terminal found
 
@@ -1493,9 +1497,12 @@ Add -i (interactive confirmation) to destructive commands:
       -h, --help  Show usage help
       args...     Arguments forwarded to the clipboard tool
 
-    Returns:
-      0  Clipboard contents printed successfully
+    Exit Status:
+      0  Clipboard contents read successfully
       1  No supported clipboard tool found
+
+    Returns:
+      The clipboard contents, printed to stdout
 
     Example:
     p | grep foo
@@ -1511,9 +1518,12 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the clipboard tool
 
-    Returns:
-      0  Clipboard contents printed successfully
+    Exit Status:
+      0  Clipboard contents read successfully
       1  No supported clipboard tool found
+
+    Returns:
+      The clipboard contents, printed to stdout
 
     Example:
     paste > file.txt
@@ -1528,7 +1538,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       text  Text to copy; reads from stdin if omitted
 
-    Returns:
+    Exit Status:
       0  Text copied to clipboard
       1  No clipboard provider found
 
@@ -1565,9 +1575,12 @@ Add -i (interactive confirmation) to destructive commands:
     Fetches and prints the machine's public IPv6 address using icanhazip.com.
     Prints an error message if IPv6 is unavailable on the current network.
 
-    Returns:
-      0  IPv6 address printed
+    Exit Status:
+      0  IPv6 address resolved
       1  IPv6 unavailable or not supported on this network
+
+    Returns:
+      The machine's public IPv6 address, printed to stdout
 
     Example:
     gip6
@@ -1626,7 +1639,7 @@ Add -i (interactive confirmation) to destructive commands:
       -h, --help           Show help message
       -c, --category cat   Filter to one category: scrollback, paru, or yay
 
-    Returns:
+    Exit Status:
       0  File viewed or no file selected
       1  No log files found
 
@@ -1648,7 +1661,7 @@ Add -i (interactive confirmation) to destructive commands:
       -h, --help    Show help message
       -n, --no-log  Exit without saving a scrollback log
 
-    Returns:
+    Exit Status:
       0  Shell session exited
       1  Argument parsing failed
 
@@ -1724,7 +1737,7 @@ Add -i (interactive confirmation) to destructive commands:
       -s, --silent   Suppress all output; errors only (standard UNIX convention)
       -h, --help     Show this help message and exit
 
-    Returns:
+    Exit Status:
       0  Setup completed successfully
       1  Fatal error (git init failed, move failed, etc.)
 
@@ -1754,7 +1767,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       ARGS  Any arguments forwarded verbatim to the underlying agy binary
 
-    Returns:
+    Exit Status:
       Exit status of the underlying agy binary
 
     Example:
@@ -1795,7 +1808,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       ARGS  Any arguments forwarded verbatim to the underlying claude binary
 
-    Returns:
+    Exit Status:
       Exit status of the underlying claude binary
 
     Example:
@@ -1860,7 +1873,7 @@ Add -i (interactive confirmation) to destructive commands:
       prompt...     Prompt forwarded to aichat
       -h, --help    Show usage help
 
-    Returns:
+    Exit Status:
       aichat's exit status.
 
     Example:
@@ -1882,7 +1895,7 @@ Add -i (interactive confirmation) to destructive commands:
       -g, --global  Apply at user/global scope instead of workspace/project
       -h, --help    Show usage help
 
-    Returns:
+    Exit Status:
       0  Mode applied successfully
       1  No on/off mode specified
 
@@ -1907,7 +1920,7 @@ Add -i (interactive confirmation) to destructive commands:
       -s, --speed N       Encoder speed 0-10 (default: 3, 0 = slowest)
       -h, --help          Show help message
 
-    Returns:
+    Exit Status:
       0  Conversion complete
       1  File not found, missing dependency, or encode step failed
 
@@ -1995,7 +2008,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       owner/repo  The repository path in owner/name format
 
-    Returns:
+    Exit Status:
       0  Issues linked and synced (or no unlinked issues found)
       1  Missing required argument or environment variables
 
@@ -2059,9 +2072,13 @@ Add -i (interactive confirmation) to destructive commands:
       -m, --man   Open the compiled man page via man -l
       -h, --help  Print usage and navigation reference, then exit
 
-    Returns:
-      0  Manual displayed (or --help printed)
+    Exit Status:
+      0  Manual displayed
       1  Documentation file not found, or required tool not available
+
+    Returns:
+      With -h/--help, the usage and navigation reference, printed to stdout.
+      Otherwise, the manual is shown via the resolved pager (not captured stdout).
 
     Notes:
       The preferred invocation is `help config [...]` — this function is
@@ -2131,7 +2148,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       -h, --help  Print usage and exit
 
-    Returns:
+    Exit Status:
       0  Exited normally (q or Escape pressed)
       1  Unknown flag passed
 
@@ -2150,7 +2167,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args  Passed through verbatim to config-settings
 
-    Returns:
+    Exit Status:
       Same as config-settings
 
     Example:
@@ -2172,7 +2189,7 @@ Add -i (interactive confirmation) to destructive commands:
       -f, --force     Stash local changes before pulling, then pop the stash
       -n, --dry-run   Check for upstream changes without applying them
 
-    Returns:
+    Exit Status:
       0  Config updated (or already up to date)
       1  Update failed (network error, merge conflict, or not a git repo)
 
@@ -2192,7 +2209,7 @@ Add -i (interactive confirmation) to destructive commands:
       -h, --help   Show help message
       directory    Path to the compose project (defaults to current directory)
 
-    Returns:
+    Exit Status:
       0  Services updated and running
       1  Directory not found or no docker-compose.yml present
 
@@ -2222,7 +2239,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the joplin command
 
-    Returns:
+    Exit Status:
       0  Joplin ran successfully
       1  joplin binary not found in PATH
 
@@ -2252,7 +2269,7 @@ Add -i (interactive confirmation) to destructive commands:
       dismiss    Stop the per-session reminder
       -h, --help Show this help
 
-    Returns:
+    Exit Status:
       0  Success
       1  Unknown subcommand/flag, kitty missing, or a write failure
 
@@ -2296,7 +2313,7 @@ Add -i (interactive confirmation) to destructive commands:
       -v, --verbose  Print which browser is being launched
       -h, --help     Print usage and exit
 
-    Returns:
+    Exit Status:
       0  Browser launched
       1  No URL given, invalid $BROWSER, or no browser found
 
@@ -2320,7 +2337,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       commands  Bash command string to execute and replay
 
-    Returns:
+    Exit Status:
       0  Commands ran successfully and changes were replayed
       1  Bash command exited with a non-zero status
 
@@ -2358,9 +2375,12 @@ Add -i (interactive confirmation) to destructive commands:
       -r, --root   Ignore the current sub-directory; link to the repo root
       -h, --help   Print usage and exit
 
-    Returns:
-      0  URL opened (or printed)
+    Exit Status:
+      0  URL opened, or resolved with -p/--print
       1  Not a git repo, no origin remote, or browser launch failed
+
+    Returns:
+      With -p/--print, the resolved repository URL, printed to stdout
 
     Notes:
       Typo abbreviation: open-repo (expands to repo-open on space/enter).
@@ -2393,7 +2413,7 @@ Add -i (interactive confirmation) to destructive commands:
       command  Command to run with sleep inhibition active
       args...  Arguments forwarded to the command
 
-    Returns:
+    Exit Status:
       0  Command ran and completed
       1  No command provided
 

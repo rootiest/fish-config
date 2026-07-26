@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to paru or yay
 #
-# RETURNS
+# EXIT STATUS
 #   0  AUR helper ran successfully
 #   1  No AUR helper (paru or yay) found
 #

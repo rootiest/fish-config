@@ -18,7 +18,7 @@
 #   -f, --force     Stash local changes before pulling, then pop the stash
 #   -n, --dry-run   Check for upstream changes without applying them
 #
-# RETURNS
+# EXIT STATUS
 #   0  Config updated (or already up to date)
 #   1  Update failed (network error, merge conflict, or not a git repo)
 #

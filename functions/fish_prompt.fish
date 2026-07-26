@@ -10,8 +10,11 @@
 #   C3 overrides are disabled. Has no external dependencies; uses only fish-provided functions
 #   (set_color, fish_git_prompt, prompt_pwd, prompt_hostname).
 #
+# EXIT STATUS
+#   0  Always
+#
 # RETURNS
-#   0  Always; outputs the prompt to stdout
+#   The rendered two-line prompt, printed to stdout
 #
 # EXAMPLE
 #   # Rendered automatically by fish; not called directly.

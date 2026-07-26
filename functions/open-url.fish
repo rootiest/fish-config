@@ -30,7 +30,7 @@
 #   -v, --verbose  Print which browser is being launched
 #   -h, --help     Print usage and exit
 #
-# RETURNS
+# EXIT STATUS
 #   0  Browser launched
 #   1  No URL given, invalid $BROWSER, or no browser found
 #

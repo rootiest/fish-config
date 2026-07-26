@@ -15,7 +15,7 @@
 #   command  Command to run with sleep inhibition active
 #   args...  Arguments forwarded to the command
 #
-# RETURNS
+# EXIT STATUS
 #   0  Command ran and completed
 #   1  No command provided
 #

@@ -18,7 +18,7 @@
 #   -s, --silent  Suppress directory creation output
 #   <dir>         Directory to create and enter
 #
-# RETURNS
+# EXIT STATUS
 #   0  Directory created (or already existed) and entered successfully
 #   1  Directory creation or cd failed
 #

@@ -18,7 +18,7 @@
 #   command      The command to run detached
 #   args...      Additional arguments for the command
 #
-# RETURNS
+# EXIT STATUS
 #   0  Command launched or help/version shown
 #   1  No command provided or unknown option
 #

@@ -29,7 +29,7 @@
 #   status             Show enabled/disabled state, repo count, and registry path
 #   -h, --help         Show this help message
 #
-# RETURNS
+# EXIT STATUS
 #   0  Subcommand succeeded
 #   1  Bad usage, target is not a git repo, or target not registered
 #

@@ -31,7 +31,7 @@
 #   -s, --silent      Suppress all output, including the editor's
 #   -h, --help        Show this help message
 #
-# RETURNS
+# EXIT STATUS
 #   0  Editor launched successfully
 #   1  Conflicting flags, no editor found, or clipboard read failed
 #

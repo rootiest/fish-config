@@ -14,7 +14,7 @@
 #   -s, --silent  Suppress all output
 #   dir           The directory path to create
 #
-# RETURNS
+# EXIT STATUS
 #   0  Directory created or already exists
 #   1  No target directory specified or mkdir failed
 #

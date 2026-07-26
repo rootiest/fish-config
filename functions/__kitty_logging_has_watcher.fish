@@ -9,7 +9,7 @@
 #   (non-commented) `watcher` directive — whether the fish-config managed one or
 #   a user's own. Used to suppress the setup reminder and to inform status.
 #
-# RETURNS
+# EXIT STATUS
 #   0  An active watcher directive is present
 #   1  None present, or kitty.conf does not exist
 #

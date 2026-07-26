@@ -14,7 +14,7 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the spawn command
 #
-# RETURNS
+# EXIT STATUS
 #   0  Window opened successfully
 #   1  Not running inside Kitty or WezTerm
 #
