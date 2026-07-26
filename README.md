@@ -122,14 +122,19 @@ the watcher inert without uninstalling it.
 
 ### [📖 Documentation Site](https://fish-config-docs.pages.dev/)
 
-A Starlight-powered site generated from `docs/manual/**` — the single source
-of truth — on every push to `main`. It covers configuration variables, key
-bindings, abbreviations, all functions, the dependency catalog, customization,
-and more, with full-text search.
+A Starlight-powered site rebuilt on every push to `main`. It covers
+configuration variables, key bindings, abbreviations, all functions, the
+dependency catalog, customization, and more, with full-text search.
 
-Contributing to the docs? Edit files under `docs/manual/**`, never the
-generated `docs/fish-config.md` — it's rebuilt from the manual tree and any
-hand-edits are discarded.
+Contributing to the docs? There are two sources, split by content type:
+
+- **Function documentation** comes from the man-page-style comment header
+  above each function in `functions/*.fish`. Edit the function; the entry
+  and its site page are generated from the header.
+- **Everything else** lives under `docs/manual/**`.
+
+Never edit the generated `docs/fish-config.md` — it's rebuilt from both
+sources and any hand-edits are discarded.
 
 To browse the docs from the terminal:
 

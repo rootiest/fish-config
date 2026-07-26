@@ -3054,3 +3054,14 @@ editor, or from a shell:
 
     cd ~/.config/fish/docs/manual
     grep -rn "keybindings" .
+
+Section 5 is the exception. Function entries are generated from the
+man-page-style comment header above each function in `functions/*.fish`,
+so the documentation for a command lives beside the code that implements
+it and cannot drift from it. To read the source for a single function, or
+to correct its documentation, open the function itself:
+
+    functions/git-clean.fish
+
+The files under `docs/manual/05-functions/` carry only the category
+titles, ordering, and search keywords.
