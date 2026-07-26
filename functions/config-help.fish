@@ -18,7 +18,7 @@
 #   keyword aliases), then a normalized heading scan as fallback.
 #   When opened with ov a sticky navigation hint is shown at the top of the
 #   screen. Section matching is case-insensitive. Pass --html / -w to open
-#   the published documentation website (https://fish-config-docs.pages.dev/)
+#   the published documentation website (https://fish-config.rootiest.fyi/)
 #   in the default browser via xdg-open — deep links to a section aren't
 #   supported there, so if a keyword is given a note points you to the site's
 #   search box instead. Pass --man / -m to open the compiled man page
@@ -55,7 +55,7 @@ function config-help --description 'Open the offline fish shell configuration ma
     set -l doc_file "$__fish_config_dir/docs/fish-config.md"
     set -l idx_file "$__fish_config_dir/docs/fish-config.index"
     set -l man_file "$__fish_config_dir/docs/fish-config.1"
-    set -l site_url "https://fish-config-docs.pages.dev/"
+    set -l site_url "https://fish-config.rootiest.fyi/"
 
     # ── Extract section keyword (first non-flag argument) ────────
     set -l section_kw ""

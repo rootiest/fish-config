@@ -3,10 +3,10 @@ import starlight from '@astrojs/starlight';
 import sidebar from './src/sidebar.json' with { type: 'json' };
 
 export default defineConfig({
-  site: 'https://fish-config-docs.pages.dev',
+  site: 'https://fish-config.rootiest.fyi',
   integrations: [
     starlight({
-      title: 'Fish Config',
+      title: 'Rootiest Fish Config',
       description: 'Reference manual for the rootiest fish configuration.',
       social: [
         {

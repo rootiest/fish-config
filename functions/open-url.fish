@@ -36,7 +36,7 @@
 #
 # EXAMPLE
 #   open-url https://git.rootiest.dev/rootiest/fish-config
-#   open-url -v https://fish-config-docs.pages.dev/
+#   open-url -v https://fish-config.rootiest.fyi/
 #
 # NOTES
 #   Typo abbreviation: url-open (expands to open-url on space/enter).

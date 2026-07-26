@@ -2045,7 +2045,7 @@ Add -i (interactive confirmation) to destructive commands:
     keyword aliases), then a normalized heading scan as fallback.
     When opened with ov a sticky navigation hint is shown at the top of the
     screen. Section matching is case-insensitive. Pass --html / -w to open
-    the published documentation website (https://fish-config-docs.pages.dev/)
+    the published documentation website (https://fish-config.rootiest.fyi/)
     in the default browser via xdg-open — deep links to a section aren't
     supported there, so if a keyword is given a note points you to the site's
     search box instead. Pass --man / -m to open the compiled man page
@@ -2305,7 +2305,7 @@ Add -i (interactive confirmation) to destructive commands:
 
     Example:
     open-url https://git.rootiest.dev/rootiest/fish-config
-    open-url -v https://fish-config-docs.pages.dev/
+    open-url -v https://fish-config.rootiest.fyi/
 
 **Used by:** `repo-open`
 
@@ -3101,7 +3101,7 @@ There are four ways to read this manual.
 
     help config --html
 
-Opens https://fish-config-docs.pages.dev/ in the default browser — the
+Opens https://fish-config.rootiest.fyi/ in the default browser — the
 Starlight-powered site built from `docs/manual/**` on every push to `main`.
 It has a section sidebar and full-text search. Deep links to a specific
 section aren't supported from the command line; once the site opens, use
