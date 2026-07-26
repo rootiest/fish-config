@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   06-dependency-management
+#
 # SYNOPSIS
 #   fzf-update
 #

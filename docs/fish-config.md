@@ -1214,6 +1214,15 @@ Add -i (interactive confirmation) to destructive commands:
     fish-deps install
     fish-deps update
 
+### fzf-update
+
+    Synopsis:  fzf-update
+
+    Installs or upgrades fzf from git HEAD into ~/.fzf. Pulls the latest
+    changes if ~/.fzf already exists, or clones the repository if not.
+
+    fzf-update
+
 ## 5.7 System and Monitoring
 
 ### limine-edit
@@ -1746,6 +1755,20 @@ Add -i (interactive confirmation) to destructive commands:
     pull request with a manual verification checklist.
 
     claude-pr
+
+### dops
+
+    Synopsis:  docker [subcommand] [args...]
+
+    Wrapper for docker that intercepts the ps subcommand and redirects it to
+    the dops function for enhanced container listing. All other subcommands are
+    passed through to the real docker binary.
+
+    Arguments:
+      subcommand  Docker subcommand (ps is redirected to dops)
+      args...     Arguments forwarded to docker or dops
+
+    docker ps
 
 ### qc
 
