@@ -3,7 +3,7 @@ import starlight from '@astrojs/starlight';
 import sidebar from './src/sidebar.json' with { type: 'json' };
 
 export default defineConfig({
-  site: 'https://fish-config.pages.dev',
+  site: 'https://fish-config-docs.pages.dev',
   integrations: [
     starlight({
       title: 'Fish Config',

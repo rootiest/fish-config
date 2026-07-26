@@ -9,6 +9,7 @@ on:
       - "docs/build-manual.py"
       - "docs/manualtools.py"
       - "docs/verify-manual.py"
+      - "docs/site/**"
 
 jobs:
   build-docs:
@@ -45,6 +46,28 @@ jobs:
                  --to man \
                  docs/fish-config.md \
                  -o docs/fish-config.1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Build documentation site
+        run: |
+          python3 docs/build-manual.py --site
+          cd docs/site
+          npm ci
+          npx astro build
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          cd docs/site
+          npx --yes wrangler pages deploy dist/ \
+            --project-name=fish-config-docs \
+            --branch=main
 
       - name: Commit generated docs
         run: |
