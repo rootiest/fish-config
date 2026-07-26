@@ -154,7 +154,7 @@ def _first_sentence(body: str) -> str:
 SHELL_HEADS = frozenset(
     """
     abbr alias apt bg bind brew builtin cargo cat cd chmod code command cp curl
-    dnf echo end env exec export fg fish fisher for funcsave function git help
+    dnf docker echo end env exec export fg fish fisher for funcsave function git help
     if jobs kitty ls man math mkdir mv nvim npm pacman paru pip pip3 pkg printf
     python python3 rm set shutdown source string sudo switch systemctl test time
     tmux touch trash type wget wezterm while yay zellij zypper
@@ -162,6 +162,7 @@ SHELL_HEADS = frozenset(
 )
 
 SYNOPSIS_PREFIX = "Synopsis:"
+EXAMPLE_PREFIX = "Example:"
 INDENT = "    "
 
 
@@ -200,6 +201,16 @@ def _is_shell(para: list[str], entry_name: str | None) -> bool:
             return False
     return True
 
+
+# A lone indented line that's just a path ending in a known extension —
+# e.g. pointing at where a file lives — reads better as a titled snippet
+# than an unhighlighted grey slab.
+PATH_LINE_RE = re.compile(r"^[~$][\w./{}-]*\.\w+$")
+
+# A leading "# in local.fish" / "# local.fish" comment names the file an
+# example belongs to; promote it to the fence title instead of leaving it
+# as a literal comment inside the code.
+FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([\w-]+\.\w+)\s*$")
 
 CELL_SPLIT = re.compile(r"\s{2,}")
 
@@ -262,9 +273,18 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
     if not deeper:
         if _is_prose(para):
             return "\n".join(line.strip() for line in para)
+        if len(para) == 1 and PATH_LINE_RE.match(para[0].strip()):
+            path = para[0].strip()
+            name = path.rsplit("/", 1)[-1]
+            return f'```fish title="{name}"\n{path}\n```'
         if _is_shell(para, entry_name):
-            body = "\n".join(para)
-            return f"```fish\n{body}\n```"
+            body = para
+            title = None
+            m = FILENAME_COMMENT_RE.match(para[0].strip())
+            if m:
+                title, body = m.group(1), para[1:]
+            info = f'fish title="{title}"' if title else "fish"
+            return f"```{info}\n" + "\n".join(body) + "\n```"
     table = _as_table(para)
     if table is not None:
         return table
@@ -288,10 +308,10 @@ def _prettify_block(block: list[str], entry_name: str | None) -> str:
         # keep the whole thing in one fence rather than orphaning the rest.
         while lines and lines[0].startswith(" "):
             synopsis.append(lines.pop(0).strip())
-        # Titling the fence with the source file name (Starlight's
-        # filename-title convention) makes the synopsis read as a snippet
-        # of the function it documents rather than a bare command example.
-        info = f'fish title="{entry_name}.fish"' if entry_name else "fish"
+        # A "Usage" title (Starlight's filename-title convention, repurposed
+        # as a label) makes the synopsis read as a snippet of the function
+        # it documents rather than a bare command example.
+        info = 'fish title="Usage"' if entry_name else "fish"
         out.append(f"```{info}\n" + "\n".join(synopsis) + "\n```")
 
     para: list[str] = []
@@ -300,8 +320,17 @@ def _prettify_block(block: list[str], entry_name: str | None) -> str:
             para.append(line)
             continue
         if para:
-            deeper = any(line.startswith(" ") for line in para)
-            out.append(_render_para(para, entry_name, deeper))
+            if para[0].strip() == EXAMPLE_PREFIX:
+                example = para[1:]
+                if example and _is_shell(example, entry_name):
+                    body = "\n".join(example)
+                    out.append(f'```fish title="Examples"\n{body}\n```')
+                else:
+                    deeper = any(line.startswith(" ") for line in example)
+                    out.append(_render_para(example, entry_name, deeper))
+            else:
+                deeper = any(line.startswith(" ") for line in para)
+                out.append(_render_para(para, entry_name, deeper))
             para = []
     return "\n\n".join(chunk for chunk in out if chunk.strip())
 
@@ -366,7 +395,7 @@ def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str
             continue
         out += ["", head] + ["  " + line for line in body]
     if fn.get("EXAMPLE"):
-        out += [""] + fn["EXAMPLE"]
+        out += ["", EXAMPLE_PREFIX] + fn["EXAMPLE"]
 
     block = "\n".join((INDENT + line).rstrip() for line in out)
 

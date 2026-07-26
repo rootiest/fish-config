@@ -33,6 +33,7 @@ fish_variables (auto-managed by fish) is excluded from this repo via
 Store anything you would not commit to a public repo: API keys, auth tokens,
 passwords, and personal identifiers.
 
+    # secrets.fish
     set -gx MY_NAME "Your Name"
     set -gx MY_EMAIL "you@example.com"
     set -gx GPG_RECIPIENT "you@example.com"

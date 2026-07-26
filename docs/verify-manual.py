@@ -332,16 +332,19 @@ def test_prettify_splits_an_entry_block():
             "",
             "    Falls back to /usr/bin/rm when trash is unavailable.",
             "",
+            "    Example:",
             "    rm file.txt           # moves to trash",
             "    rm -e                 # empty trash",
         ]
     )
     out = build_manual.prettify(body, "rm")
 
-    assert '```fish title="rm.fish"\nrm [-e | args...]\n```' in out, (
-        "synopsis was not fenced as fish with a filename title"
+    assert '```fish title="Usage"\nrm [-e | args...]\n```' in out, (
+        "synopsis was not fenced as fish with a Usage title"
     )
-    assert "```fish\nrm file.txt" in out, "examples were not fenced as fish"
+    assert '```fish title="Examples"\nrm file.txt' in out, (
+        "examples were not fenced as fish with an Examples title"
+    )
     assert out.count("```") == 4, f"expected exactly two fences, got:\n{out}"
     assert "\nSafe rm wrapper routing to trash:" in out, "description stayed indented"
     assert "| `(no args)` | List current trash contents |" in out, (
@@ -429,6 +432,24 @@ def test_prettify_leaves_reference_tables_alone():
 
     shell = "    set -U __fish_user_dots_path /path/to/dots"
     assert "```fish" in build_manual.prettify(shell), "a shell block was not fenced"
+
+
+def test_prettify_titles_paths_and_commented_examples():
+    """A bare file path or a leading '# in x.fish' comment become a title."""
+    import build_manual
+
+    path = "    $__fish_user_dots_path/local.fish"
+    assert '```fish title="local.fish"\n$__fish_user_dots_path/local.fish\n```' in (
+        build_manual.prettify(path)
+    ), "a bare file path was not titled"
+
+    commented = "\n".join(
+        ["    # in local.fish", "    set -gx SCROLLBACK_HISTORY_MAX_FILES 200"]
+    )
+    out = build_manual.prettify(commented)
+    assert '```fish title="local.fish"\nset -gx SCROLLBACK_HISTORY_MAX_FILES 200\n```' in out, (
+        f"a filename comment was not promoted to the fence title:\n{out}"
+    )
 
 
 def test_prettify_is_site_only():

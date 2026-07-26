@@ -536,6 +536,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Files or directories to display
 
+    Example:
     cat README.md
     cat ~/projects/myapp
 
@@ -550,6 +551,7 @@ Add -i (interactive confirmation) to destructive commands:
       source  Source file or directory
       dest    Destination path
 
+    Example:
     copy ./mydir/ ~/backup
     copy ./mydir/ ~/backup    # copies mydir INTO backup, not backup/mydir/
 
@@ -567,6 +569,7 @@ Add -i (interactive confirmation) to destructive commands:
       --dua    Force dua  (fast interactive space analyzer)
       args...  Files/directories or flags forwarded to the selected tool
 
+    Example:
     du ~/Downloads
     du --disk
 
@@ -580,6 +583,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       dir  Directory to summarize (defaults to current directory)
 
+    Example:
     dusize ~/Downloads
     dusize ~/Videos
 
@@ -593,6 +597,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     lD ~/projects
 
 ### ls
@@ -605,6 +610,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     ls ~/projects
     ls
     ls -a ~/projects
@@ -619,6 +625,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     lsr ~/projects
 
 ### lss
@@ -631,6 +638,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     lss ~/downloads
 
 ### lstree
@@ -643,6 +651,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     lstree ~/projects/myapp
 
 ### lt
@@ -655,6 +664,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     lt ~/projects
 
 ### ltr
@@ -668,6 +678,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     ltr ~/projects
 
 ### lx
@@ -680,6 +691,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Example:
     lx ~/projects
 
 ### mkcd
@@ -700,6 +712,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Directory created (or already existed) and entered successfully
       1  Directory creation or cd failed
 
+    Example:
     mkcd ~/projects/myapp
     mkcd ~/projects/newapp/src
 
@@ -715,6 +728,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Directories to create, or flags passed through to command mkdir
 
+    Example:
     mkdir ~/projects/myapp/src
 
 ### poke
@@ -731,6 +745,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Files created
       1  No file argument provided
 
+    Example:
     poke ~/projects/new/src/main.fish
 
 ### rg
@@ -744,6 +759,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to ripgrep
 
+    Example:
     rg "TODO" src/
     rg "fish_greeting" ~/.config/fish/
     rg -l "TODO" ~/projects/myapp
@@ -776,6 +792,7 @@ Add -i (interactive confirmation) to destructive commands:
     Notes:
       Falls back to /usr/bin/rm when trash is unavailable.
 
+    Example:
     rm file.txt
     rm -e
     rm -S sensitive_key.pem
@@ -799,6 +816,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Sweep completed (or dry run shown)
       1  fd not found, or unknown argument provided
 
+    Example:
     scrub
     scrub -a
     scrub -d
@@ -815,6 +833,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       query  Optional search term to pre-filter the directory list
 
+    Example:
     cdi myproject
 
 ### clone
@@ -831,6 +850,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Repository cloned
       1  Not running inside Kitty terminal
 
+    Example:
     clone https://github.com/user/repo.git
 
 ### clonet
@@ -847,6 +867,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Repository cloned
       1  Not running inside Kitty terminal
 
+    Example:
     clonet https://github.com/user/repo.git
 
 ## 5.3 Editors and Viewers
@@ -882,6 +903,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Editor launched successfully
       1  Conflicting flags, no editor found, or clipboard read failed
 
+    Example:
     edit notes.txt
     edit --visual ~/.config/fish/config.fish
     edit --terminal --new todo.md
@@ -904,6 +926,7 @@ Add -i (interactive confirmation) to destructive commands:
       The edited command's exit status, or a message when history lookup
       found nothing.
 
+    Example:
     fc
     fc git
 
@@ -917,6 +940,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Files or options forwarded to the pager
 
+    Example:
     less /var/log/syslog
 
 ### rawfish
@@ -929,6 +953,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to fish
 
+    Example:
     rawfish
 
 ### view
@@ -941,6 +966,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Files or options forwarded to nvim -R or less
 
+    Example:
     view /etc/fstab
 
 ## 5.4 Git and Version Control
@@ -974,6 +1000,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Subcommand succeeded
       1  Bad usage, target is not a git repo, or target not registered
 
+    Example:
     cd ~/src/qmk_firmware; and auto-pull add
     auto-pull add ~/work/api
     auto-pull list
@@ -993,6 +1020,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Branch checked out or created
       1  Not inside a git work tree
 
+    Example:
     branch feature/new-ui
 
 ### gi
@@ -1017,6 +1045,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Patterns appended or printed
       1  Not in a git repository or API fetch failed
 
+    Example:
     gi python,venv
     gi -b -p
     gi -s node > .gitignore
@@ -1037,6 +1066,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Cleanup complete
       1  Argument parsing failed
 
+    Example:
     git-clean --force
     git-clean
 
@@ -1050,6 +1080,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to the gitui command
 
+    Example:
     gitui
 
 ### gitup
@@ -1066,6 +1097,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Fetch and status succeeded
       1  Not inside a git work tree
 
+    Example:
     gitup
     gitup --all
 
@@ -1076,6 +1108,7 @@ Add -i (interactive confirmation) to destructive commands:
     Searches fish history interactively using fzf, inserts the selected command
     into the command line, and copies it to the clipboard via wl-copy.
 
+    Example:
     hist
 
 ## 5.5 Package Management
@@ -1087,6 +1120,7 @@ Add -i (interactive confirmation) to destructive commands:
     Identifies and removes Arch Linux orphan packages using pacman. Logs
     package names and versions to ~/.removed_orphans before removal.
 
+    Example:
     cleanup
 
 ### parur
@@ -1101,6 +1135,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Packages removed or none selected
       1  No AUR helper (paru or yay) found
 
+    Example:
     parur
 
 ### pkg
@@ -1130,6 +1165,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Operation completed
       1  No supported package manager found, unknown flag, or package operation failed
 
+    Example:
     pkg firefox
     pkg -i ripgrep fd-find
     pkg -u cowsay
@@ -1148,6 +1184,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  AUR helper ran successfully
       1  No AUR helper (paru or yay) found
 
+    Example:
     search neovim
 
 ### upgrade
@@ -1161,6 +1198,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Upgrade completed successfully
       1  No AUR helper (paru or yay) found
 
+    Example:
     upgrade
 
 ## 5.6 Dependency Management
@@ -1172,6 +1210,7 @@ Add -i (interactive confirmation) to destructive commands:
     Backwards-compatibility wrapper that delegates to fish-deps status to
     report which fish shell dependencies are installed or missing.
 
+    Example:
     check_fish_deps
 
 ### fish-deps
@@ -1209,6 +1248,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Subcommand completed
       1  Unknown subcommand
 
+    Example:
     fish-deps sync
     fish-deps
     fish-deps install
@@ -1221,6 +1261,7 @@ Add -i (interactive confirmation) to destructive commands:
     Installs or upgrades fzf from git HEAD into ~/.fzf. Pulls the latest
     changes if ~/.fzf already exists, or clones the repository if not.
 
+    Example:
     fzf-update
 
 ## 5.7 System and Monitoring
@@ -1234,6 +1275,7 @@ Add -i (interactive confirmation) to destructive commands:
     files tracked by sbctl. Combines the edit and sign steps into a single
     command.
 
+    Example:
     limine-edit
 
 ### lock
@@ -1242,6 +1284,7 @@ Add -i (interactive confirmation) to destructive commands:
 
     Locks the current desktop session using loginctl lock-session.
 
+    Example:
     lock
 
 ### ports
@@ -1251,6 +1294,7 @@ Add -i (interactive confirmation) to destructive commands:
     Lists all active TCP listeners on the system using lsof, showing
     port numbers and addresses without hostname resolution.
 
+    Example:
     ports
 
 ### sbver
@@ -1269,6 +1313,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  All binaries verified (or summary shown)
       1  sbctl is not installed
 
+    Example:
     sbver
     sbver --brief
 
@@ -1279,6 +1324,7 @@ Add -i (interactive confirmation) to destructive commands:
     Turns off the display after a 1-second delay by invoking the KDE
     PowerDevil "Turn Off Screen" global shortcut via busctl.
 
+    Example:
     screensleep
 
 ### sudo-toggle
@@ -1293,6 +1339,7 @@ Add -i (interactive confirmation) to destructive commands:
     Returns:
       0  Rule toggled
 
+    Example:
     sudo-toggle
 
 ### swapstat
@@ -1303,6 +1350,7 @@ Add -i (interactive confirmation) to destructive commands:
     zRAM compression ratio, zRAM device details (via zramctl), and
     active swap priority (via swapon).
 
+    Example:
     swapstat
 
 ### top
@@ -1315,6 +1363,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to btop or system top
 
+    Example:
     top
 
 ## 5.8 Terminal Management
@@ -1335,6 +1384,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Command launched successfully
       1  No command provided
 
+    Example:
     bkg firefox
 
 ### detach
@@ -1355,6 +1405,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Command launched or help/version shown
       1  No command provided or unknown option
 
+    Example:
     detach rsync -a ./data remote:/backup/
 
 ### split
@@ -1375,6 +1426,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Pane opened successfully
       1  Not running inside Kitty or WezTerm
 
+    Example:
     split
     split -v nvim README.md
 
@@ -1392,6 +1444,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Window opened successfully
       1  Not running inside Kitty or WezTerm
 
+    Example:
     spwin
 
 ### ssh
@@ -1406,6 +1459,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to kitten ssh or system ssh
 
+    Example:
     ssh user@host
 
 ### tab
@@ -1423,6 +1477,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Tab opened successfully
       1  No supported terminal found
 
+    Example:
     tab
 
 ## 5.9 Clipboard
@@ -1442,6 +1497,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Clipboard contents printed successfully
       1  No supported clipboard tool found
 
+    Example:
     p | grep foo
     p > file.txt
 
@@ -1459,6 +1515,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Clipboard contents printed successfully
       1  No supported clipboard tool found
 
+    Example:
     paste > file.txt
 
 ### y
@@ -1475,6 +1532,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Text copied to clipboard
       1  No clipboard provider found
 
+    Example:
     y "hello world"
     ls | y
     cat file.txt | y
@@ -1488,6 +1546,7 @@ Add -i (interactive confirmation) to destructive commands:
     Fetches and prints both the public IPv4 and IPv6 addresses using
     icanhazip.com. Shows "Not detected" for any address that times out.
 
+    Example:
     gip
 
 ### gip4
@@ -1496,6 +1555,7 @@ Add -i (interactive confirmation) to destructive commands:
 
     Fetches and prints the machine's public IPv4 address using icanhazip.com.
 
+    Example:
     gip4
 
 ### gip6
@@ -1509,6 +1569,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  IPv6 address printed
       1  IPv6 unavailable or not supported on this network
 
+    Example:
     gip6
 
 ### ping
@@ -1523,6 +1584,7 @@ Add -i (interactive confirmation) to destructive commands:
       --legend  Show the prettyping legend (overrides default --nolegend)
       args...   Arguments forwarded to prettyping or system ping
 
+    Example:
     ping google.com
     ping --legend google.com
 
@@ -1537,6 +1599,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       text...  Text to encode; reads from stdin if omitted
 
+    Example:
     qr "https://example.com"
     echo "hello" | qr
 
@@ -1567,6 +1630,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  File viewed or no file selected
       1  No log files found
 
+    Example:
     logs -c paru
     logs
     logs -c scrollback
@@ -1592,6 +1656,7 @@ Add -i (interactive confirmation) to destructive commands:
       The exit builtin is wired to smart_exit for interactive sessions. Typing
       `exit` or Ctrl+D behaves identically to calling smart_exit directly.
 
+    Example:
     smart_exit
     smart_exit --no-log
 
@@ -1663,6 +1728,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Setup completed successfully
       1  Fatal error (git init failed, move failed, etc.)
 
+    Example:
     agents-init
     agents-init --agents
     agents-init --plugins
@@ -1691,6 +1757,7 @@ Add -i (interactive confirmation) to destructive commands:
     Returns:
       Exit status of the underlying agy binary
 
+    Example:
     agy
     agy chat
     agy resume
@@ -1707,6 +1774,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments passed through to the antigravity-ide command
 
+    Example:
     antigravity-ide
 
 ### claude
@@ -1730,6 +1798,7 @@ Add -i (interactive confirmation) to destructive commands:
     Returns:
       Exit status of the underlying claude binary
 
+    Example:
     claude
     claude --resume
     claude "Explain the recent changes"
@@ -1744,6 +1813,7 @@ Add -i (interactive confirmation) to destructive commands:
     README.md, ensuring all features and examples are accurate and pruning
     obsolete content.
 
+    Example:
     claude-docs
 
 ### claude-pr
@@ -1754,6 +1824,7 @@ Add -i (interactive confirmation) to destructive commands:
     branch, write a Conventional Commit, run verification, push, and open a
     pull request with a manual verification checklist.
 
+    Example:
     claude-pr
 
 ### dops
@@ -1768,6 +1839,7 @@ Add -i (interactive confirmation) to destructive commands:
       subcommand  Docker subcommand (ps is redirected to dops)
       args...     Arguments forwarded to docker or dops
 
+    Example:
     docker ps
 
 ### qc
@@ -1791,6 +1863,7 @@ Add -i (interactive confirmation) to destructive commands:
     Returns:
       aichat's exit status.
 
+    Example:
     qc "how do I list open ports on linux?"
     qc -m ollama:llama3 "explain this error"
     qc --role coder "refactor this function"
@@ -1813,6 +1886,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Mode applied successfully
       1  No on/off mode specified
 
+    Example:
     superpowers on
     superpowers off -g
 
@@ -1837,6 +1911,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Conversion complete
       1  File not found, missing dependency, or encode step failed
 
+    Example:
     dng2avif photo.dng
     dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 
@@ -1855,6 +1930,7 @@ Add -i (interactive confirmation) to destructive commands:
       -v, --version  Print version
       -h, --help     Show usage help
 
+    Example:
     spark 1 1 2 5 14 42
     seq 64 | sort --random-sort | spark
     echo "3 7 2 9 1" | spark
@@ -1866,6 +1942,7 @@ Add -i (interactive confirmation) to destructive commands:
     Launches Steam with systemd-inhibit to prevent the system from idling
     or sleeping during active downloads.
 
+    Example:
     steam-dl
 
 ### yt-dlp
@@ -1888,6 +1965,7 @@ Add -i (interactive confirmation) to destructive commands:
       args...  Arguments forwarded to yt-dlp (defaults prepended)
       --no-embed-thumbnail  Skip thumbnail embedding for this run
 
+    Example:
     yt-dlp dQw4w9WgXcQ
     yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
 
@@ -1903,6 +1981,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments passed through to the bash command
 
+    Example:
     bash
 
 ### bd-pull
@@ -1920,6 +1999,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Issues linked and synced (or no unlinked issues found)
       1  Missing required argument or environment variables
 
+    Example:
     bd-pull myuser/myproject
     bd-pull rootiest/fish-config
 
@@ -1933,6 +2013,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Additional arguments forwarded to fastfetch or neofetch
 
+    Example:
     cffetch
 
 ### cheat
@@ -1946,6 +2027,7 @@ Add -i (interactive confirmation) to destructive commands:
       topic   The command or topic to look up
       args... Additional arguments forwarded to cheat, tldr, or man
 
+    Example:
     cheat tar
     cheat git
 
@@ -1986,6 +2068,7 @@ Add -i (interactive confirmation) to destructive commands:
       registered as a handler in the help wrapper so that syntax works
       transparently. Direct `config-help` calls are also valid.
 
+    Example:
     config-help
     config-help keybindings
     config-help pkg
@@ -2052,6 +2135,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Exited normally (q or Escape pressed)
       1  Unknown flag passed
 
+    Example:
     config-settings
 
 **Used by:** `config-toggle`
@@ -2069,6 +2153,7 @@ Add -i (interactive confirmation) to destructive commands:
     Returns:
       Same as config-settings
 
+    Example:
     config-toggle        # opens config-settings with a deprecation notice
 
 **Dependencies:** `config-settings`
@@ -2091,6 +2176,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Config updated (or already up to date)
       1  Update failed (network error, merge conflict, or not a git repo)
 
+    Example:
     config-update
     config-update --dry-run
     config-update --force
@@ -2110,6 +2196,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Services updated and running
       1  Directory not found or no docker-compose.yml present
 
+    Example:
     dockup ~/myapp
 
 ### ffetch
@@ -2122,6 +2209,7 @@ Add -i (interactive confirmation) to destructive commands:
     Arguments:
       args...  Arguments forwarded to fastfetch or neofetch
 
+    Example:
     ffetch
 
 ### joplin
@@ -2138,6 +2226,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Joplin ran successfully
       1  joplin binary not found in PATH
 
+    Example:
     joplin ls
 
 ### kitty-logging
@@ -2167,6 +2256,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Success
       1  Unknown subcommand/flag, kitty missing, or a write failure
 
+    Example:
     kitty-logging install
     kitty-logging status
 
@@ -2177,6 +2267,7 @@ Add -i (interactive confirmation) to destructive commands:
     Launches lazydocker targeting the currently active Docker context by
     resolving the host endpoint from docker context inspect.
 
+    Example:
     ld
 
 ### open-url
@@ -2212,6 +2303,7 @@ Add -i (interactive confirmation) to destructive commands:
     Notes:
       Typo abbreviation: url-open (expands to open-url on space/enter).
 
+    Example:
     open-url https://git.rootiest.dev/rootiest/fish-config
     open-url -v https://fish-config-docs.pages.dev/
 
@@ -2232,6 +2324,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Commands ran successfully and changes were replayed
       1  Bash command exited with a non-zero status
 
+    Example:
     replay "source ~/.bashrc"
     replay "export FOO=bar"
 
@@ -2272,6 +2365,7 @@ Add -i (interactive confirmation) to destructive commands:
     Notes:
       Typo abbreviation: open-repo (expands to repo-open on space/enter).
 
+    Example:
     repo-open              # open current branch (+ subdir) in browser
     repo-open --print      # just print the URL
     repo-open --root       # repo home page for the current branch
@@ -2285,6 +2379,7 @@ Add -i (interactive confirmation) to destructive commands:
     Kills all detached (unattached) tmux sessions, leaving any currently
     attached sessions running.
 
+    Example:
     tmux-clean
 
 ### wake-lock
@@ -2302,6 +2397,7 @@ Add -i (interactive confirmation) to destructive commands:
       0  Command ran and completed
       1  No command provided
 
+    Example:
     wake-lock rsync -avz src/ dest/
 
 # 6. DEPENDENCY CATALOG
@@ -2962,6 +3058,7 @@ fish_variables (auto-managed by fish) is excluded from this repo via
 Store anything you would not commit to a public repo: API keys, auth tokens,
 passwords, and personal identifiers.
 
+    # secrets.fish
     set -gx MY_NAME "Your Name"
     set -gx MY_EMAIL "you@example.com"
     set -gx GPG_RECIPIENT "you@example.com"
