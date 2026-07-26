@@ -279,7 +279,14 @@ def build_site(root: Path, out: Path) -> list[dict]:
             continue
 
         # Section 5: category index page keeps its slot; entries explode.
-        slug_dir = "functions"
+        #
+        # Deliberately NOT "functions": Cloudflare Pages reserves a top-level
+        # `functions/` directory in the deploy output for Pages Functions
+        # (server-side handlers) and silently drops it from the static-asset
+        # upload. The pages build fine and never arrive — every entry 404s in
+        # production while working locally. test_site_avoids_reserved_dir
+        # guards this.
+        slug_dir = "reference"
         if rel.name == "index.md":
             target = out / slug_dir / "index.md"
             target.parent.mkdir(parents=True, exist_ok=True)
