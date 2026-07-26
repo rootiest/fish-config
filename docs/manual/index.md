@@ -4,12 +4,6 @@ description: Reference manual for the rootiest fish configuration.
 manTitle: DESCRIPTION
 sidebar:
   order: 3
-pandoc:
-  title: FISH-CONFIG
-  section: 7
-  header: Fish Shell Configuration User Manual
-  date: June 2026
-  author: Rootiest
 helpKeywords:
 - description
 - autopair

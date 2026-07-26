@@ -50,6 +50,23 @@ def load_keywords() -> dict[str, list[str]]:
     return mapping
 
 
+def extract_raw_frontmatter(path: Path) -> str | None:
+    """Return the raw text between a file's opening `---` fences, or None.
+
+    Unlike `mt.parse`, this does not round-trip the block through
+    `yaml.safe_load`/`yaml.safe_dump` — it hands back the exact original
+    bytes (minus the fence lines themselves) so a later verbatim re-emit
+    doesn't have to worry about quoting-style or scalar-coercion drift.
+    """
+    text = path.read_text()
+    if not text.startswith("---\n"):
+        return None
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return None
+    return text[4:end]
+
+
 def _trim_blank_lines(text: str) -> str:
     """Drop leading/trailing blank lines without touching interior indentation.
 
@@ -91,10 +108,16 @@ def main() -> int:
 
     keywords = load_keywords()
     # SRC starts with a pandoc metadata block (title/section/header/date/
-    # author) consumed by the man-page build. mt.parse() peels it off so it
-    # isn't silently dropped; it gets stashed on the LANDING (index.md) page
-    # under "pandoc" and re-emitted verbatim by build-manual.py --concat.
-    pandoc_meta, src_body = mt.parse(SRC)
+    # author) consumed by the man-page build. It has no purpose as an Astro
+    # page's frontmatter (index.md is also a website content page, and
+    # Starlight errors on any custom frontmatter key outside the fixed
+    # man/site/manTitle/helpKeywords schema), so it is extracted as raw text
+    # and written to docs/manual/_pandoc.yml instead of being folded into
+    # index.md's frontmatter. The leading underscore keeps Astro content
+    # collections from treating it as a page. build-manual.py --concat
+    # reads it back and re-emits it byte-for-byte.
+    pandoc_raw = extract_raw_frontmatter(SRC)
+    _, src_body = mt.parse(SRC)
     sections = split_h1(src_body)
     order = 0
     # `position` tracks each heading's place in the *original* document,
@@ -127,11 +150,11 @@ def main() -> int:
                 "manTitle": heading,
                 "sidebar": {"order": position},
             }
-            if pandoc_meta:
-                fm["pandoc"] = pandoc_meta
             if kw:
                 fm["helpKeywords"] = kw
             (OUT / "index.md").write_text(mt.serialize(fm, body))
+            if pandoc_raw is not None:
+                (OUT / "_pandoc.yml").write_text(pandoc_raw.rstrip("\n") + "\n")
             continue
 
         order += 1

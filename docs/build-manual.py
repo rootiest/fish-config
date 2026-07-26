@@ -11,8 +11,6 @@ import argparse
 import sys
 from pathlib import Path
 
-import yaml
-
 import manualtools as mt
 
 DOCS = Path(__file__).parent
@@ -25,17 +23,17 @@ def build_concat(root: Path) -> str:
     Each file contributes `# {manTitle or title}` at a level matching its
     depth, and its body headings are demoted by the same amount.
 
-    The root `index.md` (the LANDING page) may carry a `pandoc` key in its
-    frontmatter — the original document's pandoc metadata block
-    (title/section/header/date/author). If present, it is re-emitted
-    verbatim as the leading `---`-fenced block, ahead of every heading.
+    `root / "_pandoc.yml"` (if present) holds the original document's
+    pandoc metadata block (title/section/header/date/author) as raw text,
+    with no frontmatter fences and no Astro-visible frontmatter key. When
+    present, its contents are re-emitted byte-for-byte as the leading
+    `---`-fenced block, ahead of every heading.
     """
     chunks: list[str] = []
-    index_fm, _ = mt.parse(root / "index.md")
-    pandoc_meta = index_fm.get("pandoc")
-    if pandoc_meta:
-        header = yaml.safe_dump(pandoc_meta, sort_keys=False, allow_unicode=True).rstrip()
-        chunks.append(f"---\n{header}\n---")
+    pandoc_path = root / "_pandoc.yml"
+    if pandoc_path.exists():
+        raw = pandoc_path.read_text().rstrip("\n")
+        chunks.append(f"---\n{raw}\n---")
     for path, depth in mt.walk(root):
         fm, body = mt.parse(path)
         if not fm.get("man", True):
