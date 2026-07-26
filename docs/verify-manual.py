@@ -192,6 +192,27 @@ def test_every_index_keyword_resolves():
     assert not missing, "unresolvable index keywords:\n  " + "\n  ".join(missing)
 
 
+def test_site_build_produces_function_pages():
+    import tempfile
+
+    import build_manual
+
+    docs = Path(__file__).parent
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d)
+        sidebar = build_manual.build_site(docs / "manual", out)
+        pages = list(out.rglob("*.md*"))
+        assert (out / "index.md").exists(), "landing page missing"
+        fn_pages = [p for p in pages if "functions" in p.parts and p.name != "index.mdx"]
+        assert len(fn_pages) > 80, f"expected >80 function pages, got {len(fn_pages)}"
+        assert not (out / "00-name.md").exists(), "site:false page was published"
+        assert sidebar, "sidebar structure is empty"
+        for page in pages:
+            fm, _ = mt.parse(page)
+            assert "manTitle" not in fm, f"{page.name} leaked manTitle into site output"
+            assert "title" in fm, f"{page.name} has no title"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 
