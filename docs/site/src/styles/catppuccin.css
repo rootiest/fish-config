@@ -100,6 +100,11 @@
   text-decoration-color: currentColor;
 }
 
+.sl-link-button.primary {
+  color: var(--sl-color-black) !important;
+}
+
+
 /* ── Cards ─────────────────────────────────────────────────────────── */
 /* Each function category is a grid of LinkCards; a hover accent makes the
    grid feel navigable rather than like a wall of boxes. */
