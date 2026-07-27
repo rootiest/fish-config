@@ -670,11 +670,14 @@ def test_prettify_is_site_only():
     import build_manual
 
     manual = Path(__file__).parent / "manual"
+    forbidden = ("```", "<Aside", "<FileTree", ":::")
     for path in manual.rglob("*.md"):
-        assert "```" not in path.read_text(), (
-            f"{path.name} contains a fence: prettify must run at site-build "
-            "time, never be written back to the SSOT"
-        )
+        text = path.read_text()
+        for marker in forbidden:
+            assert marker not in text, (
+                f"{path.name} contains {marker!r}: prettify must run at "
+                "site-build time, never be written back to the SSOT"
+            )
 
 
 def test_sidebar_has_no_duplicate_functions_entry():
