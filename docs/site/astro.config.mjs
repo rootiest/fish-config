@@ -18,7 +18,7 @@ export default defineConfig({
       head: [
         {
           tag: 'script',
-          content: 'document.addEventListener("DOMContentLoaded", () => { document.querySelectorAll("starlight-file-tree details").forEach(d => d.removeAttribute("open")); });',
+          content: 'document.addEventListener("DOMContentLoaded", () => { document.querySelectorAll("starlight-file-tree").forEach(tree => { tree.querySelectorAll("details").forEach((d, i) => { if (i !== 0) d.removeAttribute("open"); }); }); });',
         },
       ],
       customCss: ['./src/styles/catppuccin.css'],
