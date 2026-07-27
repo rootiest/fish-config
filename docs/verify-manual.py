@@ -307,7 +307,7 @@ def test_site_build_produces_function_pages():
         out = Path(d)
         sidebar = build_manual.build_site(docs / "manual", out)
         pages = list(out.rglob("*.md*"))
-        assert (out / "index.md").exists(), "landing page missing"
+        assert (out / "index.md").exists() or (out / "index.mdx").exists(), "landing page missing"
         fn_pages = [p for p in pages if "reference" in p.parts and p.name != "index.mdx"]
         assert len(fn_pages) > 80, f"expected >80 function pages, got {len(fn_pages)}"
         assert not (out / "00-name.md").exists(), "site:false page was published"
@@ -665,8 +665,8 @@ def test_as_file_tree_rejects_non_trees():
         assert build_manual._as_file_tree(para) is None, f"{label} was wrongly treed"
 
 
-def test_as_file_tree_rejects_deeper_trees():
-    """A tree with a second-level (indented) branch line is not detected — falls through to verbatim rendering."""
+def test_as_file_tree_accepts_deeper_trees():
+    """A tree with indented branch lines becomes a Starlight <FileTree> with nested markdown lists."""
     import build_manual
 
     para = [
@@ -675,7 +675,15 @@ def test_as_file_tree_rejects_deeper_trees():
         "│   └── main.fish",
         "└── README.md",
     ]
-    assert build_manual._as_file_tree(para) is None
+    out = build_manual._as_file_tree(para)
+    assert out == (
+        "<FileTree>\n"
+        "- ~/proj/\n"
+        "  - src/\n"
+        "    - main.fish\n"
+        "  - README.md\n"
+        "</FileTree>"
+    ), f"unexpected file tree output:\n{out}"
 
 
 def test_customization_notes_render_as_aside():
