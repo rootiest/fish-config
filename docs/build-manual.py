@@ -698,7 +698,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
             functions_group = {
                 "label": fm["title"],
                 "collapsed": True,
-                "items": [{"label": "Overview", "link": f"/{slug_dir}/"}],
+                "items": [{"label": "Categories", "link": f"/{slug_dir}/"}],
             }
             sidebar.append(functions_group)
             continue
@@ -756,7 +756,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
                 "label": fm["title"],
                 "collapsed": True,
                 "items": [
-                    {"label": "Overview", "link": f"/{slug_dir}/{category}/"},
+                    {"label": f"{fm['title']} Overview", "link": f"/{slug_dir}/{category}/"},
                     *links,
                 ],
             }
