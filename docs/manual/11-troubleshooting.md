@@ -12,6 +12,8 @@ helpKeywords:
 - revert
 ---
 
+This section covers common issues, their solutions, and how to safely revert changes or uninstall the configuration entirely.
+
 ## Uninstalling / Reverting to Backup
 
 The installation step backs up any existing config to `~/.config/fish.bak`.
