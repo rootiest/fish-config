@@ -32,21 +32,23 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 - Drop-in replacements for common Unix tools (ls, cat, rm, du, ping, less)
 - Deep Kitty and WezTerm terminal integration: tab/window/pane management from
   the command line
-- Automatic session logging: terminal scrollback, tmux/zellij panes, and
-  paru/yay output captured to ~/.terminal_history (on by default; see below)
+- Optional session logging: terminal scrollback, tmux/zellij panes, and
+  paru/yay output captured to ~/.terminal_history (off by default; see below)
 - Automatic Python virtualenv activation on directory change
 - Cross-platform package management via pkg and fish-deps
 - AI scaffolding helpers for Claude Code and Antigravity
 - Catppuccin Mocha color theme throughout
 
-CAUTION: **SESSION LOGGING IS ON BY DEFAULT**  
-This configuration silently records terminal output to `~/.terminal_history`:
-Kitty scrollback on window close, live tmux pane streams, zellij pane
-snapshots on exit, and full paru/yay output. These logs can contain command
-output, file contents, and secrets printed to the terminal. Nothing leaves
-your machine, but the files persist locally.
-- Disable all logging with: `set -U __fish_config_op_logging off`
+CAUTION: **SESSION LOGGING IS OPT-IN**  
+Once enabled, this configuration *can* silently record terminal output to
+`~/.terminal_history`: Kitty scrollback on window close, live tmux pane
+streams, zellij pane snapshots on exit, and full paru/yay output. These logs
+can contain command output, file contents, and secrets printed to the
+terminal. Nothing leaves your machine, but the files persist locally. Logging
+is off unless you turn it on.
+- Enable all logging with: `set -U __fish_config_op_logging on`
 - Prefer a menu? Run the interactive picker: `config-settings`
+- Turn it back off with: `set -U __fish_config_op_logging off` (or erase the variable)
 - See C5 — Logging and Capture for the full breakdown.
 
 The configuration uses a structured file tree:
@@ -130,7 +132,7 @@ The configuration uses a structured file tree:
     11. Troubleshooting
         11.1 Uninstalling and Reverting to Backup
         11.2 Fish Version Requirement
-        11.3 Disable Session Logging
+        11.3 Enable or Disable Session Logging
         11.4 Change or Disable the Greeting
         11.5 Secrets and Machine-Local Configuration
         11.6 Tool Init Does Nothing (Return Sentinel)
@@ -2565,11 +2567,17 @@ Every opinionated piece of this config is active by default but can be
 switched off through six category opt-out variables, each evaluated via
 __fish_variable_check. Set a variable to any falsy value (0, false, no,
 off, n) to disable its category; erase it or set a truthy value (1, true,
-yes, on, y) to re-enable. Unset means enabled.
+yes, on, y) to re-enable. Unset means enabled — except for C5 logging, which
+is opt-in (see below).
 
 An explicit per-category truthy value takes precedence over the master
 switch: setting __fish_config_opinionated=0 disables all unset categories,
 but a category with an explicit truthy value remains enabled regardless.
+
+C5 (logging) is the one exception to "unset means enabled". Because it
+writes terminal output to disk, it is opt-in: unset means disabled, and the
+master switch cannot enable it. Only an explicit truthy value turns logging
+on.
 
     Variable                        Disables
     ────────────────────────────────────────
@@ -2595,10 +2603,11 @@ but a category with an explicit truthy value remains enabled regardless.
                                     WezTerm window abbreviations, done
                                     notifications, spwin/tab/split,
                                     hist, logs, upgrade, WakaTime
-    __fish_config_op_logging        Logging & capture: scrollback
-                                    capture on exit, paru/yay AUR log
-                                    wrappers, Kitty watcher capture;
-                                    sentinel file coordinates
+    __fish_config_op_logging        Logging & capture (OPT-IN — this one
+                                    is off unless explicitly enabled):
+                                    scrollback capture on exit, paru/yay
+                                    AUR log wrappers, Kitty watcher
+                                    capture; sentinel file coordinates
                                     cross-process state
     __fish_config_op_greeting       Greeting & first-run UI: per-session
                                     fish_greeting override (defines empty
@@ -2612,10 +2621,13 @@ Examples:
     # Disable command shadows only (rm becomes plain rm again):
     set -U __fish_config_op_aliases off
 
+    # Turn session logging on (opt-in; off until you do this):
+    set -U __fish_config_op_logging on
+
     # Full minimal mode — disable all six categories at once:
     set -U __fish_config_opinionated 0
 
-    # Re-enable everything:
+    # Re-enable everything (except C5 logging, which stays opt-in):
     set -Ue __fish_config_opinionated
 
     # Minimal mode but keep the greeting:
@@ -2769,8 +2781,16 @@ silently failing.
 
 #### C5 — Logging and Capture
 
-Five components capture shell output to disk. Disabling
-__fish_config_op_logging skips all capture and removes the logging wrappers.
+Five components capture shell output to disk. Unlike every other category,
+C5 is opt-in: it stays off until __fish_config_op_logging is set to an
+explicit truthy value, and a truthy master switch does not enable it. While
+it is off, all capture is skipped and the logging wrappers are removed.
+
+    # Turn it on (persistently, in every shell):
+    set -U __fish_config_op_logging on
+
+    # Turn it back off:
+    set -U __fish_config_op_logging off     # or: set -Ue __fish_config_op_logging
 
     Component               What it captures
     ───────────────────────────────────────────────────────────────────────────
@@ -2827,8 +2847,10 @@ The Kitty watcher is managed by the kitty-logging command: it symlinks the
 watcher (fish-config-watcher.py) into the Kitty config directory and wires it
 into kitty.conf via a managed block. Inside Kitty, a non-blocking
 per-session reminder points first-time users at `kitty-logging install` until
-they install or run `kitty-logging dismiss`. Install affects new Kitty windows
-only; runtime disable is still handled by the .logging_disabled sentinel.
+they install or run `kitty-logging dismiss`; the reminder is itself gated on
+C5, so it stays silent until you enable logging. Install affects new Kitty
+windows only; runtime disable is still handled by the .logging_disabled
+sentinel.
 
 Logging coordination via sentinel file
 
@@ -2837,7 +2859,11 @@ out-of-process components (the Kitty watcher and all running shells):
 
     ~/.config/fish/.logging_disabled
 
-Disabling __fish_config_op_logging:
+Because C5 is off by default, the sentinel is present on a fresh install —
+the startup sync in conf.d/logging-events.fish reconciles it on every shell
+start, so it appears without any action on your part.
+
+Disabling __fish_config_op_logging (or leaving it unset):
   1. Creates the sentinel immediately in every open shell.
   2. Removes ~/.local/bin/paru and ~/.local/bin/yay logging wrappers;
      bare /usr/bin/paru and /usr/bin/yay are used instead.
@@ -2846,7 +2872,7 @@ Disabling __fish_config_op_logging:
   4. smart_exit stops saving scrollback logs.
   5. Stops tmux pipe-pane capture in every open fish shell inside tmux.
 
-Re-enabling __fish_config_op_logging:
+Enabling __fish_config_op_logging:
   1. Removes the sentinel in every open shell.
   2. Regenerates paru/yay logging wrappers in ~/.local/bin/.
   3. Kitty watcher resumes capture on the next session exit.
@@ -3198,21 +3224,24 @@ Upgrading Fish by distribution:
 
 For other systems or building from source, see https://fishshell.com.
 
-## Disable Session Logging
+## Enable or Disable Session Logging
 
-Disable all logging and capture (scrollback, tmux/zellij pane logs, AUR
-helper wrappers, Kitty watcher):
+Session logging is opt-in: it is off until you turn it on. To enable all
+logging and capture (scrollback, tmux/zellij pane logs, AUR helper wrappers,
+Kitty watcher):
 
-    set -U __fish_config_op_logging off
+    set -U __fish_config_op_logging on
 
 Or toggle it interactively: run `config-settings` and flip the Logging row.
 
+Disable it again — either an explicit falsy value or erasing the variable
+returns you to the default off state:
+
+    set -U __fish_config_op_logging off
+    set -Ue __fish_config_op_logging
+
 This takes effect immediately in all running shells — no restart needed. The
 sentinel file, wrapper removal, and pipe-pane teardown happen automatically.
-
-Re-enable:
-
-    set -Ue __fish_config_op_logging
 
 See C5 — Logging and Capture for the full component breakdown.
 
@@ -3345,7 +3374,7 @@ Disable a single category:
     set -U __fish_config_op_autoexec off        # C2
     set -U __fish_config_op_overrides off       # C3
     set -U __fish_config_op_integrations off    # C4
-    set -U __fish_config_op_logging off         # C5
+    set -U __fish_config_op_logging off         # C5 (already off by default)
     set -U __fish_config_op_greeting off        # C6
 
 Keep one category active under a master disable:

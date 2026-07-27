@@ -30,23 +30,24 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 - **Smart CLI wrappers** that prefer modern tools (`eza`, `bat`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Auto Python venv** activation on directory change (direnv-aware)
 - **Kitty terminal** deep integration for splits, tabs, and SSH
-- **Automatic session logging** — terminal scrollback, multiplexer panes (tmux/zellij), and AUR-helper output are captured to `~/.terminal_history` (see the caution below and [Session Logging](#session-logging))
+- **Optional session logging** — terminal scrollback, multiplexer panes (tmux/zellij), and AUR-helper output can be captured to `~/.terminal_history`; **off by default**, opt in when you want it (see the caution below and [Session Logging](#session-logging))
 - **AI workflow** helpers for Claude and Antigravity session management
 - **WakaTime** shell activity tracking
 - **Opt-out toggles** for every opinionated component — see [Minimal Mode](#minimal-mode)
 
 > [!CAUTION]
-> **This configuration logs your terminal sessions to disk by default.**
-> Out of the box it silently captures terminal output to `~/.terminal_history`:
-> Kitty scrollback when a window closes, live tmux pane streams, zellij pane
-> snapshots on exit, and full `paru`/`yay` output. These logs can contain
-> command output, file contents, and anything else printed to your terminal.
-> Nothing is sent off your machine, but the files persist locally until pruned.
+> **This configuration *can* log your terminal sessions to disk.** Logging is
+> **off by default** — but once enabled it silently captures terminal output to
+> `~/.terminal_history`: Kitty scrollback when a window closes, live tmux pane
+> streams, zellij pane snapshots on exit, and full `paru`/`yay` output. These
+> logs can contain command output, file contents, and anything else printed to
+> your terminal. Nothing is sent off your machine, but the files persist
+> locally until pruned.
 >
-> To turn all logging off, set the C5 category variable:
+> To turn logging on, set the C5 category variable:
 >
 > ```fish
-> set -U __fish_config_op_logging off
+> set -U __fish_config_op_logging on
 > ```
 >
 > Or run **`config-settings`** for an interactive menu to flip logging (and any
@@ -60,9 +61,10 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 
 ## Session Logging
 
-This config captures terminal output to `~/.terminal_history` (override with
+This config can capture terminal output to `~/.terminal_history` (override with
 `$SCROLLBACK_HISTORY_DIR`) so you can search back through past sessions. It is
-**on by default**. Five sources feed it:
+**off by default** — opt in with `set -U __fish_config_op_logging on`. Once
+enabled, five sources feed it:
 
 | Source | When it captures | Log file |
 |---|---|---|
@@ -84,21 +86,26 @@ Old logs are pruned automatically to stay within `$SCROLLBACK_HISTORY_MAX_FILES`
 output, file dumps, tokens echoed to stdout) ends up in them. They never leave
 your machine, but treat `~/.terminal_history` as sensitive.
 
-Disable all of it with a single universal variable:
+All of it is controlled by a single universal variable:
 
 ```fish
-set -U __fish_config_op_logging off   # disable; takes effect in every open shell
-set -Ue __fish_config_op_logging      # re-enable (erase the override)
+set -U __fish_config_op_logging on    # enable; takes effect in every open shell
+set -U __fish_config_op_logging off   # disable again
+set -Ue __fish_config_op_logging      # erase — back to the default (off)
 ```
+
+Unlike the other categories, C5 is opt-in: an unset variable means off, and
+`__fish_config_opinionated` cannot turn it on for you.
 
 Prefer an interactive interface? Run **`config-settings`** for a full-screen
 picker that flips logging — and every other opinionated category — on or off
 per session or universally, without memorizing variable names.
 
-Disabling also removes the generated `paru`/`yay` log wrappers and tells the
-Kitty watcher to skip capture via a sentinel file — no shell or terminal
-restart required. Logging is category **C5** in [Minimal Mode](#minimal-mode);
-`set -U __fish_config_opinionated 0` turns it off along with everything else.
+Disabling (or leaving it unset) also removes the generated `paru`/`yay` log
+wrappers and tells the Kitty watcher to skip capture via a sentinel file — no
+shell or terminal restart required. Logging is category **C5** in
+[Minimal Mode](#minimal-mode); `set -U __fish_config_opinionated 0` keeps it
+off along with everything else.
 
 The Kitty scrollback capture is provided by a watcher script that fish-config can
 install and manage for you. Inside Kitty, if it isn't set up yet, you'll see a
@@ -113,8 +120,9 @@ one-time-per-session reminder. Manage it with:
 
 `install` adds a clearly-marked managed block to `kitty.conf` and comments out
 any conflicting `watcher` line. It affects **new** Kitty windows (existing
-windows keep their current watcher until restarted). Disabling C5 logging makes
-the watcher inert without uninstalling it.
+windows keep their current watcher until restarted). With C5 logging off the
+watcher is inert without needing to be uninstalled, and the reminder stays
+silent until you enable logging.
 
 ---
 
@@ -269,7 +277,7 @@ To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots li
 
 ## Minimal Mode
 
-Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, terminal integrations, logging, and the first-run greeting — is active by default but can be switched off.
+Everything opinionated in this config — command shadows, startup side-effects, key and environment overrides, terminal integrations, and the first-run greeting — is active by default but can be switched off. Logging (C5) is the exception: it is **opt-in**, off until you explicitly enable it.
 
 > **The easy way — `config-settings`:** Run `config-settings` for an interactive TUI that manages settings across four pages — **Universal** and **Session** (the opinionated category toggles below, persistent or per-shell), **Sponge** (history-scrubbing: delay, exit codes, purge-on-exit, and extra sensitive variable names), and **Paths** (scrollback log dir, max files, and the user-dots path) — without typing a single variable name. Navigate with the arrow keys (or `h`/`j`/`k`/`l`); toggle rows step OFF ← DEFAULT → ON, value rows edit inline with `Enter` and clear with `←`. `Tab`/`Shift-Tab` cycle pages and `q` quits. Changes apply instantly. The panel auto-sizes to your terminal width (four tiers from 52- to 78-wide with a 6-column margin), centers itself horizontally, and redraws within ~0.3 s of a resize.
 
@@ -281,9 +289,9 @@ If you'd rather set them by hand, each category is controlled by a universal var
 | `__fish_config_op_autoexec` | Startup side-effects: Fisher bootstrap, theme apply, `paru`/`yay` wrapper generation, auto venv activation, WakaTime hook, auto-pull background fast-forward |
 | `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`/`XDG`/`PATH`, bang-bang history expansion, autopair, puffer, Starship prompt, theme colors |
 | `__fish_config_op_integrations` | Kitty/WezTerm window abbreviations, `done` notifications, `spwin`/`tab`/`split`, `hist`, `logs`, `upgrade`, WakaTime |
-| `__fish_config_op_logging` | Scrollback capture on exit, tmux `pipe-pane` pane logging, zellij `dump-screen` capture on exit, `paru`/`yay` AUR log wrappers, Kitty watcher capture (sentinel-file coordinated) |
+| `__fish_config_op_logging` | **Opt-in — off unless explicitly enabled.** Scrollback capture on exit, tmux `pipe-pane` pane logging, zellij `dump-screen` capture on exit, `paru`/`yay` AUR log wrappers, Kitty watcher capture (sentinel-file coordinated) |
 | `__fish_config_op_greeting` | Per-session `fish_greeting` (suppresses distro greetings such as CachyOS fastfetch by overriding with an empty function); first-run welcome banner |
-| `__fish_config_opinionated` | Master switch — all six categories at once |
+| `__fish_config_opinionated` | Master switch — disables all six categories at once (it is a master *off* switch; it cannot enable opt-in C5 logging) |
 
 Set any of them to a falsy value (`0`, `false`, `no`, `off`, `n`) to disable; erase the variable to re-enable. An explicit per-category truthy value overrides a falsy master switch, so you can disable everything with `__fish_config_opinionated=0` and selectively re-enable individual categories:
 
@@ -297,6 +305,9 @@ set -U __fish_config_op_aliases off
 # Minimal mode but keep the greeting (per-category overrides master)
 set -U __fish_config_opinionated 0
 set -U __fish_config_op_greeting 1
+
+# Opt in to session logging (C5 is off by default)
+set -U __fish_config_op_logging on
 
 # Back to full flavor
 set -Ue __fish_config_opinionated

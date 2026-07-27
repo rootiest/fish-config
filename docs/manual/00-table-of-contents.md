@@ -45,7 +45,7 @@ sidebar:
     11. Troubleshooting
         11.1 Uninstalling and Reverting to Backup
         11.2 Fish Version Requirement
-        11.3 Disable Session Logging
+        11.3 Enable or Disable Session Logging
         11.4 Change or Disable the Greeting
         11.5 Secrets and Machine-Local Configuration
         11.6 Tool Init Does Nothing (Return Sentinel)

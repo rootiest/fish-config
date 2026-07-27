@@ -75,21 +75,24 @@ Upgrading Fish by distribution:
 
 For other systems or building from source, see https://fishshell.com.
 
-## Disable Session Logging
+## Enable or Disable Session Logging
 
-Disable all logging and capture (scrollback, tmux/zellij pane logs, AUR
-helper wrappers, Kitty watcher):
+Session logging is opt-in: it is off until you turn it on. To enable all
+logging and capture (scrollback, tmux/zellij pane logs, AUR helper wrappers,
+Kitty watcher):
 
-    set -U __fish_config_op_logging off
+    set -U __fish_config_op_logging on
 
 Or toggle it interactively: run `config-settings` and flip the Logging row.
 
+Disable it again — either an explicit falsy value or erasing the variable
+returns you to the default off state:
+
+    set -U __fish_config_op_logging off
+    set -Ue __fish_config_op_logging
+
 This takes effect immediately in all running shells — no restart needed. The
 sentinel file, wrapper removal, and pipe-pane teardown happen automatically.
-
-Re-enable:
-
-    set -Ue __fish_config_op_logging
 
 See [C5 — Logging and Capture](/07-customization/#c5-logging-and-capture) for the full component breakdown.
 
@@ -222,7 +225,7 @@ Disable a single category:
     set -U __fish_config_op_autoexec off        # C2
     set -U __fish_config_op_overrides off       # C3
     set -U __fish_config_op_integrations off    # C4
-    set -U __fish_config_op_logging off         # C5
+    set -U __fish_config_op_logging off         # C5 (already off by default)
     set -U __fish_config_op_greeting off        # C6
 
 Keep one category active under a master disable:

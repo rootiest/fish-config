@@ -15,6 +15,11 @@
 #   falsy master disables every unset-category component at once.
 #   Unset master with unset category → enabled (active by default).
 #
+#   One exception: __fish_config_op_logging (C5) is opt-in, because it
+#   writes terminal output to disk. Unset or unrecognized means disabled,
+#   and the master switch cannot enable it — only an explicit truthy
+#   value turns logging on.
+#
 # ARGUMENTS
 #   category_variable  Name (without $) of the category opt-out variable:
 #                      __fish_config_op_aliases, __fish_config_op_autoexec,
@@ -24,8 +29,8 @@
 #                      __fish_config_op_greeting
 #
 # EXIT STATUS
-#   0  Component enabled (category explicitly truthy; or category unset and master not falsy)
-#   1  Component disabled (category explicitly falsy; or category unset and master falsy; or no argument with falsy master)
+#   0  Component enabled (category explicitly truthy; or category unset and master not falsy — except C5 logging, which requires an explicit truthy value)
+#   1  Component disabled (category explicitly falsy; or category unset and master falsy; or C5 logging unset; or no argument with falsy master)
 #
 # EXAMPLE
 #   if __fish_config_op_enabled __fish_config_op_aliases
@@ -40,6 +45,12 @@ function __fish_config_op_enabled --description 'Check whether an opinionated co
     end
 
     if test $cat_status -eq 1
+        return 1
+    end
+
+    # C5 logging is opt-in: it writes terminal output to disk, so an unset or
+    # unrecognized value means off — the master switch cannot enable it.
+    if test "$argv[1]" = __fish_config_op_logging
         return 1
     end
 
