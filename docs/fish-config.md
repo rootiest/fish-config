@@ -3306,7 +3306,7 @@ See Dependency Catalog for the full list grouped by tier
 
 This config enables Vi mode by default (via C3 overrides), replacing the
 standard Emacs-style bindings. If Vi mode interferes with your workflow,
-override it in `local.fish`:
+override it in `local.fish` (See Personalization):
 
     # $__fish_user_dots_path/local.fish
     fish_default_key_bindings
