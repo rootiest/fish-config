@@ -680,6 +680,32 @@ def test_customization_notes_render_as_aside():
     assert "</Aside>" in out
 
 
+def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
+    """A page whose rendered content contains <Aside> or <FileTree> is written as .mdx."""
+    import build_manual
+
+    docs = Path(__file__).parent
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d)
+        build_manual.build_site(docs / "manual", out)
+
+        assert (out / "10-personalization.mdx").exists(), "FileTree page was not promoted to .mdx"
+        assert not (out / "10-personalization.md").exists(), "old .md sibling was left behind"
+
+        assert (out / "11-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
+
+        assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
+
+        assert (out / "01-configuration-variables.md").exists(), "plain page was wrongly promoted to .mdx"
+        assert not (out / "01-configuration-variables.mdx").exists(), "plain page should stay .md"
+
+        text = (out / "10-personalization.mdx").read_text()
+        assert "import { FileTree } from '@astrojs/starlight/components';" in text
+
+        text2 = (out / "11-viewing-this-manual.mdx").read_text()
+        assert "import { Aside } from '@astrojs/starlight/components';" in text2
+
+
 def test_prettify_is_site_only():
     """The SSOT keeps the indented form the man-page pipeline depends on."""
     import build_manual
