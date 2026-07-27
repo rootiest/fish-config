@@ -78,6 +78,7 @@ def build_concat(root: Path) -> str:
         if _is_function_page(path, root):
             body = _with_entries(body, path, entries)
         if body:
+            body = re.sub(r"<LinkButton.*?</LinkButton>\n*", "", body, flags=re.DOTALL)
             chunks.append(mt.shift_headings(body, depth))
     return "\n\n".join(chunks) + "\n"
 
@@ -597,7 +598,7 @@ def _split_entries(body: str) -> tuple[str, list[tuple[str, str]]]:
     return intro, entries
 
 
-ASTRO_ASIDE_COMPONENTS = {"<Aside": "Aside", "<FileTree": "FileTree"}
+ASTRO_ASIDE_COMPONENTS = {"<Aside": "Aside", "<FileTree": "FileTree", "<LinkButton": "LinkButton"}
 
 
 def _write_prettified(target: Path, fm: dict, content: str) -> None:

@@ -24,19 +24,20 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 - AI session helpers for Claude Code and Antigravity
 - Catppuccin Mocha color theme throughout
 
-> **CAUTION - SESSION LOGGING IS ON BY DEFAULT**
->
-> This configuration silently records terminal output to `~/.terminal_history`:
-> Kitty scrollback on window close, live tmux pane streams, zellij pane
-> snapshots on exit, and full paru/yay output. These logs can contain command
-> output, file contents, and secrets printed to the terminal. Nothing leaves
-> your machine, but the files persist locally.
->
-> - Disable all logging with: `set -U __fish_config_op_logging off`
-> - Prefer a menu? Run the interactive picker: `config-settings`
-> - See Section 7 (C5 - Logging and Capture) for the full breakdown.
+<LinkButton href="/09-installation/">Install now</LinkButton>
+<LinkButton href="/reference/" variant="secondary">Function reference</LinkButton>
 
-The configuration is split across:
+CAUTION: **SESSION LOGGING IS ON BY DEFAULT**
+This configuration silently records terminal output to `~/.terminal_history`:
+Kitty scrollback on window close, live tmux pane streams, zellij pane
+snapshots on exit, and full paru/yay output. These logs can contain command
+output, file contents, and secrets printed to the terminal. Nothing leaves
+your machine, but the files persist locally.
+- Disable all logging with: `set -U __fish_config_op_logging off`
+- Prefer a menu? Run the interactive picker: `config-settings`
+- See Section 7 (C5 - Logging and Capture) for the full breakdown.
+
+The configuration uses a structured file tree:
 
     ~/.config/fish/
     ├── config.fish                 Main entry point; sets env vars and PATH
