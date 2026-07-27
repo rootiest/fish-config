@@ -14,7 +14,7 @@ There are four ways to read this manual.
 
     help config --html
 
-Opens https://fish-config.rootiest.fyi/ in the default browser — the
+Opens https://fish.rootiest.fyi/ in the default browser — the
 Starlight-powered site built from `docs/manual/**` on every push to `main`.
 It has a section sidebar and full-text search. Deep links to a specific
 section aren't supported from the command line; once the site opens, use

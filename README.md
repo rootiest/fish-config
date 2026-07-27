@@ -5,7 +5,7 @@ built around a Catppuccin Mocha aesthetic with a curated set of modern
 CLI tool integrations, smart shell functions, and a heavily customized
 abbreviation system for keyboard-driven workflows.
 
-📖 **[Documentation site](https://fish-config.rootiest.fyi/)**
+📖 **[Documentation site](https://fish.rootiest.fyi/)**
 
 ## Table of Contents
 
@@ -120,7 +120,7 @@ the watcher inert without uninstalling it.
 
 ## Documentation
 
-### [📖 Documentation Site](https://fish-config.rootiest.fyi/)
+### [📖 Documentation Site](https://fish.rootiest.fyi/)
 
 A Starlight-powered site rebuilt on every push to `main`. It covers
 configuration variables, key bindings, abbreviations, all functions, the
@@ -309,7 +309,7 @@ Command shadows react immediately; bindings, prompt, and abbreviations take effe
 
 ## Attribution
 
-The core of the [Zoxide integration](https://fish-config.rootiest.fyi/02-path-setup/) in this repository was originally adapted from the [icezyclon/zoxide.fish](https://github.com/icezyclon/zoxide.fish) plugin (MIT Licensed) and has since been heavily customized for performance and Fish 4.x compatibility.
+The core of the [Zoxide integration](https://fish.rootiest.fyi/02-path-setup/) in this repository was originally adapted from the [icezyclon/zoxide.fish](https://github.com/icezyclon/zoxide.fish) plugin (MIT Licensed) and has since been heavily customized for performance and Fish 4.x compatibility.
 
 ---
 
