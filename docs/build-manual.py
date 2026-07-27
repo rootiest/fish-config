@@ -412,19 +412,27 @@ def _as_aside(para: list[str]) -> str | None:
 
 
 def prettify(body: str, entry_name: str | None = None) -> str:
-    """Rewrite a body's indented code blocks for the website.
+    """Rewrite a body's indented code blocks and labeled asides for the website.
 
     Site-only: the man page and `config-help` keep reading the untouched
-    SSOT, where the indented form is exactly what pandoc wants.
+    SSOT, where the indented form and the `LABEL:` text are exactly what
+    pandoc/`config-help` want.
     """
     out: list[str] = []
     block: list[str] = []
+    flat: list[str] = []
     in_fence = False
+
+    def flush_flat() -> None:
+        out.append(_as_aside(flat) or "\n".join(flat))
 
     for line in body.split("\n"):
         if mt.FENCE_RE.match(line):
             in_fence = not in_fence
         if not in_fence and (line.startswith(INDENT) or (not line.strip() and block)):
+            if flat:
+                flush_flat()
+                flat.clear()
             block.append(line)
             continue
         if block:
@@ -433,8 +441,16 @@ def prettify(body: str, entry_name: str | None = None) -> str:
             out.append(_prettify_block(block, entry_name))
             out.append("")
             block = []
-        out.append(line)
+        if in_fence or not line.strip():
+            if flat:
+                flush_flat()
+                flat.clear()
+            out.append(line)
+        else:
+            flat.append(line)
 
+    if flat:
+        flush_flat()
     if block:
         while block and not block[-1].strip():
             block.pop()

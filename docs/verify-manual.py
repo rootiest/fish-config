@@ -592,6 +592,47 @@ def test_as_aside_rejects_non_label_paragraphs():
         assert build_manual._as_aside(para) is None, f"{label} was wrongly asided"
 
 
+def test_prettify_flat_paragraphs_unchanged_when_not_labeled():
+    """Restructuring prettify()'s loop to buffer flat lines must not alter output for ordinary prose."""
+    import build_manual
+
+    body = "\n".join(
+        [
+            "## Heading",
+            "",
+            "First line of a paragraph",
+            "continued on a second line.",
+            "",
+            "A second paragraph.",
+        ]
+    )
+    assert build_manual.prettify(body) == body, "flat prose was altered by the aside buffering"
+
+
+def test_prettify_converts_a_flat_note_paragraph_to_an_aside():
+    """A `NOTE:` paragraph surrounded by ordinary prose becomes an <Aside>, prose is untouched."""
+    import build_manual
+
+    body = "\n".join(
+        [
+            "## Heading",
+            "",
+            "Ordinary prose before.",
+            "",
+            "NOTE: Something worth calling out.",
+            "",
+            "Ordinary prose after.",
+        ]
+    )
+    out = build_manual.prettify(body)
+    assert "## Heading" in out
+    assert "Ordinary prose before." in out
+    assert "Ordinary prose after." in out
+    assert (
+        '<Aside type="note" title="Note">\nSomething worth calling out.\n</Aside>' in out
+    ), f"note paragraph was not converted:\n{out}"
+
+
 def test_prettify_is_site_only():
     """The SSOT keeps the indented form the man-page pipeline depends on."""
     import build_manual
