@@ -15,6 +15,12 @@ export default defineConfig({
           href: 'https://git.rootiest.dev/rootiest/fish-config',
         },
       ],
+      head: [
+        {
+          tag: 'script',
+          content: 'document.addEventListener("DOMContentLoaded", () => { document.querySelectorAll("starlight-file-tree details").forEach(d => d.removeAttribute("open")); });',
+        },
+      ],
       customCss: ['./src/styles/catppuccin.css'],
       expressiveCode: {
         // Shiki ships both Catppuccin flavours; Starlight picks by the
