@@ -714,7 +714,7 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
         assert (out / "10-personalization.mdx").exists(), "FileTree page was not promoted to .mdx"
         assert not (out / "10-personalization.md").exists(), "old .md sibling was left behind"
 
-        assert (out / "11-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
+        assert (out / "12-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
 
         assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
 
@@ -724,7 +724,7 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
         text = (out / "10-personalization.mdx").read_text()
         assert "FileTree" in text.split("from '@astrojs/starlight/components';")[0]
 
-        text2 = (out / "11-viewing-this-manual.mdx").read_text()
+        text2 = (out / "12-viewing-this-manual.mdx").read_text()
         assert "Aside" in text2.split("from '@astrojs/starlight/components';")[0]
 
 
