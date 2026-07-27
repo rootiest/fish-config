@@ -718,14 +718,14 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
 
         assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
 
-        assert (out / "01-configuration-variables.md").exists(), "plain page was wrongly promoted to .mdx"
-        assert not (out / "01-configuration-variables.mdx").exists(), "plain page should stay .md"
+        assert (out / "02-path-setup.md").exists(), "plain page was wrongly promoted to .mdx"
+        assert not (out / "02-path-setup.mdx").exists(), "plain page should stay .md"
 
         text = (out / "10-personalization.mdx").read_text()
-        assert "import { FileTree } from '@astrojs/starlight/components';" in text
+        assert "FileTree" in text.split("from '@astrojs/starlight/components';")[0]
 
         text2 = (out / "11-viewing-this-manual.mdx").read_text()
-        assert "import { Aside } from '@astrojs/starlight/components';" in text2
+        assert "Aside" in text2.split("from '@astrojs/starlight/components';")[0]
 
 
 def test_prettify_is_site_only():

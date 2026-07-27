@@ -598,7 +598,36 @@ def _split_entries(body: str) -> tuple[str, list[tuple[str, str]]]:
     return intro, entries
 
 
-ASTRO_ASIDE_COMPONENTS = {"<Aside": "Aside", "<FileTree": "FileTree", "<LinkButton": "LinkButton"}
+
+def _inject_subheading_cards(body: str) -> str:
+    """Extract `## Heading`s and inject a CardGrid after the intro."""
+    headings = []
+    for line in body.splitlines():
+        m = re.match(r"^##\s+(.+)$", line)
+        if m:
+            headings.append(m.group(1).strip())
+    
+    if len(headings) < 2:
+        return body
+
+    parts = body.split("\n## ", 1)
+    if len(parts) != 2:
+        return body
+        
+    intro = parts[0].strip()
+    rest = "## " + parts[1]
+    
+    cards = []
+    for title in headings:
+        safe_title = _jsx_attr_escape(title)
+        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        cards.append(f'  <LinkCard title="{safe_title}" href="#{slug}" />')
+    
+    cardgrid = "<CardGrid>\n" + "\n".join(cards) + "\n</CardGrid>\n\n"
+    
+    return f"{intro}\n\n{cardgrid}{rest}"
+
+ASTRO_ASIDE_COMPONENTS = {"<Aside": "Aside", "<FileTree": "FileTree", "<LinkButton": "LinkButton", "<CardGrid": "CardGrid", "<LinkCard": "LinkCard"}
 
 
 def _write_prettified(target: Path, fm: dict, content: str) -> None:
@@ -627,6 +656,10 @@ def build_site(root: Path, out: Path) -> list[dict]:
 
     sidebar: list[dict] = []
     functions_group: dict = {}
+    functions_index_target = None
+    functions_index_fm = None
+    functions_index_body = None
+    functions_cards = []
     for path, _depth in mt.walk(root):
         fm, body = mt.parse(path)
         if not fm.get("site", True):
@@ -638,6 +671,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
         if not is_function_dir:
             target = out / rel
             target.parent.mkdir(parents=True, exist_ok=True)
+            body = _inject_subheading_cards(body)
             _write_prettified(target, _page_fm(fm), prettify(body))
             if rel.name != "index.md":
                 sidebar.append({"label": fm["title"], "link": "/" + rel.stem + "/"})
@@ -653,9 +687,11 @@ def build_site(root: Path, out: Path) -> list[dict]:
         # guards this.
         slug_dir = SLUG_DIR
         if rel.name == "index.md":
-            target = out / slug_dir / "index.md"
-            target.parent.mkdir(parents=True, exist_ok=True)
-            _write_prettified(target, _page_fm(fm), prettify(body))
+            functions_index_target = out / slug_dir / "index.md"
+            functions_index_fm = fm
+            functions_index_body = body
+            functions_cards = []
+            
             # Built explicitly rather than by `autogenerate`, which labels
             # each group with its raw directory slug and republishes this
             # index as a child of the group it already titles.
@@ -672,6 +708,17 @@ def build_site(root: Path, out: Path) -> list[dict]:
         cat_dir.mkdir(parents=True, exist_ok=True)
         intro, page_entries = _split_entries(_with_entries(body, path, entries))
 
+        cat_title = fm["title"]
+        cat_desc = fm.get("description", "")
+        safe_title = _jsx_attr_escape(cat_title)
+        safe_desc = _jsx_attr_escape(cat_desc)
+        href = f"/{slug_dir}/{category}/"
+        functions_cards.append(
+            f'  <LinkCard title="{safe_title}" href="{href}"'
+            + (f' description="{safe_desc}"' if cat_desc else "")
+            + " />"
+        )
+        
         cards = []
         links = []
         for title, entry_body in page_entries:
@@ -715,6 +762,15 @@ def build_site(root: Path, out: Path) -> list[dict]:
             }
         )
 
+    if functions_index_target:
+        overview_content = (
+            (f"{functions_index_body}\n\n" if functions_index_body.strip() else "")
+            + "<CardGrid>\n"
+            + "\n".join(functions_cards)
+            + "\n</CardGrid>\n"
+        )
+        _write_prettified(functions_index_target, _page_fm(functions_index_fm), prettify(overview_content))
+        
     return sidebar
 
 
