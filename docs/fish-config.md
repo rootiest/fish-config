@@ -310,6 +310,8 @@ shadowing system-installed Rust tools.
 
 NOTE: While these directories are merged with your system's existing `$PATH` values, any executables in the prepended directories above will override (shadow) system binaries of the same name.
 
+TIP: This standard PATH setup is gated behind the opinionated component overrides toggle. If you prefer to manage your PATH completely manually, you can disable it by setting `__fish_config_op_overrides` to `0` (or toggle it off in the `config-settings` menu).
+
 ---
 
 # 3. KEY BINDINGS
@@ -2720,6 +2722,8 @@ all of them.
     Override                  What it replaces or sets
     ───────────────────────────────────────────────────────────────────────────
     Vi mode                   fish_vi_key_bindings replaces default Emacs mode
+    XDG variables             Sets global XDG Base Directory variables
+    PATH setup                Prepends custom bin directories to the PATH
     exit → smart_exit         exit wrapper that captures scrollback before closing
     PAGER=ov                  ov used by git, man, and all $PAGER-aware tools
     MANPAGER=bat pipeline     man pages rendered with syntax highlighting

@@ -64,29 +64,32 @@ set --erase _fname
 
 #   ───────────────────────────── XDG variables ────────────────────────────
 # XDG Base Directory variables (standard practice)
-set -gx XDG_CONFIG_HOME $HOME/.config # Sets default config dir to ~/.config
-set -gx XDG_CACHE_HOME $HOME/.cache # Sets default cache dir to ~/.cache
-set -gx XDG_DATA_HOME $HOME/.local/share # Sets default data dir to ~/.local/share
-set -gx XDG_STATE_HOME $HOME/.local/state # Sets default state dir to ~/.local/state
+# Setting XDG variables globally is opinionated (C3 overrides)
+if __fish_config_op_enabled __fish_config_op_overrides
+    set -gx XDG_CONFIG_HOME $HOME/.config # Sets default config dir to ~/.config
+    set -gx XDG_CACHE_HOME $HOME/.cache # Sets default cache dir to ~/.cache
+    set -gx XDG_DATA_HOME $HOME/.local/share # Sets default data dir to ~/.local/share
+    set -gx XDG_STATE_HOME $HOME/.local/state # Sets default state dir to ~/.local/state
 
-# Attempt to keep various config/cache files out of the home directory root
-set -gx RANDFILE "$XDG_STATE_HOME/rnd"
-set -gx WGETRC "$XDG_CONFIG_HOME/wget/wgetrc"
-set -gx WGET_HSTS_FILE "$XDG_CACHE_HOME/wget-hsts"
-set -gx NPM_CONFIG_PREFIX "$XDG_DATA_HOME/npm-global"
-set -gx NPM_CONFIG_USERCONFIG "$XDG_CONFIG_HOME/npm/npmrc"
-set -gx ANDROID_USER_HOME "$XDG_DATA_HOME/android"
-set -gx CARGO_HOME "$XDG_DATA_HOME/cargo"
-set -gx RUSTUP_HOME "$XDG_DATA_HOME/rustup"
-set -gx GOPATH "$XDG_DATA_HOME/go"
-set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"
-set -gx GNUPGHOME "$XDG_CONFIG_HOME/gnupg"
-set -gx WAKATIME_HOME "$XDG_CONFIG_HOME/wakatime"
-set -gx HISTFILE "$XDG_STATE_HOME/bash_history"
-set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | source $MYVIMRC"
-set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
-set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
-set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
+    # Attempt to keep various config/cache files out of the home directory root
+    set -gx RANDFILE "$XDG_STATE_HOME/rnd"
+    set -gx WGETRC "$XDG_CONFIG_HOME/wget/wgetrc"
+    set -gx WGET_HSTS_FILE "$XDG_CACHE_HOME/wget-hsts"
+    set -gx NPM_CONFIG_PREFIX "$XDG_DATA_HOME/npm-global"
+    set -gx NPM_CONFIG_USERCONFIG "$XDG_CONFIG_HOME/npm/npmrc"
+    set -gx ANDROID_USER_HOME "$XDG_DATA_HOME/android"
+    set -gx CARGO_HOME "$XDG_DATA_HOME/cargo"
+    set -gx RUSTUP_HOME "$XDG_DATA_HOME/rustup"
+    set -gx GOPATH "$XDG_DATA_HOME/go"
+    set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"
+    set -gx GNUPGHOME "$XDG_CONFIG_HOME/gnupg"
+    set -gx WAKATIME_HOME "$XDG_CONFIG_HOME/wakatime"
+    set -gx HISTFILE "$XDG_STATE_HOME/bash_history"
+    set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | source $MYVIMRC"
+    set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
+    set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
+    set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
+end
 
 #   ─────────────────────────── Pager variables ────────────────────────────
 # Overriding $PAGER is opinionated (C3 overrides)
@@ -147,16 +150,19 @@ end
 #   Adds common user bin directories to the PATH. The -mg --move option for cargo ensures that
 #   the cargo bin directory is moved to the end of the PATH, which can help avoid conflicts
 #   with system-installed Rust tools while still allowing user-installed cargo binaries to be found.
-fish_add_path $HOME/.local/bin # Standard user-local executables (XDG spec)
-fish_add_path $HOME/.local/share/../bin # Alternative/legacy path for local user binaries
-fish_add_path $HOME/Applications # User-installed applications and standalone apps
-fish_add_path $HOME/scripts # Custom personal shell scripts and automation
-fish_add_path -mga $CARGO_HOME/bin # Rust binaries and tools installed via Cargo
-fish_add_path $BUN_INSTALL/bin # Bun runtime executables and globally installed packages
-fish_add_path $XDG_DATA_HOME/npm-global/bin # Global Node.js/npm packages (XDG compliant location)
-fish_add_path $HOME/.lmstudio/bin # LM Studio CLI tools for local LLM management
-fish_add_path $HOME/.resend/bin # Resend email service CLI tools
-fish_add_path $HOME/.fzf/bin # Fuzzy Finder (fzf) core binary and helper scripts
+#   PATH setup is opinionated (C3 overrides)
+if __fish_config_op_enabled __fish_config_op_overrides
+    fish_add_path $HOME/.local/bin # Standard user-local executables (XDG spec)
+    fish_add_path $HOME/.local/share/../bin # Alternative/legacy path for local user binaries
+    fish_add_path $HOME/Applications # User-installed applications and standalone apps
+    fish_add_path $HOME/scripts # Custom personal shell scripts and automation
+    fish_add_path -mga $CARGO_HOME/bin # Rust binaries and tools installed via Cargo
+    fish_add_path $BUN_INSTALL/bin # Bun runtime executables and globally installed packages
+    fish_add_path $XDG_DATA_HOME/npm-global/bin # Global Node.js/npm packages (XDG compliant location)
+    fish_add_path $HOME/.lmstudio/bin # LM Studio CLI tools for local LLM management
+    fish_add_path $HOME/.resend/bin # Resend email service CLI tools
+    fish_add_path $HOME/.fzf/bin # Fuzzy Finder (fzf) core binary and helper scripts
+end
 
 #   ───────────────────────── CDPATH projects dir ──────────────────────────
 # Allows cd-ing to directories within $HOME/projects or $HOME without needing to specify the full path.
