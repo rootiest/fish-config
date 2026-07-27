@@ -633,6 +633,38 @@ def test_prettify_converts_a_flat_note_paragraph_to_an_aside():
     ), f"note paragraph was not converted:\n{out}"
 
 
+def test_as_file_tree_converts_a_box_drawing_tree():
+    """A root path plus ├──/└── branches becomes a Starlight <FileTree>."""
+    import build_manual
+
+    para = [
+        "$__fish_user_dots_path/",
+        "├── secrets.fish   API keys, tokens, passwords, personal identifiers",
+        "└── local.fish     Machine-specific paths, env vars, and sourcing secrets",
+    ]
+    out = build_manual._as_file_tree(para)
+    assert out == (
+        "<FileTree>\n"
+        "- $__fish_user_dots_path/\n"
+        "  - secrets.fish API keys, tokens, passwords, personal identifiers\n"
+        "  - local.fish Machine-specific paths, env vars, and sourcing secrets\n"
+        "</FileTree>"
+    ), f"unexpected file tree output:\n{out}"
+
+
+def test_as_file_tree_rejects_non_trees():
+    """Returning None is always safe for anything that isn't a root+branches shape."""
+    import build_manual
+
+    cases = {
+        "no root slash": ["$__fish_user_dots_path", "├── secrets.fish"],
+        "single line": ["$__fish_user_dots_path/"],
+        "non-branch second line": ["$__fish_user_dots_path/", "secrets.fish"],
+    }
+    for label, para in cases.items():
+        assert build_manual._as_file_tree(para) is None, f"{label} was wrongly treed"
+
+
 def test_prettify_is_site_only():
     """The SSOT keeps the indented form the man-page pipeline depends on."""
     import build_manual

@@ -314,6 +314,26 @@ def _as_ruled_table(para: list[str]) -> str | None:
     return "\n".join(out)
 
 
+TREE_ROOT_RE = re.compile(r"^[~$][\w./{}-]*/$")
+TREE_BRANCH_RE = re.compile(r"^[│ ]*[├└]──\s*(\S+)\s*(.*)$")
+
+
+def _as_file_tree(para: list[str]) -> str | None:
+    """Render a hand-drawn box-drawing tree as a Starlight <FileTree>, else None."""
+    if len(para) < 2 or not TREE_ROOT_RE.match(para[0].strip()):
+        return None
+    branches = []
+    for line in para[1:]:
+        m = TREE_BRANCH_RE.match(line)
+        if not m:
+            return None
+        branches.append(m.groups())
+    out = ["<FileTree>", f"- {para[0].strip()}"]
+    out += [f"  - {name} {desc}".rstrip() for name, desc in branches]
+    out.append("</FileTree>")
+    return "\n".join(out)
+
+
 def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
     """Render one paragraph of a former indented block.
 
@@ -335,7 +355,7 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
                 title, body = m.group(1), para[1:]
             info = f'fish title="{title}"' if title else "fish"
             return f"```{info}\n" + "\n".join(body) + "\n```"
-    table = _as_ruled_table(para) or _as_table(para)
+    table = _as_ruled_table(para) or _as_table(para) or _as_file_tree(para)
     if table is not None:
         return table
     return "\n".join(INDENT + line for line in para)
