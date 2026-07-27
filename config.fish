@@ -15,8 +15,11 @@
 #   __fish_config_op_overrides     C3 — key bindings, env, prompt overrides
 #   __fish_config_op_integrations  C4 — terminal/tool coupling
 #   __fish_config_op_logging       C5 — scrollback capture / AUR log wrappers
+#                                       (opt-in: unset means OFF)
 #   __fish_config_op_greeting      C6 — per-session greeting / first-run welcome
 # Example: set -U __fish_config_op_aliases off   (erase to re-enable)
+# C5 is the one exception: it defaults to disabled and needs an explicit
+# truthy value — set -U __fish_config_op_logging on
 
 #   ──────────────────────── Source CachyOS configs ────────────────────────
 if test -f /usr/share/cachyos-fish-config/cachyos-config.fish

@@ -17,8 +17,8 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 - Drop-in replacements for common Unix tools (ls, cat, rm, du, ping, less)
 - Deep Kitty and WezTerm terminal integration: tab/window/pane management from
   the command line
-- Automatic session logging: terminal scrollback, tmux/zellij panes, and
-  paru/yay output captured to ~/.terminal_history (on by default; see below)
+- Optional session logging: terminal scrollback, tmux/zellij panes, and
+  paru/yay output captured to ~/.terminal_history (off by default; see below)
 - Automatic Python virtualenv activation on directory change
 - Cross-platform package management via pkg and fish-deps
 - AI scaffolding helpers for Claude Code and Antigravity
@@ -27,14 +27,16 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 <LinkButton href="/09-installation/">Install now</LinkButton>
 <LinkButton href="/reference/" variant="secondary">Function reference</LinkButton>
 
-CAUTION: **SESSION LOGGING IS ON BY DEFAULT**  
-This configuration silently records terminal output to `~/.terminal_history`:
-Kitty scrollback on window close, live tmux pane streams, zellij pane
-snapshots on exit, and full paru/yay output. These logs can contain command
-output, file contents, and secrets printed to the terminal. Nothing leaves
-your machine, but the files persist locally.
-- Disable all logging with: `set -U __fish_config_op_logging off`
+CAUTION: **SESSION LOGGING IS OPT-IN**  
+Once enabled, this configuration *can* silently record terminal output to
+`~/.terminal_history`: Kitty scrollback on window close, live tmux pane
+streams, zellij pane snapshots on exit, and full paru/yay output. These logs
+can contain command output, file contents, and secrets printed to the
+terminal. Nothing leaves your machine, but the files persist locally. Logging
+is off unless you turn it on.
+- Enable all logging with: `set -U __fish_config_op_logging on`
 - Prefer a menu? Run the interactive picker: `config-settings`
+- Turn it back off with: `set -U __fish_config_op_logging off` (or erase the variable)
 - See [C5 — Logging and Capture](/07-customization/#c5-logging-and-capture) for the full breakdown.
 
 The configuration uses a structured file tree:
