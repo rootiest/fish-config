@@ -673,7 +673,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
             target.parent.mkdir(parents=True, exist_ok=True)
             body = _inject_subheading_cards(body)
             _write_prettified(target, _page_fm(fm), prettify(body))
-            if rel.name != "index.md":
+            if rel.name not in ("index.md", "404.md"):
                 sidebar.append({"label": fm["title"], "link": "/" + rel.stem + "/"})
             continue
 
