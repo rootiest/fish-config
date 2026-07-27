@@ -718,8 +718,10 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
 
         assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
 
-        assert (out / "02-path-setup.md").exists(), "plain page was wrongly promoted to .mdx"
-        assert not (out / "02-path-setup.mdx").exists(), "plain page should stay .md"
+        assert (out / "02-path-setup.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
+
+        assert (out / "03-key-bindings.md").exists(), "plain page was wrongly promoted to .mdx"
+        assert not (out / "03-key-bindings.mdx").exists(), "plain page should stay .md"
 
         text = (out / "10-personalization.mdx").read_text()
         assert "FileTree" in text.split("from '@astrojs/starlight/components';")[0]
