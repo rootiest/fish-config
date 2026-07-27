@@ -288,9 +288,30 @@ personalize=# 10. PERSONALIZATION
 secrets-file=## secrets.fish
 local-config=## local.fish
 
-# ── Section 11: Viewing This Manual ──────────────────────────
-viewing=# 11. VIEWING THIS MANUAL
-manual=# 11. VIEWING THIS MANUAL
+# ── Section 11: Troubleshooting ──────────────────────────────
+troubleshooting=# 11. TROUBLESHOOTING
+troubleshoot=# 11. TROUBLESHOOTING
+faq=# 11. TROUBLESHOOTING
+uninstall=## Uninstalling / Reverting to Backup
+revert=## Uninstalling / Reverting to Backup
+fish-version=## Fish Version Requirement
+version-req=## Fish Version Requirement
+disable-logging=## Disable Session Logging
+disable-greeting=## Change or Disable the Greeting
+change-greeting=## Change or Disable the Greeting
+secrets-trouble=## Secrets and Machine-Local Configuration
+local-trouble=## Secrets and Machine-Local Configuration
+return-sentinel=## Tool Init Does Nothing (Return Sentinel)
+tool-init=## Tool Init Does Nothing (Return Sentinel)
+missing-deps=## Missing Dependencies
+vi-mode=## Vi Mode Keybindings
+vi-trouble=## Vi Mode Keybindings
+emacs-mode=## Vi Mode Keybindings
+minimal-trouble=## Minimal Mode / Disabling Opinionated Features
+
+# ── Section 12: Viewing This Manual ──────────────────────────
+viewing=# 12. VIEWING THIS MANUAL
+manual=# 12. VIEWING THIS MANUAL
 ov=## In the terminal
 man-page=## As a man page
 manpage=## As a man page
@@ -298,3 +319,5 @@ jump=## In the terminal
 html=## The documentation website
 browser=## The documentation website
 site=## The documentation website
+
+
