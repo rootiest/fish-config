@@ -3059,20 +3059,15 @@ config-settings \[em] a full-screen TUI that flips any category
 (including C5 logging) on or off, per session or universally.
 See its entry in Section 5.
 .PP
-Notes:
-.IP \[bu] 2
-Command shadows (rm, cat, ls, \&...)
+NOTE: - Command shadows (rm, cat, ls, \&...)
 react immediately; conf.d-level components (bindings, prompt,
 abbreviations, hooks) take effect in new shells.
-.IP \[bu] 2
-With aliases disabled, rm falls back to bare \f[V]command rm\f[R] \[em]
-files are deleted permanently, not trashed.
-.IP \[bu] 2
-Disabled integration commands (spwin, tab, split, hist, logs, upgrade)
+- With aliases disabled, rm falls back to bare \f[V]command rm\f[R]
+\[em] files are deleted permanently, not trashed.
+- Disabled integration commands (spwin, tab, split, hist, logs, upgrade)
 print an error naming the variable that disabled them.
-.IP \[bu] 2
-On CachyOS, the distro fish config\[cq]s own aliases, history override,
-and bang-bang bindings are stripped per category as well.
+- On CachyOS, the distro fish config\[cq]s own aliases, history
+override, and bang-bang bindings are stripped per category as well.
 .SS Component Reference
 .PP
 The following tables detail every component in each category.
