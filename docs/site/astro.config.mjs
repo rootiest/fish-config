@@ -8,6 +8,10 @@ export default defineConfig({
     starlight({
       title: 'Rootiest Fish Config',
       description: 'Reference manual for the rootiest fish configuration.',
+      favicon: '/favicon.svg',
+      logo: {
+        src: './src/assets/logo.svg',
+      },
       social: [
         {
           icon: 'code-branch',
