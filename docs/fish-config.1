@@ -161,7 +161,17 @@ The configuration uses a structured file tree:
 8.  Fisher Plugins
 9.  Installation
 10. Personalization
-11. Viewing This Manual
+11. Troubleshooting
+    11.1 Uninstalling / Reverting to Backup
+    11.2 Fish Version Requirement
+    11.3 Disable Session Logging
+    11.4 Change or Disable the Greeting
+    11.5 Secrets and Machine-Local Configuration
+    11.6 Tool Init Does Nothing (Return Sentinel)
+    11.7 Missing Dependencies
+    11.8 Vi Mode Keybindings
+    11.9 Minimal Mode / Disabling Opinionated Features
+12. Viewing This Manual
 \f[R]
 .fi
 .PP
@@ -3693,7 +3703,329 @@ repo.
 local.fish in turn sources secrets.fish when it exists.
 .PP
    *   *   *   *   *
-.SH 11. VIEWING THIS MANUAL
+.SH 11. TROUBLESHOOTING
+.SS Uninstalling / Reverting to Backup
+.PP
+The installation step backs up any existing config to
+\f[V]\[ti]/.config/fish.bak\f[R].
+To revert:
+.IP
+.nf
+\f[C]
+rm -rf \[ti]/.config/fish
+mv \[ti]/.config/fish.bak \[ti]/.config/fish
+\f[R]
+.fi
+.PP
+If no backup exists, remove the directory and let Fish regenerate a
+default config on next launch:
+.IP
+.nf
+\f[C]
+rm -rf \[ti]/.config/fish
+fish -c \[aq]fish_config theme choose \[dq]Fish default\[dq]\[aq]
+\f[R]
+.fi
+.PP
+Clean up files generated outside the config directory:
+.IP
+.nf
+\f[C]
+rm -f \[ti]/.local/bin/paru \[ti]/.local/bin/yay        # AUR log wrappers
+rm -f \[ti]/.local/share/man/man1/fish-config.1     # man page symlink
+rm -f \[ti]/.config/fish/.logging_disabled           # C5 sentinel
+\f[R]
+.fi
+.PP
+Erase universal variables set by this config:
+.IP
+.nf
+\f[C]
+for v in (set -Un | string match \[aq]__fish_config*\[aq])
+    set -Ue $v
+end
+for v in __done_min_cmd_duration __done_notification_urgency_level
+    set -Ue $v
+end
+for v in (set -Un | string match \[aq]sponge_*\[aq])
+    set -Ue $v
+end
+\f[R]
+.fi
+.PP
+The \f[V]\[ti]/.terminal_history/\f[R] log directory contains your
+session logs.
+Remove it only if you do not want to keep them.
+.SS Fish Version Requirement
+.PP
+This config requires Fish 4.x or newer.
+Check your version:
+.IP
+.nf
+\f[C]
+fish --version
+\f[R]
+.fi
+.PP
+Run \f[V]fish-deps\f[R] to see a status report \[em] an outdated Fish
+shows ⚠ with an upgrade message.
+.PP
+Upgrading Fish by distribution:
+.IP
+.nf
+\f[C]
+# Arch / AUR
+pacman -S fish          # or paru -S fish
+
+# Ubuntu / Debian (PPA)
+sudo apt-add-repository ppa:fish-shell/release-4
+sudo apt update && sudo apt install fish
+
+# Fedora
+sudo dnf install fish
+
+# macOS
+brew install fish
+\f[R]
+.fi
+.PP
+For other systems or building from source, see https://fishshell.com.
+.SS Disable Session Logging
+.PP
+Disable all logging and capture (scrollback, tmux/zellij pane logs, AUR
+helper wrappers, Kitty watcher):
+.IP
+.nf
+\f[C]
+set -U __fish_config_op_logging off
+\f[R]
+.fi
+.PP
+Or toggle it interactively: run \f[V]config-settings\f[R] and flip the
+Logging row.
+.PP
+This takes effect immediately in all running shells \[em] no restart
+needed.
+The sentinel file, wrapper removal, and pipe-pane teardown happen
+automatically.
+.PP
+Re-enable:
+.IP
+.nf
+\f[C]
+set -Ue __fish_config_op_logging
+\f[R]
+.fi
+.PP
+See Section 7, \[lq]C5 \[em] Logging and Capture\[rq] for the full
+component breakdown.
+.SS Change or Disable the Greeting
+.PP
+This config suppresses the distro greeting (e.g.\ CachyOS fastfetch) by
+default.
+To let the distro greeting through:
+.IP
+.nf
+\f[C]
+set -U __fish_config_op_greeting off
+\f[R]
+.fi
+.PP
+To set a custom greeting, define fish_greeting in your local.fish:
+.IP
+.nf
+\f[C]
+# in $__fish_user_dots_path/local.fish
+function fish_greeting
+    echo \[dq]Hello, world!\[dq]
+end
+\f[R]
+.fi
+.PP
+The first-run welcome banner runs exactly once.
+To re-trigger it (e.g.\ for testing):
+.IP
+.nf
+\f[C]
+set -Ue __fish_config_first_run_complete
+\f[R]
+.fi
+.PP
+See Section 7, \[lq]C6 \[em] Greeting and First-Run UI\[rq] for details.
+.SS Secrets and Machine-Local Configuration
+.PP
+Machine-specific config goes in
+\f[V]$__fish_user_dots_path/local.fish\f[R] (defaults to
+\f[V]\[ti]/.config/.user-dots/fish/local.fish\f[R]).
+Secrets go in \f[V]secrets.fish\f[R] in the same directory.
+.PP
+If local.fish is not loading, verify the path:
+.IP
+.nf
+\f[C]
+echo $__fish_user_dots_path
+test -f \[dq]$__fish_user_dots_path/local.fish\[dq]; and echo exists; or echo missing
+\f[R]
+.fi
+.PP
+Change the path via variable or TUI:
+.IP
+.nf
+\f[C]
+set -U __fish_user_dots_path /new/path/to/dots/fish
+\f[R]
+.fi
+.PP
+Or run \f[V]config-settings\f[R], navigate to the Paths page, and edit
+\[lq]Dots path\[rq].
+.PP
+The \f[V]user-dots\f[R] convenience symlink in the config directory
+tracks this path.
+Disable it with:
+.IP
+.nf
+\f[C]
+set -U __fish_user_dots_symlink false
+\f[R]
+.fi
+.PP
+See Section 10, \[lq]Personalization\[rq] for the full local.fish /
+secrets.fish layout.
+.SS Tool Init Does Nothing (Return Sentinel)
+.PP
+Symptom: you ran a tool\[cq]s setup command (e.g.
+\f[V]starship init fish >> \[ti]/.config/fish/config.fish\f[R]) and
+nothing changed.
+.PP
+Cause: config.fish ends with a \f[V]return\f[R] guard.
+Any lines appended after it are never executed.
+.PP
+Fix: create a dedicated conf.d file instead of appending to config.fish:
+.IP
+.nf
+\f[C]
+# \[ti]/.config/fish/conf.d/mytool.fish
+mytool init fish | source
+\f[R]
+.fi
+.PP
+All existing integrations (starship, zoxide, direnv) already have
+conf.d/ files.
+See Section 9, \[lq]Return Sentinel\[rq] for background.
+.SS Missing Dependencies
+.PP
+Run \f[V]fish-deps\f[R] (defaults to \f[V]fish-deps status\f[R]) to see
+what is installed and what is missing.
+Common symptoms and their missing tools:
+.IP
+.nf
+\f[C]
+Symptom                                  Missing tool
+─────────────────────────────────────────────────────
+ls output has no icons or colors         eza (or lsd)
+cd does not remember directories         zoxide
+cat shows no syntax highlighting         bat
+fzf keybindings do nothing               fzf
+Starship prompt not appearing            starship
+\f[R]
+.fi
+.PP
+Install missing dependencies interactively:
+.IP
+.nf
+\f[C]
+fish-deps install
+\f[R]
+.fi
+.PP
+Or install everything missing and update what is installed:
+.IP
+.nf
+\f[C]
+fish-deps sync
+\f[R]
+.fi
+.PP
+See Section 6, \[lq]Dependency Catalog\[rq] for the full list grouped by
+tier (required, integrations, recommended).
+.SS Vi Mode Keybindings
+.PP
+This config enables Vi mode by default (via C3 overrides), replacing the
+standard Emacs-style bindings.
+If Vi mode interferes with your workflow, override it in local.fish:
+.IP
+.nf
+\f[C]
+# in $__fish_user_dots_path/local.fish
+fish_default_key_bindings
+\f[R]
+.fi
+.PP
+This restores Emacs-style bindings without disabling the rest of C3
+(bang-bang, autopair, starship prompt, pager settings, etc.).
+.PP
+To disable the entire C3 category (Vi mode and all other key/environment
+overrides):
+.IP
+.nf
+\f[C]
+set -U __fish_config_op_overrides off
+\f[R]
+.fi
+.PP
+See Section 7, \[lq]C3 \[em] Key and Environment Overrides\[rq] for the
+full list of what C3 controls.
+.SS Minimal Mode / Disabling Opinionated Features
+.PP
+Disable all opinionated features at once:
+.IP
+.nf
+\f[C]
+set -U __fish_config_opinionated 0
+\f[R]
+.fi
+.PP
+This turns off all six categories (aliases, auto-exec, overrides,
+integrations, logging, greeting) \[em] leaving a clean shell with only
+PATH, XDG variables, and local.fish sourcing.
+.PP
+Disable a single category:
+.IP
+.nf
+\f[C]
+set -U __fish_config_op_aliases off         # C1 \[em] command shadows
+set -U __fish_config_op_autoexec off        # C2 \[em] startup side-effects
+set -U __fish_config_op_overrides off       # C3 \[em] key/env overrides
+set -U __fish_config_op_integrations off    # C4 \[em] terminal integrations
+set -U __fish_config_op_logging off         # C5 \[em] logging and capture
+set -U __fish_config_op_greeting off        # C6 \[em] greeting
+\f[R]
+.fi
+.PP
+Keep one category active under a master disable:
+.IP
+.nf
+\f[C]
+set -U __fish_config_opinionated 0
+set -U __fish_config_op_aliases 1           # only C1 stays on
+\f[R]
+.fi
+.PP
+Re-enable everything:
+.IP
+.nf
+\f[C]
+set -Ue __fish_config_opinionated
+\f[R]
+.fi
+.PP
+Or use the interactive TUI: \f[V]config-settings\f[R].
+.PP
+See Section 7, \[lq]Opinionated Components (Minimal Mode)\[rq] for the
+full component reference tables.
+.PP
+   *   *   *   *   *
+.SH 12. VIEWING THIS MANUAL
 .PP
 There are four ways to read this manual.
 .SS The documentation website
