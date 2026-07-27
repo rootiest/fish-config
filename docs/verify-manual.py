@@ -665,6 +665,19 @@ def test_as_file_tree_rejects_non_trees():
         assert build_manual._as_file_tree(para) is None, f"{label} was wrongly treed"
 
 
+def test_as_file_tree_rejects_deeper_trees():
+    """A tree with a second-level (indented) branch line is not detected — falls through to verbatim rendering."""
+    import build_manual
+
+    para = [
+        "~/proj/",
+        "├── src/",
+        "│   └── main.fish",
+        "└── README.md",
+    ]
+    assert build_manual._as_file_tree(para) is None
+
+
 def test_customization_notes_render_as_aside():
     """The real 07-customization.md NOTE paragraph converts to one intact <Aside>."""
     import build_manual
@@ -673,11 +686,12 @@ def test_customization_notes_render_as_aside():
     _, body = mt.parse(path)
     out = build_manual.prettify(body)
     assert out.count('<Aside type="note" title="Note">') == 1, f"expected exactly one Note aside:\n{out}"
-    assert "- Command shadows (rm, cat, ls, ...) react immediately" in out
-    assert "- With aliases disabled, rm falls back to bare `command rm`" in out
-    assert "- Disabled integration commands (spwin, tab, split, hist, logs, upgrade)" in out
-    assert "- On CachyOS, the distro fish config's own aliases" in out
-    assert "</Aside>" in out
+    aside = out.split('<Aside type="note" title="Note">')[1].split("</Aside>")[0]
+    assert aside.count("  - ") == 4, f"expected exactly 4 bullets inside the aside:\n{aside}"
+    assert "- Command shadows (rm, cat, ls, ...) react immediately" in aside
+    assert "- With aliases disabled, rm falls back to bare `command rm`" in aside
+    assert "- Disabled integration commands (spwin, tab, split, hist, logs, upgrade)" in aside
+    assert "- On CachyOS, the distro fish config's own aliases" in aside
 
 
 def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():

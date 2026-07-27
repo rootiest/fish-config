@@ -315,7 +315,7 @@ def _as_ruled_table(para: list[str]) -> str | None:
 
 
 TREE_ROOT_RE = re.compile(r"^[~$][\w./{}-]*/$")
-TREE_BRANCH_RE = re.compile(r"^[│ ]*[├└]──\s*(\S+)\s*(.*)$")
+TREE_BRANCH_RE = re.compile(r"^[├└]──\s*(\S+)\s*(.*)$")
 
 
 def _as_file_tree(para: list[str]) -> str | None:
