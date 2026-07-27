@@ -78,6 +78,7 @@ def build_concat(root: Path) -> str:
         if _is_function_page(path, root):
             body = _with_entries(body, path, entries)
         if body:
+            body = re.sub(r"<LinkButton.*?</LinkButton>\n*", "", body, flags=re.DOTALL)
             chunks.append(mt.shift_headings(body, depth))
     return "\n\n".join(chunks) + "\n"
 
