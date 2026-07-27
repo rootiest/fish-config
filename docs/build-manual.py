@@ -654,7 +654,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
     functions = mt.parse_functions(FUNCTIONS)
     entries = build_entries(functions, link=lambda n: _entry_link(n, functions))
 
-    sidebar: list[dict] = []
+    sidebar: list[dict] = [{"label": "Home", "link": "/"}]
     functions_group: dict = {}
     functions_index_target = None
     functions_index_fm = None
