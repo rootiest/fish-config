@@ -26,4 +26,6 @@ shadowing system-installed Rust tools.
 
 NOTE: While these directories are merged with your system's existing `$PATH` values, any executables in the prepended directories above will override (shadow) system binaries of the same name.
 
+TIP: This standard PATH setup is gated behind the opinionated component overrides toggle. If you prefer to manage your PATH completely manually, you can disable it by setting `__fish_config_op_overrides` to `0` (or toggle it off in the `config-settings` menu).
+
 ---
