@@ -91,7 +91,7 @@ Re-enable:
 
     set -Ue __fish_config_op_logging
 
-See Section 7, "C5 — Logging and Capture" for the full component breakdown.
+See [C5 — Logging and Capture](/07-customization/#c5--logging-and-capture) for the full component breakdown.
 
 ## Change or Disable the Greeting
 
@@ -112,7 +112,7 @@ testing):
 
     set -Ue __fish_config_first_run_complete
 
-See Section 7, "C6 — Greeting and First-Run UI" for details.
+See [C6 — Greeting and First-Run UI](/07-customization/#c6--greeting-and-first-run-ui) for details.
 
 ## Secrets and Machine-Local Configuration
 
@@ -136,7 +136,7 @@ Disable it with:
 
     set -U __fish_user_dots_symlink false
 
-See Section 10, "Personalization" for the full local.fish / secrets.fish
+See [Personalization](/10-personalization/) for the full `local.fish` / `secrets.fish`
 layout.
 
 ## Tool Init Does Nothing (Return Sentinel)
@@ -144,16 +144,16 @@ layout.
 Symptom: you ran a tool's setup command (e.g.
 `starship init fish >> ~/.config/fish/config.fish`) and nothing changed.
 
-Cause: config.fish ends with a `return` guard. Any lines appended after it
+Cause: `config.fish` ends with a `return` guard. Any lines appended after it
 are never executed.
 
-Fix: create a dedicated conf.d file instead of appending to config.fish:
+Fix: create a dedicated `conf.d/` file instead of appending to `config.fish`:
 
     # ~/.config/fish/conf.d/mytool.fish
     mytool init fish | source
 
-All existing integrations (starship, zoxide, direnv) already have conf.d/
-files. See Section 9, "Return Sentinel" for background.
+All existing integrations (starship, zoxide, direnv) already have `conf.d/`
+files. See [Return Sentinel](/09-installation/#return-sentinel) for background.
 
 ## Missing Dependencies
 
@@ -176,16 +176,16 @@ Or install everything missing and update what is installed:
 
     fish-deps sync
 
-See Section 6, "Dependency Catalog" for the full list grouped by tier
+See [Dependency Catalog](/06-dependency-catalog/) for the full list grouped by tier
 (required, integrations, recommended).
 
 ## Vi Mode Keybindings
 
 This config enables Vi mode by default (via C3 overrides), replacing the
 standard Emacs-style bindings. If Vi mode interferes with your workflow,
-override it in local.fish:
+override it in `local.fish`:
 
-    # in $__fish_user_dots_path/local.fish
+    # $__fish_user_dots_path/local.fish
     fish_default_key_bindings
 
 This restores Emacs-style bindings without disabling the rest of C3
@@ -196,7 +196,7 @@ overrides):
 
     set -U __fish_config_op_overrides off
 
-See Section 7, "C3 — Key and Environment Overrides" for the full list of
+See [C3 — Key and Environment Overrides](/07-customization/#c3--key-and-environment-overrides) for the full list of
 what C3 controls.
 
 ## Minimal Mode / Disabling Opinionated Features
@@ -229,7 +229,7 @@ Re-enable everything:
 
 Or use the interactive TUI: `config-settings`.
 
-See Section 7, "Opinionated Components (Minimal Mode)" for the full
+See [Opinionated Components (Minimal Mode)](/07-customization/#opinionated-components-minimal-mode) for the full
 component reference tables.
 
 ---
