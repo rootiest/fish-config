@@ -301,6 +301,10 @@ it is off, all capture is skipped and the logging wrappers are removed.
                             ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
     Kitty watcher           watcher.py captures scrollback when Kitty closes
 
+NOTE: **Turning off logging does not delete any existing logs.**  
+They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)
+until you remove them manually.
+
 The tmux capture starts automatically when fish launches inside any tmux
 pane ($TMUX is set). It uses tmux's native pipe-pane to stream all pane
 output directly to disk without an intermediate process. Each fish shell

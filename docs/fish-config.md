@@ -39,8 +39,8 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 - AI scaffolding helpers for Claude Code and Antigravity
 - Catppuccin Mocha color theme throughout
 
-CAUTION: **SESSION LOGGING IS OPT-IN**  
-Once enabled, this configuration *can* silently record terminal output to
+CAUTION: **SESSION LOGGING**  
+If enabled, this configuration can silently record terminal output to
 `~/.terminal_history`: Kitty scrollback on window close, live tmux pane
 streams, zellij pane snapshots on exit, and full paru/yay output. These logs
 can contain command output, file contents, and secrets printed to the
@@ -2805,6 +2805,10 @@ it is off, all capture is skipped and the logging wrappers are removed.
     yay wrapper             All yay/AUR output captured to:
                             ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
     Kitty watcher           watcher.py captures scrollback when Kitty closes
+
+NOTE: **Turning off logging does not delete any existing logs.**  
+They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)
+until you remove them manually.
 
 The tmux capture starts automatically when fish launches inside any tmux
 pane ($TMUX is set). It uses tmux's native pipe-pane to stream all pane

@@ -27,8 +27,8 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 <LinkButton href="/09-installation/">Install now</LinkButton>
 <LinkButton href="/reference/" variant="secondary">Function reference</LinkButton>
 
-CAUTION: **SESSION LOGGING IS OPT-IN**  
-Once enabled, this configuration *can* silently record terminal output to
+CAUTION: **SESSION LOGGING**  
+If enabled, this configuration can silently record terminal output to
 `~/.terminal_history`: Kitty scrollback on window close, live tmux pane
 streams, zellij pane snapshots on exit, and full paru/yay output. These logs
 can contain command output, file contents, and secrets printed to the

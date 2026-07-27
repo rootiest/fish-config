@@ -693,7 +693,7 @@ def test_customization_notes_render_as_aside():
     path = Path(__file__).parent / "manual" / "07-customization.md"
     _, body = mt.parse(path)
     out = build_manual.prettify(body)
-    assert out.count('<Aside type="note" title="Note">') == 1, f"expected exactly one Note aside:\n{out}"
+    assert out.count('<Aside type="note" title="Note">') >= 1, f"expected at least one Note aside:\n{out}"
     aside = out.split('<Aside type="note" title="Note">')[1].split("</Aside>")[0]
     assert aside.count("  - ") == 4, f"expected exactly 4 bullets inside the aside:\n{aside}"
     assert "- Command shadows (rm, cat, ls, ...) react immediately" in aside
