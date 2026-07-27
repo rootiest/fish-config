@@ -67,14 +67,14 @@ AI scaffolding helpers for Claude Code and Antigravity
 .IP \[bu] 2
 Catppuccin Mocha color theme throughout
 .PP
-CAUTION: \f[B]SESSION LOGGING IS OPT-IN\f[R]
+CAUTION: \f[B]SESSION LOGGING\f[R]
 .PD 0
 .P
 .PD
-Once enabled, this configuration \f[I]can\f[R] silently record terminal
-output to \f[V]\[ti]/.terminal_history\f[R]: Kitty scrollback on window
-close, live tmux pane streams, zellij pane snapshots on exit, and full
-paru/yay output.
+If enabled, this configuration can silently record terminal output to
+\f[V]\[ti]/.terminal_history\f[R]: Kitty scrollback on window close,
+live tmux pane streams, zellij pane snapshots on exit, and full paru/yay
+output.
 These logs can contain command output, file contents, and secrets
 printed to the terminal.
 Nothing leaves your machine, but the files persist locally.
@@ -3637,6 +3637,13 @@ yay wrapper             All yay/AUR output captured to:
 Kitty watcher           watcher.py captures scrollback when Kitty closes
 \f[R]
 .fi
+.PP
+NOTE: \f[B]Turning off logging does not delete any existing logs.\f[R]
+.PD 0
+.P
+.PD
+They remain in \f[V]$SCROLLBACK_HISTORY_DIR\f[R] (defaults to:
+\f[V]\[ti]/.terminal_history/\f[R]) until you remove them manually.
 .PP
 The tmux capture starts automatically when fish launches inside any tmux
 pane ($TMUX is set).
