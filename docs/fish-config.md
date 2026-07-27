@@ -36,10 +36,10 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
   paru/yay output captured to ~/.terminal_history (on by default; see below)
 - Automatic Python virtualenv activation on directory change
 - Cross-platform package management via pkg and fish-deps
-- AI session helpers for Claude Code and Antigravity
+- AI scaffolding helpers for Claude Code and Antigravity
 - Catppuccin Mocha color theme throughout
 
-CAUTION: **SESSION LOGGING IS ON BY DEFAULT**
+CAUTION: **SESSION LOGGING IS ON BY DEFAULT**  
 This configuration silently records terminal output to `~/.terminal_history`:
 Kitty scrollback on window close, live tmux pane streams, zellij pane
 snapshots on exit, and full paru/yay output. These logs can contain command
