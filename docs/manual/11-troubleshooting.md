@@ -91,7 +91,7 @@ Re-enable:
 
     set -Ue __fish_config_op_logging
 
-See [C5 — Logging and Capture](/07-customization/#c5--logging-and-capture) for the full component breakdown.
+See [C5 — Logging and Capture](/07-customization/#c5-logging-and-capture) for the full component breakdown.
 
 ## Change or Disable the Greeting
 
@@ -112,7 +112,7 @@ testing):
 
     set -Ue __fish_config_first_run_complete
 
-See [C6 — Greeting and First-Run UI](/07-customization/#c6--greeting-and-first-run-ui) for details.
+See [C6 — Greeting and First-Run UI](/07-customization/#c6-greeting-and-first-run-ui) for details.
 
 ## Secrets and Machine-Local Configuration
 
@@ -196,7 +196,7 @@ overrides):
 
     set -U __fish_config_op_overrides off
 
-See [C3 — Key and Environment Overrides](/07-customization/#c3--key-and-environment-overrides) for the full list of
+See [C3 — Key and Environment Overrides](/07-customization/#c3-key-and-environment-overrides) for the full list of
 what C3 controls.
 
 ## What's with the C1-C6 stuff?
@@ -205,12 +205,12 @@ This configuration groups its opinionated behaviors into six categories (C1–C6
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────
-    C1         [Command Shadows](/07-customization/#c1--command-shadows) (aliases that replace default tools)
-    C2         [Auto-Exec](/07-customization/#c2--auto-exec) (background tasks and startup side-effects)
-    C3         [Key & Env Overrides](/07-customization/#c3--key-and-environment-overrides) (Vi mode, PAGER)
-    C4         [Terminal Integrations](/07-customization/#c4--terminal-integrations) (Kitty, WezTerm)
-    C5         [Logging and Capture](/07-customization/#c5--logging-and-capture) (session logs, command duration)
-    C6         [Greeting & First-Run UI](/07-customization/#c6--greeting-and-first-run-ui) (custom startup banner)
+    C1         [Command Shadows](/07-customization/#c1-command-shadows) (aliases that replace default tools)
+    C2         [Auto-Exec](/07-customization/#c2-auto-exec) (background tasks and startup side-effects)
+    C3         [Key & Env Overrides](/07-customization/#c3-key-and-environment-overrides) (Vi mode, PAGER)
+    C4         [Terminal Integrations](/07-customization/#c4-terminal-integrations) (Kitty, WezTerm)
+    C5         [Logging and Capture](/07-customization/#c5-logging-and-capture) (session logs, command duration)
+    C6         [Greeting & First-Run UI](/07-customization/#c6-greeting-and-first-run-ui) (custom startup banner)
 
 Disable all opinionated features at once (Minimal Mode):
 

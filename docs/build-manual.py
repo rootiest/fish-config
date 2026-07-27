@@ -621,7 +621,8 @@ def _inject_subheading_cards(body: str) -> str:
     cards = []
     for title in headings:
         safe_title = _jsx_attr_escape(title)
-        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        slug = re.sub(r"[^\w\s-]", "", title.lower())
+        slug = re.sub(r"[-\s]+", "-", slug).strip("-")
         cards.append(f'  <LinkCard title="{safe_title}" href="#{slug}" />')
     
     cardgrid = "<CardGrid>\n" + "\n".join(cards) + "\n</CardGrid>\n\n"
