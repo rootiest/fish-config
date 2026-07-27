@@ -35,7 +35,7 @@ output, file contents, and secrets printed to the terminal. Nothing leaves
 your machine, but the files persist locally.
 - Disable all logging with: `set -U __fish_config_op_logging off`
 - Prefer a menu? Run the interactive picker: `config-settings`
-- See [C5 — Logging and Capture](/07-customization/#c5--logging-and-capture) for the full breakdown.
+- See [C5 — Logging and Capture](/07-customization/#c5-logging-and-capture) for the full breakdown.
 
 The configuration uses a structured file tree:
 

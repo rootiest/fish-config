@@ -160,6 +160,7 @@ SHELL_HEADS = frozenset(
     if jobs kitty ls man math mkdir mv nvim npm pacman paru pip pip3 pkg printf
     python python3 rm set shutdown source string sudo switch systemctl test time
     tmux touch trash type wget wezterm while yay zellij zypper
+    fish_default_key_bindings fish_vi_key_bindings
     """.split()
 )
 
@@ -212,7 +213,7 @@ PATH_LINE_RE = re.compile(r"^[~$][\w./{}-]*\.\w+$")
 # A leading "# in local.fish" / "# local.fish" comment names the file an
 # example belongs to; promote it to the fence title instead of leaving it
 # as a literal comment inside the code.
-FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([\w-]+\.\w+)\s*$")
+FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([$~\w./-]+\.\w+)\s*$")
 
 CELL_SPLIT = re.compile(r"\s{2,}")
 
@@ -621,7 +622,8 @@ def _inject_subheading_cards(body: str) -> str:
     cards = []
     for title in headings:
         safe_title = _jsx_attr_escape(title)
-        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        slug = re.sub(r"[^\w\s-]", "", title.lower())
+        slug = re.sub(r"[-\s]+", "-", slug).strip("-")
         cards.append(f'  <LinkCard title="{safe_title}" href="#{slug}" />')
     
     cardgrid = "<CardGrid>\n" + "\n".join(cards) + "\n</CardGrid>\n\n"

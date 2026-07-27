@@ -128,7 +128,7 @@ The configuration uses a structured file tree:
     9.  Installation
     10. Personalization
     11. Troubleshooting
-        11.1 Uninstalling / Reverting to Backup
+        11.1 Uninstalling and Reverting to Backup
         11.2 Fish Version Requirement
         11.3 Disable Session Logging
         11.4 Change or Disable the Greeting
@@ -136,7 +136,7 @@ The configuration uses a structured file tree:
         11.6 Tool Init Does Nothing (Return Sentinel)
         11.7 Missing Dependencies
         11.8 Vi Mode Keybindings
-        11.9 Minimal Mode / Disabling Opinionated Features
+        11.9 What's with the C1-C6 stuff?
     12. Viewing This Manual
 
 ---
@@ -3137,7 +3137,7 @@ local.fish in turn sources secrets.fish when it exists.
 
 This section covers common issues, their solutions, and how to safely revert changes or uninstall the configuration entirely.
 
-## Uninstalling / Reverting to Backup
+## Uninstalling and Reverting to Backup
 
 The installation step backs up any existing config to `~/.config/fish.bak`.
 To revert:
@@ -3306,7 +3306,7 @@ See Dependency Catalog for the full list grouped by tier
 
 This config enables Vi mode by default (via C3 overrides), replacing the
 standard Emacs-style bindings. If Vi mode interferes with your workflow,
-override it in `local.fish`:
+override it in `local.fish` (See Personalization):
 
     # $__fish_user_dots_path/local.fish
     fish_default_key_bindings
@@ -3322,24 +3322,31 @@ overrides):
 See C3 — Key and Environment Overrides for the full list of
 what C3 controls.
 
-## Minimal Mode / Disabling Opinionated Features
+## What's with the C1-C6 stuff?
 
-Disable all opinionated features at once:
+This configuration groups its opinionated behaviors into six categories (C1–C6), allowing you to selectively disable features that conflict with your workflow. Disabling all of them leaves you with a "Minimal Mode" shell that only manages PATH, XDG variables, and your `local.fish` overrides.
+
+    Category   Description
+    ──────────────────────────────────────────────────────────────────────────
+    C1         Command Shadows (aliases that replace default tools)
+    C2         Auto-Exec (background tasks and startup side-effects)
+    C3         Key & Env Overrides (Vi mode, PAGER)
+    C4         Terminal Integrations (Kitty, WezTerm)
+    C5         Logging and Capture (session logs, command duration)
+    C6         Greeting & First-Run UI (custom startup banner)
+
+Disable all opinionated features at once (Minimal Mode):
 
     set -U __fish_config_opinionated 0
 
-This turns off all six categories (aliases, auto-exec, overrides,
-integrations, logging, greeting) — leaving a clean shell with only PATH,
-XDG variables, and local.fish sourcing.
-
 Disable a single category:
 
-    set -U __fish_config_op_aliases off         # C1 — command shadows
-    set -U __fish_config_op_autoexec off        # C2 — startup side-effects
-    set -U __fish_config_op_overrides off       # C3 — key/env overrides
-    set -U __fish_config_op_integrations off    # C4 — terminal integrations
-    set -U __fish_config_op_logging off         # C5 — logging and capture
-    set -U __fish_config_op_greeting off        # C6 — greeting
+    set -U __fish_config_op_aliases off         # C1
+    set -U __fish_config_op_autoexec off        # C2
+    set -U __fish_config_op_overrides off       # C3
+    set -U __fish_config_op_integrations off    # C4
+    set -U __fish_config_op_logging off         # C5
+    set -U __fish_config_op_greeting off        # C6
 
 Keep one category active under a master disable:
 
@@ -3350,10 +3357,7 @@ Re-enable everything:
 
     set -Ue __fish_config_opinionated
 
-Or use the interactive TUI: `config-settings`.
-
-See Opinionated Components (Minimal Mode) for the full
-component reference tables.
+For an interactive alternative to setting these variables by hand, run `config-settings`.
 
 ---
 

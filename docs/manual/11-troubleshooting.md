@@ -14,7 +14,7 @@ helpKeywords:
 
 This section covers common issues, their solutions, and how to safely revert changes or uninstall the configuration entirely.
 
-## Uninstalling / Reverting to Backup
+## Uninstalling and Reverting to Backup
 
 The installation step backs up any existing config to `~/.config/fish.bak`.
 To revert:
@@ -91,7 +91,7 @@ Re-enable:
 
     set -Ue __fish_config_op_logging
 
-See [C5 — Logging and Capture](/07-customization/#c5--logging-and-capture) for the full component breakdown.
+See [C5 — Logging and Capture](/07-customization/#c5-logging-and-capture) for the full component breakdown.
 
 ## Change or Disable the Greeting
 
@@ -112,7 +112,7 @@ testing):
 
     set -Ue __fish_config_first_run_complete
 
-See [C6 — Greeting and First-Run UI](/07-customization/#c6--greeting-and-first-run-ui) for details.
+See [C6 — Greeting and First-Run UI](/07-customization/#c6-greeting-and-first-run-ui) for details.
 
 ## Secrets and Machine-Local Configuration
 
@@ -183,7 +183,7 @@ See [Dependency Catalog](/06-dependency-catalog/) for the full list grouped by t
 
 This config enables Vi mode by default (via C3 overrides), replacing the
 standard Emacs-style bindings. If Vi mode interferes with your workflow,
-override it in `local.fish`:
+override it in `local.fish` (See [Personalization](/10-personalization/)):
 
     # $__fish_user_dots_path/local.fish
     fish_default_key_bindings
@@ -196,27 +196,34 @@ overrides):
 
     set -U __fish_config_op_overrides off
 
-See [C3 — Key and Environment Overrides](/07-customization/#c3--key-and-environment-overrides) for the full list of
+See [C3 — Key and Environment Overrides](/07-customization/#c3-key-and-environment-overrides) for the full list of
 what C3 controls.
 
-## Minimal Mode / Disabling Opinionated Features
+## What's with the C1-C6 stuff?
 
-Disable all opinionated features at once:
+This configuration groups its opinionated behaviors into six categories (C1–C6), allowing you to selectively disable features that conflict with your workflow. Disabling all of them leaves you with a "Minimal Mode" shell that only manages PATH, XDG variables, and your `local.fish` overrides.
+
+    Category   Description
+    ──────────────────────────────────────────────────────────────────────────
+    C1         [Command Shadows](/07-customization/#c1-command-shadows) (aliases that replace default tools)
+    C2         [Auto-Exec](/07-customization/#c2-auto-exec) (background tasks and startup side-effects)
+    C3         [Key & Env Overrides](/07-customization/#c3-key-and-environment-overrides) (Vi mode, PAGER)
+    C4         [Terminal Integrations](/07-customization/#c4-terminal-integrations) (Kitty, WezTerm)
+    C5         [Logging and Capture](/07-customization/#c5-logging-and-capture) (session logs, command duration)
+    C6         [Greeting & First-Run UI](/07-customization/#c6-greeting-and-first-run-ui) (custom startup banner)
+
+Disable all opinionated features at once (Minimal Mode):
 
     set -U __fish_config_opinionated 0
 
-This turns off all six categories (aliases, auto-exec, overrides,
-integrations, logging, greeting) — leaving a clean shell with only PATH,
-XDG variables, and local.fish sourcing.
-
 Disable a single category:
 
-    set -U __fish_config_op_aliases off         # C1 — command shadows
-    set -U __fish_config_op_autoexec off        # C2 — startup side-effects
-    set -U __fish_config_op_overrides off       # C3 — key/env overrides
-    set -U __fish_config_op_integrations off    # C4 — terminal integrations
-    set -U __fish_config_op_logging off         # C5 — logging and capture
-    set -U __fish_config_op_greeting off        # C6 — greeting
+    set -U __fish_config_op_aliases off         # C1
+    set -U __fish_config_op_autoexec off        # C2
+    set -U __fish_config_op_overrides off       # C3
+    set -U __fish_config_op_integrations off    # C4
+    set -U __fish_config_op_logging off         # C5
+    set -U __fish_config_op_greeting off        # C6
 
 Keep one category active under a master disable:
 
@@ -227,9 +234,6 @@ Re-enable everything:
 
     set -Ue __fish_config_opinionated
 
-Or use the interactive TUI: `config-settings`.
-
-See [Opinionated Components (Minimal Mode)](/07-customization/#opinionated-components-minimal-mode) for the full
-component reference tables.
+For an interactive alternative to setting these variables by hand, run `config-settings`.
 
 ---
