@@ -199,24 +199,31 @@ overrides):
 See [C3 — Key and Environment Overrides](/07-customization/#c3--key-and-environment-overrides) for the full list of
 what C3 controls.
 
-## Minimal Mode / Disabling Opinionated Features
+## What's with the C1-C6 stuff?
 
-Disable all opinionated features at once:
+This configuration groups its opinionated behaviors into six categories (C1–C6), allowing you to selectively disable features that conflict with your workflow. Disabling all of them leaves you with a "Minimal Mode" shell that only manages PATH, XDG variables, and your `local.fish` overrides.
+
+    Category   Description
+    ──────────────────────────────────────────────────────────────────────────
+    C1         [Command Shadows](/07-customization/#c1--command-shadows) (aliases that replace default tools)
+    C2         [Auto-Exec](/07-customization/#c2--auto-exec) (background tasks and startup side-effects)
+    C3         [Key & Env Overrides](/07-customization/#c3--key-and-environment-overrides) (Vi mode, PAGER)
+    C4         [Terminal Integrations](/07-customization/#c4--terminal-integrations) (Kitty, WezTerm)
+    C5         [Logging and Capture](/07-customization/#c5--logging-and-capture) (session logs, command duration)
+    C6         [Greeting & First-Run UI](/07-customization/#c6--greeting-and-first-run-ui) (custom startup banner)
+
+Disable all opinionated features at once (Minimal Mode):
 
     set -U __fish_config_opinionated 0
 
-This turns off all six categories (aliases, auto-exec, overrides,
-integrations, logging, greeting) — leaving a clean shell with only PATH,
-XDG variables, and local.fish sourcing.
-
 Disable a single category:
 
-    set -U __fish_config_op_aliases off         # C1 — command shadows
-    set -U __fish_config_op_autoexec off        # C2 — startup side-effects
-    set -U __fish_config_op_overrides off       # C3 — key/env overrides
-    set -U __fish_config_op_integrations off    # C4 — terminal integrations
-    set -U __fish_config_op_logging off         # C5 — logging and capture
-    set -U __fish_config_op_greeting off        # C6 — greeting
+    set -U __fish_config_op_aliases off         # C1
+    set -U __fish_config_op_autoexec off        # C2
+    set -U __fish_config_op_overrides off       # C3
+    set -U __fish_config_op_integrations off    # C4
+    set -U __fish_config_op_logging off         # C5
+    set -U __fish_config_op_greeting off        # C6
 
 Keep one category active under a master disable:
 
@@ -227,9 +234,6 @@ Re-enable everything:
 
     set -Ue __fish_config_opinionated
 
-Or use the interactive TUI: `config-settings`.
-
-See [Opinionated Components (Minimal Mode)](/07-customization/#opinionated-components-minimal-mode) for the full
-component reference tables.
+For an interactive alternative to setting these variables by hand, run `config-settings`.
 
 ---

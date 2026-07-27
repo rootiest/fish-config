@@ -307,7 +307,7 @@ missing-deps=## Missing Dependencies
 vi-mode=## Vi Mode Keybindings
 vi-trouble=## Vi Mode Keybindings
 emacs-mode=## Vi Mode Keybindings
-minimal-trouble=## Minimal Mode / Disabling Opinionated Features
+minimal-trouble=## What's with the C1-C6 stuff?
 
 # ── Section 12: Viewing This Manual ──────────────────────────
 viewing=# 12. VIEWING THIS MANUAL
