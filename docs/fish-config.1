@@ -507,23 +507,69 @@ Use \f[V]exit --no-log\f[R] (or \f[V]exit -n\f[R]) to skip capture.
 .SH 2. PATH SETUP
 .PP
 Directories prepended to PATH in this order (first wins):
-.IP
-.nf
-\f[C]
-\[ti]/.local/bin              Standard user-local executables
-\[ti]/Applications            User-installed standalone apps
-\[ti]/scripts                 Personal shell scripts
-\[ti]/bin                     Cargo binaries (appended \[em] lowest priority)
-$BUN_INSTALL/bin          Bun runtime and global packages
-$NPM_CONFIG_PREFIX/bin    Global npm packages
-\[ti]/.lmstudio/bin           LM Studio CLI
-\[ti]/.resend/bin             Resend CLI
-\[ti]/.fzf/bin                fzf binary (git-installed)
-\f[R]
-.fi
+.PP
+.TS
+tab(@);
+l l.
+T{
+Directory
+T}@T{
+Purpose
+T}
+_
+T{
+\f[V]\[ti]/.local/bin\f[R]
+T}@T{
+Standard user-local executables
+T}
+T{
+\f[V]\[ti]/Applications\f[R]
+T}@T{
+User-installed standalone apps
+T}
+T{
+\f[V]\[ti]/scripts\f[R]
+T}@T{
+Personal shell scripts
+T}
+T{
+\f[V]\[ti]/bin\f[R]
+T}@T{
+Cargo binaries (appended \[em] lowest priority)
+T}
+T{
+\f[V]$BUN_INSTALL/bin\f[R]
+T}@T{
+Bun runtime and global packages
+T}
+T{
+\f[V]$NPM_CONFIG_PREFIX/bin\f[R]
+T}@T{
+Global npm packages
+T}
+T{
+\f[V]\[ti]/.lmstudio/bin\f[R]
+T}@T{
+LM Studio CLI
+T}
+T{
+\f[V]\[ti]/.resend/bin\f[R]
+T}@T{
+Resend CLI
+T}
+T{
+\f[V]\[ti]/.fzf/bin\f[R]
+T}@T{
+\f[V]fzf\f[R] binary (git-installed)
+T}
+.TE
 .PP
 Cargo binaries are intentionally appended (lowest priority) to avoid
 shadowing system-installed Rust tools.
+.PP
+NOTE: While these directories are merged with your system\[cq]s existing
+\f[V]$PATH\f[R] values, any executables in the prepended directories
+above will override (shadow) system binaries of the same name.
 .PP
    *   *   *   *   *
 .SH 3. KEY BINDINGS
