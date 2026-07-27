@@ -24,6 +24,9 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 - AI session helpers for Claude Code and Antigravity
 - Catppuccin Mocha color theme throughout
 
+<LinkButton href="/09-installation/">Install now</LinkButton>
+<LinkButton href="/reference/" variant="secondary">Function reference</LinkButton>
+
 CAUTION: **SESSION LOGGING IS ON BY DEFAULT**
 This configuration silently records terminal output to `~/.terminal_history`:
 Kitty scrollback on window close, live tmux pane streams, zellij pane

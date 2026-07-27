@@ -597,7 +597,7 @@ def _split_entries(body: str) -> tuple[str, list[tuple[str, str]]]:
     return intro, entries
 
 
-ASTRO_ASIDE_COMPONENTS = {"<Aside": "Aside", "<FileTree": "FileTree"}
+ASTRO_ASIDE_COMPONENTS = {"<Aside": "Aside", "<FileTree": "FileTree", "<LinkButton": "LinkButton"}
 
 
 def _write_prettified(target: Path, fm: dict, content: str) -> None:
