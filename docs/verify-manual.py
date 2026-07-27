@@ -538,16 +538,201 @@ def test_prettify_titles_paths_and_commented_examples():
     )
 
 
+def test_as_aside_converts_a_single_line_label():
+    """A `LABEL: text` line becomes a titled <Aside> with the label's type."""
+    import build_manual
+
+    out = build_manual._as_aside(["TIP: Use `-h` on any function for its help text."])
+    assert out == (
+        '<Aside type="tip" title="Tip">\n'
+        "Use `-h` on any function for its help text.\n"
+        "</Aside>"
+    ), f"unexpected aside output:\n{out}"
+
+
+def test_as_aside_converts_a_label_and_list():
+    """A label line immediately followed by a list becomes one aside body."""
+    import build_manual
+
+    out = build_manual._as_aside(
+        [
+            "NOTE:",
+            "  - Command shadows react immediately.",
+            "  - conf.d-level components take effect in new shells.",
+        ]
+    )
+    assert out == (
+        '<Aside type="note" title="Note">\n'
+        "  - Command shadows react immediately.\n"
+        "  - conf.d-level components take effect in new shells.\n"
+        "</Aside>"
+    ), f"unexpected aside output:\n{out}"
+
+
+def test_as_aside_adds_icon_only_where_types_collide():
+    """WARNING and CAUTION share the `caution` type; only WARNING gets an icon."""
+    import build_manual
+
+    warning = build_manual._as_aside(["WARNING: Deletes files permanently."])
+    caution = build_manual._as_aside(["CAUTION: Slow on large trees."])
+    assert 'icon="warning"' in warning, f"WARNING lost its icon override:\n{warning}"
+    assert "icon=" not in caution, f"CAUTION should use its type's default icon:\n{caution}"
+
+
+def test_as_aside_rejects_non_label_paragraphs():
+    """Only the closed set of 7 labels triggers an aside; other WORD: prose does not."""
+    import build_manual
+
+    cases = {
+        "Example prefix": ["Example:", "rm file.txt"],
+        "sentence with a colon": ["Options: pass one of the flags below."],
+        "lowercase label": ["note: this should not become an aside"],
+    }
+    for label, para in cases.items():
+        assert build_manual._as_aside(para) is None, f"{label} was wrongly asided"
+
+
+def test_prettify_flat_paragraphs_unchanged_when_not_labeled():
+    """Restructuring prettify()'s loop to buffer flat lines must not alter output for ordinary prose."""
+    import build_manual
+
+    body = "\n".join(
+        [
+            "## Heading",
+            "",
+            "First line of a paragraph",
+            "continued on a second line.",
+            "",
+            "A second paragraph.",
+        ]
+    )
+    assert build_manual.prettify(body) == body, "flat prose was altered by the aside buffering"
+
+
+def test_prettify_converts_a_flat_note_paragraph_to_an_aside():
+    """A `NOTE:` paragraph surrounded by ordinary prose becomes an <Aside>, prose is untouched."""
+    import build_manual
+
+    body = "\n".join(
+        [
+            "## Heading",
+            "",
+            "Ordinary prose before.",
+            "",
+            "NOTE: Something worth calling out.",
+            "",
+            "Ordinary prose after.",
+        ]
+    )
+    out = build_manual.prettify(body)
+    assert "## Heading" in out
+    assert "Ordinary prose before." in out
+    assert "Ordinary prose after." in out
+    assert (
+        '<Aside type="note" title="Note">\nSomething worth calling out.\n</Aside>' in out
+    ), f"note paragraph was not converted:\n{out}"
+
+
+def test_as_file_tree_converts_a_box_drawing_tree():
+    """A root path plus ├──/└── branches becomes a Starlight <FileTree>."""
+    import build_manual
+
+    para = [
+        "$__fish_user_dots_path/",
+        "├── secrets.fish   API keys, tokens, passwords, personal identifiers",
+        "└── local.fish     Machine-specific paths, env vars, and sourcing secrets",
+    ]
+    out = build_manual._as_file_tree(para)
+    assert out == (
+        "<FileTree>\n"
+        "- $__fish_user_dots_path/\n"
+        "  - secrets.fish API keys, tokens, passwords, personal identifiers\n"
+        "  - local.fish Machine-specific paths, env vars, and sourcing secrets\n"
+        "</FileTree>"
+    ), f"unexpected file tree output:\n{out}"
+
+
+def test_as_file_tree_rejects_non_trees():
+    """Returning None is always safe for anything that isn't a root+branches shape."""
+    import build_manual
+
+    cases = {
+        "no root slash": ["$__fish_user_dots_path", "├── secrets.fish"],
+        "single line": ["$__fish_user_dots_path/"],
+        "non-branch second line": ["$__fish_user_dots_path/", "secrets.fish"],
+    }
+    for label, para in cases.items():
+        assert build_manual._as_file_tree(para) is None, f"{label} was wrongly treed"
+
+
+def test_as_file_tree_rejects_deeper_trees():
+    """A tree with a second-level (indented) branch line is not detected — falls through to verbatim rendering."""
+    import build_manual
+
+    para = [
+        "~/proj/",
+        "├── src/",
+        "│   └── main.fish",
+        "└── README.md",
+    ]
+    assert build_manual._as_file_tree(para) is None
+
+
+def test_customization_notes_render_as_aside():
+    """The real 07-customization.md NOTE paragraph converts to one intact <Aside>."""
+    import build_manual
+
+    path = Path(__file__).parent / "manual" / "07-customization.md"
+    _, body = mt.parse(path)
+    out = build_manual.prettify(body)
+    assert out.count('<Aside type="note" title="Note">') == 1, f"expected exactly one Note aside:\n{out}"
+    aside = out.split('<Aside type="note" title="Note">')[1].split("</Aside>")[0]
+    assert aside.count("  - ") == 4, f"expected exactly 4 bullets inside the aside:\n{aside}"
+    assert "- Command shadows (rm, cat, ls, ...) react immediately" in aside
+    assert "- With aliases disabled, rm falls back to bare `command rm`" in aside
+    assert "- Disabled integration commands (spwin, tab, split, hist, logs, upgrade)" in aside
+    assert "- On CachyOS, the distro fish config's own aliases" in aside
+
+
+def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
+    """A page whose rendered content contains <Aside> or <FileTree> is written as .mdx."""
+    import build_manual
+
+    docs = Path(__file__).parent
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d)
+        build_manual.build_site(docs / "manual", out)
+
+        assert (out / "10-personalization.mdx").exists(), "FileTree page was not promoted to .mdx"
+        assert not (out / "10-personalization.md").exists(), "old .md sibling was left behind"
+
+        assert (out / "11-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
+
+        assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
+
+        assert (out / "01-configuration-variables.md").exists(), "plain page was wrongly promoted to .mdx"
+        assert not (out / "01-configuration-variables.mdx").exists(), "plain page should stay .md"
+
+        text = (out / "10-personalization.mdx").read_text()
+        assert "import { FileTree } from '@astrojs/starlight/components';" in text
+
+        text2 = (out / "11-viewing-this-manual.mdx").read_text()
+        assert "import { Aside } from '@astrojs/starlight/components';" in text2
+
+
 def test_prettify_is_site_only():
     """The SSOT keeps the indented form the man-page pipeline depends on."""
     import build_manual
 
     manual = Path(__file__).parent / "manual"
+    forbidden = ("```", "<Aside", "<FileTree", ":::")
     for path in manual.rglob("*.md"):
-        assert "```" not in path.read_text(), (
-            f"{path.name} contains a fence: prettify must run at site-build "
-            "time, never be written back to the SSOT"
-        )
+        text = path.read_text()
+        for marker in forbidden:
+            assert marker not in text, (
+                f"{path.name} contains {marker!r}: prettify must run at "
+                "site-build time, never be written back to the SSOT"
+            )
 
 
 def test_sidebar_has_no_duplicate_functions_entry():

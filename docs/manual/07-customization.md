@@ -123,17 +123,11 @@ For an interactive alternative to setting these variables by hand, run
 config-settings — a full-screen TUI that flips any category (including C5
 logging) on or off, per session or universally. See its entry in Section 5.
 
-Notes:
-
-  - Command shadows (rm, cat, ls, ...) react immediately; conf.d-level
-    components (bindings, prompt, abbreviations, hooks) take effect in
-    new shells.
-  - With aliases disabled, rm falls back to bare `command rm` — files
-    are deleted permanently, not trashed.
-  - Disabled integration commands (spwin, tab, split, hist, logs,
-    upgrade) print an error naming the variable that disabled them.
-  - On CachyOS, the distro fish config's own aliases, history override,
-    and bang-bang bindings are stripped per category as well.
+NOTE:
+  - Command shadows (rm, cat, ls, ...) react immediately; conf.d-level components (bindings, prompt, abbreviations, hooks) take effect in new shells.
+  - With aliases disabled, rm falls back to bare `command rm` — files are deleted permanently, not trashed.
+  - Disabled integration commands (spwin, tab, split, hist, logs, upgrade) print an error naming the variable that disabled them.
+  - On CachyOS, the distro fish config's own aliases, history override, and bang-bang bindings are stripped per category as well.
 
 ### Component Reference
 

@@ -314,6 +314,26 @@ def _as_ruled_table(para: list[str]) -> str | None:
     return "\n".join(out)
 
 
+TREE_ROOT_RE = re.compile(r"^[~$][\w./{}-]*/$")
+TREE_BRANCH_RE = re.compile(r"^[├└]──\s*(\S+)\s*(.*)$")
+
+
+def _as_file_tree(para: list[str]) -> str | None:
+    """Render a hand-drawn box-drawing tree as a Starlight <FileTree>, else None."""
+    if len(para) < 2 or not TREE_ROOT_RE.match(para[0].strip()):
+        return None
+    branches = []
+    for line in para[1:]:
+        m = TREE_BRANCH_RE.match(line)
+        if not m:
+            return None
+        branches.append(m.groups())
+    out = ["<FileTree>", f"- {para[0].strip()}"]
+    out += [f"  - {name} {desc}".rstrip() for name, desc in branches]
+    out.append("</FileTree>")
+    return "\n".join(out)
+
+
 def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
     """Render one paragraph of a former indented block.
 
@@ -335,7 +355,7 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
                 title, body = m.group(1), para[1:]
             info = f'fish title="{title}"' if title else "fish"
             return f"```{info}\n" + "\n".join(body) + "\n```"
-    table = _as_ruled_table(para) or _as_table(para)
+    table = _as_ruled_table(para) or _as_table(para) or _as_file_tree(para)
     if table is not None:
         return table
     return "\n".join(INDENT + line for line in para)
@@ -385,20 +405,54 @@ def _prettify_block(block: list[str], entry_name: str | None) -> str:
     return "\n\n".join(chunk for chunk in out if chunk.strip())
 
 
+ASIDE_LABELS: dict[str, tuple[str, str, str | None]] = {
+    "NOTE": ("note", "Note", None),
+    "IMPORTANT": ("note", "Important", "star"),
+    "TIP": ("tip", "Tip", None),
+    "HINT": ("tip", "Hint", "question-circle"),
+    "WARNING": ("caution", "Warning", "warning"),
+    "CAUTION": ("caution", "Caution", None),
+    "DANGER": ("danger", "Danger", None),
+}
+ASIDE_RE = re.compile(rf"^({'|'.join(ASIDE_LABELS)}):\s*(.*)$")
+
+
+def _as_aside(para: list[str]) -> str | None:
+    """Render a `LABEL: ...` flat paragraph as a Starlight <Aside>, else None."""
+    m = ASIDE_RE.match(para[0])
+    if not m:
+        return None
+    label, rest = m.groups()
+    aside_type, title, icon = ASIDE_LABELS[label]
+    body = "\n".join(([rest] if rest else []) + para[1:])
+    attrs = f'type="{aside_type}" title="{title}"'
+    if icon:
+        attrs += f' icon="{icon}"'
+    return f"<Aside {attrs}>\n{body}\n</Aside>"
+
+
 def prettify(body: str, entry_name: str | None = None) -> str:
-    """Rewrite a body's indented code blocks for the website.
+    """Rewrite a body's indented code blocks and labeled asides for the website.
 
     Site-only: the man page and `config-help` keep reading the untouched
-    SSOT, where the indented form is exactly what pandoc wants.
+    SSOT, where the indented form and the `LABEL:` text are exactly what
+    pandoc/`config-help` want.
     """
     out: list[str] = []
     block: list[str] = []
+    flat: list[str] = []
     in_fence = False
+
+    def flush_flat() -> None:
+        out.append(_as_aside(flat) or "\n".join(flat))
 
     for line in body.split("\n"):
         if mt.FENCE_RE.match(line):
             in_fence = not in_fence
         if not in_fence and (line.startswith(INDENT) or (not line.strip() and block)):
+            if flat:
+                flush_flat()
+                flat.clear()
             block.append(line)
             continue
         if block:
@@ -407,8 +461,16 @@ def prettify(body: str, entry_name: str | None = None) -> str:
             out.append(_prettify_block(block, entry_name))
             out.append("")
             block = []
-        out.append(line)
+        if in_fence or not line.strip():
+            if flat:
+                flush_flat()
+                flat.clear()
+            out.append(line)
+        else:
+            flat.append(line)
 
+    if flat:
+        flush_flat()
     if block:
         while block and not block[-1].strip():
             block.pop()
@@ -532,6 +594,24 @@ def _split_entries(body: str) -> tuple[str, list[tuple[str, str]]]:
     return intro, entries
 
 
+ASTRO_ASIDE_COMPONENTS = {"<Aside": "Aside", "<FileTree": "FileTree"}
+
+
+def _write_prettified(target: Path, fm: dict, content: str) -> None:
+    """Write a prettified page, promoting to .mdx when it needs a component import.
+
+    A page stays .md (prettify()'s default, no imports) unless its rendered
+    content actually contains an <Aside> or <FileTree> — the only two
+    components a prettified (non-hand-built) page can contain.
+    """
+    needed = [name for marker, name in ASTRO_ASIDE_COMPONENTS.items() if marker in content]
+    if needed:
+        imports = f"import {{ {', '.join(needed)} }} from '@astrojs/starlight/components';\n\n"
+        target = target.with_suffix(".mdx")
+        content = imports + content
+    target.write_text(mt.serialize(fm, content))
+
+
 def build_site(root: Path, out: Path) -> list[dict]:
     """Write the Starlight content tree. Returns the sidebar structure."""
     if out.exists():
@@ -554,7 +634,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
         if not is_function_dir:
             target = out / rel
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(mt.serialize(_page_fm(fm), prettify(body)))
+            _write_prettified(target, _page_fm(fm), prettify(body))
             if rel.name != "index.md":
                 sidebar.append({"label": fm["title"], "link": "/" + rel.stem + "/"})
             continue
@@ -571,7 +651,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
         if rel.name == "index.md":
             target = out / slug_dir / "index.md"
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(mt.serialize(_page_fm(fm), prettify(body)))
+            _write_prettified(target, _page_fm(fm), prettify(body))
             # Built explicitly rather than by `autogenerate`, which labels
             # each group with its raw directory slug and republishes this
             # index as a child of the group it already titles.
@@ -596,8 +676,10 @@ def build_site(root: Path, out: Path) -> list[dict]:
             entry_fm = {"title": title}
             if desc:
                 entry_fm["description"] = desc
-            (cat_dir / f"{entry_slug}.md").write_text(
-                mt.serialize(entry_fm, prettify(entry_body, title.split()[0]))
+            _write_prettified(
+                cat_dir / f"{entry_slug}.md",
+                entry_fm,
+                prettify(entry_body, title.split()[0]),
             )
             href = f"/{slug_dir}/{category}/{entry_slug}/"
             links.append({"label": title, "link": href})
