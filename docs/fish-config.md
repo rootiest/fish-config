@@ -128,7 +128,7 @@ The configuration uses a structured file tree:
     9.  Installation
     10. Personalization
     11. Troubleshooting
-        11.1 Uninstalling / Reverting to Backup
+        11.1 Uninstalling and Reverting to Backup
         11.2 Fish Version Requirement
         11.3 Disable Session Logging
         11.4 Change or Disable the Greeting
@@ -136,7 +136,7 @@ The configuration uses a structured file tree:
         11.6 Tool Init Does Nothing (Return Sentinel)
         11.7 Missing Dependencies
         11.8 Vi Mode Keybindings
-        11.9 Minimal Mode / Disabling Opinionated Features
+        11.9 What's with the C1-C6 stuff?
     12. Viewing This Manual
 
 ---
@@ -3137,7 +3137,7 @@ local.fish in turn sources secrets.fish when it exists.
 
 This section covers common issues, their solutions, and how to safely revert changes or uninstall the configuration entirely.
 
-## Uninstalling / Reverting to Backup
+## Uninstalling and Reverting to Backup
 
 The installation step backs up any existing config to `~/.config/fish.bak`.
 To revert:
