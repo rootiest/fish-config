@@ -25,7 +25,7 @@ etc.) will have no effect. All integrations are managed via conf.d/ files.
 
 If a new tool's shell integration appears to do nothing, check whether its
 setup command appended an init line below the sentinel and create a dedicated
-conf.d/<tool>.fish instead.
+`conf.d/<tool>.fish` instead.
 
 ## Updating
 
