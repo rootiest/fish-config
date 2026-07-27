@@ -160,6 +160,7 @@ SHELL_HEADS = frozenset(
     if jobs kitty ls man math mkdir mv nvim npm pacman paru pip pip3 pkg printf
     python python3 rm set shutdown source string sudo switch systemctl test time
     tmux touch trash type wget wezterm while yay zellij zypper
+    fish_default_key_bindings fish_vi_key_bindings
     """.split()
 )
 
@@ -212,7 +213,7 @@ PATH_LINE_RE = re.compile(r"^[~$][\w./{}-]*\.\w+$")
 # A leading "# in local.fish" / "# local.fish" comment names the file an
 # example belongs to; promote it to the fence title instead of leaving it
 # as a literal comment inside the code.
-FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([\w-]+\.\w+)\s*$")
+FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([$~\w./-]+\.\w+)\s*$")
 
 CELL_SPLIT = re.compile(r"\s{2,}")
 
