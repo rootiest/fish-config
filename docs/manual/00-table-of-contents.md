@@ -42,6 +42,16 @@ sidebar:
     8.  Fisher Plugins
     9.  Installation
     10. Personalization
-    11. Viewing This Manual
+    11. Troubleshooting
+        11.1 Uninstalling / Reverting to Backup
+        11.2 Fish Version Requirement
+        11.3 Disable Session Logging
+        11.4 Change or Disable the Greeting
+        11.5 Secrets and Machine-Local Configuration
+        11.6 Tool Init Does Nothing (Return Sentinel)
+        11.7 Missing Dependencies
+        11.8 Vi Mode Keybindings
+        11.9 Minimal Mode / Disabling Opinionated Features
+    12. Viewing This Manual
 
 ---
