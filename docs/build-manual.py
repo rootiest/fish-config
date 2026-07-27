@@ -315,7 +315,7 @@ def _as_ruled_table(para: list[str]) -> str | None:
 
 
 TREE_ROOT_RE = re.compile(r"^[~$][\w./{}-]*/$")
-TREE_BRANCH_RE = re.compile(r"^[├└]──\s*(\S+)\s*(.*)$")
+TREE_BRANCH_RE = re.compile(r"^([│ \t]*)[├└]──\s*(\S+)\s*(.*)$")
 
 
 def _as_file_tree(para: list[str]) -> str | None:
@@ -329,7 +329,10 @@ def _as_file_tree(para: list[str]) -> str | None:
             return None
         branches.append(m.groups())
     out = ["<FileTree>", f"- {para[0].strip()}"]
-    out += [f"  - {name} {desc}".rstrip() for name, desc in branches]
+    for prefix, name, desc in branches:
+        depth = len(prefix.replace('\t', '    ')) // 4
+        indent = "  " * (depth + 1)
+        out.append(f"{indent}- {name} {desc}".rstrip())
     out.append("</FileTree>")
     return "\n".join(out)
 
