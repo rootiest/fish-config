@@ -79,6 +79,7 @@ def build_concat(root: Path) -> str:
             body = _with_entries(body, path, entries)
         if body:
             body = re.sub(r"<LinkButton.*?</LinkButton>\n*", "", body, flags=re.DOTALL)
+            body = re.sub(r"\[([^\]]+)\]\(/[^)]+\)", r"\1", body)
             chunks.append(mt.shift_headings(body, depth))
     return "\n\n".join(chunks) + "\n"
 
