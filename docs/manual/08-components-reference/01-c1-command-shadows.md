@@ -2,7 +2,7 @@
 title: C1 — Command Shadows
 ---
 
-Disabling __fish_config_op_aliases restores standard system behavior for
+Disabling `__fish_config_op_aliases` restores standard system behavior for
 all of these commands.
 
     Command / Alias    Active behavior                       Disabled fallback

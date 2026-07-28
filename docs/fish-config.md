@@ -29,27 +29,15 @@ The underlying `config-help` function is also available directly.
 
 A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 
-- Drop-in replacements for common Unix tools (ls, cat, rm, du, ping, less)
+- Drop-in replacements for common Unix tools (`ls`, `cat`, `rm`, `du`, `ping`, `less`)
 - Deep Kitty and WezTerm terminal integration: tab/window/pane management from
   the command line
 - Optional session logging: terminal scrollback, tmux/zellij panes, and
-  paru/yay output captured to ~/.terminal_history (off by default; see below)
+  paru/yay output captured to `~/.terminal_history` (off by default; see C5 Logging)
 - Automatic Python virtualenv activation on directory change
 - Cross-platform package management via pkg and fish-deps
 - AI scaffolding helpers for Claude Code and Antigravity
 - Catppuccin Mocha color theme throughout
-
-CAUTION: **SESSION LOGGING**  
-If enabled, this configuration can silently record terminal output to
-`~/.terminal_history`: Kitty scrollback on window close, live tmux pane
-streams, zellij pane snapshots on exit, and full paru/yay output. These logs
-can contain command output, file contents, and secrets printed to the
-terminal. Nothing leaves your machine, but the files persist locally. Logging
-is off unless you turn it on.
-- Enable all logging with: `set -U __fish_config_op_logging on`
-- Prefer a menu? Run the interactive picker: `config-settings`
-- Turn it back off with: `set -U __fish_config_op_logging off` (or erase the variable)
-- See C5 — Logging and Capture for the full breakdown.
 
 The configuration uses a structured file tree:
 
@@ -157,7 +145,7 @@ Override them in local.fish (see Section 10, Personalization).
 | `XDG_DATA_HOME` | `~/.local/share` |
 | `XDG_STATE_HOME` | `~/.local/state` |
 
-Tools that respect XDG are directed to these paths rather than polluting $HOME.
+Tools that respect XDG are directed to these paths rather than polluting `$HOME`.
 
 ## Tool Homes (XDG-compliant)
 
@@ -401,7 +389,7 @@ some expand differently in Kitty vs WezTerm vs other terminals.
 
 These abbreviations control the terminal emulator. Each has a Kitty
 variant and a WezTerm variant; the correct one is inserted based on
-$TERM or $TERM_PROGRAM.
+`$TERM` or `$TERM_PROGRAM`.
 
     :w          New OS window
     :wv         Split pane horizontally (new pane below)
@@ -2639,6 +2627,7 @@ The install priority for each tool:
 
 This section explains how to adapt the configuration to your specific workflow, including local machine overrides and opinionated component toggles.
 
+
 ## Machine-local Configuration
 
 Place machine-specific settings that should not be committed to git in:
@@ -2661,6 +2650,7 @@ Opt out by setting `__fish_user_dots_symlink` to a falsy value, or toggling
 removes any existing link. It only ever manages a symlink and never clobbers a
 real file or directory at that path.
 
+
 ## Secrets and API Keys
 
     $__fish_user_dots_path/secrets.fish
@@ -2672,6 +2662,7 @@ committed. It is sourced by local.fish directly, not by config.fish.
 session, so it and its companion secrets.fish can override anything set
 earlier.
 
+
 ## Overriding Configuration Variables
 
 Any variable set in local.fish after the main config loads takes effect.
@@ -2680,23 +2671,25 @@ Example: to increase the scrollback history limit:
     # in local.fish
     set -gx SCROLLBACK_HISTORY_MAX_FILES 200
 
+
 ## Fish Universal Variables
 
 Some settings (fzf colors, theme) are stored in fish_variables via
 `set -U`. These are machine-local and git-ignored. Do not commit
 fish_variables.
 
+
 ## Opinionated Components (Minimal Mode)
 
 Every opinionated piece of this config is active by default but can be
 switched off through six category opt-out variables, each evaluated via
-__fish_variable_check. Set a variable to any falsy value (0, false, no,
+`__fish_variable_check`. Set a variable to any falsy value (0, false, no,
 off, n) to disable its category; erase it or set a truthy value (1, true,
 yes, on, y) to re-enable. Unset means enabled — except for C5 logging, which
 is opt-in (see below).
 
 An explicit per-category truthy value takes precedence over the master
-switch: setting __fish_config_opinionated=0 disables all unset categories,
+switch: setting `__fish_config_opinionated`=0 disables all unset categories,
 but a category with an explicit truthy value remains enabled regardless.
 
 C5 (logging) is the one exception to "unset means enabled". Because it
@@ -2770,9 +2763,10 @@ NOTE:
   - Disabled integration commands (spwin, tab, split, hist, logs, upgrade) print an error naming the variable that disabled them.
   - On CachyOS, the distro fish config's own aliases, history override, and bang-bang bindings are stripped per category as well.
 
+
 ## Prompt and Theme
 
-#### Starship
+### Starship
 
 The primary prompt is Starship, initialized by conf.d/starship.fish.
 Configure it via ~/.config/starship.toml.
@@ -2784,7 +2778,7 @@ markers on the prompt line itself. This allows ov to use them as sticky
 section headers when browsing scrollback logs. Without Starship, fish's
 built-in prompt handles these markers automatically.
 
-#### Catppuccin Fallback Prompt
+### Catppuccin Fallback Prompt
 
 When Starship is absent or C3 overrides are disabled, a built-in nim-style
 two-line prompt activates from functions/fish_prompt.fish. No external
@@ -2814,7 +2808,7 @@ active Docker context is also shown (if non-default):
     ✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
     Fri Jun 12 00:51:21 2026                     ← success (no ✘)
 
-#### FZF
+### FZF
 
 FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in
 integrations/fzf.fish. The colors applied:
@@ -2825,7 +2819,7 @@ integrations/fzf.fish. The colors applied:
 
 To customize, override FZF_DEFAULT_OPTS in local.fish.
 
-#### Catppuccin Mocha Syntax Highlighting
+### Catppuccin Mocha Syntax Highlighting
 
 The Catppuccin Mocha theme ships with this config in themes/ and is applied
 on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
@@ -2833,7 +2827,7 @@ on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
 
     fish_config theme save "Catppuccin Latte"
 
----
+`---`
 
 # 8. COMPONENTS REFERENCE
 
@@ -2843,7 +2837,7 @@ category variable.
 
 ## C1 — Command Shadows
 
-Disabling __fish_config_op_aliases restores standard system behavior for
+Disabling `__fish_config_op_aliases` restores standard system behavior for
 all of these commands.
 
     Command / Alias    Active behavior                       Disabled fallback
@@ -2875,7 +2869,7 @@ are permanently deleted, not trashed. There is no intermediate safety net.
 ## C2 — Startup Side-Effects
 
 These run automatically without any user action. Disabling
-__fish_config_op_autoexec prevents all of them.
+`__fish_config_op_autoexec` prevents all of them.
 
     Component                  Trigger              What it does
     ───────────────────────────────────────────────────────────────────────────
@@ -2895,15 +2889,15 @@ wrapper generation, no automatic venv activation, no WakaTime reporting,
 no auto-pull (the PWD handler is never registered), and the user-dots
 convenience symlink is not created. The symlink is git-ignored and only ever
 managed as a symlink — a real file or directory at that path is left untouched.
-The symlink has its own opt-out independent of C2: set __fish_user_dots_symlink
+The symlink has its own opt-out independent of C2: set `__fish_user_dots_symlink`
 to a falsy value (or toggle "Dots link" off on the config-settings Paths page)
 to stop generating it and remove any existing link — honoured even when C2 is
-enabled. Managed by the __fish_user_dots_link helper.
-The first-run completion marker (__fish_config_first_run_complete) is still
+enabled. Managed by the `__fish_user_dots_link` helper.
+The first-run completion marker (`__fish_config_first_run_complete`) is still
 set so the init does not re-run on subsequent shells.
 
 Python venv activation fires on every directory change. If a directory uses
-direnv (.envrc present), direnv takes priority and auto-venv is skipped for
+direnv (`.envrc` present), direnv takes priority and auto-venv is skipped for
 that directory.
 
 Auto-pull fast-forwards opted-in repositories in the background when you cd
@@ -2912,13 +2906,13 @@ the `auto-pull` command (see its entry in the functions reference). It only
 ever fast-forwards a clean repo whose branch has an upstream — never rebases,
 merges, or overwrites work — so it is a no-op on dirty trees, divergent
 branches, or repos without a remote. The handler fires once per repo entry
-(not on every sub-directory cd). The registry is machine-local at
+(not on every sub-directory `cd`). The registry is machine-local at
 `$__fish_user_dots_path/auto-pull.list` (defaults to `~/.config/.user-dots/fish/auto-pull.list`) and is never committed.
 
 ## C3 — Key and Environment Overrides
 
 These change fundamental shell behavior: how keys work, which pager opens,
-and what the prompt looks like. Disabling __fish_config_op_overrides removes
+and what the prompt looks like. Disabling `__fish_config_op_overrides` removes
 all of them.
 
     Override                  What it replaces or sets
@@ -2940,8 +2934,8 @@ all of them.
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
     Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
 
-The bang-bang system spans key_bindings.fish, abbr.fish, puffer.fish, and
-six expand_bang_*.fish functions. All are gated together — disabling C3
+The bang-bang system spans `key_bindings.fish`, `abbr.fish`, `puffer.fish`, and
+six `expand_bang_*.fish` functions. All are gated together — disabling C3
 removes the entire bang-expansion system at once.
 
 When C3 is disabled, `exit` falls back to `builtin exit` with no scrollback
@@ -2951,11 +2945,11 @@ is independently controlled by C5 (see below).
 ## C4 — Terminal and Tool Integration
 
 These features couple the shell to specific external tools. Disabling
-__fish_config_op_integrations disables all of them.
+`__fish_config_op_integrations` disables all of them.
 
     Component                  Requires
     ───────────────────────────────────────────────────────────────────────────
-    ~60 Kitty/WezTerm abbrs    Active Kitty or WezTerm session
+    ≈ 60 Kitty/WezTerm abbrs    Active Kitty or WezTerm session
       (:w, :wv, :wh, :t, etc.)
     Done desktop notifications  Graphical desktop with a notification daemon
     spwin                      Kitty or WezTerm
@@ -2966,16 +2960,18 @@ __fish_config_op_integrations disables all of them.
     upgrade                    paru or yay (Arch Linux only)
     WakaTime hook              wakatime CLI and a configured API key
 
-Disabled integration commands (spwin, tab, split, hist, logs, upgrade) print
+Disabled integration commands (`spwin`, `tab`, `split`, `hist`, `logs`, `upgrade`) print
 a colored error to stderr naming the variable that disabled them rather than
 silently failing.
 
 ## C5 — Logging and Capture
 
 Five components capture shell output to disk. Unlike every other category,
-C5 is opt-in: it stays off until __fish_config_op_logging is set to an
+C5 is opt-in: it stays off until `__fish_config_op_logging` is set to an
 explicit truthy value, and a truthy master switch does not enable it. While
 it is off, all capture is skipped and the logging wrappers are removed.
+
+CAUTION: This configuration is capable of silently recording terminal output and secrets directly to disk. See below for details on how this capture mechanism works, where files are stored, and how to manage its state.
 
     # Turn it on (persistently, in every shell):
     set -U __fish_config_op_logging on
@@ -2986,38 +2982,38 @@ it is off, all capture is skipped and the logging wrappers are removed.
     Component               What it captures
     ───────────────────────────────────────────────────────────────────────────
     Scrollback capture      Terminal session output saved to:
-                            ~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
+                            `~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log`
     tmux pane capture       Continuous pane stream via pipe-pane, saved to:
-                            ~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
+                            `~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log`
     zellij pane capture     Pane scrollback snapshot on shell exit, saved to:
-                            ~/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
+                            `~/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log`
     paru wrapper            All paru/AUR output captured to:
-                            ~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
+                            `~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log`
     yay wrapper             All yay/AUR output captured to:
-                            ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
-    Kitty watcher           watcher.py captures scrollback when Kitty closes
+                            `~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log`
+    Kitty watcher           `watcher.py` captures scrollback when Kitty closes
 
 NOTE: **Turning off logging does not delete any existing logs.**  
 They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)
 until you remove them manually.
 
 The tmux capture starts automatically when fish launches inside any tmux
-pane ($TMUX is set). It uses tmux's native pipe-pane to stream all pane
+pane (`$TMUX` is set). It uses tmux's native pipe-pane to stream all pane
 output directly to disk without an intermediate process. Each fish shell
 session gets its own log file; a new log is created on each shell start
 (including exec fish and new splits). Before each new log, the oldest
-tmux_*.log files are pruned (by modification time) to keep the total within
-SCROLLBACK_HISTORY_MAX_FILES, matching the paru/yay wrapper behaviour.
+`tmux_*.log` files are pruned (by modification time) to keep the total within
+`SCROLLBACK_HISTORY_MAX_FILES`, matching the paru/yay wrapper behaviour.
 
 The zellij capture works differently: Zellij has no live output-streaming
 facility like pipe-pane, so the log is taken as a one-shot snapshot when the
-shell exits, via `zellij action dump-screen --full --ansi` (the --ansi flag
+shell exits, via `zellij action dump-screen --full --ansi` (the `--ansi` flag
 preserves color). The dump is captured on the fish process's stdout and
 written to the log file by fish itself (not via `--path`, which would make the
 zellij server write the file). A fish_exit handler (registered whenever
-$ZELLIJ is set) writes the pane's full scrollback and then prunes old
-zellij_*.log files the same way. Because the capture happens at exit, toggling
-__fish_config_op_logging takes effect on the next exit with no restart or
+`$ZELLIJ` is set) writes the pane's full scrollback and then prunes old
+`zellij_*.log` files the same way. Because the capture happens at exit, toggling
+`__fish_config_op_logging` takes effect on the next exit with no restart or
 sentinel coordination needed — the C5 guard is re-checked when the handler
 fires.
 
@@ -3039,12 +3035,12 @@ logged, end the session with `exit` or Ctrl-D rather than zellij's close-pane
 or quit actions.
 
 The Kitty watcher is managed by the kitty-logging command: it symlinks the
-watcher (fish-config-watcher.py) into the Kitty config directory and wires it
-into kitty.conf via a managed block. Inside Kitty, a non-blocking
+watcher (`fish-config-watcher.py`) into the Kitty config directory and wires it
+into `kitty.conf` via a managed block. Inside Kitty, a non-blocking
 per-session reminder points first-time users at `kitty-logging install` until
 they install or run `kitty-logging dismiss`; the reminder is itself gated on
 C5, so it stays silent until you enable logging. Install affects new Kitty
-windows only; runtime disable is still handled by the .logging_disabled
+windows only; runtime disable is still handled by the `.logging_disabled`
 sentinel.
 
 Logging coordination via sentinel file
@@ -3055,26 +3051,26 @@ out-of-process components (the Kitty watcher and all running shells):
     ~/.config/fish/.logging_disabled
 
 Because C5 is off by default, the sentinel is present on a fresh install —
-the startup sync in conf.d/logging-events.fish reconciles it on every shell
+the startup sync in `conf.d/logging-events.fish` reconciles it on every shell
 start, so it appears without any action on your part.
 
-Disabling __fish_config_op_logging (or leaving it unset):
+Disabling `__fish_config_op_logging` (or leaving it unset):
   1. Creates the sentinel immediately in every open shell.
-  2. Removes ~/.local/bin/paru and ~/.local/bin/yay logging wrappers;
-     bare /usr/bin/paru and /usr/bin/yay are used instead.
-  3. Kitty's watcher.py reads the sentinel on each save attempt and
+  2. Removes `~/.local/bin/paru` and `~/.local/bin/yay` logging wrappers;
+     bare `/usr/bin/paru` and `/usr/bin/yay` are used instead.
+  3. Kitty's `watcher.py` reads the sentinel on each save attempt and
      skips capture — no Kitty restart required.
   4. smart_exit stops saving scrollback logs.
-  5. Stops tmux pipe-pane capture in every open fish shell inside tmux.
+  5. Stops `tmux pipe-pane` capture in every open fish shell inside tmux.
 
-Enabling __fish_config_op_logging:
+Enabling `__fish_config_op_logging`:
   1. Removes the sentinel in every open shell.
-  2. Regenerates paru/yay logging wrappers in ~/.local/bin/.
+  2. Regenerates paru/yay logging wrappers in `~/.local/bin/`.
   3. Kitty watcher resumes capture on the next session exit.
   4. Restarts tmux pipe-pane capture in every open fish shell inside tmux.
 
 Changes propagate to all running shells through an event handler that fires
-whenever __fish_config_op_logging changes — no shell restart needed.
+whenever `__fish_config_op_logging` changes — no shell restart needed.
 
 Note: C3 and C5 compose independently. C3 controls whether the smart_exit
 wrapper is active at all; C5 controls only the scrollback-capture block
@@ -3097,7 +3093,7 @@ not override it.
 
 Fisher is bootstrapped automatically on the **first interactive session** via
 `conf.d/first_run.fish`. This also applies the Catppuccin Mocha theme and
-prints a one-time welcome message (gated by __fish_config_op_greeting; set
+prints a one-time welcome message (gated by `__fish_config_op_greeting`; set
 it to 0 to suppress). Subsequent sessions skip all first-run logic with zero
 overhead.
 
@@ -3487,12 +3483,12 @@ This configuration groups its opinionated behaviors into six categories (C1–C6
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────
-    C1         Command Shadows (aliases that replace default tools)
-    C2         Auto-Exec (background tasks and startup side-effects)
-    C3         Key & Env Overrides (Vi mode, PAGER)
-    C4         Terminal Integrations (Kitty, WezTerm)
-    C5         Logging and Capture (session logs, command duration)
-    C6         Greeting & First-Run UI (custom startup banner)
+    C1 | Command Shadows | Wraps destructive commands (`rm`, `cp`) to be safe by default |
+    C2 | Startup Side-Effects | Bootstraps Fisher, generates wrappers, auto-activates venvs |
+    C3 | Overrides | Overrides `cd`, sets Vi mode, binds `<CR>` to `smart_enter` |
+    C4 | Integrations | Kitty/Wezterm integrations, starship hooks, fzf theme |
+    C5 | Logging and Capture | Session logs, command duration |
+    C6 | Greeting & First-Run UI | Custom startup banner |
 
 Disable all opinionated features at once (Minimal Mode):
 

@@ -255,12 +255,12 @@ greeting=## C6 — Greeting and First-Run UI
 
 # ── Prompt and Theme ──────────────────────────────────────────
 prompt-theme=## Prompt and Theme
-starship=#### Starship
-fallback-prompt=#### Catppuccin Fallback Prompt
-catppuccin-prompt=#### Catppuccin Fallback Prompt
-nim-prompt=#### Catppuccin Fallback Prompt
-fzf-theme=#### FZF
-catppuccin-theme=#### Catppuccin Mocha Syntax Highlighting
+starship=### Starship
+fallback-prompt=### Catppuccin Fallback Prompt
+catppuccin-prompt=### Catppuccin Fallback Prompt
+nim-prompt=### Catppuccin Fallback Prompt
+fzf-theme=### FZF
+catppuccin-theme=### Catppuccin Mocha Syntax Highlighting
 
 # ── Section 9: Fisher Plugins ─────────────────────────────────
 plugins=# 9. FISHER PLUGINS
