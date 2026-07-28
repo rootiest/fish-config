@@ -3,7 +3,7 @@ title: C3 — Key and Environment Overrides
 ---
 
 These change fundamental shell behavior: how keys work, which pager opens,
-and what the prompt looks like. Disabling __fish_config_op_overrides removes
+and what the prompt looks like. Disabling `__fish_config_op_overrides` removes
 all of them.
 
     Override                  What it replaces or sets
@@ -25,8 +25,8 @@ all of them.
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
     Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
 
-The bang-bang system spans key_bindings.fish, abbr.fish, puffer.fish, and
-six expand_bang_*.fish functions. All are gated together — disabling C3
+The bang-bang system spans `key_bindings.fish`, `abbr.fish`, `puffer.fish`, and
+six `expand_bang_*.fish` functions. All are gated together — disabling C3
 removes the entire bang-expansion system at once.
 
 When C3 is disabled, `exit` falls back to `builtin exit` with no scrollback

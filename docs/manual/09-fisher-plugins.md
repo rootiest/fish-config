@@ -10,7 +10,7 @@ helpKeywords:
 
 Fisher is bootstrapped automatically on the **first interactive session** via
 `conf.d/first_run.fish`. This also applies the Catppuccin Mocha theme and
-prints a one-time welcome message (gated by __fish_config_op_greeting; set
+prints a one-time welcome message (gated by `__fish_config_op_greeting`; set
 it to 0 to suppress). Subsequent sessions skip all first-run logic with zero
 overhead.
 

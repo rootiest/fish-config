@@ -1,5 +1,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightLinksValidator from 'starlight-links-validator';
+import starlightCatppuccin from '@catppuccin/starlight';
 import sidebar from './src/sidebar.json' with { type: 'json' };
 
 export default defineConfig({
@@ -25,7 +27,13 @@ export default defineConfig({
           content: 'document.addEventListener("DOMContentLoaded", () => { document.querySelectorAll("starlight-file-tree").forEach(tree => { tree.querySelectorAll("details").forEach((d, i) => { if (i !== 0) d.removeAttribute("open"); }); }); });',
         },
       ],
-      customCss: ['./src/styles/catppuccin.css'],
+      plugins: [
+        starlightLinksValidator(),
+        starlightCatppuccin({
+          dark: { flavor: "mocha", accent: "green" },
+          light: { flavor: "latte", accent: "sky" },
+        }),
+      ],
       expressiveCode: {
         // Shiki ships both Catppuccin flavours; Starlight picks by the
         // reader's colour scheme, matching the palette in catppuccin.css.

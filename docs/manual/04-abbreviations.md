@@ -43,7 +43,7 @@ some expand differently in Kitty vs WezTerm vs other terminals.
 
 These abbreviations control the terminal emulator. Each has a Kitty
 variant and a WezTerm variant; the correct one is inserted based on
-$TERM or $TERM_PROGRAM.
+`$TERM` or `$TERM_PROGRAM`.
 
     :w          New OS window
     :wv         Split pane horizontally (new pane below)

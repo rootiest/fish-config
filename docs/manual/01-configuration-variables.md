@@ -20,7 +20,7 @@ Override them in local.fish (see Section 10, Personalization).
 | `XDG_DATA_HOME` | `~/.local/share` |
 | `XDG_STATE_HOME` | `~/.local/state` |
 
-Tools that respect XDG are directed to these paths rather than polluting $HOME.
+Tools that respect XDG are directed to these paths rather than polluting `$HOME`.
 
 ## Tool Homes (XDG-compliant)
 

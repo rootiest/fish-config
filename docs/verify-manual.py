@@ -690,7 +690,7 @@ def test_customization_notes_render_as_aside():
     """The real 07-customization NOTE paragraph converts to one intact <Aside>."""
     import build_manual
 
-    path = Path(__file__).parent / "manual" / "07-customization" / "05-opinionated-components-minimal-mode.md"
+    path = Path(__file__).parent / "manual" / "07-customization.md"
     _, body = mt.parse(path)
     out = build_manual.prettify(body)
     assert out.count('<Aside type="note" title="Note">') >= 1, f"expected at least one Note aside:\n{out}"
@@ -716,7 +716,7 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
 
         assert (out / "13-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
 
-        assert (out / "07-customization/05-opinionated-components-minimal-mode.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
+        assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
 
         assert (out / "02-path-setup.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
 
@@ -754,8 +754,8 @@ def test_sidebar_has_no_duplicate_functions_entry():
         sidebar = build_manual.build_site(docs / "manual", Path(d))
 
     groups = [e for e in sidebar if "items" in e]
-    assert len(groups) == 1, f"expected one sidebar group, got {len(groups)}"
-    group = groups[0]
+    group = next((g for g in groups if g["label"] == "Functions Reference"), None)
+    assert group is not None, "expected to find 'Functions Reference' sidebar group"
     labels = [item["label"] for item in group["items"]]
     assert group["label"] not in labels[1:], (
         f"'{group['label']}' is repeated inside its own group: {labels}"

@@ -94,7 +94,7 @@ returns you to the default off state:
 This takes effect immediately in all running shells — no restart needed. The
 sentinel file, wrapper removal, and pipe-pane teardown happen automatically.
 
-See [C5 — Logging and Capture](/07-customization/#c5-logging-and-capture) for the full component breakdown.
+See [C5 — Logging and Capture](/08-components-reference/05-c5-logging-and-capture/) for the full component breakdown.
 
 ## Change or Disable the Greeting
 
@@ -115,7 +115,7 @@ testing):
 
     set -Ue __fish_config_first_run_complete
 
-See [C6 — Greeting and First-Run UI](/07-customization/#c6-greeting-and-first-run-ui) for details.
+See [C6 — Greeting and First-Run UI](/08-components-reference/06-c6-greeting-and-first-run-ui/) for details.
 
 ## Secrets and Machine-Local Configuration
 
@@ -139,7 +139,7 @@ Disable it with:
 
     set -U __fish_user_dots_symlink false
 
-See [Personalization](/10-personalization/) for the full `local.fish` / `secrets.fish`
+See [Personalization](/11-personalization/) for the full `local.fish` / `secrets.fish`
 layout.
 
 ## Tool Init Does Nothing (Return Sentinel)
@@ -156,7 +156,7 @@ Fix: create a dedicated `conf.d/` file instead of appending to `config.fish`:
     mytool init fish | source
 
 All existing integrations (starship, zoxide, direnv) already have `conf.d/`
-files. See [Return Sentinel](/09-installation/#return-sentinel) for background.
+files. See [Return Sentinel](/10-installation/#return-sentinel) for background.
 
 ## Missing Dependencies
 
@@ -186,7 +186,7 @@ See [Dependency Catalog](/06-dependency-catalog/) for the full list grouped by t
 
 This config enables Vi mode by default (via C3 overrides), replacing the
 standard Emacs-style bindings. If Vi mode interferes with your workflow,
-override it in `local.fish` (See [Personalization](/10-personalization/)):
+override it in `local.fish` (See [Personalization](/11-personalization/)):
 
     # $__fish_user_dots_path/local.fish
     fish_default_key_bindings
@@ -199,7 +199,7 @@ overrides):
 
     set -U __fish_config_op_overrides off
 
-See [C3 — Key and Environment Overrides](/07-customization/#c3-key-and-environment-overrides) for the full list of
+See [C3 — Key and Environment Overrides](/08-components-reference/03-c3-key-and-environment-overrides/) for the full list of
 what C3 controls.
 
 ## What's with the C1-C6 stuff?
@@ -208,12 +208,12 @@ This configuration groups its opinionated behaviors into six categories (C1–C6
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────
-    C1         [Command Shadows](/07-customization/#c1-command-shadows) (aliases that replace default tools)
-    C2         [Auto-Exec](/07-customization/#c2-auto-exec) (background tasks and startup side-effects)
-    C3         [Key & Env Overrides](/07-customization/#c3-key-and-environment-overrides) (Vi mode, PAGER)
-    C4         [Terminal Integrations](/07-customization/#c4-terminal-integrations) (Kitty, WezTerm)
-    C5         [Logging and Capture](/07-customization/#c5-logging-and-capture) (session logs, command duration)
-    C6         [Greeting & First-Run UI](/07-customization/#c6-greeting-and-first-run-ui) (custom startup banner)
+    C1 | [Command Shadows](/08-components-reference/01-c1-command-shadows/) | Wraps destructive commands (`rm`, `cp`) to be safe by default |
+    C2 | [Startup Side-Effects](/08-components-reference/02-c2-startup-side-effects/) | Bootstraps Fisher, generates wrappers, auto-activates venvs |
+    C3 | [Overrides](/08-components-reference/03-c3-key-and-environment-overrides/) | Overrides `cd`, sets Vi mode, binds `<CR>` to `smart_enter` |
+    C4 | [Integrations](/08-components-reference/04-c4-terminal-and-tool-integration/) | Kitty/Wezterm integrations, starship hooks, fzf theme |
+    C5 | [Logging and Capture](/08-components-reference/05-c5-logging-and-capture/) | Session logs, command duration |
+    C6 | [Greeting & First-Run UI](/08-components-reference/06-c6-greeting-and-first-run-ui/) | Custom startup banner |
 
 Disable all opinionated features at once (Minimal Mode):
 

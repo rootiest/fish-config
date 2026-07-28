@@ -308,7 +308,8 @@ def _as_ruled_table(para: list[str]) -> str | None:
     # placeholders like <session> or brace globs — code-span protects them
     # instead of rejecting the whole table.
     def cell(text: str, code: bool) -> str:
-        return _cell(text, code or "<" in text or "{" in text)
+        needs_protection = ("<" in text or "{" in text) and "`" not in text
+        return _cell(text, code or needs_protection)
 
     out = [f"| {' | '.join(header)} |", "|" + "|".join(["---"] * n) + "|"]
     for row in rows:
@@ -658,6 +659,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
     entries = build_entries(functions, link=lambda n: _entry_link(n, functions))
 
     sidebar: list[dict] = [{"label": "Home", "link": "/"}]
+    standard_groups: dict = {}
     functions_group: dict = {}
     functions_index_target = None
     functions_index_fm = None
@@ -676,8 +678,28 @@ def build_site(root: Path, out: Path) -> list[dict]:
             target.parent.mkdir(parents=True, exist_ok=True)
             body = _inject_subheading_cards(body)
             _write_prettified(target, _page_fm(fm), prettify(body))
-            if rel.name not in ("index.md", "404.md"):
-                sidebar.append({"label": fm["title"], "link": "/" + rel.stem + "/"})
+            
+            if len(rel.parts) > 1:
+                group_dir = rel.parts[0]
+                if rel.name == "index.md":
+                    group = {
+                        "label": fm["title"],
+                        "collapsed": True,
+                        "items": [{"label": "Categories", "link": f"/{group_dir}/"}]
+                    }
+                    standard_groups[group_dir] = group
+                    sidebar.append(group)
+                elif rel.name != "404.md":
+                    if group_dir in standard_groups:
+                        standard_groups[group_dir]["items"].append({
+                            "label": fm["title"],
+                            "link": f"/{group_dir}/{rel.stem}/"
+                        })
+                    else:
+                        sidebar.append({"label": fm["title"], "link": f"/{group_dir}/{rel.stem}/"})
+            else:
+                if rel.name not in ("index.md", "404.md"):
+                    sidebar.append({"label": fm["title"], "link": "/" + rel.stem + "/"})
             continue
 
         # Section 5: category index page keeps its slot; entries explode.
