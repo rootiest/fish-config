@@ -687,10 +687,10 @@ def test_as_file_tree_accepts_deeper_trees():
 
 
 def test_customization_notes_render_as_aside():
-    """The real 07-customization.md NOTE paragraph converts to one intact <Aside>."""
+    """The real 07-customization NOTE paragraph converts to one intact <Aside>."""
     import build_manual
 
-    path = Path(__file__).parent / "manual" / "07-customization.md"
+    path = Path(__file__).parent / "manual" / "07-customization" / "05-opinionated-components-minimal-mode.md"
     _, body = mt.parse(path)
     out = build_manual.prettify(body)
     assert out.count('<Aside type="note" title="Note">') >= 1, f"expected at least one Note aside:\n{out}"
@@ -711,22 +711,22 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
         out = Path(d)
         build_manual.build_site(docs / "manual", out)
 
-        assert (out / "10-personalization.mdx").exists(), "FileTree page was not promoted to .mdx"
-        assert not (out / "10-personalization.md").exists(), "old .md sibling was left behind"
+        assert (out / "11-personalization.mdx").exists(), "FileTree page was not promoted to .mdx"
+        assert not (out / "11-personalization.md").exists(), "old .md sibling was left behind"
 
-        assert (out / "12-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
+        assert (out / "13-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
 
-        assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
+        assert (out / "07-customization/05-opinionated-components-minimal-mode.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
 
         assert (out / "02-path-setup.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
 
         assert (out / "03-key-bindings.md").exists(), "plain page was wrongly promoted to .mdx"
         assert not (out / "03-key-bindings.mdx").exists(), "plain page should stay .md"
 
-        text = (out / "10-personalization.mdx").read_text()
+        text = (out / "11-personalization.mdx").read_text()
         assert "FileTree" in text.split("from '@astrojs/starlight/components';")[0]
 
-        text2 = (out / "12-viewing-this-manual.mdx").read_text()
+        text2 = (out / "13-viewing-this-manual.mdx").read_text()
         assert "Aside" in text2.split("from '@astrojs/starlight/components';")[0]
 
 

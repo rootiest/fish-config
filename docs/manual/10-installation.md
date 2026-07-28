@@ -1,8 +1,8 @@
 ---
 title: Installation
-manTitle: 9. INSTALLATION
+manTitle: 10. INSTALLATION
 sidebar:
-  order: 13
+  order: 14
 helpKeywords:
 - installation
 - install

@@ -229,42 +229,42 @@ minimal=## Opinionated Components (Minimal Mode)
 minimal-mode=## Opinionated Components (Minimal Mode)
 opt-out=## Opinionated Components (Minimal Mode)
 toggles=## Opinionated Components (Minimal Mode)
-component-reference=### Component Reference
-components=### Component Reference
-c1=#### C1 — Command Shadows
-command-shadows=#### C1 — Command Shadows
-aliases-detail=#### C1 — Command Shadows
-c2=#### C2 — Startup Side-Effects
-autoexec=#### C2 — Startup Side-Effects
-startup=#### C2 — Startup Side-Effects
-c3=#### C3 — Key and Environment Overrides
-overrides-detail=#### C3 — Key and Environment Overrides
-bang-bang=#### C3 — Key and Environment Overrides
-c4=#### C4 — Terminal and Tool Integration
-integrations-detail=#### C4 — Terminal and Tool Integration
-c5=#### C5 — Logging and Capture
-logging-detail=#### C5 — Logging and Capture
-logging-sentinel=#### C5 — Logging and Capture
-zellij=#### C5 — Logging and Capture
-zellij-logging=#### C5 — Logging and Capture
-tmux-logging=#### C5 — Logging and Capture
-pipe-pane=#### C5 — Logging and Capture
-dump-screen=#### C5 — Logging and Capture
-c6=#### C6 — Greeting and First-Run UI
-greeting=#### C6 — Greeting and First-Run UI
+component-reference=# 8. COMPONENTS REFERENCE
+components=# 8. COMPONENTS REFERENCE
+c1=## C1 — Command Shadows
+command-shadows=## C1 — Command Shadows
+aliases-detail=## C1 — Command Shadows
+c2=## C2 — Startup Side-Effects
+autoexec=## C2 — Startup Side-Effects
+startup=## C2 — Startup Side-Effects
+c3=## C3 — Key and Environment Overrides
+overrides-detail=## C3 — Key and Environment Overrides
+bang-bang=## C3 — Key and Environment Overrides
+c4=## C4 — Terminal and Tool Integration
+integrations-detail=## C4 — Terminal and Tool Integration
+c5=## C5 — Logging and Capture
+logging-detail=## C5 — Logging and Capture
+logging-sentinel=## C5 — Logging and Capture
+zellij=## C5 — Logging and Capture
+zellij-logging=## C5 — Logging and Capture
+tmux-logging=## C5 — Logging and Capture
+pipe-pane=## C5 — Logging and Capture
+dump-screen=## C5 — Logging and Capture
+c6=## C6 — Greeting and First-Run UI
+greeting=## C6 — Greeting and First-Run UI
 
 # ── Prompt and Theme ──────────────────────────────────────────
 prompt-theme=## Prompt and Theme
-starship=### Starship
-fallback-prompt=### Catppuccin Fallback Prompt
-catppuccin-prompt=### Catppuccin Fallback Prompt
-nim-prompt=### Catppuccin Fallback Prompt
-fzf-theme=### FZF
-catppuccin-theme=### Catppuccin Mocha Syntax Highlighting
+starship=#### Starship
+fallback-prompt=#### Catppuccin Fallback Prompt
+catppuccin-prompt=#### Catppuccin Fallback Prompt
+nim-prompt=#### Catppuccin Fallback Prompt
+fzf-theme=#### FZF
+catppuccin-theme=#### Catppuccin Mocha Syntax Highlighting
 
-# ── Section 8: Fisher Plugins ─────────────────────────────────
-plugins=# 8. FISHER PLUGINS
-fisher=# 8. FISHER PLUGINS
+# ── Section 9: Fisher Plugins ─────────────────────────────────
+plugins=# 9. FISHER PLUGINS
+fisher=# 9. FISHER PLUGINS
 fisher-managed=## Fisher-Managed Plugins
 sponge=## Fisher-Managed Plugins
 sponge-filtering=## Sponge History Filtering
@@ -276,22 +276,22 @@ sponge-settings=### config-settings
 bundled-plugins=## Bundled Plugin Functionality
 fish-plugins-manifest=## fish_plugins Manifest
 
-# ── Section 9: Installation ────────────────────────────────────
-installation=# 9. INSTALLATION
-install=# 9. INSTALLATION
+# ── Section 10: Installation ────────────────────────────────────
+installation=# 10. INSTALLATION
+install=# 10. INSTALLATION
 sentinel=## Return Sentinel
 updating=## Updating
 
-# ── Section 10: Personalization ───────────────────────────────
-personalization=# 10. PERSONALIZATION
-personalize=# 10. PERSONALIZATION
+# ── Section 11: Personalization ───────────────────────────────
+personalization=# 11. PERSONALIZATION
+personalize=# 11. PERSONALIZATION
 secrets-file=## secrets.fish
 local-config=## local.fish
 
-# ── Section 11: Troubleshooting ──────────────────────────────
-troubleshooting=# 11. TROUBLESHOOTING
-troubleshoot=# 11. TROUBLESHOOTING
-faq=# 11. TROUBLESHOOTING
+# ── Section 12: Troubleshooting ──────────────────────────────
+troubleshooting=# 12. TROUBLESHOOTING
+troubleshoot=# 12. TROUBLESHOOTING
+faq=# 12. TROUBLESHOOTING
 uninstall=## Uninstalling and Reverting to Backup
 revert=## Uninstalling and Reverting to Backup
 fish-version=## Fish Version Requirement
@@ -310,9 +310,9 @@ vi-trouble=## Vi Mode Keybindings
 emacs-mode=## Vi Mode Keybindings
 minimal-trouble=## What's with the C1-C6 stuff?
 
-# ── Section 12: Viewing This Manual ──────────────────────────
-viewing=# 12. VIEWING THIS MANUAL
-manual=# 12. VIEWING THIS MANUAL
+# ── Section 13: Viewing This Manual ──────────────────────────
+viewing=# 13. VIEWING THIS MANUAL
+manual=# 13. VIEWING THIS MANUAL
 ov=## In the terminal
 man-page=## As a man page
 manpage=## As a man page
