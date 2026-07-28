@@ -1442,6 +1442,54 @@ Add -i (interactive confirmation) to destructive commands:
     Example:
     detach rsync -a ./data remote:/backup/
 
+### fish_mode_prompt
+
+    Synopsis:  fish_mode_prompt
+
+    Empty override. Suppresses fish's built-in vi-mode prefix ([N]/[I]/etc.)
+    that would prepend to the prompt line and break the two-line nim layout.
+    Vi-mode display is handled inside fish_prompt itself.
+
+    Exit Status:
+      0  Always (function body is empty)
+
+    Example:
+    # Rendered automatically by fish; not called directly.
+
+### fish_prompt
+
+    Synopsis:  fish_prompt
+
+    Catppuccin Mocha fallback prompt (nim-style, two-line). Active whenever
+    the starship prompt is not available — either starship is not installed or
+    C3 overrides are disabled. Has no external dependencies; uses only fish-provided functions
+    (set_color, fish_git_prompt, prompt_pwd, prompt_hostname).
+
+    Exit Status:
+      0  Always
+
+    Returns:
+      The rendered two-line prompt, printed to stdout
+
+    Example:
+    # Rendered automatically by fish; not called directly.
+
+### fish_right_prompt
+
+    Synopsis:  fish_right_prompt
+
+    Renders the right-side prompt. Always shows a dim timestamp. When the last
+    command failed, prefixes it with a red ✘ and the exit code. When starship
+    is installed and C3 overrides are enabled, also shows the active Docker
+    context (if non-default) — that block is paired with the starship prompt
+    which already guards on both conditions.
+
+    Exit Status:
+      0  Always
+
+    Example:
+    # Rendered automatically by fish; not called directly.
+
 ### split
 
     Synopsis:  split [-h | -v] [command...]
@@ -1579,6 +1627,28 @@ Add -i (interactive confirmation) to destructive commands:
 
 ## 5.10 Network
 
+### fast
+
+    Synopsis:  fast
+
+    Displays a styled message indicating that the fast command is unavailable
+    and suggests using fast-cli instead.
+
+    Example:
+    fast
+
+### fast-cli
+
+    Synopsis:  fast-cli [args...]
+
+    Runs a network speed test using the fast.com CLI tool.
+
+    Arguments:
+      args...  Arguments forwarded to the fast command
+
+    Example:
+    fast-cli
+
 ### gip
 
     Synopsis:  gip
@@ -1702,6 +1772,34 @@ Add -i (interactive confirmation) to destructive commands:
     Example:
     smart_exit
     smart_exit --no-log
+
+### sponge_filter_secrets
+
+    Synopsis:  sponge_filter_secrets <command> <exit_code> <previously_in_history>
+
+    Custom sponge filter that prevents commands from being stored in history
+    when they contain the literal value of any exported environment variable
+    whose name indicates it holds a credential (TOKEN, PASSWORD, SECRET,
+    API_KEY, etc.).  This catches shell-expansion leakage where a variable
+    value is embedded directly in the command string at execution time — a
+    case that static regex patterns cannot cover.
+
+    Any variable whose name matches the sensitive-name heuristic and whose
+    value is longer than 8 characters (excluding bare paths) is checked.
+    The value is escaped for literal regex matching before comparison.
+
+    Arguments:
+      command                 The exact command that was entered
+      exit_code               Exit code of the command (unused)
+      previously_in_history   "true"/"false" flag (unused)
+
+    Exit Status:
+      0  Command contains a secret value — filter out of history
+      1  No secret value found — keep in history
+
+    Example:
+    # Register with sponge (done automatically by conf.d/sponge_privacy.fish):
+    set -U -a sponge_filters sponge_filter_secrets
 
 ## 5.12 AI and Developer Tools
 
@@ -2258,6 +2356,31 @@ Add -i (interactive confirmation) to destructive commands:
 
     Example:
     ffetch
+
+### fzf_configure_bindings
+
+    Synopsis:  fzf_configure_bindings [--directory=<key>] [--git_log=<key>] [--git_status=<key>]
+                                      [--history=<key>] [--processes=<key>] [--variables=<key>] [-h]
+
+    Installs key bindings for fzf.fish in both insert and default vi modes.
+    Each binding can be overridden with a custom key or disabled by passing an
+    empty string. Only runs in interactive mode.
+
+    Arguments:
+      --directory=key   Override the directory search binding (default: Ctrl-Alt-F)
+      --git_log=key     Override the git log search binding (default: Ctrl-Alt-L)
+      --git_status=key  Override the git status binding (default: Ctrl-Alt-S)
+      --history=key     Override the history search binding (default: Ctrl-R)
+      --processes=key   Override the processes search binding (default: Ctrl-Alt-P)
+      --variables=key   Override the variables search binding (default: Ctrl-V)
+      -h, --help        Show help message
+
+    Exit Status:
+      0  Bindings installed or help shown
+      22 Invalid option or positional argument provided
+
+    Example:
+    fzf_configure_bindings --history=ctrl-h
 
 ### joplin
 

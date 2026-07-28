@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   11-pager-and-logging
+#
 # SYNOPSIS
 #   sponge_filter_secrets <command> <exit_code> <previously_in_history>
 #
