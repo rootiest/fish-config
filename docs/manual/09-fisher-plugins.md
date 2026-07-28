@@ -1,8 +1,8 @@
 ---
 title: Fisher Plugins
-manTitle: 8. FISHER PLUGINS
+manTitle: 9. FISHER PLUGINS
 sidebar:
-  order: 12
+  order: 13
 helpKeywords:
 - plugins
 - fisher

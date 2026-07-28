@@ -1,8 +1,8 @@
 ---
 title: Personalization
-manTitle: 10. PERSONALIZATION
+manTitle: 11. PERSONALIZATION
 sidebar:
-  order: 14
+  order: 15
 helpKeywords:
 - personalization
 - personalize

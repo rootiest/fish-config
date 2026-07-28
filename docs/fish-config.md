@@ -2768,13 +2768,78 @@ NOTE:
   - Disabled integration commands (spwin, tab, split, hist, logs, upgrade) print an error naming the variable that disabled them.
   - On CachyOS, the distro fish config's own aliases, history override, and bang-bang bindings are stripped per category as well.
 
-### Component Reference
+## Prompt and Theme
+
+#### Starship
+
+The primary prompt is Starship, initialized by conf.d/starship.fish.
+Configure it via ~/.config/starship.toml.
+
+conf.d/starship.fish defines a fish_prompt wrapper that only activates when
+starship is in PATH. It emits OSC 133;A (prompt start) immediately before
+Starship renders and OSC 133;B (input start) immediately after, placing both
+markers on the prompt line itself. This allows ov to use them as sticky
+section headers when browsing scrollback logs. Without Starship, fish's
+built-in prompt handles these markers automatically.
+
+#### Catppuccin Fallback Prompt
+
+When Starship is absent or C3 overrides are disabled, a built-in nim-style
+two-line prompt activates from functions/fish_prompt.fish. No external
+dependencies — fish builtins only.
+
+Layout:
+
+    ┬─[user@host:~/path] (main)
+    ╰─>$
+
+Elements:
+
+    user        Yellow (Catppuccin Yellow); red if root
+    @host       Blue (local) or Teal (SSH)
+    ~/path      prompt_pwd abbreviation (Catppuccin Text)
+    (main)      Current git branch in Catppuccin Pink; omitted outside repos
+    ─[V:name]   Active Python venv basename; omitted when none
+    ─[N/I/R/V]  Vi-mode indicator when vi bindings are active
+    ┬─ / ╰─>    Connector lines: Catppuccin Green on success, Red on failure
+
+The right prompt (fish_right_prompt.fish) always renders, regardless of C3
+state. On failure it shows a red ✘ and the exit code; on success it shows
+only the dim timestamp. When starship is installed and C3 is enabled, the
+active Docker context is also shown (if non-default):
+
+    ✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
+    ✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
+    Fri Jun 12 00:51:21 2026                     ← success (no ✘)
+
+#### FZF
+
+FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in
+integrations/fzf.fish. The colors applied:
+
+    Background:   #1E1E2E (base)    #313244 (surface0)
+    Foreground:   #CDD6F4 (text)
+    Highlights:   #F38BA8 (red)     #CBA6F7 (mauve)    #B4BEFE (lavender)
+
+To customize, override FZF_DEFAULT_OPTS in local.fish.
+
+#### Catppuccin Mocha Syntax Highlighting
+
+The Catppuccin Mocha theme ships with this config in themes/ and is applied
+on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
+(universal). To switch variants, install a different theme from themes/:
+
+    fish_config theme save "Catppuccin Latte"
+
+---
+
+# 8. COMPONENTS REFERENCE
 
 The following tables detail every component in each category. Use this
 reference to understand exactly which behaviors change when you toggle a
 category variable.
 
-#### C1 — Command Shadows
+## C1 — Command Shadows
 
 Disabling __fish_config_op_aliases restores standard system behavior for
 all of these commands.
@@ -2805,7 +2870,7 @@ all of these commands.
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.
 
-#### C2 — Startup Side-Effects
+## C2 — Startup Side-Effects
 
 These run automatically without any user action. Disabling
 __fish_config_op_autoexec prevents all of them.
@@ -2848,7 +2913,7 @@ branches, or repos without a remote. The handler fires once per repo entry
 (not on every sub-directory cd). The registry is machine-local at
 `$__fish_user_dots_path/auto-pull.list` (defaults to `~/.config/.user-dots/fish/auto-pull.list`) and is never committed.
 
-#### C3 — Key and Environment Overrides
+## C3 — Key and Environment Overrides
 
 These change fundamental shell behavior: how keys work, which pager opens,
 and what the prompt looks like. Disabling __fish_config_op_overrides removes
@@ -2880,7 +2945,7 @@ When C3 is disabled, `exit` falls back to `builtin exit` with no scrollback
 capture, no Kitty IPC, and no file I/O on exit. The scrollback capture block
 is independently controlled by C5 (see below).
 
-#### C4 — Terminal and Tool Integration
+## C4 — Terminal and Tool Integration
 
 These features couple the shell to specific external tools. Disabling
 __fish_config_op_integrations disables all of them.
@@ -2902,7 +2967,7 @@ Disabled integration commands (spwin, tab, split, hist, logs, upgrade) print
 a colored error to stderr naming the variable that disabled them rather than
 silently failing.
 
-#### C5 — Logging and Capture
+## C5 — Logging and Capture
 
 Five components capture shell output to disk. Unlike every other category,
 C5 is opt-in: it stays off until __fish_config_op_logging is set to an
@@ -3012,7 +3077,7 @@ Note: C3 and C5 compose independently. C3 controls whether the smart_exit
 wrapper is active at all; C5 controls only the scrollback-capture block
 inside it. With C3 disabled, exit is plain builtin exit regardless of C5.
 
-#### C6 — Greeting and First-Run UI
+## C6 — Greeting and First-Run UI
 
     Component                  What it shows
     ───────────────────────────────────────────────────────────────────────────
@@ -3025,72 +3090,7 @@ When C6 is disabled, no greeting is printed by this config. Any greeting
 set by the distro or other configs runs normally — this config simply does
 not override it.
 
-## Prompt and Theme
-
-### Starship
-
-The primary prompt is Starship, initialized by conf.d/starship.fish.
-Configure it via ~/.config/starship.toml.
-
-conf.d/starship.fish defines a fish_prompt wrapper that only activates when
-starship is in PATH. It emits OSC 133;A (prompt start) immediately before
-Starship renders and OSC 133;B (input start) immediately after, placing both
-markers on the prompt line itself. This allows ov to use them as sticky
-section headers when browsing scrollback logs. Without Starship, fish's
-built-in prompt handles these markers automatically.
-
-### Catppuccin Fallback Prompt
-
-When Starship is absent or C3 overrides are disabled, a built-in nim-style
-two-line prompt activates from functions/fish_prompt.fish. No external
-dependencies — fish builtins only.
-
-Layout:
-
-    ┬─[user@host:~/path] (main)
-    ╰─>$
-
-Elements:
-
-    user        Yellow (Catppuccin Yellow); red if root
-    @host       Blue (local) or Teal (SSH)
-    ~/path      prompt_pwd abbreviation (Catppuccin Text)
-    (main)      Current git branch in Catppuccin Pink; omitted outside repos
-    ─[V:name]   Active Python venv basename; omitted when none
-    ─[N/I/R/V]  Vi-mode indicator when vi bindings are active
-    ┬─ / ╰─>    Connector lines: Catppuccin Green on success, Red on failure
-
-The right prompt (fish_right_prompt.fish) always renders, regardless of C3
-state. On failure it shows a red ✘ and the exit code; on success it shows
-only the dim timestamp. When starship is installed and C3 is enabled, the
-active Docker context is also shown (if non-default):
-
-    ✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
-    ✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
-    Fri Jun 12 00:51:21 2026                     ← success (no ✘)
-
-### FZF
-
-FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in
-integrations/fzf.fish. The colors applied:
-
-    Background:   #1E1E2E (base)    #313244 (surface0)
-    Foreground:   #CDD6F4 (text)
-    Highlights:   #F38BA8 (red)     #CBA6F7 (mauve)    #B4BEFE (lavender)
-
-To customize, override FZF_DEFAULT_OPTS in local.fish.
-
-### Catppuccin Mocha Syntax Highlighting
-
-The Catppuccin Mocha theme ships with this config in themes/ and is applied
-on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
-(universal). To switch variants, install a different theme from themes/:
-
-    fish_config theme save "Catppuccin Latte"
-
----
-
-# 8. FISHER PLUGINS
+# 9. FISHER PLUGINS
 
 Fisher is bootstrapped automatically on the **first interactive session** via
 `conf.d/first_run.fish`. This also applies the Catppuccin Mocha theme and
@@ -3190,7 +3190,7 @@ update` which calls it as its first step.
 
 ---
 
-# 9. INSTALLATION
+# 10. INSTALLATION
 
 This configuration is managed as a git repository. To deploy on a new machine:
 
@@ -3224,7 +3224,7 @@ All git output is suppressed. Run exec fish after a successful update to reload.
 
 ---
 
-# 10. PERSONALIZATION
+# 11. PERSONALIZATION
 
 Sensitive credentials and machine-specific settings are kept out of version
 control in a private directory. The path defaults to
@@ -3286,7 +3286,7 @@ local.fish in turn sources secrets.fish when it exists.
 
 ---
 
-# 11. TROUBLESHOOTING
+# 12. TROUBLESHOOTING
 
 This section covers common issues, their solutions, and how to safely revert changes or uninstall the configuration entirely.
 
@@ -3517,7 +3517,7 @@ For an interactive alternative to setting these variables by hand, run `config-s
 
 ---
 
-# 12. VIEWING THIS MANUAL
+# 13. VIEWING THIS MANUAL
 
 There are four ways to read this manual.
 
