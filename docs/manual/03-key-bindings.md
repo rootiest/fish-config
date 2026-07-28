@@ -46,6 +46,10 @@ are active in Insert, Normal, and Visual modes unless noted.
                     line to open an fzf picker and insert a selection
                     at the cursor position.
 
+    Ctrl+Right      Accept autosuggestion one word/directory segment
+                    at a time. (Restores Fish 3.x behavior by binding
+                    to nextd-or-forward-word).
+
 ## FZF Bindings (bundled from PatrickF1/fzf.fish)
 
     Ctrl+R          Search command history
