@@ -3672,6 +3672,19 @@ fish_config theme save \[dq]Catppuccin Latte\[dq]
 The following tables detail every component in each category.
 Use this reference to understand exactly which behaviors change when you
 toggle a category variable.
+.IP
+.nf
+\f[C]
+Category   Description
+──────────────────────────────────────────────────────────────────────────
+C1         Command Shadows \[em] Wraps destructive commands (\[ga]rm\[ga], \[ga]cp\[ga]) to be safe by default
+C2         Startup Side-Effects \[em] Bootstraps Fisher, generates wrappers, auto-activates venvs
+C3         Overrides \[em] Overrides \[ga]cd\[ga], sets Vi mode, binds \[ga]<CR>\[ga] to \[ga]smart_enter\[ga]
+C4         Integrations \[em] Kitty/Wezterm integrations, starship hooks, fzf theme
+C5         Logging and Capture \[em] Session logs, command duration
+C6         Greeting & First-Run UI \[em] Custom startup banner
+\f[R]
+.fi
 .SS C1 \[em] Command Shadows
 .PP
 Disabling \f[V]__fish_config_op_aliases\f[R] restores standard system
@@ -4543,12 +4556,12 @@ that only manages basic features like \f[V]XDG\f[R] variables, and your
 \f[C]
 Category   Description
 ──────────────────────────────────────────────────────────────────────────
-C1 | Command Shadows | Wraps destructive commands (\[ga]rm\[ga], \[ga]cp\[ga]) to be safe by default |
-C2 | Startup Side-Effects | Bootstraps Fisher, generates wrappers, auto-activates venvs |
-C3 | Overrides | Overrides \[ga]cd\[ga], sets Vi mode, binds \[ga]<CR>\[ga] to \[ga]smart_enter\[ga] |
-C4 | Integrations | Kitty/Wezterm integrations, starship hooks, fzf theme |
-C5 | Logging and Capture | Session logs, command duration |
-C6 | Greeting & First-Run UI | Custom startup banner |
+C1         Command Shadows \[em] Wraps destructive commands (\[ga]rm\[ga], \[ga]cp\[ga]) to be safe by default
+C2         Startup Side-Effects \[em] Bootstraps Fisher, generates wrappers, auto-activates venvs
+C3         Overrides \[em] Overrides \[ga]cd\[ga], sets Vi mode, binds \[ga]<CR>\[ga] to \[ga]smart_enter\[ga]
+C4         Integrations \[em] Kitty/Wezterm integrations, starship hooks, fzf theme
+C5         Logging and Capture \[em] Session logs, command duration
+C6         Greeting & First-Run UI \[em] Custom startup banner
 \f[R]
 .fi
 .PP
