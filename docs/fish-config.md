@@ -2835,6 +2835,15 @@ The following tables detail every component in each category. Use this
 reference to understand exactly which behaviors change when you toggle a
 category variable.
 
+    Category   Description
+    ──────────────────────────────────────────────────────────────────────────
+    C1         Command Shadows — Wraps destructive commands (`rm`, `cp`) to be safe by default
+    C2         Startup Side-Effects — Bootstraps Fisher, generates wrappers, auto-activates venvs
+    C3         Overrides — Overrides `cd`, sets Vi mode, binds `<CR>` to `smart_enter`
+    C4         Integrations — Kitty/Wezterm integrations, starship hooks, fzf theme
+    C5         Logging and Capture — Session logs, command duration
+    C6         Greeting & First-Run UI — Custom startup banner
+
 ## C1 — Command Shadows
 
 Disabling `__fish_config_op_aliases` restores standard system behavior for
@@ -3483,12 +3492,12 @@ This configuration groups its opinionated behaviors into six categories (C1–C6
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────
-    C1 | Command Shadows | Wraps destructive commands (`rm`, `cp`) to be safe by default |
-    C2 | Startup Side-Effects | Bootstraps Fisher, generates wrappers, auto-activates venvs |
-    C3 | Overrides | Overrides `cd`, sets Vi mode, binds `<CR>` to `smart_enter` |
-    C4 | Integrations | Kitty/Wezterm integrations, starship hooks, fzf theme |
-    C5 | Logging and Capture | Session logs, command duration |
-    C6 | Greeting & First-Run UI | Custom startup banner |
+    C1         Command Shadows — Wraps destructive commands (`rm`, `cp`) to be safe by default
+    C2         Startup Side-Effects — Bootstraps Fisher, generates wrappers, auto-activates venvs
+    C3         Overrides — Overrides `cd`, sets Vi mode, binds `<CR>` to `smart_enter`
+    C4         Integrations — Kitty/Wezterm integrations, starship hooks, fzf theme
+    C5         Logging and Capture — Session logs, command duration
+    C6         Greeting & First-Run UI — Custom startup banner
 
 Disable all opinionated features at once (Minimal Mode):
 
