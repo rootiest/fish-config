@@ -10,6 +10,8 @@ on:
       - "docs/manualtools.py"
       - "docs/verify-manual.py"
       - "docs/site/**"
+      - "functions/**"
+  workflow_dispatch:
 
 jobs:
   build-docs:
