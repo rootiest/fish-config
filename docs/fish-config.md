@@ -2574,7 +2574,6 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
 |---|---|
 | `fish` | Fish shell >= 4.0 |
 | `fzf` | Fuzzy finder |
-| `zoxide` | Smart cd with frecency |
 
 ## Integrations
 
@@ -2594,6 +2593,7 @@ fish-deps manages these tools. Run `fish-deps` to check status, or
 | `paru` | AUR helper (Arch only; preferred); guarded throughout — non-Arch systems silently skip AUR-specific paths. |
 | `yay` | AUR helper (Arch only; fallback to paru); same guards apply. |
 | `eza` | Modern `ls` replacement |
+| `zoxide` | Smart cd with frecency |
 | `lsd` | `ls` replacement (fallback to `eza`) |
 | `bat` | Syntax-highlighted `cat` |
 | `btop` | Modern resource monitor |
