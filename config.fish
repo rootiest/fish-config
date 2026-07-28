@@ -67,59 +67,58 @@ set --erase _fname
 
 #   ───────────────────────────── XDG variables ────────────────────────────
 # XDG Base Directory variables (standard practice)
-# Setting XDG variables globally is opinionated (C3 overrides)
-if __fish_config_op_enabled __fish_config_op_overrides
-    set -gx XDG_CONFIG_HOME $HOME/.config # Sets default config dir to ~/.config
-    set -gx XDG_CACHE_HOME $HOME/.cache # Sets default cache dir to ~/.cache
-    set -gx XDG_DATA_HOME $HOME/.local/share # Sets default data dir to ~/.local/share
-    set -gx XDG_STATE_HOME $HOME/.local/state # Sets default state dir to ~/.local/state
+# We set these unconditionally to ensure a consistent baseline, but only if
+# they are not already defined by the system/user.
+set -q XDG_CONFIG_HOME; or set -gx XDG_CONFIG_HOME $HOME/.config # Sets default config dir to ~/.config
+set -q XDG_CACHE_HOME; or set -gx XDG_CACHE_HOME $HOME/.cache # Sets default cache dir to ~/.cache
+set -q XDG_DATA_HOME; or set -gx XDG_DATA_HOME $HOME/.local/share # Sets default data dir to ~/.local/share
+set -q XDG_STATE_HOME; or set -gx XDG_STATE_HOME $HOME/.local/state # Sets default state dir to ~/.local/state
 
-    # Attempt to keep various config/cache files out of the home directory root
-    set -gx RANDFILE "$XDG_STATE_HOME/rnd"
-    set -gx WGETRC "$XDG_CONFIG_HOME/wget/wgetrc"
-    set -gx WGET_HSTS_FILE "$XDG_CACHE_HOME/wget-hsts"
-    set -gx NPM_CONFIG_PREFIX "$XDG_DATA_HOME/npm-global"
-    set -gx NPM_CONFIG_USERCONFIG "$XDG_CONFIG_HOME/npm/npmrc"
-    set -gx ANDROID_USER_HOME "$XDG_DATA_HOME/android"
-    set -gx CARGO_HOME "$XDG_DATA_HOME/cargo"
-    set -gx RUSTUP_HOME "$XDG_DATA_HOME/rustup"
-    set -gx GOPATH "$XDG_DATA_HOME/go"
-    set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"
-    set -gx GNUPGHOME "$XDG_CONFIG_HOME/gnupg"
-    set -gx WAKATIME_HOME "$XDG_CONFIG_HOME/wakatime"
-    set -gx HISTFILE "$XDG_STATE_HOME/bash_history"
-    set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | source $MYVIMRC"
-    set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
-    set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
-    set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
-end
+# Attempt to keep various config/cache files out of the home directory root
+set -q RANDFILE; or set -gx RANDFILE "$XDG_STATE_HOME/rnd"
+set -q WGETRC; or set -gx WGETRC "$XDG_CONFIG_HOME/wget/wgetrc"
+set -q WGET_HSTS_FILE; or set -gx WGET_HSTS_FILE "$XDG_CACHE_HOME/wget-hsts"
+set -q NPM_CONFIG_PREFIX; or set -gx NPM_CONFIG_PREFIX "$XDG_DATA_HOME/npm-global"
+set -q NPM_CONFIG_USERCONFIG; or set -gx NPM_CONFIG_USERCONFIG "$XDG_CONFIG_HOME/npm/npmrc"
+set -q ANDROID_USER_HOME; or set -gx ANDROID_USER_HOME "$XDG_DATA_HOME/android"
+set -q CARGO_HOME; or set -gx CARGO_HOME "$XDG_DATA_HOME/cargo"
+set -q RUSTUP_HOME; or set -gx RUSTUP_HOME "$XDG_DATA_HOME/rustup"
+set -q GOPATH; or set -gx GOPATH "$XDG_DATA_HOME/go"
+set -q BUN_INSTALL; or set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"
+set -q GNUPGHOME; or set -gx GNUPGHOME "$XDG_CONFIG_HOME/gnupg"
+set -q WAKATIME_HOME; or set -gx WAKATIME_HOME "$XDG_CONFIG_HOME/wakatime"
+set -q HISTFILE; or set -gx HISTFILE "$XDG_STATE_HOME/bash_history"
+set -q EXINIT; or set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | source $MYVIMRC"
+set -q NVIDIA_SETTINGS_RW_CONFIG_FILE; or set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
+set -q CODEIUM_HOME; or set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
+set -q WORDLIST; or set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
 
 #   ─────────────────────────── Pager variables ────────────────────────────
-# Overriding $PAGER is opinionated (C3 overrides)
+# Overriding $PAGER, $EDITOR, and $GPG_TTY is opinionated (C3 overrides)
 if __fish_config_op_enabled __fish_config_op_overrides
     if type -q ov
         set -gx PAGER ov
     else if type -q less
         set -gx PAGER less
     end
-end
 
-#   ─────────────────────────── Editor variables ───────────────────────────
-#   Set Editor variables with fallback to vi if nvim isn't available. This ensures that
-#   tools that rely on these variables (like git commit messages) will work out of the box,
-#   while still preferring nvim if it's installed.
-if type -q nvim
-    set -gx NVIM_APPNAME nvim
-    set -gx EDITOR (command -s nvim)
-else
-    set -gx EDITOR (command -s vi)
-end
-# set -gx VISUAL $EDITOR # <- Use local.fish to set your preferred GUI editor.
-set -gx SUDO_EDITOR $EDITOR
+    #   ─────────────────────────── Editor variables ───────────────────────────
+    #   Set Editor variables with fallback to vi if nvim isn't available. This ensures that
+    #   tools that rely on these variables (like git commit messages) will work out of the box,
+    #   while still preferring nvim if it's installed.
+    if type -q nvim
+        set -gx NVIM_APPNAME nvim
+        set -gx EDITOR (command -s nvim)
+    else
+        set -gx EDITOR (command -s vi)
+    end
+    # set -gx VISUAL $EDITOR # <- Use local.fish to set your preferred GUI editor.
+    set -gx SUDO_EDITOR $EDITOR
 
-#   ──────────────────────────── GPG variables ─────────────────────────────
-#   Helps ensure that GPG can prompt for passphrases correctly when invoked from the terminal.
-set -gx GPG_TTY (tty)
+    #   ──────────────────────────── GPG variables ─────────────────────────────
+    #   Helps ensure that GPG can prompt for passphrases correctly when invoked from the terminal.
+    set -gx GPG_TTY (tty)
+end
 
 #   ────────────────────────── Scrollback History ──────────────────────────
 #   Optional fish-style source of truth (set -U via config-settings); exported

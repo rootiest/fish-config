@@ -229,10 +229,11 @@ all of them.
     Override                  What it replaces or sets
     ───────────────────────────────────────────────────────────────────────────
     Vi mode                   fish_vi_key_bindings replaces default Emacs mode
-    XDG variables             Sets global XDG Base Directory variables
     PATH setup                Prepends custom bin directories to the PATH
     exit → smart_exit         exit wrapper that captures scrollback before closing
     PAGER=ov                  ov used by git, man, and all $PAGER-aware tools
+    EDITOR=nvim               nvim fallback to vi for git commit, etc.
+    GPG_TTY                   Sets GPG_TTY to current terminal tty
     MANPAGER=bat pipeline     man pages rendered with syntax highlighting
     CDPATH=. ~/projects ~     bare dir names resolve against ~/projects and ~
     Bang-bang system          ! and $ keys expand history; !^, !*, !-N, !?str?,

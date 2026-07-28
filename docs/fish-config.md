@@ -2857,10 +2857,11 @@ all of them.
     Override                  What it replaces or sets
     ───────────────────────────────────────────────────────────────────────────
     Vi mode                   fish_vi_key_bindings replaces default Emacs mode
-    XDG variables             Sets global XDG Base Directory variables
     PATH setup                Prepends custom bin directories to the PATH
     exit → smart_exit         exit wrapper that captures scrollback before closing
     PAGER=ov                  ov used by git, man, and all $PAGER-aware tools
+    EDITOR=nvim               nvim fallback to vi for git commit, etc.
+    GPG_TTY                   Sets GPG_TTY to current terminal tty
     MANPAGER=bat pipeline     man pages rendered with syntax highlighting
     CDPATH=. ~/projects ~     bare dir names resolve against ~/projects and ~
     Bang-bang system          ! and $ keys expand history; !^, !*, !-N, !?str?,
@@ -3480,7 +3481,7 @@ what C3 controls.
 
 ## What's with the C1-C6 stuff?
 
-This configuration groups its opinionated behaviors into six categories (C1–C6), allowing you to selectively disable features that conflict with your workflow. Disabling all of them leaves you with a "Minimal Mode" shell that only manages PATH, XDG variables, and your `local.fish` overrides.
+This configuration groups its opinionated behaviors into six categories (C1–C6), allowing you to selectively disable features that conflict with your workflow. The **C**ategory numbers are used as shorthand when referencing these. Disabling all of them leaves you with a "Minimal Mode" shell that only manages basic features like `XDG` variables, and your `local.fish` overrides.
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────

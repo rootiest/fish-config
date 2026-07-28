@@ -204,7 +204,7 @@ what C3 controls.
 
 ## What's with the C1-C6 stuff?
 
-This configuration groups its opinionated behaviors into six categories (C1–C6), allowing you to selectively disable features that conflict with your workflow. Disabling all of them leaves you with a "Minimal Mode" shell that only manages PATH, XDG variables, and your `local.fish` overrides.
+This configuration groups its opinionated behaviors into six categories (C1–C6), allowing you to selectively disable features that conflict with your workflow. The **C**ategory numbers are used as shorthand when referencing these. Disabling all of them leaves you with a "Minimal Mode" shell that only manages basic features like `XDG` variables, and your `local.fish` overrides.
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────
