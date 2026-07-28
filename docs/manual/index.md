@@ -25,7 +25,8 @@ A production-grade Fish shell configuration targeting Fish 4.x. It provides:
 - Catppuccin Mocha color theme throughout
 
 <LinkButton href="/10-installation/" icon="cloud-download" style="font-size: 1.25rem; padding: 1rem 1.5rem; margin-right: 1rem;">Install now</LinkButton>
-<LinkButton href="/reference/" variant="secondary" style="font-size: 1.125rem; padding: 0.85rem 1.25rem;">Function reference</LinkButton>
+<LinkButton href="/reference/" variant="secondary" style="font-size: 1.125rem; padding: 0.85rem 1.25rem;">Functions</LinkButton>
+<LinkButton href="/08-components-reference/" variant="secondary" style="font-size: 1.125rem; padding: 0.85rem 1.25rem;">Components</LinkButton>
 
 The configuration uses a structured file tree:
 
