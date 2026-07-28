@@ -59,6 +59,8 @@ function fish_user_key_bindings
     type -q qalc && bind ctrl-alt-= _qalc_eval
     bind ctrl-enter _smart_execute
     bind @@ __fzf_inline_picker
+    bind ctrl-right nextd-or-forward-word
+    bind \e\[1\;5C nextd-or-forward-word
 
     # Set bindings for all Vi modes:
     # 'default' is Vi-Command, 'insert' is Vi-Insert, 'visual' is Vi-Visual
@@ -69,5 +71,7 @@ function fish_user_key_bindings
         type -q qalc && bind --mode $mode ctrl-alt-= _qalc_eval
         bind --mode $mode ctrl-enter _smart_execute
         bind --mode $mode @@ __fzf_inline_picker
+        bind --mode $mode ctrl-right nextd-or-forward-word
+        bind --mode $mode \e\[1\;5C nextd-or-forward-word
     end
 end
