@@ -1915,6 +1915,63 @@ Example:
 detach rsync -a ./data remote:/backup/
 \f[R]
 .fi
+.SS fish_mode_prompt
+.IP
+.nf
+\f[C]
+Synopsis:  fish_mode_prompt
+
+Empty override. Suppresses fish\[aq]s built-in vi-mode prefix ([N]/[I]/etc.)
+that would prepend to the prompt line and break the two-line nim layout.
+Vi-mode display is handled inside fish_prompt itself.
+
+Exit Status:
+  0  Always (function body is empty)
+
+Example:
+# Rendered automatically by fish; not called directly.
+\f[R]
+.fi
+.SS fish_prompt
+.IP
+.nf
+\f[C]
+Synopsis:  fish_prompt
+
+Catppuccin Mocha fallback prompt (nim-style, two-line). Active whenever
+the starship prompt is not available \[em] either starship is not installed or
+C3 overrides are disabled. Has no external dependencies; uses only fish-provided functions
+(set_color, fish_git_prompt, prompt_pwd, prompt_hostname).
+
+Exit Status:
+  0  Always
+
+Returns:
+  The rendered two-line prompt, printed to stdout
+
+Example:
+# Rendered automatically by fish; not called directly.
+\f[R]
+.fi
+.SS fish_right_prompt
+.IP
+.nf
+\f[C]
+Synopsis:  fish_right_prompt
+
+Renders the right-side prompt. Always shows a dim timestamp. When the last
+command failed, prefixes it with a red ✘ and the exit code. When starship
+is installed and C3 overrides are enabled, also shows the active Docker
+context (if non-default) \[em] that block is paired with the starship prompt
+which already guards on both conditions.
+
+Exit Status:
+  0  Always
+
+Example:
+# Rendered automatically by fish; not called directly.
+\f[R]
+.fi
 .SS split
 .IP
 .nf
@@ -2071,6 +2128,34 @@ cat file.txt | y
 \f[R]
 .fi
 .SS 5.10 Network
+.SS fast
+.IP
+.nf
+\f[C]
+Synopsis:  fast
+
+Displays a styled message indicating that the fast command is unavailable
+and suggests using fast-cli instead.
+
+Example:
+fast
+\f[R]
+.fi
+.SS fast-cli
+.IP
+.nf
+\f[C]
+Synopsis:  fast-cli [args...]
+
+Runs a network speed test using the fast.com CLI tool.
+
+Arguments:
+  args...  Arguments forwarded to the fast command
+
+Example:
+fast-cli
+\f[R]
+.fi
 .SS gip
 .IP
 .nf
@@ -2213,6 +2298,37 @@ Notes:
 Example:
 smart_exit
 smart_exit --no-log
+\f[R]
+.fi
+.SS sponge_filter_secrets
+.IP
+.nf
+\f[C]
+Synopsis:  sponge_filter_secrets <command> <exit_code> <previously_in_history>
+
+Custom sponge filter that prevents commands from being stored in history
+when they contain the literal value of any exported environment variable
+whose name indicates it holds a credential (TOKEN, PASSWORD, SECRET,
+API_KEY, etc.).  This catches shell-expansion leakage where a variable
+value is embedded directly in the command string at execution time \[em] a
+case that static regex patterns cannot cover.
+
+Any variable whose name matches the sensitive-name heuristic and whose
+value is longer than 8 characters (excluding bare paths) is checked.
+The value is escaped for literal regex matching before comparison.
+
+Arguments:
+  command                 The exact command that was entered
+  exit_code               Exit code of the command (unused)
+  previously_in_history   \[dq]true\[dq]/\[dq]false\[dq] flag (unused)
+
+Exit Status:
+  0  Command contains a secret value \[em] filter out of history
+  1  No secret value found \[em] keep in history
+
+Example:
+# Register with sponge (done automatically by conf.d/sponge_privacy.fish):
+set -U -a sponge_filters sponge_filter_secrets
 \f[R]
 .fi
 .SS 5.12 AI and Developer Tools
@@ -2837,6 +2953,34 @@ Example:
 ffetch
 \f[R]
 .fi
+.SS fzf_configure_bindings
+.IP
+.nf
+\f[C]
+Synopsis:  fzf_configure_bindings [--directory=<key>] [--git_log=<key>] [--git_status=<key>]
+                                  [--history=<key>] [--processes=<key>] [--variables=<key>] [-h]
+
+Installs key bindings for fzf.fish in both insert and default vi modes.
+Each binding can be overridden with a custom key or disabled by passing an
+empty string. Only runs in interactive mode.
+
+Arguments:
+  --directory=key   Override the directory search binding (default: Ctrl-Alt-F)
+  --git_log=key     Override the git log search binding (default: Ctrl-Alt-L)
+  --git_status=key  Override the git status binding (default: Ctrl-Alt-S)
+  --history=key     Override the history search binding (default: Ctrl-R)
+  --processes=key   Override the processes search binding (default: Ctrl-Alt-P)
+  --variables=key   Override the variables search binding (default: Ctrl-V)
+  -h, --help        Show help message
+
+Exit Status:
+  0  Bindings installed or help shown
+  22 Invalid option or positional argument provided
+
+Example:
+fzf_configure_bindings --history=ctrl-h
+\f[R]
+.fi
 .SS joplin
 .IP
 .nf
@@ -3451,7 +3595,94 @@ abbreviations, hooks) take effect in new shells.
 print an error naming the variable that disabled them.
 - On CachyOS, the distro fish config\[cq]s own aliases, history
 override, and bang-bang bindings are stripped per category as well.
-.SS Component Reference
+.SS Prompt and Theme
+.SS Starship
+.PP
+The primary prompt is Starship, initialized by conf.d/starship.fish.
+Configure it via \[ti]/.config/starship.toml.
+.PP
+conf.d/starship.fish defines a fish_prompt wrapper that only activates
+when starship is in PATH.
+It emits OSC 133;A (prompt start) immediately before Starship renders
+and OSC 133;B (input start) immediately after, placing both markers on
+the prompt line itself.
+This allows ov to use them as sticky section headers when browsing
+scrollback logs.
+Without Starship, fish\[cq]s built-in prompt handles these markers
+automatically.
+.SS Catppuccin Fallback Prompt
+.PP
+When Starship is absent or C3 overrides are disabled, a built-in
+nim-style two-line prompt activates from functions/fish_prompt.fish.
+No external dependencies \[em] fish builtins only.
+.PP
+Layout:
+.IP
+.nf
+\f[C]
+┬─[user\[at]host:\[ti]/path] (main)
+╰─>$
+\f[R]
+.fi
+.PP
+Elements:
+.IP
+.nf
+\f[C]
+user        Yellow (Catppuccin Yellow); red if root
+\[at]host       Blue (local) or Teal (SSH)
+\[ti]/path      prompt_pwd abbreviation (Catppuccin Text)
+(main)      Current git branch in Catppuccin Pink; omitted outside repos
+─[V:name]   Active Python venv basename; omitted when none
+─[N/I/R/V]  Vi-mode indicator when vi bindings are active
+┬─ / ╰─>    Connector lines: Catppuccin Green on success, Red on failure
+\f[R]
+.fi
+.PP
+The right prompt (fish_right_prompt.fish) always renders, regardless of
+C3 state.
+On failure it shows a red ✘ and the exit code; on success it shows only
+the dim timestamp.
+When starship is installed and C3 is enabled, the active Docker context
+is also shown (if non-default):
+.IP
+.nf
+\f[C]
+✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
+✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
+Fri Jun 12 00:51:21 2026                     ← success (no ✘)
+\f[R]
+.fi
+.SS FZF
+.PP
+FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in
+integrations/fzf.fish.
+The colors applied:
+.IP
+.nf
+\f[C]
+Background:   #1E1E2E (base)    #313244 (surface0)
+Foreground:   #CDD6F4 (text)
+Highlights:   #F38BA8 (red)     #CBA6F7 (mauve)    #B4BEFE (lavender)
+\f[R]
+.fi
+.PP
+To customize, override FZF_DEFAULT_OPTS in local.fish.
+.SS Catppuccin Mocha Syntax Highlighting
+.PP
+The Catppuccin Mocha theme ships with this config in themes/ and is
+applied on first run via \f[V]conf.d/first_run.fish\f[R].
+Colors are stored in fish_variables (universal).
+To switch variants, install a different theme from themes/:
+.IP
+.nf
+\f[C]
+fish_config theme save \[dq]Catppuccin Latte\[dq]
+\f[R]
+.fi
+.PP
+   *   *   *   *   *
+.SH 8. COMPONENTS REFERENCE
 .PP
 The following tables detail every component in each category.
 Use this reference to understand exactly which behaviors change when you
@@ -3554,10 +3785,11 @@ Disabling __fish_config_op_overrides removes all of them.
 Override                  What it replaces or sets
 ───────────────────────────────────────────────────────────────────────────
 Vi mode                   fish_vi_key_bindings replaces default Emacs mode
-XDG variables             Sets global XDG Base Directory variables
 PATH setup                Prepends custom bin directories to the PATH
 exit → smart_exit         exit wrapper that captures scrollback before closing
 PAGER=ov                  ov used by git, man, and all $PAGER-aware tools
+EDITOR=nvim               nvim fallback to vi for git commit, etc.
+GPG_TTY                   Sets GPG_TTY to current terminal tty
 MANPAGER=bat pipeline     man pages rendered with syntax highlighting
 CDPATH=. \[ti]/projects \[ti]     bare dir names resolve against \[ti]/projects and \[ti]
 Bang-bang system          ! and $ keys expand history; !\[ha], !*, !-N, !?str?,
@@ -3763,94 +3995,7 @@ fish_greeting override     Empty function defined late in config.fish to
 When C6 is disabled, no greeting is printed by this config.
 Any greeting set by the distro or other configs runs normally \[em] this
 config simply does not override it.
-.SS Prompt and Theme
-.SS Starship
-.PP
-The primary prompt is Starship, initialized by conf.d/starship.fish.
-Configure it via \[ti]/.config/starship.toml.
-.PP
-conf.d/starship.fish defines a fish_prompt wrapper that only activates
-when starship is in PATH.
-It emits OSC 133;A (prompt start) immediately before Starship renders
-and OSC 133;B (input start) immediately after, placing both markers on
-the prompt line itself.
-This allows ov to use them as sticky section headers when browsing
-scrollback logs.
-Without Starship, fish\[cq]s built-in prompt handles these markers
-automatically.
-.SS Catppuccin Fallback Prompt
-.PP
-When Starship is absent or C3 overrides are disabled, a built-in
-nim-style two-line prompt activates from functions/fish_prompt.fish.
-No external dependencies \[em] fish builtins only.
-.PP
-Layout:
-.IP
-.nf
-\f[C]
-┬─[user\[at]host:\[ti]/path] (main)
-╰─>$
-\f[R]
-.fi
-.PP
-Elements:
-.IP
-.nf
-\f[C]
-user        Yellow (Catppuccin Yellow); red if root
-\[at]host       Blue (local) or Teal (SSH)
-\[ti]/path      prompt_pwd abbreviation (Catppuccin Text)
-(main)      Current git branch in Catppuccin Pink; omitted outside repos
-─[V:name]   Active Python venv basename; omitted when none
-─[N/I/R/V]  Vi-mode indicator when vi bindings are active
-┬─ / ╰─>    Connector lines: Catppuccin Green on success, Red on failure
-\f[R]
-.fi
-.PP
-The right prompt (fish_right_prompt.fish) always renders, regardless of
-C3 state.
-On failure it shows a red ✘ and the exit code; on success it shows only
-the dim timestamp.
-When starship is installed and C3 is enabled, the active Docker context
-is also shown (if non-default):
-.IP
-.nf
-\f[C]
-✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
-✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
-Fri Jun 12 00:51:21 2026                     ← success (no ✘)
-\f[R]
-.fi
-.SS FZF
-.PP
-FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in
-integrations/fzf.fish.
-The colors applied:
-.IP
-.nf
-\f[C]
-Background:   #1E1E2E (base)    #313244 (surface0)
-Foreground:   #CDD6F4 (text)
-Highlights:   #F38BA8 (red)     #CBA6F7 (mauve)    #B4BEFE (lavender)
-\f[R]
-.fi
-.PP
-To customize, override FZF_DEFAULT_OPTS in local.fish.
-.SS Catppuccin Mocha Syntax Highlighting
-.PP
-The Catppuccin Mocha theme ships with this config in themes/ and is
-applied on first run via \f[V]conf.d/first_run.fish\f[R].
-Colors are stored in fish_variables (universal).
-To switch variants, install a different theme from themes/:
-.IP
-.nf
-\f[C]
-fish_config theme save \[dq]Catppuccin Latte\[dq]
-\f[R]
-.fi
-.PP
-   *   *   *   *   *
-.SH 8. FISHER PLUGINS
+.SH 9. FISHER PLUGINS
 .PP
 Fisher is bootstrapped automatically on the \f[B]first interactive
 session\f[R] via \f[V]conf.d/first_run.fish\f[R].
@@ -3981,7 +4126,7 @@ To update all Fisher-managed plugins, run \f[V]fisher update\f[R] or
 \f[V]fish-deps update\f[R] which calls it as its first step.
 .PP
    *   *   *   *   *
-.SH 9. INSTALLATION
+.SH 10. INSTALLATION
 .PP
 This configuration is managed as a git repository.
 To deploy on a new machine:
@@ -4026,7 +4171,7 @@ All git output is suppressed.
 Run exec fish after a successful update to reload.
 .PP
    *   *   *   *   *
-.SH 10. PERSONALIZATION
+.SH 11. PERSONALIZATION
 .PP
 Sensitive credentials and machine-specific settings are kept out of
 version control in a private directory.
@@ -4105,7 +4250,7 @@ repo.
 local.fish in turn sources secrets.fish when it exists.
 .PP
    *   *   *   *   *
-.SH 11. TROUBLESHOOTING
+.SH 12. TROUBLESHOOTING
 .PP
 This section covers common issues, their solutions, and how to safely
 revert changes or uninstall the configuration entirely.
@@ -4389,9 +4534,11 @@ controls.
 This configuration groups its opinionated behaviors into six categories
 (C1\[en]C6), allowing you to selectively disable features that conflict
 with your workflow.
+The \f[B]C\f[R]ategory numbers are used as shorthand when referencing
+these.
 Disabling all of them leaves you with a \[lq]Minimal Mode\[rq] shell
-that only manages PATH, XDG variables, and your \f[V]local.fish\f[R]
-overrides.
+that only manages basic features like \f[V]XDG\f[R] variables, and your
+\f[V]local.fish\f[R] overrides.
 .IP
 .nf
 \f[C]
@@ -4448,7 +4595,7 @@ For an interactive alternative to setting these variables by hand, run
 \f[V]config-settings\f[R].
 .PP
    *   *   *   *   *
-.SH 12. VIEWING THIS MANUAL
+.SH 13. VIEWING THIS MANUAL
 .PP
 There are four ways to read this manual.
 .SS The documentation website
