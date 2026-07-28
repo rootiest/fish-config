@@ -69,7 +69,8 @@ jobs:
           cd docs/site
           npx --yes wrangler pages deploy dist/ \
             --project-name=fish-config-docs \
-            --branch=main
+            --branch=main \
+            --commit-dirty=true
 
       - name: Commit generated docs
         run: |

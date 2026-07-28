@@ -5,6 +5,7 @@ import starlightCatppuccin from '@catppuccin/starlight';
 import sidebar from './src/sidebar.json' with { type: 'json' };
 
 export default defineConfig({
+  prerenderConflictBehavior: 'ignore',
   site: 'https://fish.rootiest.fyi',
   integrations: [
     starlight({
