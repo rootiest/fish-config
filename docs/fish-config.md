@@ -1885,23 +1885,25 @@ Add -i (interactive confirmation) to destructive commands:
     sub-repository is initialized and any agent-made changes are committed
     before launch. Delegates all scaffold and commit logic to agents-init
     --quiet (full setup), which ensures AGENTS/ is scaffolded and CLAUDE.md
-    is symlinked to AGENTS/AGENTS.md in the current project. All arguments
-    are forwarded verbatim to the real agy binary.
+    is symlinked to AGENTS/AGENTS.md in the current project. Arguments are
+    forwarded verbatim to the real agy binary, except for -r/--resume which
+    are translated to -c/--continue.
 
     Opinionated component (C1): when disabled via __fish_config_op_aliases
     (or the __fish_config_opinionated master), the command is passed through
     to the real agy binary unchanged.
 
     Arguments:
-      ARGS  Any arguments forwarded verbatim to the underlying agy binary
+      ARGS  Arguments forwarded to the underlying agy binary (-r translates to -c)
 
     Exit Status:
       Exit status of the underlying agy binary
 
     Example:
     agy
-    agy chat
-    agy resume
+    agy --resume
+    agy -i "initial prompt"
+    agy models
 
 **Dependencies:** `agents-init`
 
