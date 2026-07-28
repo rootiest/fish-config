@@ -3,7 +3,10 @@
 # Adapted from icezyclon/zoxide.fish (MIT)
 # Heavily customized for Fish 4.x compatibility and performance
 
-# SYNOPSIS
+# CATEGORY
+#   02-navigation
+#
+# INTERNAL SYNOPSIS
 #   _zoxide_z_complete [comp] [desc]
 #
 # DESCRIPTION
@@ -50,7 +53,10 @@ function _zoxide_z_complete -d "Complete directory first or zoxide queries other
     end
 end
 
-# SYNOPSIS
+# CATEGORY
+#   02-navigation
+#
+# INTERNAL SYNOPSIS
 #   _zoxide_equals_first_token <check>
 #
 # DESCRIPTION

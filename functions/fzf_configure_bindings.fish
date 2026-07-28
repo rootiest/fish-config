@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
 # SYNOPSIS
 #   fzf_configure_bindings [--directory=<key>] [--git_log=<key>] [--git_status=<key>]
 #                          [--history=<key>] [--processes=<key>] [--variables=<key>] [-h]
