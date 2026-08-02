@@ -212,7 +212,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
             end
 
             if test -z "$name"
-                set name (rand_string adjective name)
+                set name (rand_string adjective animal)
             end
             set task $argv[2..-1]
 
