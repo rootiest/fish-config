@@ -24,7 +24,7 @@
 #   a memorable, random name (like `sleepy-badger`) will be generated.
 #
 # SUBCOMMANDS
-#   run, -r, --run [<name>] <cmd>    Start a new background job
+#   run, -r, --run [-n <name>] <cmd> Start a new background job
 #   list, -l, --list                 List all running jobs (default if no args)
 #   attach, -a, --attach <name>      Attach to a running job's terminal
 #   kill, -k, --kill <name>          Terminate a running background job
@@ -37,9 +37,9 @@
 #   127  neither tmux nor screen is installed
 #
 # EXAMPLE
-#   jobrunner run build make -j8
+#   jobrunner run -n build make -j8
 #   jobrunner sleep 1000
-#   jobrunner -t screen run backup rsync -a ./data remote:/backup/
+#   jobrunner -t screen run -n backup rsync -a ./data remote:/backup/
 #   jobrunner list
 #   jobrunner logs build
 #   jobrunner build
@@ -67,6 +67,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
     # │ Tool Extraction                                          │
     # ╰──────────────────────────────────────────────────────────╯
     set -l tool ""
+    set -l global_name ""
     while test (count $argv) -gt 0
         switch $argv[1]
             case -t
@@ -80,6 +81,18 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
                 set -e argv[1]
             case '-t*'
                 set tool (string replace -r "^-t" "" $argv[1])
+                set -e argv[1]
+            case -n
+                set global_name $argv[2]
+                set -e argv[1..2]
+            case --name
+                set global_name $argv[2]
+                set -e argv[1..2]
+            case '--name=*'
+                set global_name (string replace -- "--name=" "" $argv[1])
+                set -e argv[1]
+            case '-n*'
+                set global_name (string replace -r "^-n" "" $argv[1])
                 set -e argv[1]
             case '*'
                 break
@@ -97,7 +110,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
         echo "  If $c_arg<name>$c_rst is omitted, a random memorable name is generated."
         echo
         echo "$c_head""Subcommands:$c_rst"
-        echo "  $c_cmd""run$c_rst, $c_flag-r$c_rst, $c_flag--run$c_rst $c_arg""[<name>] <cmd>$c_rst  Start a new background job"
+        echo "  $c_cmd""run$c_rst, $c_flag-r$c_rst, $c_flag--run$c_rst $c_arg""[-n <name>] <cmd>$c_rst Start a new background job"
         echo "  $c_cmd""list$c_rst, $c_flag-l$c_rst, $c_flag--list$c_rst                  List all running jobs (default)"
         echo "  $c_cmd""attach$c_rst, $c_flag-a$c_rst, $c_flag--attach$c_rst $c_arg""<name>$c_rst       Attach to a running job's terminal"
         echo "  $c_cmd""kill$c_rst, $c_flag-k$c_rst, $c_flag--kill$c_rst $c_arg""<name>$c_rst           Terminate a running background job"
@@ -106,13 +119,14 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
         echo
         echo "$c_head""Options:$c_rst"
         echo "  $c_flag-t$c_rst, $c_flag--tool$c_rst $c_arg""<tool>$c_rst               Force backend tool ('tmux' or 'screen')"
+        echo "  $c_flag-n$c_rst, $c_flag--name$c_rst $c_arg""<name>$c_rst               Set explicit name for a new job"
         echo
         echo "$c_head""Shortcuts:$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""<name>$c_rst              $c_dim""attach <name>$c_rst"
-        echo "  $c_cmd""jobrunner$c_rst $c_arg""[<name>] <cmd>...$c_rst   $c_dim""run [<name>] <cmd>...$c_rst"
+        echo "  $c_cmd""jobrunner$c_rst $c_arg""[-n <name>] <cmd>...$c_rst$c_dim""run [-n <name>] <cmd>...$c_rst"
         echo
         echo "$c_head""Examples:$c_rst"
-        echo "  $c_cmd""jobrunner$c_rst $c_arg""run build$c_rst""$c_dim"" make -j8$c_rst"
+        echo "  $c_cmd""jobrunner$c_rst $c_arg""run -n build$c_rst""$c_dim"" make -j8$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""sleep 1000$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""logs build$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""kill build$c_rst"
@@ -173,29 +187,34 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
     # ╰──────────────────────────────────────────────────────────╯
     switch $cmd
         case run -r --run
+            set -l name "$global_name"
+            set -l task
+
+            while test (count $argv) -gt 1
+                switch $argv[2]
+                    case -n --name
+                        set name $argv[3]
+                        set -e argv[2..3]
+                    case '--name=*'
+                        set name (string replace -- "--name=" "" $argv[2])
+                        set -e argv[2]
+                    case '-n*'
+                        set name (string replace -r "^-n" "" $argv[2])
+                        set -e argv[2]
+                    case '*'
+                        break
+                end
+            end
+
             if test (count $argv) -lt 2
-                echo "$c_head""Usage:$c_rst $c_cmd""jobrunner run$c_rst $c_arg""[<name>] <command>...$c_rst" >&2
+                echo "$c_head""Usage:$c_rst $c_cmd""jobrunner run$c_rst $c_arg""[-n <name>] <command>...$c_rst" >&2
                 return 1
             end
 
-            set -l name
-            set -l task
-
-            # If the first argument is an executable, assume the name was omitted.
-            # (Unless they explicitly name their job after an existing command,
-            # which is an edge case we accept to allow seamless auto-naming).
-            if type -q "$argv[2]"
+            if test -z "$name"
                 set name (rand_string adjective name)
-                set task $argv[2..-1]
-            else
-                if test (count $argv) -lt 3
-                    echo "$c_err""jobrunner:$c_rst '$c_arg$argv[2]$c_rst' is not a known command, and no command was provided to run." >&2
-                    echo "$c_head""Usage:$c_rst $c_cmd""jobrunner run$c_rst $c_arg""[<name>] <command>...$c_rst" >&2
-                    return 1
-                end
-                set name $argv[2]
-                set task $argv[3..-1]
             end
+            set task $argv[2..-1]
 
             # screen stores each session as a socket file named after it.
             if string match -q '*/*' -- $name
