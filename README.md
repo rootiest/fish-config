@@ -30,6 +30,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 - **Smart CLI wrappers** that prefer modern tools (`eza`, `bat`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Auto Python venv** activation on directory change (direnv-aware)
 - **Kitty terminal** deep integration for splits, tabs, and SSH
+- **Named background jobs** — `jobrunner` (short: `jr`) starts, lists, inspects, re-attaches to, and kills detached tasks via GNU `screen`, so long-running work survives closing the shell
 - **Optional session logging** — terminal scrollback, multiplexer panes (tmux/zellij), and AUR-helper output can be captured to `~/.terminal_history`; **off by default**, opt in when you want it (see the caution below and [Session Logging](#session-logging))
 - **AI workflow** helpers for Claude and Antigravity session management
 - **WakaTime** shell activity tracking

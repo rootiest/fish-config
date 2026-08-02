@@ -1482,6 +1482,71 @@ Add -i (interactive confirmation) to destructive commands:
     Example:
     # Rendered automatically by fish; not called directly.
 
+### jobrunner
+
+    Synopsis:  jobrunner [<subcommand>] [<name>] [<command>...]
+               jr [<subcommand>] [<name>] [<command>...]
+
+    Runs, lists, inspects, re-attaches to, and terminates named background
+    jobs using GNU screen as the process engine. Unlike bkg and detach,
+    which discard output, a jobrunner job keeps a live terminal you can
+    return to later — it survives closing the shell, and `attach` restores
+    it in any subsequent session.
+
+    Every subcommand has a matching flag form, and the common cases are
+    inferred: no arguments lists jobs, a lone name attaches to it, and a
+    name followed by a command runs it.
+
+    Arguments:
+      run, -r, --run <name> <cmd>...   Start a named job in the background
+      list, -l, --list                 List all managed background jobs
+      attach, -a, --attach <name>      Re-attach interactively to a job
+      kill, -k, --kill <name>          Terminate a running background job
+      logs, -o, --output <name>        Print a job's current output, no attach
+      help, -h, --help                 Show usage help
+
+    Exit Status:
+      0    Command succeeded, or no jobs are running
+      1    Invalid arguments, or the named job does not exist
+      127  screen is not installed
+
+    Notes:
+      Detach from an attached job with Ctrl-A then D; the job keeps running.
+      Commands are executed directly rather than through a shell, so pipes and
+      redirections must be wrapped explicitly, e.g.
+      `jobrunner run sync fish -c 'a | b'`.
+
+    Example:
+    jobrunner run build make -j8
+    jobrunner backup rsync -a ./data remote:/backup/
+    jobrunner list
+    jobrunner logs build
+    jobrunner build
+    jobrunner kill build
+
+**Dependencies:** `screen`, `__jobrunner_sessions`
+
+**Used by:** `jr`
+
+### jr
+
+    Synopsis:  jr [<subcommand>] [<name>] [<command>...]
+
+    Shorthand for jobrunner. Accepts the same subcommands, flags, and
+    shorthands, and inherits its completions.
+
+    Arguments:
+      See jobrunner --help for the full argument reference.
+
+    Exit Status:
+      Same as jobrunner.
+
+    Example:
+    jr run build make -j8
+    jr list
+
+**Dependencies:** `jobrunner`
+
 ### split
 
     Synopsis:  split [-h | -v] [command...]
