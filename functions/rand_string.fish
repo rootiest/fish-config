@@ -1,8 +1,11 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CATEGORY
+#   14-miscellaneous
+#
 # SYNOPSIS
-#   __rand_string [COMPONENTS/MODIFIERS]...
+#   rand_string [COMPONENTS/MODIFIERS]...
 #
 # DESCRIPTION
 #   Generates a random, memorable string using a sequence of specified word
@@ -20,19 +23,47 @@
 # ARGUMENTS
 #   -s, --separator=<sep>   Delimiter for subsequent words (dash, underscore, dot, none, or literal chars)
 #   -c, --case=<casing>     Casing for subsequent words (lower, upper, title)
+#   -h, --help              Show usage help
 #
 # EXIT STATUS
 #   0  String generated successfully
 #   1  Unknown category or missing word list file
 #
 # EXAMPLE
-#   __rand_string adjective animal
-#   __rand_string --case=title color animal --separator=dot digits=4
+#   rand_string adjective animal
+#   rand_string --case=title color animal --separator=dot digits=4
 #
 # NOTES
 #   Falls back to `random choice` if GNU `shuf` is missing, but `shuf` is
 #   much faster for files with >1000 lines.
-function __rand_string --description 'Generate random, memorable strings from curated word databases'
+function rand_string --description 'Generate random, memorable strings from curated word databases'
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold white)
+    set -l c_arg (set_color cyan)
+    set -l c_flag (set_color yellow)
+    set -l c_rst (set_color normal)
+
+    if set -q argv[1]; and contains -- $argv[1] -h --help
+        echo "$c_head""Usage:$c_rst $c_cmd""rand_string$c_rst $c_arg""[COMPONENTS/MODIFIERS]...$c_rst"
+        echo
+        echo "  Generate random, memorable strings from curated word databases."
+        echo
+        echo "$c_head""Components:$c_rst"
+        echo "  $c_arg<category>$c_rst    A bundled word list (e.g. adjective, animal, color, name, noun)"
+        echo "  $c_arg""digits=<N>$c_rst    N random digits (e.g. digits=3 -> 842)"
+        echo "  $c_arg""literal=<text>$c_rst A literal string component"
+        echo
+        echo "$c_head""Modifiers:$c_rst"
+        echo "  $c_flag-s$c_rst, $c_flag--separator=<sep>$c_rst   Delimiter for subsequent words (dash, underscore, dot, none)"
+        echo "  $c_flag-c$c_rst, $c_flag--case=<casing>$c_rst     Casing for subsequent words (lower, upper, title)"
+        echo "  $c_flag-h$c_rst, $c_flag--help$c_rst              Show usage help"
+        echo
+        echo "$c_head""Examples:$c_rst"
+        echo "  $c_cmd""rand_string$c_rst adjective animal"
+        echo "  $c_cmd""rand_string$c_rst --case=title color animal --separator=dot digits=4"
+        return 0
+    end
+
     set -l sep "dash"
     set -l casing "lower"
     
@@ -112,7 +143,7 @@ function __rand_string --description 'Generate random, memorable strings from cu
             case '*'
                 set -l db "$words_dir/$arg.txt"
                 if not test -f "$db"
-                    echo "__rand_string: unknown category or file missing for '$arg'" >&2
+                    echo "rand_string: unknown category or file missing for '$arg'" >&2
                     return 1
                 end
                 
