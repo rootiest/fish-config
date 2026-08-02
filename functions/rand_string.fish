@@ -16,9 +16,9 @@
 #   apply only to the components that follow them.
 #
 #   Supported Components:
-#   <category>      A bundled word list (e.g. adjective, animal, color, name, noun)
+#   <category>      A bundled word list (e.g. adjective, animal, color, name, noun, verb)
 #   digits=<N>      N random digits (e.g. digits=3 -> 842)
-#   literal=<text>  A literal string component
+#   literal=<text>  A static string component (e.g. literal=TEST)
 #
 # ARGUMENTS
 #   -s, --separator=<sep>   Delimiter for subsequent words (dash, underscore, dot, none, or literal chars)
@@ -32,6 +32,7 @@
 # EXAMPLE
 #   rand_string adjective animal
 #   rand_string --case=title color animal --separator=dot digits=4
+#   rand_string literal=TEST --separator=underscore verb noun
 #
 # NOTES
 #   Falls back to `random choice` if GNU `shuf` is missing, but `shuf` is
@@ -49,9 +50,9 @@ function rand_string --description 'Generate random, memorable strings from cura
         echo "  Generate random, memorable strings from curated word databases."
         echo
         echo "$c_head""Components:$c_rst"
-        echo "  $c_arg<category>$c_rst    A bundled word list (e.g. adjective, animal, color, name, noun)"
+        echo "  $c_arg<category>$c_rst    A bundled word list (e.g. adjective, animal, color, name, noun, verb)"
         echo "  $c_arg""digits=<N>$c_rst    N random digits (e.g. digits=3 -> 842)"
-        echo "  $c_arg""literal=<text>$c_rst A literal string component"
+        echo "  $c_arg""literal=<text>$c_rst A static string component for prefixes/suffixes (e.g. literal=TEST)"
         echo
         echo "$c_head""Modifiers:$c_rst"
         echo "  $c_flag-s$c_rst, $c_flag--separator=<sep>$c_rst   Delimiter for subsequent words (dash, underscore, dot, none)"
@@ -61,6 +62,7 @@ function rand_string --description 'Generate random, memorable strings from cura
         echo "$c_head""Examples:$c_rst"
         echo "  $c_cmd""rand_string$c_rst adjective animal"
         echo "  $c_cmd""rand_string$c_rst --case=title color animal --separator=dot digits=4"
+        echo "  $c_cmd""rand_string$c_rst literal=TEST --separator=underscore verb noun"
         return 0
     end
 
@@ -155,14 +157,16 @@ function rand_string --description 'Generate random, memorable strings from cura
                 end
         end
 
-        # 4. Apply casing
-        switch $casing
-            case upper
-                set part (string upper $part)
-            case lower
-                set part (string lower $part)
-            case title
-                set part (string replace -r '^(.)' '\U$1' (string lower $part))
+        # 4. Apply casing (skip for literal text)
+        if not string match -q 'literal=*' -- $arg; and not string match -q 'string=*' -- $arg
+            switch $casing
+                case upper
+                    set part (string upper $part)
+                case lower
+                    set part (string lower $part)
+                case title
+                    set part (string replace -r '^(.)' '\U$1' (string lower $part))
+            end
         end
 
         # 5. Append to result
