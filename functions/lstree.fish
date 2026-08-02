@@ -18,7 +18,7 @@
 #   lstree ~/projects/myapp
 function lstree --description 'Full recursive tree listing'
     if which eza >/dev/null 2>&1
-        eza --tree --icons --color=auto --hyperlink $argv
+        eza --tree --icons --color=auto --hyperlink=auto $argv
     else if which lsd >/dev/null 2>&1
         lsd --tree --hyperlink=auto $argv
     else

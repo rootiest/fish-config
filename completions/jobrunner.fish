@@ -6,7 +6,25 @@
 
 # Offer running jobs as name<TAB>description pairs.
 function __jobrunner_complete_jobs
-    for row in (__jobrunner_sessions)
+    set -l tool ""
+    set -l tokens (commandline -opc)
+    set -l idx 1
+    while test $idx -le (count $tokens)
+        switch $tokens[$idx]
+            case -t --tool
+                set idx (math $idx + 1)
+                if test $idx -le (count $tokens)
+                    set tool $tokens[$idx]
+                end
+            case '--tool=*'
+                set tool (string replace -- "--tool=" "" $tokens[$idx])
+            case '-t*'
+                set tool (string replace -r "^-t" "" $tokens[$idx])
+        end
+        set idx (math $idx + 1)
+    end
+
+    for row in (__jobrunner_sessions $tool)
         set -l f (string split \t -- $row)
         printf '%s\t%s job (PID %s)\n' $f[1] $f[3] $f[2]
     end
@@ -17,6 +35,10 @@ set -l needs_job "__fish_seen_subcommand_from attach kill logs -a --attach -k --
 
 # No file completions; jobs are named, not paths.
 complete -c jobrunner -f
+
+# Backend tool selection flag.
+complete -c jobrunner -n "not __fish_seen_subcommand_from $subcmds" \
+    -s t -l tool -x -a "tmux screen" -d 'Force specific backend'
 
 # Subcommands (only as the first argument).
 complete -c jobrunner -n "not __fish_seen_subcommand_from $subcmds" \
