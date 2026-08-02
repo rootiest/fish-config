@@ -17,16 +17,16 @@
 #   detach, which discard output, a jobrunner job keeps a live terminal you
 #   can return to later — it survives closing the shell, and `attach`
 #   restores it in any subsequent session.
+#   Run and manage named background jobs. Jobs are detached from the shell
+#   and backed by tmux (preferred) or GNU screen.
 #
-#   Every subcommand has a matching flag form, and the common cases are
-#   inferred: no arguments lists jobs, a lone name attaches to it, and a
-#   name followed by a command runs it.
+#   If the job name is omitted when starting a new job (e.g. `jobrunner sleep 1`),
+#   a memorable, random name (like `sleepy-badger`) will be generated.
 #
-# ARGUMENTS
-#   -t, --tool <name>                Force specific backend (tmux or screen)
-#   run, -r, --run <name> <cmd>...   Start a named job in the background
-#   list, -l, --list                 List all managed background jobs
-#   attach, -a, --attach <name>      Re-attach interactively to a job
+# SUBCOMMANDS
+#   run, -r, --run [<name>] <cmd>    Start a new background job
+#   list, -l, --list                 List all running jobs (default if no args)
+#   attach, -a, --attach <name>      Attach to a running job's terminal
 #   kill, -k, --kill <name>          Terminate a running background job
 #   logs, -o, --output <name>        Print a job's current output, no attach
 #   help, -h, --help                 Show usage help
@@ -38,6 +38,7 @@
 #
 # EXAMPLE
 #   jobrunner run build make -j8
+#   jobrunner sleep 1000
 #   jobrunner -t screen run backup rsync -a ./data remote:/backup/
 #   jobrunner list
 #   jobrunner logs build
@@ -93,30 +94,26 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
         echo "$c_head""Usage:$c_rst $c_cmd""jobrunner$c_rst $c_arg""[<subcommand>] [<name>] [<command>...]$c_rst"
         echo
         echo "  Run and manage named background jobs backed by tmux or GNU screen."
+        echo "  If $c_arg<name>$c_rst is omitted, a random memorable name is generated."
         echo
         echo "$c_head""Subcommands:$c_rst"
-        echo "  $c_cmd""run$c_rst $c_arg""<name> <cmd>...$c_rst   Start a named job in the background"
-        echo "  $c_cmd""list$c_rst                  List all managed background jobs"
-        echo "  $c_cmd""attach$c_rst $c_arg""<name>$c_rst         Re-attach interactively to a job"
-        echo "  $c_cmd""kill$c_rst $c_arg""<name>$c_rst           Terminate a running background job"
-        echo "  $c_cmd""logs$c_rst $c_arg""<name>$c_rst           Print a job's output without attaching"
+        echo "  $c_cmd""run$c_rst, $c_flag-r$c_rst, $c_flag--run$c_rst $c_arg""[<name>] <cmd>$c_rst  Start a new background job"
+        echo "  $c_cmd""list$c_rst, $c_flag-l$c_rst, $c_flag--list$c_rst                  List all running jobs (default)"
+        echo "  $c_cmd""attach$c_rst, $c_flag-a$c_rst, $c_flag--attach$c_rst $c_arg""<name>$c_rst       Attach to a running job's terminal"
+        echo "  $c_cmd""kill$c_rst, $c_flag-k$c_rst, $c_flag--kill$c_rst $c_arg""<name>$c_rst           Terminate a running background job"
+        echo "  $c_cmd""logs$c_rst, $c_flag-o$c_rst, $c_flag--output$c_rst $c_arg""<name>$c_rst         Print a job's current output, no attach"
+        echo "  $c_cmd""help$c_rst, $c_flag-h$c_rst, $c_flag--help$c_rst                  Show usage help"
         echo
-        echo "$c_head""Flags:$c_rst"
-        echo "  $c_flag-t$c_rst, $c_flag--tool$c_rst $c_arg<name>$c_rst   Force specific backend (tmux or screen)"
-        echo "  $c_flag-r$c_rst, $c_flag--run$c_rst      Same as $c_cmd""run$c_rst"
-        echo "  $c_flag-l$c_rst, $c_flag--list$c_rst     Same as $c_cmd""list$c_rst"
-        echo "  $c_flag-a$c_rst, $c_flag--attach$c_rst   Same as $c_cmd""attach$c_rst"
-        echo "  $c_flag-k$c_rst, $c_flag--kill$c_rst     Same as $c_cmd""kill$c_rst"
-        echo "  $c_flag-o$c_rst, $c_flag--output$c_rst   Same as $c_cmd""logs$c_rst"
-        echo "  $c_flag-h$c_rst, $c_flag--help$c_rst     Show this help message"
+        echo "$c_head""Options:$c_rst"
+        echo "  $c_flag-t$c_rst, $c_flag--tool$c_rst $c_arg""<tool>$c_rst               Force backend tool ('tmux' or 'screen')"
         echo
-        echo "$c_head""Shorthands:$c_rst"
-        echo "  $c_cmd""jobrunner$c_rst                     $c_dim""list$c_rst"
+        echo "$c_head""Shortcuts:$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""<name>$c_rst              $c_dim""attach <name>$c_rst"
-        echo "  $c_cmd""jobrunner$c_rst $c_arg""<name> <cmd>...$c_rst     $c_dim""run <name> <cmd>...$c_rst"
+        echo "  $c_cmd""jobrunner$c_rst $c_arg""[<name>] <cmd>...$c_rst   $c_dim""run [<name>] <cmd>...$c_rst"
         echo
         echo "$c_head""Examples:$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""run build$c_rst""$c_dim"" make -j8$c_rst"
+        echo "  $c_cmd""jobrunner$c_rst $c_arg""sleep 1000$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""logs build$c_rst"
         echo "  $c_cmd""jobrunner$c_rst $c_arg""kill build$c_rst"
         echo
@@ -176,12 +173,29 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
     # ╰──────────────────────────────────────────────────────────╯
     switch $cmd
         case run -r --run
-            if test (count $argv) -lt 3
-                echo "$c_head""Usage:$c_rst $c_cmd""jobrunner run$c_rst $c_arg""<name> <command>...$c_rst" >&2
+            if test (count $argv) -lt 2
+                echo "$c_head""Usage:$c_rst $c_cmd""jobrunner run$c_rst $c_arg""[<name>] <command>...$c_rst" >&2
                 return 1
             end
-            set -l name $argv[2]
-            set -l task $argv[3..-1]
+
+            set -l name
+            set -l task
+
+            # If the first argument is an executable, assume the name was omitted.
+            # (Unless they explicitly name their job after an existing command,
+            # which is an edge case we accept to allow seamless auto-naming).
+            if type -q "$argv[2]"
+                set name (rand_string adjective name)
+                set task $argv[2..-1]
+            else
+                if test (count $argv) -lt 3
+                    echo "$c_err""jobrunner:$c_rst '$c_arg$argv[2]$c_rst' is not a known command, and no command was provided to run." >&2
+                    echo "$c_head""Usage:$c_rst $c_cmd""jobrunner run$c_rst $c_arg""[<name>] <command>...$c_rst" >&2
+                    return 1
+                end
+                set name $argv[2]
+                set task $argv[3..-1]
+            end
 
             # screen stores each session as a socket file named after it.
             if string match -q '*/*' -- $name
