@@ -364,30 +364,36 @@ some expand differently in Kitty vs WezTerm vs other terminals.
 
 ## 4.1 Editors
 
-    n / nv / neovim    nvim
-    e                  edit
-    se                 sudoedit
-    k                  kate
-    editt              Open new tab with nvim (terminal-aware)
-    cdnv               cd ~/.config/nvim
-    cdnvn              cd ~/.config/nvim; nvim
+| Abbreviation | Description |
+|---|---|
+| `n` | nvim |
+| `nv` | nvim |
+| `neovim` | nvim |
+| `cdnv` | cd ~/.config/nvim |
+| `cdnvn` | cd ~/.config/nvim; nvim |
+| `k` | kate |
+| `e` | edit |
+| `se` | sudoedit |
 
 ## 4.2 Navigation and Listing
 
-    l                  ls
-    lS                 lss       (sort by size)
-    lsR                lsr       (sort by time, oldest first)
-    lX                 lx        (sort by extension)
-    lT                 lt        (tree, depth 2)
-    lsT                lstree    (full recursive tree)
-    lzd                ld        (lazydocker)
-    cdi                zi        (interactive zoxide picker)
+| Abbreviation | Description |
+|---|---|
+| `l` | ls |
+| `lS` | lss (sort by size) |
+| `lsR` | lsr (sort by time, oldest first) |
+| `lX` | lx (sort by extension) |
+| `lT` | lt (tree, depth 2) |
+| `lsT` | lstree (full recursive tree) |
 
 ## 4.3 Git
 
-    g                  git
-    lg                 lazygit
-    gitig / git-ignore gi        (generate .gitignore)
+| Abbreviation | Description |
+|---|---|
+| `lg` | lazygit |
+| `g` | git |
+| `gitig` | generate .gitignore |
+| `git-ignore` | generate .gitignore |
 
 ## 4.4 Terminal Windows, Tabs, and Panes
 
@@ -395,152 +401,183 @@ These abbreviations control the terminal emulator. Each has a Kitty
 variant and a WezTerm variant; the correct one is inserted based on
 `$TERM` or `$TERM_PROGRAM`.
 
-    :w          New OS window
-    :wv         Split pane horizontally (new pane below)
-    :wh         Split pane vertically (new pane to the right)
-    :wo         Detach current window to its own OS window
-    :wot        Move current pane to a new tab
-    :t          New tab
-    :tl         Set tab title
-    :tw         Set window title
-    :twk        Rename workspace (WezTerm only)
-    :tp         Focus previous tab
-    :tn         Focus next tab
-    :q          Close current pane/window
-    :Q          Close current tab
-    :sw         spwin (spawn new OS window)
-
-Quick-navigate shortcuts open windows/tabs/panes with preset working dirs:
-
-    :tgk    New tab at ~/.config/kitty
-    :tgn    New tab at ~/.config/nvim
-    :tgf    New tab at ~/.config/fish
-    :tgh    New tab at ~
-    :tgcz   New tab at chezmoi source dir
-    :tgcm   New tab at chezmoi source dir
-    :tgp    New tab at ~/projects
-    :tgr    New tab at / (root)
-
-Prefixes :wg* and :wvg* / :whg* open OS windows or splits to the same
-set of dirs, respectively.
-
-Prefixes :cd* open tabs with a quick cd shortcut:
-
-    :cdn    cd ~/.config/nvim
-    :cdf    cd ~/.config/fish
-    :cdh    cd ~
-    :cdcz   cd to chezmoi source
-    :cdp    cd ~/projects
-
-Appending n to any :cd* abbreviation also runs nvim after changing dir.
+| Abbreviation | Description |
+|---|---|
+| `editt` | Open new tab with nvim (terminal-aware) |
+| `:q` | Close current pane/window |
+| `:Q` | Close current tab |
+| `:w` | New OS window |
+| `:wv` | Split pane horizontally (new pane below) |
+| `:wh` | Split pane vertically (new pane to the right) |
+| `:wo` | Detach current window to its own OS window |
+| `:wot` | Move current pane to a new tab |
+| `:t` | New tab |
+| `:tl` | Set tab title |
+| `:tw` | Set window title |
+| `:twk` | Rename workspace (WezTerm only) |
+| `:tp` | Focus previous tab |
+| `:tn` | Focus next tab |
+| `:tgk` | New tab at ~/.config/kitty |
+| `:tgn` | New tab at ~/.config/nvim |
+| `:tgf` | New tab at ~/.config/fish |
+| `:tgh` | New tab at ~ |
+| `:tgcz` | New tab at ~/.local/share/chezmoi |
+| `:tgcm` | New tab at ~/.config/chezmoi |
+| `:tgp` | New tab at ~/projects |
+| `:tgr` | New tab at / (root) |
+| `:wgk` | New OS window at ~/.config/kitty |
+| `:wgn` | New OS window at ~/.config/nvim |
+| `:wgf` | New OS window at ~/.config/fish |
+| `:wgh` | New OS window at ~ |
+| `:wgzd` | New OS window at ~/.local/share/chezmoi |
+| `:wgcz` | New OS window at ~/.config/chezmoi |
+| `:wgp` | New OS window at ~/projects |
+| `:wgr` | New OS window at / (root) |
+| `:wvgk` | Split bottom at ~/.config/kitty |
+| `:wvgn` | Split bottom at ~/.config/nvim |
+| `:wvgf` | Split bottom at ~/.config/fish |
+| `:wvgh` | Split bottom at ~ |
+| `:wvgcz` | Split bottom at ~/.local/share/chezmoi |
+| `:wvgcm` | Split bottom at ~/.config/chezmoi |
+| `:wvgp` | Split bottom at ~/projects |
+| `:wvgr` | Split bottom at / (root) |
+| `:whgk` | Split right at ~/.config/kitty |
+| `:whgn` | Split right at ~/.config/nvim |
+| `:whgf` | Split right at ~/.config/fish |
+| `:whgh` | Split right at ~ |
+| `:whgcz` | Split right at ~/.local/share/chezmoi |
+| `:whgcm` | Split right at ~/.config/chezmoi |
+| `:whgp` | Split right at ~/projects |
+| `:whgr` | Split right at / (root) |
+| `:cdk` | cd ~/.config/kitty |
+| `:cdkn` | cd ~/.config/kitty; nvim |
+| `:cdn` | cd ~/.config/nvim |
+| `:cdnn` | cd ~/.config/nvim; nvim |
+| `:cdf` | cd ~/.config/fish |
+| `:cdfn` | cd ~/.config/fish; nvim |
+| `:cdh` | cd ~ |
+| `:cdhn` | cd ~; nvim |
+| `:cdcz` | cd ~/.local/share/chezmoi |
+| `:cdczn` | cd ~/.local/share/chezmoi; nvim |
+| `:cdcm` | cd ~/.config/chezmoi |
+| `:cdcmn` | cd ~/.config/chezmoi; nvim |
+| `:cdp` | cd ~/projects/... |
+| `:cdpn` | cd ~/projects; nvim |
+| `:cdw` | cd ~/.config/wezterm |
+| `:cdwn` | cd ~/.config/wezterm; nvim |
+| `:sw` | spwin (spawn new OS window) |
 
 ## 4.5 Chezmoi
 
-    cm / cme / cmi / cmap / cmad / cmrm / cmcd /
-    cz / cze / czi / czap / czad / czrm / czcd
-
-    cm / cz          chezmoi
-    cmcd / czcd      chezmoi cd
-    cme / cze        chezmoi edit
-    cmad / czad      chezmoi add
-    cmap / czap      chezmoi apply
-    cmrm / cmf / czrm / czf    chezmoi forget
-    cmi / czi        chezmoi init
+| Abbreviation | Description |
+|---|---|
+| `cm` | chezmoi |
+| `cmcd` | chezmoi cd |
+| `czcd` | chezmoi cd |
+| `cdcm` | chezmoi cd |
+| `cdcz` | chezmoi cd |
+| `cme` | chezmoi edit |
+| `cze` | chezmoi edit |
+| `cmad` | chezmoi add |
+| `czad` | chezmoi add |
+| `cmap` | chezmoi apply |
+| `czap` | chezmoi apply |
+| `cmrm` | chezmoi forget |
+| `cmf` | chezmoi forget |
+| `czrm` | chezmoi forget |
+| `czf` | chezmoi forget |
+| `cmi` | chezmoi init |
+| `czi` | chezmoi init |
 
 ## 4.6 Docker
 
-    dcl         docker context use default
-    dcls        docker context ls
-    lzd         ld (lazydocker)
+| Abbreviation | Description |
+|---|---|
+| `dcl` | docker context use default |
+| `lzd` | ld (lazydocker) |
+| `dcls` | docker context ls |
 
 ## 4.7 Systemctl
 
-    sc          systemctl
-    ssc         sudo systemctl
-    scu         systemctl --user
-    st          systemctl status
-    scs         sudo systemctl start
-    scr         sudo systemctl restart
-    ssct        sudo systemctl start
-    sscs        sudo systemctl stop
-    sscr        sudo systemctl restart
+| Abbreviation | Description |
+|---|---|
+| `sc` | systemctl |
+| `ssc` | sudo systemctl |
+| `scu` | systemctl --user |
+| `st` | systemctl status |
+| `scs` | systemctl start |
+| `scr` | systemctl restart |
+| `ssct` | sudo systemctl status |
+| `sscs` | sudo systemctl start |
+| `sscr` | sudo systemctl restart |
 
 ## 4.8 AI Assistants
 
-    ag          agy
-    ag.         agy .
-    v           antigravity-ide
-    s           wezterm ssh (WezTerm only)
+| Abbreviation | Description |
+|---|---|
+| `v` | antigravity-ide |
+| `s` | wezterm ssh (WezTerm only) |
+| `ag` | agy |
+| `ag.` | agy . |
 
-## 4.9 History Expansion
+## 4.9 Miscellaneous
 
-These are implemented as keybinding helpers, but can also be typed:
+| Abbreviation | Description |
+|---|---|
+| `sudu` | sudo -s |
+| `kt` | kitty (Kitty only) |
+| `c` | cat |
+| `/exit` | exit |
+| `speedtest-fast` | fast-cli |
+| `bl` | bd list |
+| `bs` | bd sync |
+| `bC` | bd create --title |
+| `bsh` | bd show |
+| `lb` | lazybeads |
+| `open-repo` | repo-open |
+| `url-open` | open-url |
 
-    !^          Expand to first argument of previous command
-    !*          Expand to all arguments of previous command
-    typo_sub    Interactive typo substitution (Ctrl+F)
-    bang_string !string expansion
-    bang_search !?string search
-    bang_minus_n  !-n  (nth-previous command)
-
-## 4.10 Miscellaneous
-
-    /exit       exit
-    :q          Close pane (alias for terminal close)
-    :Q          Close tab
-    sudu        sudo -s
-    kt          kitty (Kitty only)
-    c           cat
-    speedtest-fast  fast-cli
-    bl          bd list
-    bs          bd sync
-    bC          bd create --title
-    bsh         bd show
-    lb          lazybeads
-
-## 4.11 Shell Aliases
+## 4.10 Shell Aliases
 
 These aliases are defined in conf.d/tricks.fish via alias (which creates Fish
 functions). They are active in all interactive sessions.
 
-### Navigation
+| Abbreviation | Description |
+|---|---|
+| `..` | cd .. |
+| `...` | cd ../.. |
+| `....` | cd ../../.. |
+| `.....` | cd ../../../.. |
+| `......` | cd ../../../../.. |
+| `dir` | dir --color=auto |
+| `vdir` | vdir --color=auto |
+| `grep` | grep --color=auto |
+| `fgrep` | fgrep --color=auto |
+| `egrep` | egrep --color=auto |
+| `cp` | cp -i |
+| `mv` | mv -i |
+| `tarnow` | tar -acf |
+| `untar` | tar -zxvf |
+| `tb` | nc termbin.com 9999 |
+| `jctl` | journalctl -p 3 -xb |
 
-    ..      cd ..
-    ...     cd ../..
-    ....    cd ../../..
-    .....   cd ../../../..
-    ......  cd ../../../../..
+## 4.11 History Expansion
 
-### Color Overrides
+Bash-style history expansions trigger on Space or Enter. Some are implemented
+as abbreviations (e.g. `!*`), while others (`!!`, `!$`, `!.`) are implemented
+as keybindings, but they all serve the same purpose.
 
-Force color output for common tools:
-
-    grep    grep --color=auto
-    fgrep   fgrep --color=auto
-    egrep   egrep --color=auto
-    dir     dir --color=auto
-    vdir    vdir --color=auto
-
-### Safety Wrappers
-
-Add -i (interactive confirmation) to destructive commands:
-
-    cp      cp -i
-    mv      mv -i
-
-### Archives and Networking
-
-    tarnow  tar -acf              Create compressed archive (auto-detects format)
-    untar   tar -zxvf             Extract a gzip-compressed archive
-    wget    wget -c               Resume interrupted downloads by default
-    tb      nc termbin.com 9999   Pipe content to termbin.com for quick sharing
-
-### System Logs
-
-    jctl    journalctl -p 3 -xb   Show priority-3 (error) journal entries
-                                    from the current boot
-
----
+| Abbreviation | Description |
+|---|---|
+| `!^` | Expand to the first argument of the previous command |
+| `!*` | Expand to all arguments of the previous command |
+| `^old^new^` | Interactive typo substitution (replace 'old' with 'new' in previous command) |
+| `!string` | Expand to the most recent command starting with 'string' |
+| `!?string?` | Expand to the most recent command containing 'string' |
+| `!-n` | Expand to the nth-previous command |
+| `!!` | Expand to the previous command |
+| `!$` | Expand to the last argument of the previous command |
+| `!.` | Expand .. to ../.. and so on |
 
 # 5. FUNCTIONS REFERENCE
 
@@ -1484,31 +1521,24 @@ Add -i (interactive confirmation) to destructive commands:
 
 ### jobrunner
 
-    Synopsis:  jobrunner [<subcommand>] [<name>] [<command>...]
-               jr [<subcommand>] [<name>] [<command>...]
+    Synopsis:  jobrunner [-t <tool>] [<subcommand>] [<name>] [<command>...]
+               jr [-t <tool>] [<subcommand>] [<name>] [<command>...]
 
     Runs, lists, inspects, re-attaches to, and terminates named background
-    jobs using GNU screen as the process engine. Unlike bkg and detach,
-    which discard output, a jobrunner job keeps a live terminal you can
-    return to later — it survives closing the shell, and `attach` restores
-    it in any subsequent session.
+    jobs using tmux or GNU screen as the process engine. Unlike bkg and
+    detach, which discard output, a jobrunner job keeps a live terminal you
+    can return to later — it survives closing the shell, and `attach`
+    restores it in any subsequent session.
+    Run and manage named background jobs. Jobs are detached from the shell
+    and backed by tmux (preferred) or GNU screen.
 
-    Every subcommand has a matching flag form, and the common cases are
-    inferred: no arguments lists jobs, a lone name attaches to it, and a
-    name followed by a command runs it.
-
-    Arguments:
-      run, -r, --run <name> <cmd>...   Start a named job in the background
-      list, -l, --list                 List all managed background jobs
-      attach, -a, --attach <name>      Re-attach interactively to a job
-      kill, -k, --kill <name>          Terminate a running background job
-      logs, -o, --output <name>        Print a job's current output, no attach
-      help, -h, --help                 Show usage help
+    If the job name is omitted when starting a new job (e.g. `jobrunner sleep 1`),
+    a memorable, random name (like `sleepy-badger`) will be generated.
 
     Exit Status:
       0    Command succeeded, or no jobs are running
       1    Invalid arguments, or the named job does not exist
-      127  screen is not installed
+      127  neither tmux nor screen is installed
 
     Notes:
       Detach from an attached job with Ctrl-A then D; the job keeps running.
@@ -1517,14 +1547,15 @@ Add -i (interactive confirmation) to destructive commands:
       `jobrunner run sync fish -c 'a | b'`.
 
     Example:
-    jobrunner run build make -j8
-    jobrunner backup rsync -a ./data remote:/backup/
+    jobrunner run -n build make -j8
+    jobrunner sleep 1000
+    jobrunner -t screen run -n backup rsync -a ./data remote:/backup/
     jobrunner list
     jobrunner logs build
     jobrunner build
     jobrunner kill build
 
-**Dependencies:** `screen`, `__jobrunner_sessions`
+**Dependencies:** `tmux`, `screen`, `__jobrunner_sessions`
 
 **Used by:** `jr`
 
@@ -2537,6 +2568,40 @@ Add -i (interactive confirmation) to destructive commands:
     open-url -v https://fish.rootiest.fyi/
 
 **Used by:** `repo-open`
+
+### rand_string
+
+    Synopsis:  rand_string [COMPONENTS/MODIFIERS]...
+
+    Generates a random, memorable string using a sequence of specified word
+    categories and formatting modifiers. Words are pulled from curated
+    plain-text databases bundled in `data/words/`.
+
+    Modifiers like `--separator` and `--case` are evaluated sequentially and
+    apply only to the components that follow them.
+
+    Supported Components:
+    <category>      A bundled word list (e.g. adjective, animal, color, name, noun, verb)
+    digits=<N>      N random digits (e.g. digits=3 -> 842)
+    literal=<text>  A static string component (e.g. literal=TEST)
+
+    Arguments:
+      -s, --separator=<sep>   Delimiter for subsequent words (dash, underscore, dot, none, or literal chars)
+      -c, --case=<casing>     Casing for subsequent words (lower, upper, title)
+      -h, --help              Show usage help
+
+    Exit Status:
+      0  String generated successfully
+      1  Unknown category or missing word list file
+
+    Notes:
+      Falls back to `random choice` if GNU `shuf` is missing, but `shuf` is
+      much faster for files with >1000 lines.
+
+    Example:
+    rand_string adjective animal
+    rand_string --case=title color animal --separator=dot digits=4
+    rand_string literal=TEST --separator=underscore verb noun
 
 ### replay
 

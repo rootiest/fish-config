@@ -141,6 +141,50 @@ def parse_functions(root: Path) -> dict[str, dict[str, list[str]]]:
     return out
 
 
+def parse_abbreviations(root: Path) -> dict[str, list[dict]]:
+    """Parse annotated abbreviations from conf.d/.
+
+    Returns {category: [{"name": name, "desc": desc}, ...]}
+    """
+    out: dict[str, list[dict]] = {}
+    for filename in ("abbr.fish", "tricks.fish", "puffer.fish"):
+        path = root / filename
+        if not path.exists():
+            continue
+        lines = path.read_text(encoding="utf-8").split("\n")
+        category = None
+        desc = None
+        name_override = None
+        for line in lines:
+            line = line.strip()
+            if line.startswith("# @category "):
+                category = line[12:].strip()
+            elif line.startswith("# @desc "):
+                desc = line[8:].strip()
+            elif line.startswith("# @name "):
+                name_override = line[8:].strip()
+            elif line.startswith("abbr -a ") or line.startswith("bind ") or line.startswith("alias "):
+                if category and desc:
+                    if name_override:
+                        name = name_override
+                    elif line.startswith("abbr -a "):
+                        name = line[8:].strip().split()[0].strip("'\"")
+                    elif line.startswith("alias "):
+                        name = line[6:].strip().split('=')[0]
+                    else:
+                        name = "unknown"
+                    # Only add if we haven't added this name to this category yet
+                    if not any(a["name"] == name for a in out.setdefault(category, [])):
+                        out[category].append({
+                            "name": name,
+                            "desc": desc
+                        })
+                category = None
+                desc = None
+                name_override = None
+    return out
+
+
 def _sort_key(entry: Path) -> tuple:
     """Order by sidebar.order when present, else by filename. Stable."""
     target = entry / "index.md" if entry.is_dir() else entry

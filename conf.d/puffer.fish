@@ -13,9 +13,21 @@ function _puffer_fish_key_bindings --on-variable fish_key_bindings
         set modes insert default
     end
 
+    # @category History Expansion
+    # @name !.
+    # @desc Expand .. to ../.. and so on
     bind --mode $modes[1] '.' _puffer_fish_expand_dot
+    # @category History Expansion
+    # @name !!
+    # @desc Expand to the previous command
     bind --mode $modes[1] '!' _puffer_fish_expand_bang
+    # @category History Expansion
+    # @name !$
+    # @desc Expand to the last argument of the previous command
     bind --mode $modes[1] '$' _puffer_fish_expand_buck
+    # @category History Expansion
+    # @name !*
+    # @desc Expand to all arguments of the previous command
     bind --mode $modes[1] '*' _puffer_fish_expand_star
     bind --mode $modes[2] --erase '.' '!' '$' '*'
 end

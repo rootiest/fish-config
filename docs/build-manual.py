@@ -51,6 +51,27 @@ def _with_entries(body: str, path: Path, entries: dict) -> str:
     return "\n\n".join(([body] if body.strip() else []) + blocks)
 
 
+def _with_abbreviations(body: str, abbrs: dict[str, list[dict]]) -> str:
+    """Inject generated abbreviation tables into the document placeholders."""
+    rendered_abbrs = {}
+    for cat, items in abbrs.items():
+        lines_cat = ["| Abbreviation | Description |", "|---|---|"]
+        for abbr in items:
+            name = abbr["name"]
+            desc = abbr["desc"]
+            # Escape pipes if any exist in name or desc
+            name = name.replace("|", "\\|")
+            desc = desc.replace("|", "\\|")
+            lines_cat.append(f"| `{name}` | {desc} |")
+        rendered_abbrs[cat] = "\n".join(lines_cat)
+
+    for cat, table in rendered_abbrs.items():
+        placeholder = f"<!-- GENERATED: {cat} -->"
+        body = body.replace(placeholder, table)
+        
+    return body
+
+
 def build_concat(root: Path) -> str:
     """Concatenate the manual into one ordered markdown document.
 
@@ -77,6 +98,9 @@ def build_concat(root: Path) -> str:
         chunks.append("#" * (depth + 1) + " " + heading)
         if _is_function_page(path, root):
             body = _with_entries(body, path, entries)
+        elif path.stem == "04-abbreviations":
+            abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
+            body = _with_abbreviations(body, abbrs)
         if body:
             body = re.sub(r"<LinkButton.*?</LinkButton>\n*", "", body, flags=re.DOTALL)
             body = re.sub(r"\[([^\]]+)\]\(/[^)]+\)", r"\1", body)
@@ -675,6 +699,9 @@ def build_site(root: Path, out: Path) -> list[dict]:
 
         if not is_function_dir:
             target = out / rel
+            if path.stem == "04-abbreviations":
+                abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
+                body = _with_abbreviations(body, abbrs)
             target.parent.mkdir(parents=True, exist_ok=True)
             body = _inject_subheading_cards(body)
             _write_prettified(target, _page_fm(fm), prettify(body))
