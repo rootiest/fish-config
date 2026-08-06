@@ -3255,8 +3255,8 @@ The following plugins are fully managed by Fisher. Their files are installed
 into the repo directory by Fisher and are listed in `.gitignore` — do not
 commit them. Fisher installs and updates them automatically.
 
-    jorgebucaran/fisher           Plugin manager itself
-    meaningful-ooo/sponge         Remove failed commands from history
+- `jorgebucaran/fisher` — Plugin manager itself
+- `meaningful-ooo/sponge` — Remove failed commands from history
 
 ## Sponge History Filtering
 
@@ -3266,13 +3266,13 @@ also filters privacy-sensitive commands through three layers:
 Layer 1 — Static patterns (universal, persistent across sessions):
 Commands matching any of these structural signatures are never recorded:
 
-    --password / --token / --passphrase / --api-key flags with values
-    Inline env assignments: GITHUB_TOKEN=xxx, MY_API_KEY=abc
-    Fish set with sensitive names: set -gx GITHUB_TOKEN xxx
-    URLs with embedded credentials: https://user:pass@host
-    HTTP Authorization headers: curl -H "Authorization: ..."
-    Basic auth flags: curl -u user:pass
-    sshpass, docker login -p, openssl -passin/-passout
+- `--password` / `--token` / `--passphrase` / `--api-key` flags with values
+- Inline env assignments: `GITHUB_TOKEN=xxx`, `MY_API_KEY=abc`
+- Fish set with sensitive names: `set -gx GITHUB_TOKEN xxx`
+- URLs with embedded credentials: `https://user:pass@host`
+- HTTP Authorization headers: `curl -H "Authorization: ..."`
+- Basic auth flags: `curl -u user:pass`
+- `sshpass`, `docker login -p`, `openssl -passin/-passout`
 
 Layer 2 — Dynamic secret values (session globals, refreshed each login):
 On the first prompt, after secrets.fish has loaded, the literal values of
@@ -3313,11 +3313,11 @@ releases. Installing them through Fisher would overwrite these customizations.
 
 Bundled components and their upstream origins:
 
-    catppuccin/fish               → themes/ + conf.d/theme.fish
-    PatrickF1/fzf.fish            → functions/_fzf_*.fish + conf.d/fzf.fish
-    franciscolourenco/done        → conf.d/done.fish
-    jorgebucaran/autopair.fish    → functions/_autopair_*.fish + conf.d/autopair.fish
-    nickeb96/puffer-fish          → functions/_puffer_fish_*.fish + conf.d/puffer.fish
+- `catppuccin/fish` → `themes/` + `conf.d/theme.fish`
+- `PatrickF1/fzf.fish` → `functions/_fzf_*.fish` + `conf.d/fzf.fish`
+- `franciscolourenco/done` → `conf.d/done.fish`
+- `jorgebucaran/autopair.fish` → `functions/_autopair_*.fish` + `conf.d/autopair.fish`
+- `nickeb96/puffer-fish` → `functions/_puffer_fish_*.fish` + `conf.d/puffer.fish`
 
 Do not run `fisher install` for these — it will overwrite the customized
 versions. To update their behavior, edit the relevant bundled files directly.
@@ -3326,8 +3326,8 @@ versions. To update their behavior, edit the relevant bundled files directly.
 
 The `fish_plugins` file at the config root:
 
-    jorgebucaran/fisher           Plugin manager itself
-    meaningful-ooo/sponge         Remove failed commands from history
+- `jorgebucaran/fisher` — Plugin manager itself
+- `meaningful-ooo/sponge` — Remove failed commands from history
 
 To update all Fisher-managed plugins, run `fisher update` or `fish-deps
 update` which calls it as its first step.
@@ -3347,9 +3347,9 @@ bundled directly with this config and requires no additional installation.
 
 ## Return Sentinel
 
-config.fish ends with a return sentinel guard. Any lines appended after it by
-a tool's setup command (starship init fish | source, zoxide init fish | source,
-etc.) will have no effect. All integrations are managed via conf.d/ files.
+`config.fish` ends with a return sentinel guard. Any lines appended after it by
+a tool's setup command (`starship init fish | source`, `zoxide init fish | source`,
+etc.) will have no effect. All integrations are managed via `conf.d/` files.
 
 If a new tool's shell integration appears to do nothing, check whether its
 setup command appended an init line below the sentinel and create a dedicated
@@ -3360,11 +3360,11 @@ setup command appended an init line below the sentinel and create a dedicated
 Pull the latest changes from the upstream repository without needing a
 configured git remote:
 
-    config-update              Fetch and apply the latest commits from upstream
-    config-update --dry-run    Preview available changes without applying them
-    config-update --force      Stash local changes, pull, then restore the stash
+- `config-update` — Fetch and apply the latest commits from upstream
+- `config-update --dry-run` — Preview available changes without applying them
+- `config-update --force` — Stash local changes, pull, then restore the stash
 
-All git output is suppressed. Run exec fish after a successful update to reload.
+All git output is suppressed. Run `exec fish` after a successful update to reload.
 
 ---
 

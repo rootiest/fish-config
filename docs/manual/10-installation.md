@@ -19,9 +19,9 @@ bundled directly with this config and requires no additional installation.
 
 ## Return Sentinel
 
-config.fish ends with a return sentinel guard. Any lines appended after it by
-a tool's setup command (starship init fish | source, zoxide init fish | source,
-etc.) will have no effect. All integrations are managed via conf.d/ files.
+`config.fish` ends with a return sentinel guard. Any lines appended after it by
+a tool's setup command (`starship init fish | source`, `zoxide init fish | source`,
+etc.) will have no effect. All integrations are managed via `conf.d/` files.
 
 If a new tool's shell integration appears to do nothing, check whether its
 setup command appended an init line below the sentinel and create a dedicated
@@ -32,10 +32,10 @@ setup command appended an init line below the sentinel and create a dedicated
 Pull the latest changes from the upstream repository without needing a
 configured git remote:
 
-    config-update              Fetch and apply the latest commits from upstream
-    config-update --dry-run    Preview available changes without applying them
-    config-update --force      Stash local changes, pull, then restore the stash
+- `config-update` — Fetch and apply the latest commits from upstream
+- `config-update --dry-run` — Preview available changes without applying them
+- `config-update --force` — Stash local changes, pull, then restore the stash
 
-All git output is suppressed. Run exec fish after a successful update to reload.
+All git output is suppressed. Run `exec fish` after a successful update to reload.
 
 ---
