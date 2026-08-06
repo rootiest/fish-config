@@ -21,7 +21,7 @@ some expand differently in Kitty vs WezTerm vs other terminals.
   <LinkCard title="Docker" href="/04-abbreviations/06-docker/" />
   <LinkCard title="Systemctl" href="/04-abbreviations/07-systemctl/" />
   <LinkCard title="AI Assistants" href="/04-abbreviations/08-ai-assistants/" />
-  <LinkCard title="Miscellaneous" href="/04-abbreviations/09-miscellaneous/" />
-  <LinkCard title="Shell Aliases" href="/04-abbreviations/10-shell-aliases/" />
-  <LinkCard title="History Expansion" href="/04-abbreviations/11-history-expansion/" />
+  <LinkCard title="History Expansion" href="/04-abbreviations/09-history-expansion/" />
+  <LinkCard title="Miscellaneous" href="/04-abbreviations/10-miscellaneous/" />
+  <LinkCard title="Shell Aliases" href="/04-abbreviations/11-shell-aliases/" />
 </CardGrid>

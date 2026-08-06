@@ -1,6 +1,6 @@
 ---
 title: Terminal Windows, Tabs, and Panes
-manTitle: 4.4 TERMINAL WINDOWS, TABS, AND PANES
+manTitle: 4.4 Terminal Windows, Tabs, and Panes
 ---
 
 These abbreviations control the terminal emulator. Each has a Kitty

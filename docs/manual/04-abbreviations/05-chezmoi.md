@@ -1,6 +1,6 @@
 ---
 title: Chezmoi
-manTitle: 4.5 CHEZMOI
+manTitle: 4.5 Chezmoi
 ---
 
 <!-- GENERATED: Chezmoi -->

@@ -1,6 +1,6 @@
 ---
 title: History Expansion
-manTitle: 4.11 HISTORY EXPANSION
+manTitle: 4.9 History Expansion
 ---
 
 Bash-style history expansions trigger on Space or Enter. Some are implemented

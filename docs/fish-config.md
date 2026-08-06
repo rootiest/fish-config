@@ -362,38 +362,40 @@ are active in Insert, Normal, and Visual modes unless noted.
 Abbreviations expand when you press Space or Enter. They are terminal-aware:
 some expand differently in Kitty vs WezTerm vs other terminals.
 
+
+
 ## 4.1 Editors
 
-| Abbreviation | Description |
-|---|---|
-| `n` | nvim |
-| `nv` | nvim |
-| `neovim` | nvim |
-| `cdnv` | cd ~/.config/nvim |
-| `cdnvn` | cd ~/.config/nvim; nvim |
-| `k` | kate |
-| `e` | edit |
-| `se` | sudoedit |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    n               nvim
+    nv              nvim
+    neovim          nvim
+    cdnv            cd ~/.config/nvim
+    cdnvn           cd ~/.config/nvim; nvim
+    k               kate
+    e               edit
+    se              sudoedit
 
 ## 4.2 Navigation and Listing
 
-| Abbreviation | Description |
-|---|---|
-| `l` | ls |
-| `lS` | lss (sort by size) |
-| `lsR` | lsr (sort by time, oldest first) |
-| `lX` | lx (sort by extension) |
-| `lT` | lt (tree, depth 2) |
-| `lsT` | lstree (full recursive tree) |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    l               ls
+    lS              lss (sort by size)
+    lsR             lsr (sort by time, oldest first)
+    lX              lx (sort by extension)
+    lT              lt (tree, depth 2)
+    lsT             lstree (full recursive tree)
 
 ## 4.3 Git
 
-| Abbreviation | Description |
-|---|---|
-| `lg` | lazygit |
-| `g` | git |
-| `gitig` | generate .gitignore |
-| `git-ignore` | generate .gitignore |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    lg              lazygit
+    g               git
+    gitig           generate .gitignore
+    git-ignore      generate .gitignore
 
 ## 4.4 Terminal Windows, Tabs, and Panes
 
@@ -401,183 +403,183 @@ These abbreviations control the terminal emulator. Each has a Kitty
 variant and a WezTerm variant; the correct one is inserted based on
 `$TERM` or `$TERM_PROGRAM`.
 
-| Abbreviation | Description |
-|---|---|
-| `editt` | Open new tab with nvim (terminal-aware) |
-| `:q` | Close current pane/window |
-| `:Q` | Close current tab |
-| `:w` | New OS window |
-| `:wv` | Split pane horizontally (new pane below) |
-| `:wh` | Split pane vertically (new pane to the right) |
-| `:wo` | Detach current window to its own OS window |
-| `:wot` | Move current pane to a new tab |
-| `:t` | New tab |
-| `:tl` | Set tab title |
-| `:tw` | Set window title |
-| `:twk` | Rename workspace (WezTerm only) |
-| `:tp` | Focus previous tab |
-| `:tn` | Focus next tab |
-| `:tgk` | New tab at ~/.config/kitty |
-| `:tgn` | New tab at ~/.config/nvim |
-| `:tgf` | New tab at ~/.config/fish |
-| `:tgh` | New tab at ~ |
-| `:tgcz` | New tab at ~/.local/share/chezmoi |
-| `:tgcm` | New tab at ~/.config/chezmoi |
-| `:tgp` | New tab at ~/projects |
-| `:tgr` | New tab at / (root) |
-| `:wgk` | New OS window at ~/.config/kitty |
-| `:wgn` | New OS window at ~/.config/nvim |
-| `:wgf` | New OS window at ~/.config/fish |
-| `:wgh` | New OS window at ~ |
-| `:wgzd` | New OS window at ~/.local/share/chezmoi |
-| `:wgcz` | New OS window at ~/.config/chezmoi |
-| `:wgp` | New OS window at ~/projects |
-| `:wgr` | New OS window at / (root) |
-| `:wvgk` | Split bottom at ~/.config/kitty |
-| `:wvgn` | Split bottom at ~/.config/nvim |
-| `:wvgf` | Split bottom at ~/.config/fish |
-| `:wvgh` | Split bottom at ~ |
-| `:wvgcz` | Split bottom at ~/.local/share/chezmoi |
-| `:wvgcm` | Split bottom at ~/.config/chezmoi |
-| `:wvgp` | Split bottom at ~/projects |
-| `:wvgr` | Split bottom at / (root) |
-| `:whgk` | Split right at ~/.config/kitty |
-| `:whgn` | Split right at ~/.config/nvim |
-| `:whgf` | Split right at ~/.config/fish |
-| `:whgh` | Split right at ~ |
-| `:whgcz` | Split right at ~/.local/share/chezmoi |
-| `:whgcm` | Split right at ~/.config/chezmoi |
-| `:whgp` | Split right at ~/projects |
-| `:whgr` | Split right at / (root) |
-| `:cdk` | cd ~/.config/kitty |
-| `:cdkn` | cd ~/.config/kitty; nvim |
-| `:cdn` | cd ~/.config/nvim |
-| `:cdnn` | cd ~/.config/nvim; nvim |
-| `:cdf` | cd ~/.config/fish |
-| `:cdfn` | cd ~/.config/fish; nvim |
-| `:cdh` | cd ~ |
-| `:cdhn` | cd ~; nvim |
-| `:cdcz` | cd ~/.local/share/chezmoi |
-| `:cdczn` | cd ~/.local/share/chezmoi; nvim |
-| `:cdcm` | cd ~/.config/chezmoi |
-| `:cdcmn` | cd ~/.config/chezmoi; nvim |
-| `:cdp` | cd ~/projects/... |
-| `:cdpn` | cd ~/projects; nvim |
-| `:cdw` | cd ~/.config/wezterm |
-| `:cdwn` | cd ~/.config/wezterm; nvim |
-| `:sw` | spwin (spawn new OS window) |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    editt           Open new tab with nvim (terminal-aware)
+    :q              Close current pane/window
+    :Q              Close current tab
+    :w              New OS window
+    :wv             Split pane horizontally (new pane below)
+    :wh             Split pane vertically (new pane to the right)
+    :wo             Detach current window to its own OS window
+    :wot            Move current pane to a new tab
+    :t              New tab
+    :tl             Set tab title
+    :tw             Set window title
+    :twk            Rename workspace (WezTerm only)
+    :tp             Focus previous tab
+    :tn             Focus next tab
+    :tgk            New tab at ~/.config/kitty
+    :tgn            New tab at ~/.config/nvim
+    :tgf            New tab at ~/.config/fish
+    :tgh            New tab at ~
+    :tgcz           New tab at ~/.local/share/chezmoi
+    :tgcm           New tab at ~/.config/chezmoi
+    :tgp            New tab at ~/projects
+    :tgr            New tab at / (root)
+    :wgk            New OS window at ~/.config/kitty
+    :wgn            New OS window at ~/.config/nvim
+    :wgf            New OS window at ~/.config/fish
+    :wgh            New OS window at ~
+    :wgzd           New OS window at ~/.local/share/chezmoi
+    :wgcz           New OS window at ~/.config/chezmoi
+    :wgp            New OS window at ~/projects
+    :wgr            New OS window at / (root)
+    :wvgk           Split bottom at ~/.config/kitty
+    :wvgn           Split bottom at ~/.config/nvim
+    :wvgf           Split bottom at ~/.config/fish
+    :wvgh           Split bottom at ~
+    :wvgcz          Split bottom at ~/.local/share/chezmoi
+    :wvgcm          Split bottom at ~/.config/chezmoi
+    :wvgp           Split bottom at ~/projects
+    :wvgr           Split bottom at / (root)
+    :whgk           Split right at ~/.config/kitty
+    :whgn           Split right at ~/.config/nvim
+    :whgf           Split right at ~/.config/fish
+    :whgh           Split right at ~
+    :whgcz          Split right at ~/.local/share/chezmoi
+    :whgcm          Split right at ~/.config/chezmoi
+    :whgp           Split right at ~/projects
+    :whgr           Split right at / (root)
+    :cdk            cd ~/.config/kitty
+    :cdkn           cd ~/.config/kitty; nvim
+    :cdn            cd ~/.config/nvim
+    :cdnn           cd ~/.config/nvim; nvim
+    :cdf            cd ~/.config/fish
+    :cdfn           cd ~/.config/fish; nvim
+    :cdh            cd ~
+    :cdhn           cd ~; nvim
+    :cdcz           cd ~/.local/share/chezmoi
+    :cdczn          cd ~/.local/share/chezmoi; nvim
+    :cdcm           cd ~/.config/chezmoi
+    :cdcmn          cd ~/.config/chezmoi; nvim
+    :cdp            cd ~/projects/...
+    :cdpn           cd ~/projects; nvim
+    :cdw            cd ~/.config/wezterm
+    :cdwn           cd ~/.config/wezterm; nvim
+    :sw             spwin (spawn new OS window)
 
 ## 4.5 Chezmoi
 
-| Abbreviation | Description |
-|---|---|
-| `cm` | chezmoi |
-| `cmcd` | chezmoi cd |
-| `czcd` | chezmoi cd |
-| `cdcm` | chezmoi cd |
-| `cdcz` | chezmoi cd |
-| `cme` | chezmoi edit |
-| `cze` | chezmoi edit |
-| `cmad` | chezmoi add |
-| `czad` | chezmoi add |
-| `cmap` | chezmoi apply |
-| `czap` | chezmoi apply |
-| `cmrm` | chezmoi forget |
-| `cmf` | chezmoi forget |
-| `czrm` | chezmoi forget |
-| `czf` | chezmoi forget |
-| `cmi` | chezmoi init |
-| `czi` | chezmoi init |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    cm              chezmoi
+    cmcd            chezmoi cd
+    czcd            chezmoi cd
+    cdcm            chezmoi cd
+    cdcz            chezmoi cd
+    cme             chezmoi edit
+    cze             chezmoi edit
+    cmad            chezmoi add
+    czad            chezmoi add
+    cmap            chezmoi apply
+    czap            chezmoi apply
+    cmrm            chezmoi forget
+    cmf             chezmoi forget
+    czrm            chezmoi forget
+    czf             chezmoi forget
+    cmi             chezmoi init
+    czi             chezmoi init
 
 ## 4.6 Docker
 
-| Abbreviation | Description |
-|---|---|
-| `dcl` | docker context use default |
-| `lzd` | ld (lazydocker) |
-| `dcls` | docker context ls |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    dcl             docker context use default
+    lzd             ld (lazydocker)
+    dcls            docker context ls
 
 ## 4.7 Systemctl
 
-| Abbreviation | Description |
-|---|---|
-| `sc` | systemctl |
-| `ssc` | sudo systemctl |
-| `scu` | systemctl --user |
-| `st` | systemctl status |
-| `scs` | systemctl start |
-| `scr` | systemctl restart |
-| `ssct` | sudo systemctl status |
-| `sscs` | sudo systemctl start |
-| `sscr` | sudo systemctl restart |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    sc              systemctl
+    ssc             sudo systemctl
+    scu             systemctl --user
+    st              systemctl status
+    scs             systemctl start
+    scr             systemctl restart
+    ssct            sudo systemctl status
+    sscs            sudo systemctl start
+    sscr            sudo systemctl restart
 
 ## 4.8 AI Assistants
 
-| Abbreviation | Description |
-|---|---|
-| `v` | antigravity-ide |
-| `s` | wezterm ssh (WezTerm only) |
-| `ag` | agy |
-| `ag.` | agy . |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    v               antigravity-ide
+    s               wezterm ssh (WezTerm only)
+    ag              agy
+    ag.             agy .
 
-## 4.9 Miscellaneous
-
-| Abbreviation | Description |
-|---|---|
-| `sudu` | sudo -s |
-| `kt` | kitty (Kitty only) |
-| `c` | cat |
-| `/exit` | exit |
-| `speedtest-fast` | fast-cli |
-| `bl` | bd list |
-| `bs` | bd sync |
-| `bC` | bd create --title |
-| `bsh` | bd show |
-| `lb` | lazybeads |
-| `open-repo` | repo-open |
-| `url-open` | open-url |
-
-## 4.10 Shell Aliases
-
-These aliases are defined in conf.d/tricks.fish via alias (which creates Fish
-functions). They are active in all interactive sessions.
-
-| Abbreviation | Description |
-|---|---|
-| `..` | cd .. |
-| `...` | cd ../.. |
-| `....` | cd ../../.. |
-| `.....` | cd ../../../.. |
-| `......` | cd ../../../../.. |
-| `dir` | dir --color=auto |
-| `vdir` | vdir --color=auto |
-| `grep` | grep --color=auto |
-| `fgrep` | fgrep --color=auto |
-| `egrep` | egrep --color=auto |
-| `cp` | cp -i |
-| `mv` | mv -i |
-| `tarnow` | tar -acf |
-| `untar` | tar -zxvf |
-| `tb` | nc termbin.com 9999 |
-| `jctl` | journalctl -p 3 -xb |
-
-## 4.11 History Expansion
+## 4.9 History Expansion
 
 Bash-style history expansions trigger on Space or Enter. Some are implemented
 as abbreviations (e.g. `!*`), while others (`!!`, `!$`, `!.`) are implemented
 as keybindings, but they all serve the same purpose.
 
-| Abbreviation | Description |
-|---|---|
-| `!^` | Expand to the first argument of the previous command |
-| `!*` | Expand to all arguments of the previous command |
-| `^old^new^` | Interactive typo substitution (replace 'old' with 'new' in previous command) |
-| `!string` | Expand to the most recent command starting with 'string' |
-| `!?string?` | Expand to the most recent command containing 'string' |
-| `!-n` | Expand to the nth-previous command |
-| `!!` | Expand to the previous command |
-| `!$` | Expand to the last argument of the previous command |
-| `!.` | Expand .. to ../.. and so on |
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    !^              Expand to the first argument of the previous command
+    !*              Expand to all arguments of the previous command
+    ^old^new^       Interactive typo substitution (replace 'old' with 'new' in previous command)
+    !string         Expand to the most recent command starting with 'string'
+    !?string?       Expand to the most recent command containing 'string'
+    !-n             Expand to the nth-previous command
+    !!              Expand to the previous command
+    !$              Expand to the last argument of the previous command
+    !.              Expand .. to ../.. and so on
+
+## 4.10 Miscellaneous
+
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    sudu            sudo -s
+    kt              kitty (Kitty only)
+    c               cat
+    /exit           exit
+    speedtest-fast  fast-cli
+    bl              bd list
+    bs              bd sync
+    bC              bd create --title
+    bsh             bd show
+    lb              lazybeads
+    open-repo       repo-open
+    url-open        open-url
+
+## 4.11 Shell Aliases
+
+These aliases are defined in conf.d/tricks.fish via alias (which creates Fish
+functions). They are active in all interactive sessions.
+
+    Abbreviation  Description
+    ───────────────────────────────────────────────────────────────────
+    ..              cd ..
+    ...             cd ../..
+    ....            cd ../../..
+    .....           cd ../../../..
+    ......          cd ../../../../..
+    dir             dir --color=auto
+    vdir            vdir --color=auto
+    grep            grep --color=auto
+    fgrep           fgrep --color=auto
+    egrep           egrep --color=auto
+    cp              cp -i
+    mv              mv -i
+    tarnow          tar -acf
+    untar           tar -zxvf
+    tb              nc termbin.com 9999
+    jctl            journalctl -p 3 -xb
 
 # 5. FUNCTIONS REFERENCE
 

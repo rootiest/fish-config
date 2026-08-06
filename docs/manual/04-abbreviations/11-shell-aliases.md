@@ -1,6 +1,6 @@
 ---
 title: Shell Aliases
-manTitle: 4.10 SHELL ALIASES
+manTitle: 4.11 Shell Aliases
 ---
 
 These aliases are defined in conf.d/tricks.fish via alias (which creates Fish

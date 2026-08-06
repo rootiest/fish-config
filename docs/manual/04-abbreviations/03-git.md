@@ -1,6 +1,6 @@
 ---
 title: Git
-manTitle: 4.3 GIT
+manTitle: 4.3 Git
 ---
 
 <!-- GENERATED: Git -->
