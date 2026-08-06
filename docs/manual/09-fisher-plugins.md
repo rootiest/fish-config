@@ -27,8 +27,8 @@ The following plugins are fully managed by Fisher. Their files are installed
 into the repo directory by Fisher and are listed in `.gitignore` — do not
 commit them. Fisher installs and updates them automatically.
 
-    jorgebucaran/fisher           Plugin manager itself
-    meaningful-ooo/sponge         Remove failed commands from history
+- `jorgebucaran/fisher` — Plugin manager itself
+- `meaningful-ooo/sponge` — Remove failed commands from history
 
 ## Sponge History Filtering
 
@@ -38,13 +38,13 @@ also filters privacy-sensitive commands through three layers:
 Layer 1 — Static patterns (universal, persistent across sessions):
 Commands matching any of these structural signatures are never recorded:
 
-    --password / --token / --passphrase / --api-key flags with values
-    Inline env assignments: GITHUB_TOKEN=xxx, MY_API_KEY=abc
-    Fish set with sensitive names: set -gx GITHUB_TOKEN xxx
-    URLs with embedded credentials: https://user:pass@host
-    HTTP Authorization headers: curl -H "Authorization: ..."
-    Basic auth flags: curl -u user:pass
-    sshpass, docker login -p, openssl -passin/-passout
+- `--password` / `--token` / `--passphrase` / `--api-key` flags with values
+- Inline env assignments: `GITHUB_TOKEN=xxx`, `MY_API_KEY=abc`
+- Fish set with sensitive names: `set -gx GITHUB_TOKEN xxx`
+- URLs with embedded credentials: `https://user:pass@host`
+- HTTP Authorization headers: `curl -H "Authorization: ..."`
+- Basic auth flags: `curl -u user:pass`
+- `sshpass`, `docker login -p`, `openssl -passin/-passout`
 
 Layer 2 — Dynamic secret values (session globals, refreshed each login):
 On the first prompt, after secrets.fish has loaded, the literal values of
@@ -85,11 +85,11 @@ releases. Installing them through Fisher would overwrite these customizations.
 
 Bundled components and their upstream origins:
 
-    catppuccin/fish               → themes/ + conf.d/theme.fish
-    PatrickF1/fzf.fish            → functions/_fzf_*.fish + conf.d/fzf.fish
-    franciscolourenco/done        → conf.d/done.fish
-    jorgebucaran/autopair.fish    → functions/_autopair_*.fish + conf.d/autopair.fish
-    nickeb96/puffer-fish          → functions/_puffer_fish_*.fish + conf.d/puffer.fish
+- `catppuccin/fish` → `themes/` + `conf.d/theme.fish`
+- `PatrickF1/fzf.fish` → `functions/_fzf_*.fish` + `conf.d/fzf.fish`
+- `franciscolourenco/done` → `conf.d/done.fish`
+- `jorgebucaran/autopair.fish` → `functions/_autopair_*.fish` + `conf.d/autopair.fish`
+- `nickeb96/puffer-fish` → `functions/_puffer_fish_*.fish` + `conf.d/puffer.fish`
 
 Do not run `fisher install` for these — it will overwrite the customized
 versions. To update their behavior, edit the relevant bundled files directly.
@@ -98,8 +98,8 @@ versions. To update their behavior, edit the relevant bundled files directly.
 
 The `fish_plugins` file at the config root:
 
-    jorgebucaran/fisher           Plugin manager itself
-    meaningful-ooo/sponge         Remove failed commands from history
+- `jorgebucaran/fisher` — Plugin manager itself
+- `meaningful-ooo/sponge` — Remove failed commands from history
 
 To update all Fisher-managed plugins, run `fisher update` or `fish-deps
 update` which calls it as its first step.
