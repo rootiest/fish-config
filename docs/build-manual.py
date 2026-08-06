@@ -98,7 +98,7 @@ def build_concat(root: Path) -> str:
         chunks.append("#" * (depth + 1) + " " + heading)
         if _is_function_page(path, root):
             body = _with_entries(body, path, entries)
-        elif path.stem == "04-abbreviations":
+        elif "04-abbreviations" in path.parts:
             abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
             body = _with_abbreviations(body, abbrs)
         if body:
@@ -699,7 +699,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
 
         if not is_function_dir:
             target = out / rel
-            if path.stem == "04-abbreviations":
+            if "04-abbreviations" in path.parts:
                 abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
                 body = _with_abbreviations(body, abbrs)
             target.parent.mkdir(parents=True, exist_ok=True)
