@@ -55,14 +55,17 @@ def _with_abbreviations(body: str, abbrs: dict[str, list[dict]]) -> str:
     """Inject generated abbreviation tables into the document placeholders."""
     rendered_abbrs = {}
     for cat, items in abbrs.items():
-        lines_cat = ["| Abbreviation | Description |", "|---|---|"]
+        lines_cat = ["    Abbreviation  Description", "    ───────────────────────────────────────────────────────────────────"]
         for abbr in items:
             name = abbr["name"]
             desc = abbr["desc"]
-            # Escape pipes if any exist in name or desc
-            name = name.replace("|", "\\|")
-            desc = desc.replace("|", "\\|")
-            lines_cat.append(f"| `{name}` | {desc} |")
+            
+            # Left-pad description to ensure at least 2 spaces for cell split
+            name_part = name.ljust(16)
+            if len(name_part) < len(name) + 2:
+                name_part = name + "  "
+                
+            lines_cat.append(f"    {name_part}{desc}")
         rendered_abbrs[cat] = "\n".join(lines_cat)
 
     for cat, table in rendered_abbrs.items():
@@ -103,6 +106,7 @@ def build_concat(root: Path) -> str:
             body = _with_abbreviations(body, abbrs)
         if body:
             body = re.sub(r"<LinkButton.*?</LinkButton>\n*", "", body, flags=re.DOTALL)
+            body = re.sub(r"<CardGrid.*?</CardGrid>\n*", "", body, flags=re.DOTALL)
             body = re.sub(r"\[([^\]]+)\]\(/[^)]+\)", r"\1", body)
             chunks.append(mt.shift_headings(body, depth))
     return "\n\n".join(chunks) + "\n"
