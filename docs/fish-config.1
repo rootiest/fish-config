@@ -1959,6 +1959,72 @@ Example:
 # Rendered automatically by fish; not called directly.
 \f[R]
 .fi
+.SS jobrunner
+.IP
+.nf
+\f[C]
+Synopsis:  jobrunner [-t <tool>] [<subcommand>] [<name>] [<command>...]
+           jr [-t <tool>] [<subcommand>] [<name>] [<command>...]
+
+Runs, lists, inspects, re-attaches to, and terminates named background
+jobs using tmux or GNU screen as the process engine. Unlike bkg and
+detach, which discard output, a jobrunner job keeps a live terminal you
+can return to later \[em] it survives closing the shell, and \[ga]attach\[ga]
+restores it in any subsequent session.
+Run and manage named background jobs. Jobs are detached from the shell
+and backed by tmux (preferred) or GNU screen.
+
+If the job name is omitted when starting a new job (e.g. \[ga]jobrunner sleep 1\[ga]),
+a memorable, random name (like \[ga]sleepy-badger\[ga]) will be generated.
+
+Exit Status:
+  0    Command succeeded, or no jobs are running
+  1    Invalid arguments, or the named job does not exist
+  127  neither tmux nor screen is installed
+
+Notes:
+  Detach from an attached job with Ctrl-A then D; the job keeps running.
+  Commands are executed directly rather than through a shell, so pipes and
+  redirections must be wrapped explicitly, e.g.
+  \[ga]jobrunner run sync fish -c \[aq]a | b\[aq]\[ga].
+
+Example:
+jobrunner run -n build make -j8
+jobrunner sleep 1000
+jobrunner -t screen run -n backup rsync -a ./data remote:/backup/
+jobrunner list
+jobrunner logs build
+jobrunner build
+jobrunner kill build
+\f[R]
+.fi
+.PP
+\f[B]Dependencies:\f[R] \f[V]tmux\f[R], \f[V]screen\f[R],
+\f[V]__jobrunner_sessions\f[R]
+.PP
+\f[B]Used by:\f[R] \f[V]jr\f[R]
+.SS jr
+.IP
+.nf
+\f[C]
+Synopsis:  jr [<subcommand>] [<name>] [<command>...]
+
+Shorthand for jobrunner. Accepts the same subcommands, flags, and
+shorthands, and inherits its completions.
+
+Arguments:
+  See jobrunner --help for the full argument reference.
+
+Exit Status:
+  Same as jobrunner.
+
+Example:
+jr run build make -j8
+jr list
+\f[R]
+.fi
+.PP
+\f[B]Dependencies:\f[R] \f[V]jobrunner\f[R]
 .SS split
 .IP
 .nf
@@ -3079,6 +3145,43 @@ open-url -v https://fish.rootiest.fyi/
 .fi
 .PP
 \f[B]Used by:\f[R] \f[V]repo-open\f[R]
+.SS rand_string
+.IP
+.nf
+\f[C]
+Synopsis:  rand_string [COMPONENTS/MODIFIERS]...
+
+Generates a random, memorable string using a sequence of specified word
+categories and formatting modifiers. Words are pulled from curated
+plain-text databases bundled in \[ga]data/words/\[ga].
+
+Modifiers like \[ga]--separator\[ga] and \[ga]--case\[ga] are evaluated sequentially and
+apply only to the components that follow them.
+
+Supported Components:
+<category>      A bundled word list (e.g. adjective, animal, color, name, noun, verb)
+digits=<N>      N random digits (e.g. digits=3 -> 842)
+literal=<text>  A static string component (e.g. literal=TEST)
+
+Arguments:
+  -s, --separator=<sep>   Delimiter for subsequent words (dash, underscore, dot, none, or literal chars)
+  -c, --case=<casing>     Casing for subsequent words (lower, upper, title)
+  -h, --help              Show usage help
+
+Exit Status:
+  0  String generated successfully
+  1  Unknown category or missing word list file
+
+Notes:
+  Falls back to \[ga]random choice\[ga] if GNU \[ga]shuf\[ga] is missing, but \[ga]shuf\[ga] is
+  much faster for files with >1000 lines.
+
+Example:
+rand_string adjective animal
+rand_string --case=title color animal --separator=dot digits=4
+rand_string literal=TEST --separator=underscore verb noun
+\f[R]
+.fi
 .SS replay
 .IP
 .nf

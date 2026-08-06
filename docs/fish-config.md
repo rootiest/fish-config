@@ -1484,31 +1484,24 @@ Add -i (interactive confirmation) to destructive commands:
 
 ### jobrunner
 
-    Synopsis:  jobrunner [<subcommand>] [<name>] [<command>...]
-               jr [<subcommand>] [<name>] [<command>...]
+    Synopsis:  jobrunner [-t <tool>] [<subcommand>] [<name>] [<command>...]
+               jr [-t <tool>] [<subcommand>] [<name>] [<command>...]
 
     Runs, lists, inspects, re-attaches to, and terminates named background
-    jobs using GNU screen as the process engine. Unlike bkg and detach,
-    which discard output, a jobrunner job keeps a live terminal you can
-    return to later — it survives closing the shell, and `attach` restores
-    it in any subsequent session.
+    jobs using tmux or GNU screen as the process engine. Unlike bkg and
+    detach, which discard output, a jobrunner job keeps a live terminal you
+    can return to later — it survives closing the shell, and `attach`
+    restores it in any subsequent session.
+    Run and manage named background jobs. Jobs are detached from the shell
+    and backed by tmux (preferred) or GNU screen.
 
-    Every subcommand has a matching flag form, and the common cases are
-    inferred: no arguments lists jobs, a lone name attaches to it, and a
-    name followed by a command runs it.
-
-    Arguments:
-      run, -r, --run <name> <cmd>...   Start a named job in the background
-      list, -l, --list                 List all managed background jobs
-      attach, -a, --attach <name>      Re-attach interactively to a job
-      kill, -k, --kill <name>          Terminate a running background job
-      logs, -o, --output <name>        Print a job's current output, no attach
-      help, -h, --help                 Show usage help
+    If the job name is omitted when starting a new job (e.g. `jobrunner sleep 1`),
+    a memorable, random name (like `sleepy-badger`) will be generated.
 
     Exit Status:
       0    Command succeeded, or no jobs are running
       1    Invalid arguments, or the named job does not exist
-      127  screen is not installed
+      127  neither tmux nor screen is installed
 
     Notes:
       Detach from an attached job with Ctrl-A then D; the job keeps running.
@@ -1517,14 +1510,15 @@ Add -i (interactive confirmation) to destructive commands:
       `jobrunner run sync fish -c 'a | b'`.
 
     Example:
-    jobrunner run build make -j8
-    jobrunner backup rsync -a ./data remote:/backup/
+    jobrunner run -n build make -j8
+    jobrunner sleep 1000
+    jobrunner -t screen run -n backup rsync -a ./data remote:/backup/
     jobrunner list
     jobrunner logs build
     jobrunner build
     jobrunner kill build
 
-**Dependencies:** `screen`, `__jobrunner_sessions`
+**Dependencies:** `tmux`, `screen`, `__jobrunner_sessions`
 
 **Used by:** `jr`
 
@@ -2537,6 +2531,40 @@ Add -i (interactive confirmation) to destructive commands:
     open-url -v https://fish.rootiest.fyi/
 
 **Used by:** `repo-open`
+
+### rand_string
+
+    Synopsis:  rand_string [COMPONENTS/MODIFIERS]...
+
+    Generates a random, memorable string using a sequence of specified word
+    categories and formatting modifiers. Words are pulled from curated
+    plain-text databases bundled in `data/words/`.
+
+    Modifiers like `--separator` and `--case` are evaluated sequentially and
+    apply only to the components that follow them.
+
+    Supported Components:
+    <category>      A bundled word list (e.g. adjective, animal, color, name, noun, verb)
+    digits=<N>      N random digits (e.g. digits=3 -> 842)
+    literal=<text>  A static string component (e.g. literal=TEST)
+
+    Arguments:
+      -s, --separator=<sep>   Delimiter for subsequent words (dash, underscore, dot, none, or literal chars)
+      -c, --case=<casing>     Casing for subsequent words (lower, upper, title)
+      -h, --help              Show usage help
+
+    Exit Status:
+      0  String generated successfully
+      1  Unknown category or missing word list file
+
+    Notes:
+      Falls back to `random choice` if GNU `shuf` is missing, but `shuf` is
+      much faster for files with >1000 lines.
+
+    Example:
+    rand_string adjective animal
+    rand_string --case=title color animal --separator=dot digits=4
+    rand_string literal=TEST --separator=underscore verb noun
 
 ### replay
 
