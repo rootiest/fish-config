@@ -636,36 +636,42 @@ other terminals.
 .IP
 .nf
 \f[C]
-n / nv / neovim    nvim
-e                  edit
-se                 sudoedit
-k                  kate
-editt              Open new tab with nvim (terminal-aware)
-cdnv               cd \[ti]/.config/nvim
-cdnvn              cd \[ti]/.config/nvim; nvim
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+n               nvim
+nv              nvim
+neovim          nvim
+cdnv            cd \[ti]/.config/nvim
+cdnvn           cd \[ti]/.config/nvim; nvim
+k               kate
+e               edit
+se              sudoedit
 \f[R]
 .fi
 .SS 4.2 Navigation and Listing
 .IP
 .nf
 \f[C]
-l                  ls
-lS                 lss       (sort by size)
-lsR                lsr       (sort by time, oldest first)
-lX                 lx        (sort by extension)
-lT                 lt        (tree, depth 2)
-lsT                lstree    (full recursive tree)
-lzd                ld        (lazydocker)
-cdi                zi        (interactive zoxide picker)
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+l               ls
+lS              lss (sort by size)
+lsR             lsr (sort by time, oldest first)
+lX              lx (sort by extension)
+lT              lt (tree, depth 2)
+lsT             lstree (full recursive tree)
 \f[R]
 .fi
 .SS 4.3 Git
 .IP
 .nf
 \f[C]
-g                  git
-lg                 lazygit
-gitig / git-ignore gi        (generate .gitignore)
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+lg              lazygit
+g               git
+gitig           generate .gitignore
+git-ignore      generate .gitignore
 \f[R]
 .fi
 .SS 4.4 Terminal Windows, Tabs, and Panes
@@ -676,135 +682,178 @@ inserted based on \f[V]$TERM\f[R] or \f[V]$TERM_PROGRAM\f[R].
 .IP
 .nf
 \f[C]
-:w          New OS window
-:wv         Split pane horizontally (new pane below)
-:wh         Split pane vertically (new pane to the right)
-:wo         Detach current window to its own OS window
-:wot        Move current pane to a new tab
-:t          New tab
-:tl         Set tab title
-:tw         Set window title
-:twk        Rename workspace (WezTerm only)
-:tp         Focus previous tab
-:tn         Focus next tab
-:q          Close current pane/window
-:Q          Close current tab
-:sw         spwin (spawn new OS window)
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+editt           Open new tab with nvim (terminal-aware)
+:q              Close current pane/window
+:Q              Close current tab
+:w              New OS window
+:wv             Split pane horizontally (new pane below)
+:wh             Split pane vertically (new pane to the right)
+:wo             Detach current window to its own OS window
+:wot            Move current pane to a new tab
+:t              New tab
+:tl             Set tab title
+:tw             Set window title
+:twk            Rename workspace (WezTerm only)
+:tp             Focus previous tab
+:tn             Focus next tab
+:tgk            New tab at \[ti]/.config/kitty
+:tgn            New tab at \[ti]/.config/nvim
+:tgf            New tab at \[ti]/.config/fish
+:tgh            New tab at \[ti]
+:tgcz           New tab at \[ti]/.local/share/chezmoi
+:tgcm           New tab at \[ti]/.config/chezmoi
+:tgp            New tab at \[ti]/projects
+:tgr            New tab at / (root)
+:wgk            New OS window at \[ti]/.config/kitty
+:wgn            New OS window at \[ti]/.config/nvim
+:wgf            New OS window at \[ti]/.config/fish
+:wgh            New OS window at \[ti]
+:wgzd           New OS window at \[ti]/.local/share/chezmoi
+:wgcz           New OS window at \[ti]/.config/chezmoi
+:wgp            New OS window at \[ti]/projects
+:wgr            New OS window at / (root)
+:wvgk           Split bottom at \[ti]/.config/kitty
+:wvgn           Split bottom at \[ti]/.config/nvim
+:wvgf           Split bottom at \[ti]/.config/fish
+:wvgh           Split bottom at \[ti]
+:wvgcz          Split bottom at \[ti]/.local/share/chezmoi
+:wvgcm          Split bottom at \[ti]/.config/chezmoi
+:wvgp           Split bottom at \[ti]/projects
+:wvgr           Split bottom at / (root)
+:whgk           Split right at \[ti]/.config/kitty
+:whgn           Split right at \[ti]/.config/nvim
+:whgf           Split right at \[ti]/.config/fish
+:whgh           Split right at \[ti]
+:whgcz          Split right at \[ti]/.local/share/chezmoi
+:whgcm          Split right at \[ti]/.config/chezmoi
+:whgp           Split right at \[ti]/projects
+:whgr           Split right at / (root)
+:cdk            cd \[ti]/.config/kitty
+:cdkn           cd \[ti]/.config/kitty; nvim
+:cdn            cd \[ti]/.config/nvim
+:cdnn           cd \[ti]/.config/nvim; nvim
+:cdf            cd \[ti]/.config/fish
+:cdfn           cd \[ti]/.config/fish; nvim
+:cdh            cd \[ti]
+:cdhn           cd \[ti]; nvim
+:cdcz           cd \[ti]/.local/share/chezmoi
+:cdczn          cd \[ti]/.local/share/chezmoi; nvim
+:cdcm           cd \[ti]/.config/chezmoi
+:cdcmn          cd \[ti]/.config/chezmoi; nvim
+:cdp            cd \[ti]/projects/...
+:cdpn           cd \[ti]/projects; nvim
+:cdw            cd \[ti]/.config/wezterm
+:cdwn           cd \[ti]/.config/wezterm; nvim
+:sw             spwin (spawn new OS window)
 \f[R]
 .fi
-.PP
-Quick-navigate shortcuts open windows/tabs/panes with preset working
-dirs:
-.IP
-.nf
-\f[C]
-:tgk    New tab at \[ti]/.config/kitty
-:tgn    New tab at \[ti]/.config/nvim
-:tgf    New tab at \[ti]/.config/fish
-:tgh    New tab at \[ti]
-:tgcz   New tab at chezmoi source dir
-:tgcm   New tab at chezmoi source dir
-:tgp    New tab at \[ti]/projects
-:tgr    New tab at / (root)
-\f[R]
-.fi
-.PP
-Prefixes :wg* and :wvg* / :whg* open OS windows or splits to the same
-set of dirs, respectively.
-.PP
-Prefixes :cd* open tabs with a quick cd shortcut:
-.IP
-.nf
-\f[C]
-:cdn    cd \[ti]/.config/nvim
-:cdf    cd \[ti]/.config/fish
-:cdh    cd \[ti]
-:cdcz   cd to chezmoi source
-:cdp    cd \[ti]/projects
-\f[R]
-.fi
-.PP
-Appending n to any :cd* abbreviation also runs nvim after changing dir.
 .SS 4.5 Chezmoi
 .IP
 .nf
 \f[C]
-cm / cme / cmi / cmap / cmad / cmrm / cmcd /
-cz / cze / czi / czap / czad / czrm / czcd
-
-cm / cz          chezmoi
-cmcd / czcd      chezmoi cd
-cme / cze        chezmoi edit
-cmad / czad      chezmoi add
-cmap / czap      chezmoi apply
-cmrm / cmf / czrm / czf    chezmoi forget
-cmi / czi        chezmoi init
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+cm              chezmoi
+cmcd            chezmoi cd
+czcd            chezmoi cd
+cdcm            chezmoi cd
+cdcz            chezmoi cd
+cme             chezmoi edit
+cze             chezmoi edit
+cmad            chezmoi add
+czad            chezmoi add
+cmap            chezmoi apply
+czap            chezmoi apply
+cmrm            chezmoi forget
+cmf             chezmoi forget
+czrm            chezmoi forget
+czf             chezmoi forget
+cmi             chezmoi init
+czi             chezmoi init
 \f[R]
 .fi
 .SS 4.6 Docker
 .IP
 .nf
 \f[C]
-dcl         docker context use default
-dcls        docker context ls
-lzd         ld (lazydocker)
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+dcl             docker context use default
+lzd             ld (lazydocker)
+dcls            docker context ls
 \f[R]
 .fi
 .SS 4.7 Systemctl
 .IP
 .nf
 \f[C]
-sc          systemctl
-ssc         sudo systemctl
-scu         systemctl --user
-st          systemctl status
-scs         sudo systemctl start
-scr         sudo systemctl restart
-ssct        sudo systemctl start
-sscs        sudo systemctl stop
-sscr        sudo systemctl restart
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+sc              systemctl
+ssc             sudo systemctl
+scu             systemctl --user
+st              systemctl status
+scs             systemctl start
+scr             systemctl restart
+ssct            sudo systemctl status
+sscs            sudo systemctl start
+sscr            sudo systemctl restart
 \f[R]
 .fi
 .SS 4.8 AI Assistants
 .IP
 .nf
 \f[C]
-ag          agy
-ag.         agy .
-v           antigravity-ide
-s           wezterm ssh (WezTerm only)
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+v               antigravity-ide
+s               wezterm ssh (WezTerm only)
+ag              agy
+ag.             agy .
 \f[R]
 .fi
 .SS 4.9 History Expansion
 .PP
-These are implemented as keybinding helpers, but can also be typed:
+Bash-style history expansions trigger on Space or Enter.
+Some are implemented as abbreviations (e.g.\ \f[V]!*\f[R]), while others
+(\f[V]!!\f[R], \f[V]!$\f[R], \f[V]!.\f[R]) are implemented as
+keybindings, but they all serve the same purpose.
 .IP
 .nf
 \f[C]
-!\[ha]          Expand to first argument of previous command
-!*          Expand to all arguments of previous command
-typo_sub    Interactive typo substitution (Ctrl+F)
-bang_string !string expansion
-bang_search !?string search
-bang_minus_n  !-n  (nth-previous command)
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+!\[ha]              Expand to the first argument of the previous command
+!*              Expand to all arguments of the previous command
+\[ha]old\[ha]new\[ha]       Interactive typo substitution (replace \[aq]old\[aq] with \[aq]new\[aq] in previous command)
+!string         Expand to the most recent command starting with \[aq]string\[aq]
+!?string?       Expand to the most recent command containing \[aq]string\[aq]
+!-n             Expand to the nth-previous command
+!!              Expand to the previous command
+!$              Expand to the last argument of the previous command
+!.              Expand .. to ../.. and so on
 \f[R]
 .fi
 .SS 4.10 Miscellaneous
 .IP
 .nf
 \f[C]
-/exit       exit
-:q          Close pane (alias for terminal close)
-:Q          Close tab
-sudu        sudo -s
-kt          kitty (Kitty only)
-c           cat
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+sudu            sudo -s
+kt              kitty (Kitty only)
+c               cat
+/exit           exit
 speedtest-fast  fast-cli
-bl          bd list
-bs          bd sync
-bC          bd create --title
-bsh         bd show
-lb          lazybeads
+bl              bd list
+bs              bd sync
+bC              bd create --title
+bsh             bd show
+lb              lazybeads
+open-repo       repo-open
+url-open        open-url
 \f[R]
 .fi
 .SS 4.11 Shell Aliases
@@ -812,60 +861,29 @@ lb          lazybeads
 These aliases are defined in conf.d/tricks.fish via alias (which creates
 Fish functions).
 They are active in all interactive sessions.
-.SS Navigation
 .IP
 .nf
 \f[C]
-\&..      cd ..
-\&...     cd ../..
-\&....    cd ../../..
-\&.....   cd ../../../..
-\&......  cd ../../../../..
+Abbreviation  Description
+───────────────────────────────────────────────────────────────────
+\&..              cd ..
+\&...             cd ../..
+\&....            cd ../../..
+\&.....           cd ../../../..
+\&......          cd ../../../../..
+dir             dir --color=auto
+vdir            vdir --color=auto
+grep            grep --color=auto
+fgrep           fgrep --color=auto
+egrep           egrep --color=auto
+cp              cp -i
+mv              mv -i
+tarnow          tar -acf
+untar           tar -zxvf
+tb              nc termbin.com 9999
+jctl            journalctl -p 3 -xb
 \f[R]
 .fi
-.SS Color Overrides
-.PP
-Force color output for common tools:
-.IP
-.nf
-\f[C]
-grep    grep --color=auto
-fgrep   fgrep --color=auto
-egrep   egrep --color=auto
-dir     dir --color=auto
-vdir    vdir --color=auto
-\f[R]
-.fi
-.SS Safety Wrappers
-.PP
-Add -i (interactive confirmation) to destructive commands:
-.IP
-.nf
-\f[C]
-cp      cp -i
-mv      mv -i
-\f[R]
-.fi
-.SS Archives and Networking
-.IP
-.nf
-\f[C]
-tarnow  tar -acf              Create compressed archive (auto-detects format)
-untar   tar -zxvf             Extract a gzip-compressed archive
-wget    wget -c               Resume interrupted downloads by default
-tb      nc termbin.com 9999   Pipe content to termbin.com for quick sharing
-\f[R]
-.fi
-.SS System Logs
-.IP
-.nf
-\f[C]
-jctl    journalctl -p 3 -xb   Show priority-3 (error) journal entries
-                                from the current boot
-\f[R]
-.fi
-.PP
-   *   *   *   *   *
 .SH 5. FUNCTIONS REFERENCE
 .SS 5.1 File and Directory
 .SS cat
