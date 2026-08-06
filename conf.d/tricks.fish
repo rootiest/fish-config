@@ -60,10 +60,22 @@ if __fish_config_op_enabled __fish_config_op_overrides
 
     # Apply bang-bang key bindings based on current key binding mode
     if [ "$fish_key_bindings" = fish_vi_key_bindings ]
+        # @category History Expansion
+        # @name !!
+        # @desc Expand to the previous command
         bind -Minsert ! __history_previous_command
+        # @category History Expansion
+        # @name !$
+        # @desc Expand to the last argument of the previous command
         bind -Minsert '$' __history_previous_command_arguments
     else
+        # @category History Expansion
+        # @name !!
+        # @desc Expand to the previous command
         bind ! __history_previous_command
+        # @category History Expansion
+        # @name !$
+        # @desc Expand to the last argument of the previous command
         bind '$' __history_previous_command_arguments
     end
 end
@@ -94,23 +106,47 @@ end
 ## Useful aliases
 
 # Navigation short-cuts
+# @category Shell Aliases
+# @desc cd ..
 alias ..='cd ..'
+# @category Shell Aliases
+# @desc cd ../..
 alias ...='cd ../..'
+# @category Shell Aliases
+# @desc cd ../../..
 alias ....='cd ../../..'
+# @category Shell Aliases
+# @desc cd ../../../..
 alias .....='cd ../../../..'
+# @category Shell Aliases
+# @desc cd ../../../../..
 alias ......='cd ../../../../..'
 
 # Silent flag injection into POSIX tools is opinionated (C1 aliasing)
 if __fish_config_op_enabled __fish_config_op_aliases
     # Tools & Core command color overrides
+    # @category Shell Aliases
+    # @desc dir --color=auto
     alias dir='dir --color=auto'
+    # @category Shell Aliases
+    # @desc vdir --color=auto
     alias vdir='vdir --color=auto'
+    # @category Shell Aliases
+    # @desc grep --color=auto
     alias grep='grep --color=auto'
+    # @category Shell Aliases
+    # @desc fgrep --color=auto
     alias fgrep='fgrep --color=auto'
+    # @category Shell Aliases
+    # @desc egrep --color=auto
     alias egrep='egrep --color=auto'
 
     # Safety aliases (Confirmation before overwriting/deleting)
+    # @category Shell Aliases
+    # @desc cp -i
     alias cp="cp -i"
+    # @category Shell Aliases
+    # @desc mv -i
     alias mv="mv -i"
 
     # Force wget to resume partial downloads
@@ -118,9 +154,17 @@ if __fish_config_op_enabled __fish_config_op_aliases
 end
 
 # Archives and networking short-hands
+# @category Shell Aliases
+# @desc tar -acf
 alias tarnow='tar -acf '
+# @category Shell Aliases
+# @desc tar -zxvf
 alias untar='tar -zxvf '
+# @category Shell Aliases
+# @desc nc termbin.com 9999
 alias tb='nc termbin.com 9999'
 
 # System Logs
+# @category Shell Aliases
+# @desc journalctl -p 3 -xb
 alias jctl="journalctl -p 3 -xb"
