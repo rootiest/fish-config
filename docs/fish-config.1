@@ -4157,13 +4157,11 @@ The following plugins are fully managed by Fisher.
 Their files are installed into the repo directory by Fisher and are
 listed in \f[V].gitignore\f[R] \[em] do not commit them.
 Fisher installs and updates them automatically.
-.IP
-.nf
-\f[C]
-jorgebucaran/fisher           Plugin manager itself
-meaningful-ooo/sponge         Remove failed commands from history
-\f[R]
-.fi
+.IP \[bu] 2
+\f[V]jorgebucaran/fisher\f[R] \[em] Plugin manager itself
+.IP \[bu] 2
+\f[V]meaningful-ooo/sponge\f[R] \[em] Remove failed commands from
+history
 .SS Sponge History Filtering
 .PP
 Sponge removes failed commands from history and, via
@@ -4172,18 +4170,24 @@ through three layers:
 .PP
 Layer 1 \[em] Static patterns (universal, persistent across sessions):
 Commands matching any of these structural signatures are never recorded:
-.IP
-.nf
-\f[C]
---password / --token / --passphrase / --api-key flags with values
-Inline env assignments: GITHUB_TOKEN=xxx, MY_API_KEY=abc
-Fish set with sensitive names: set -gx GITHUB_TOKEN xxx
-URLs with embedded credentials: https://user:pass\[at]host
-HTTP Authorization headers: curl -H \[dq]Authorization: ...\[dq]
-Basic auth flags: curl -u user:pass
-sshpass, docker login -p, openssl -passin/-passout
-\f[R]
-.fi
+.IP \[bu] 2
+\f[V]--password\f[R] / \f[V]--token\f[R] / \f[V]--passphrase\f[R] /
+\f[V]--api-key\f[R] flags with values
+.IP \[bu] 2
+Inline env assignments: \f[V]GITHUB_TOKEN=xxx\f[R],
+\f[V]MY_API_KEY=abc\f[R]
+.IP \[bu] 2
+Fish set with sensitive names: \f[V]set -gx GITHUB_TOKEN xxx\f[R]
+.IP \[bu] 2
+URLs with embedded credentials: \f[V]https://user:pass\[at]host\f[R]
+.IP \[bu] 2
+HTTP Authorization headers:
+\f[V]curl -H \[dq]Authorization: ...\[dq]\f[R]
+.IP \[bu] 2
+Basic auth flags: \f[V]curl -u user:pass\f[R]
+.IP \[bu] 2
+\f[V]sshpass\f[R], \f[V]docker login -p\f[R],
+\f[V]openssl -passin/-passout\f[R]
 .PP
 Layer 2 \[em] Dynamic secret values (session globals, refreshed each
 login): On the first prompt, after secrets.fish has loaded, the literal
@@ -4234,16 +4238,20 @@ and improved behavior that differ from their upstream releases.
 Installing them through Fisher would overwrite these customizations.
 .PP
 Bundled components and their upstream origins:
-.IP
-.nf
-\f[C]
-catppuccin/fish               → themes/ + conf.d/theme.fish
-PatrickF1/fzf.fish            → functions/_fzf_*.fish + conf.d/fzf.fish
-franciscolourenco/done        → conf.d/done.fish
-jorgebucaran/autopair.fish    → functions/_autopair_*.fish + conf.d/autopair.fish
-nickeb96/puffer-fish          → functions/_puffer_fish_*.fish + conf.d/puffer.fish
-\f[R]
-.fi
+.IP \[bu] 2
+\f[V]catppuccin/fish\f[R] → \f[V]themes/\f[R] +
+\f[V]conf.d/theme.fish\f[R]
+.IP \[bu] 2
+\f[V]PatrickF1/fzf.fish\f[R] → \f[V]functions/_fzf_*.fish\f[R] +
+\f[V]conf.d/fzf.fish\f[R]
+.IP \[bu] 2
+\f[V]franciscolourenco/done\f[R] → \f[V]conf.d/done.fish\f[R]
+.IP \[bu] 2
+\f[V]jorgebucaran/autopair.fish\f[R] →
+\f[V]functions/_autopair_*.fish\f[R] + \f[V]conf.d/autopair.fish\f[R]
+.IP \[bu] 2
+\f[V]nickeb96/puffer-fish\f[R] → \f[V]functions/_puffer_fish_*.fish\f[R]
++ \f[V]conf.d/puffer.fish\f[R]
 .PP
 Do not run \f[V]fisher install\f[R] for these \[em] it will overwrite
 the customized versions.
@@ -4251,13 +4259,11 @@ To update their behavior, edit the relevant bundled files directly.
 .SS fish_plugins Manifest
 .PP
 The \f[V]fish_plugins\f[R] file at the config root:
-.IP
-.nf
-\f[C]
-jorgebucaran/fisher           Plugin manager itself
-meaningful-ooo/sponge         Remove failed commands from history
-\f[R]
-.fi
+.IP \[bu] 2
+\f[V]jorgebucaran/fisher\f[R] \[em] Plugin manager itself
+.IP \[bu] 2
+\f[V]meaningful-ooo/sponge\f[R] \[em] Remove failed commands from
+history
 .PP
 To update all Fisher-managed plugins, run \f[V]fisher update\f[R] or
 \f[V]fish-deps update\f[R] which calls it as its first step.
@@ -4282,11 +4288,12 @@ All other plugin functionality is bundled directly with this config and
 requires no additional installation.
 .SS Return Sentinel
 .PP
-config.fish ends with a return sentinel guard.
-Any lines appended after it by a tool\[cq]s setup command (starship init
-fish | source, zoxide init fish | source, etc.)
+\f[V]config.fish\f[R] ends with a return sentinel guard.
+Any lines appended after it by a tool\[cq]s setup command
+(\f[V]starship init fish | source\f[R],
+\f[V]zoxide init fish | source\f[R], etc.)
 will have no effect.
-All integrations are managed via conf.d/ files.
+All integrations are managed via \f[V]conf.d/\f[R] files.
 .PP
 If a new tool\[cq]s shell integration appears to do nothing, check
 whether its setup command appended an init line below the sentinel and
@@ -4295,17 +4302,18 @@ create a dedicated \f[V]conf.d/<tool>.fish\f[R] instead.
 .PP
 Pull the latest changes from the upstream repository without needing a
 configured git remote:
-.IP
-.nf
-\f[C]
-config-update              Fetch and apply the latest commits from upstream
-config-update --dry-run    Preview available changes without applying them
-config-update --force      Stash local changes, pull, then restore the stash
-\f[R]
-.fi
+.IP \[bu] 2
+\f[V]config-update\f[R] \[em] Fetch and apply the latest commits from
+upstream
+.IP \[bu] 2
+\f[V]config-update --dry-run\f[R] \[em] Preview available changes
+without applying them
+.IP \[bu] 2
+\f[V]config-update --force\f[R] \[em] Stash local changes, pull, then
+restore the stash
 .PP
 All git output is suppressed.
-Run exec fish after a successful update to reload.
+Run \f[V]exec fish\f[R] after a successful update to reload.
 .PP
    *   *   *   *   *
 .SH 11. PERSONALIZATION
