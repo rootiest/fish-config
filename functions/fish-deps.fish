@@ -5,7 +5,7 @@
 #   06-dependency-management
 #
 # SYNOPSIS
-#   fish-deps [status|install|update|sync]
+#   fish-deps [status|install|update|sync] [--optional] [--terminals] [--all]
 #
 # DESCRIPTION
 #   Unified command for managing all tools this configuration depends on,
@@ -21,19 +21,29 @@
 #
 #   When multiple methods are available you are prompted to choose.
 #
-#   Dependencies are grouped into three tiers:
+#   Dependencies are grouped into five tiers:
 #
-#     Required      fish, fzf, zoxide
-#     Integrations  wakatime, tailscale
-#     Recommended   cargo, starship, uv, direnv, paru, yay, eza, lsd, bat,
-#                   btop, dust, duf, prettyping, ov, ripgrep, lazygit,
-#                   lazydocker, trash, kitty, wezterm, python3, yt-dlp
+#     Required           fish, fzf
+#     Recommended         cargo, starship, uv, zoxide, direnv, paru, yay,
+#                         eza, lsd, bat, ov, ripgrep, trash, python3
+#     Optional            btop, dust, duf, prettyping, go, lazygit,
+#                         lazydocker, docker, yt-dlp, screen — single-purpose
+#                         wrapper conveniences that only matter if you
+#                         already use that tool; skipped by `install`/`sync`
+#                         unless --optional (or --all) is passed
+#     Terminal Emulators  kitty, wezterm — only matter if one of them is
+#                         your actual terminal; skipped by `install`/`sync`
+#                         unless --terminals (or --all) is passed
+#     Integrations        wakatime, tailscale
 #
 # ARGUMENTS
-#   status   Report installed/missing deps (default)
-#   install  Install missing deps interactively
-#   update   Update all installed deps
-#   sync     Install missing deps, then update all
+#   status       Report installed/missing deps (default)
+#   install      Install missing deps interactively
+#   update       Update all installed deps
+#   sync         Install missing deps, then update all
+#   --optional   With install/sync: also offer Optional-tier deps
+#   --terminals  With install/sync: also offer Terminal-Emulator-tier deps
+#   --all        With install/sync: shorthand for --optional --terminals
 #
 # EXIT STATUS
 #   0  Subcommand completed
@@ -43,20 +53,24 @@
 #   fish-deps sync
 #   fish-deps
 #   fish-deps install
+#   fish-deps install --optional
+#   fish-deps install --terminals
+#   fish-deps install --all
 #   fish-deps update
 function fish-deps --description 'Manage fish shell dependencies'
     set -l subcmd $argv[1]
+    set -l flags $argv[2..]
 
     switch $subcmd
         case status ''
             _fish_deps_status
         case install
-            _fish_deps_install
+            _fish_deps_install $flags
         case update
             _fish_deps_update
         case sync
             echo "=== Installing missing deps ==="
-            _fish_deps_install
+            _fish_deps_install $flags
             echo ""
             echo "=== Updating installed deps ==="
             _fish_deps_update
@@ -82,10 +96,15 @@ function __fish_deps_help
     set_color cyan; echo "fish-deps — manage fish shell dependencies"; set_color normal
     echo ""
     echo "Usage:"
-    echo "  fish-deps [status]   Check installed/missing deps (default)"
-    echo "  fish-deps install    Install missing deps interactively"
-    echo "  fish-deps update     Update all installed deps"
-    echo "  fish-deps sync       Install missing, then update all"
+    echo "  fish-deps [status]    Check installed/missing deps (default)"
+    echo "  fish-deps install     Install missing deps interactively"
+    echo "  fish-deps update      Update all installed deps"
+    echo "  fish-deps sync        Install missing, then update all"
+    echo ""
+    echo "  install/sync accept:"
+    echo "    --optional   Also offer Optional-tier deps (skipped by default)"
+    echo "    --terminals  Also offer Terminal-Emulator-tier deps (skipped by default)"
+    echo "    --all        Shorthand for --optional --terminals"
     echo ""
     echo "Install method priority: cargo > system PM > git/curl/pipx"
     echo "When multiple methods are available, you will be prompted to choose."

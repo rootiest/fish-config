@@ -6,7 +6,8 @@
 #
 # DESCRIPTION
 #   Prints a colored installed/missing status report for all managed fish shell
-#   dependencies, grouped by tier (required, integrations, recommended).
+#   dependencies, grouped by tier (required, recommended, optional, terminal
+#   emulators, integrations).
 #
 # EXAMPLE
 #   _fish_deps_status
@@ -31,18 +32,23 @@ function _fish_deps_status
             set_color green; echo -n " ✓ "; set_color normal
             echo -n "$bin "
             set_color brblack; echo "(Found at "(__fish_real_command $bin)")"; set_color normal
+        else if test "$tier" = req
+            set_color red; echo -n " ✗ "; set_color normal
+            echo -n "$bin "
+            set_color brblack; echo "(Not installed)"; set_color normal
         else if test "$tier" = rec
             set_color yellow; echo -n " ⚠ "; set_color normal
             echo -n "$bin "
             set_color brblack; echo "(Not installed)"; set_color normal
         else
-            set_color red; echo -n " ✗ "; set_color normal
+            # opt / term / int: absence is expected and not alarming
+            set_color brblack; echo -n " – "; set_color normal
             echo -n "$bin "
             set_color brblack; echo "(Not installed)"; set_color normal
         end
     end
 
-    for tier_label in "Required Dependencies:req" "Integrations:int" "Recommended Dependencies:rec"
+    for tier_label in "Required Dependencies:req" "Recommended Dependencies:rec" "Optional Dependencies:opt" "Terminal Emulators:term" "Integrations:int"
         set -l label (string split : $tier_label)[1]
         set -l tier  (string split : $tier_label)[2]
         set_color cyan; echo $label; set_color normal

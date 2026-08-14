@@ -9,10 +9,9 @@
 #
 # DESCRIPTION
 #   Renders the right-side prompt. Always shows a dim timestamp. When the last
-#   command failed, prefixes it with a red ✘ and the exit code. When starship
-#   is installed and C3 overrides are enabled, also shows the active Docker
-#   context (if non-default) — that block is paired with the starship prompt
-#   which already guards on both conditions.
+#   command failed, prefixes it with a red ✘ and the exit code. When docker
+#   and starship are both installed and C3 overrides are enabled, also shows
+#   the active Docker context (if non-default).
 #
 # EXIT STATUS
 #   0  Always
@@ -29,8 +28,10 @@ function fish_right_prompt
         set_color normal
     end
 
-    # Docker context — only relevant alongside the starship prompt
-    if type -q starship; and __fish_config_op_enabled __fish_config_op_overrides
+    # Docker context — only relevant alongside the starship prompt, and only
+    # when docker is actually installed (guarded like every other optional
+    # integration in this config).
+    if type -q docker; and type -q starship; and __fish_config_op_enabled __fish_config_op_overrides
         set -l docker_ctx (docker context show 2>/dev/null)
         if test -n "$docker_ctx"; and test "$docker_ctx" != default
             set_color blue

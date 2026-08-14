@@ -9,16 +9,61 @@
 #   For each missing entry, prompts yes/no and the preferred install method
 #   when multiple options are available.
 #
+#   Optional-tier and Terminal-Emulator-tier dependencies are skipped by
+#   default; pass --optional / --terminals to include them individually, or
+#   --all to include both.
+#
+# ARGUMENTS
+#   --optional   Also offer to install Optional-tier dependencies
+#   --terminals  Also offer to install Terminal-Emulator-tier dependencies
+#   --all        Shorthand for --optional --terminals
+#
 # EXAMPLE
 #   _fish_deps_install
+#   _fish_deps_install --optional
+#   _fish_deps_install --terminals
+#   _fish_deps_install --all
 function _fish_deps_install
     _fish_deps_catalog
 
+    set -l include_optional 0
+    set -l include_terminals 0
+    if contains -- --all $argv
+        set include_optional 1
+        set include_terminals 1
+    end
+    if contains -- --optional $argv
+        set include_optional 1
+    end
+    if contains -- --terminals $argv
+        set include_terminals 1
+    end
+
     set -l pm (_fish_deps_detect_pm)
     set -l installed_any 0
+    set -l skipped_optional 0
+    set -l skipped_terminals 0
 
     set -l i 1
     for bin in $_fdc_bins
+        # Optional-tier deps are opt-in: skip unless --optional/--all was passed.
+        if test "$_fdc_tiers[$i]" = opt; and test $include_optional -eq 0
+            if not command -q $bin
+                set skipped_optional (math $skipped_optional + 1)
+            end
+            set i (math $i + 1)
+            continue
+        end
+
+        # Terminal-emulator-tier deps are opt-in: skip unless --terminals/--all was passed.
+        if test "$_fdc_tiers[$i]" = term; and test $include_terminals -eq 0
+            if not command -q $bin
+                set skipped_terminals (math $skipped_terminals + 1)
+            end
+            set i (math $i + 1)
+            continue
+        end
+
         # Determine if this dep needs attention: missing, or fish < 4.0
         set -l needs_install 0
         set -l upgrade_label Install
@@ -81,6 +126,15 @@ function _fish_deps_install
                 case wakatime-binary
                     set -a methods special-wakatime
                     set -a method_labels "binary download (github releases)"
+                case go-ov
+                    if type -q go
+                        set -a methods special-go-ov
+                        set -a method_labels "go install (github.com/noborus/ov@latest)"
+                    else
+                        set_color brblack
+                        echo "  note: go not found — install go first for the latest $bin (not all distros package $bin in their base repos)"
+                        set_color normal
+                    end
             end
 
             # System PM — after cargo and preferred specials
@@ -172,6 +226,25 @@ function _fish_deps_install
                         echo "  cargo not yet in PATH — restart your shell if subsequent installs fail."
                         set_color normal
                     end
+                case special-go-ov
+                    go install github.com/noborus/ov@latest
+                    set -l _go_status $status
+                    # go install places binaries in $GOBIN, falling back to
+                    # $GOPATH/bin (default ~/go/bin) — ask go itself rather
+                    # than guessing, since GOPATH may be customized.
+                    set -l _gobin (go env GOBIN)
+                    if test -z "$_gobin"
+                        set _gobin (go env GOPATH)/bin
+                    end
+                    if test -d "$_gobin"
+                        fish_add_path "$_gobin"
+                    end
+                    if test $_go_status -eq 0; and not type -q ov
+                        set_color yellow
+                        echo "  ov not yet in PATH — restart your shell if subsequent installs fail."
+                        set_color normal
+                    end
+                    test $_go_status -eq 0
                 case special-lazydocker
                     curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
                 case special-wakatime
@@ -271,5 +344,21 @@ function _fish_deps_install
 
     if test $installed_any -eq 0
         echo "Nothing to install."
+    end
+
+    if test $skipped_optional -gt 0
+        set -l _plural dependencies
+        test $skipped_optional -eq 1; and set _plural dependency
+        set_color brblack
+        echo "Skipped $skipped_optional optional $_plural. Run 'fish-deps install --optional' to include them."
+        set_color normal
+    end
+
+    if test $skipped_terminals -gt 0
+        set -l _plural "terminal emulators"
+        test $skipped_terminals -eq 1; and set _plural "terminal emulator"
+        set_color brblack
+        echo "Skipped $skipped_terminals $_plural. Run 'fish-deps install --terminals' to include them."
+        set_color normal
     end
 end
