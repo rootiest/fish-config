@@ -9,8 +9,8 @@
 #
 # DESCRIPTION
 #   Wraps mv to automatically collapse nested directories of the same name.
-#   When extracting archives results in redundant structures (e.g., 
-#   themes/themes/), calling `mv themes/themes themes` will gracefully 
+#   When extracting archives results in redundant structures (e.g.,
+#   themes/themes/), calling `mv themes/themes themes` will gracefully
 #   move the inner contents up one level and remove the empty outer shell.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases,
@@ -20,12 +20,12 @@
 #   args...  Arguments forwarded to standard mv
 #
 # EXIT STATUS
-#   0  Operation succeeded
-#   >0 Standard mv failure, or failed to collapse directory
+#   0   Operation succeeded
+#   >0  Standard mv failure, or failed to collapse directory
 #
 # EXAMPLE
 #   mv ~/.config/btop/themes/themes ~/.config/btop/themes
-function mv --description 'Move files with auto-collapse for nested directories'
+function mv --wraps='mv' --description 'Move files with auto-collapse for nested directories'
     # Opinionated guard (C1): fall back to bare command mv when disabled.
     if not __fish_config_op_enabled __fish_config_op_aliases
         command mv $argv
