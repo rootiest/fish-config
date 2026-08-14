@@ -307,3 +307,4 @@ docs/site/dist/
 docs/site/.astro/
 docs/site/src/content/docs/
 docs/site/src/sidebar.json
+/conf.d/uv.env.fish
