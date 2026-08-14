@@ -133,7 +133,10 @@ silent until you enable logging.
 
 A Starlight-powered site rebuilt on every push to `main`. It covers
 configuration variables, key bindings, abbreviations, all functions, the
-dependency catalog, customization, and more, with full-text search.
+dependency catalog, customization, and more, with full-text search. Also
+published as [`llms.txt`](https://fish.rootiest.fyi/llms.txt) (with
+`llms-full.txt` and `llms-small.txt` variants) for AI agents and other
+LLM tooling.
 
 Contributing to the docs? There are two sources, split by content type:
 
