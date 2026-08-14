@@ -808,8 +808,8 @@ functions). They are active in all interactive sessions.
       args...  Arguments forwarded to standard mv
 
     Exit Status:
-      0  Operation succeeded
-      >0 Standard mv failure, or failed to collapse directory
+      0   Operation succeeded
+      >0  Standard mv failure, or failed to collapse directory
 
     Example:
     mv ~/.config/btop/themes/themes ~/.config/btop/themes
