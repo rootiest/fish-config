@@ -1720,7 +1720,7 @@ check_fish_deps
 .IP
 .nf
 \f[C]
-Synopsis:  fish-deps [status|install|update|sync]
+Synopsis:  fish-deps [status|install|update|sync] [--optional] [--terminals] [--all]
 
 Unified command for managing all tools this configuration depends on,
 dispatching to subcommand handlers. Defaults to status when no subcommand
@@ -1735,19 +1735,29 @@ Install method priority (highest to lowest):
 
 When multiple methods are available you are prompted to choose.
 
-Dependencies are grouped into three tiers:
+Dependencies are grouped into five tiers:
 
-  Required      fish, fzf, zoxide
-  Integrations  wakatime, tailscale
-  Recommended   cargo, starship, uv, direnv, paru, yay, eza, lsd, bat,
-                btop, dust, duf, prettyping, ov, ripgrep, lazygit,
-                lazydocker, trash, kitty, wezterm, python3, yt-dlp
+  Required           fish, fzf
+  Recommended         cargo, starship, uv, zoxide, direnv, paru, yay,
+                      eza, lsd, bat, ov, ripgrep, trash, python3
+  Optional            btop, dust, duf, prettyping, go, lazygit,
+                      lazydocker, docker, yt-dlp, screen \[em] single-purpose
+                      wrapper conveniences that only matter if you
+                      already use that tool; skipped by \[ga]install\[ga]/\[ga]sync\[ga]
+                      unless --optional (or --all) is passed
+  Terminal Emulators  kitty, wezterm \[em] only matter if one of them is
+                      your actual terminal; skipped by \[ga]install\[ga]/\[ga]sync\[ga]
+                      unless --terminals (or --all) is passed
+  Integrations        wakatime, tailscale
 
 Arguments:
-  status   Report installed/missing deps (default)
-  install  Install missing deps interactively
-  update   Update all installed deps
-  sync     Install missing deps, then update all
+  status       Report installed/missing deps (default)
+  install      Install missing deps interactively
+  update       Update all installed deps
+  sync         Install missing deps, then update all
+  --optional   With install/sync: also offer Optional-tier deps
+  --terminals  With install/sync: also offer Terminal-Emulator-tier deps
+  --all        With install/sync: shorthand for --optional --terminals
 
 Exit Status:
   0  Subcommand completed
@@ -1757,6 +1767,9 @@ Example:
 fish-deps sync
 fish-deps
 fish-deps install
+fish-deps install --optional
+fish-deps install --terminals
+fish-deps install --all
 fish-deps update
 \f[R]
 .fi
@@ -1990,10 +2003,9 @@ Example:
 Synopsis:  fish_right_prompt
 
 Renders the right-side prompt. Always shows a dim timestamp. When the last
-command failed, prefixes it with a red ✘ and the exit code. When starship
-is installed and C3 overrides are enabled, also shows the active Docker
-context (if non-default) \[em] that block is paired with the starship prompt
-which already guards on both conditions.
+command failed, prefixes it with a red ✘ and the exit code. When docker
+and starship are both installed and C3 overrides are enabled, also shows
+the active Docker context (if non-default).
 
 Exit Status:
   0  Always
@@ -3142,6 +3154,9 @@ Synopsis:  ld
 Launches lazydocker targeting the currently active Docker context by
 resolving the host endpoint from docker context inspect.
 
+Exit Status:
+  1  docker or lazydocker is not installed
+
 Example:
 ld
 \f[R]
@@ -3334,8 +3349,10 @@ wake-lock rsync -avz src/ dest/
 .SH 6. DEPENDENCY CATALOG
 .PP
 fish-deps manages these tools.
-Run \f[V]fish-deps\f[R] to check status, or \f[V]fish-deps install\f[R]
-to install missing ones.
+Run \f[V]fish-deps\f[R] to check status, \f[V]fish-deps install\f[R] to
+install missing Required/Recommended ones, or add \f[V]--optional\f[R],
+\f[V]--terminals\f[R], or \f[V]--all\f[R] to also include the Optional
+and/or Terminal Emulators tiers.
 .SS Required
 .PP
 .TS
@@ -3356,28 +3373,6 @@ T{
 \f[V]fzf\f[R]
 T}@T{
 Fuzzy finder
-T}
-.TE
-.SS Integrations
-.PP
-.TS
-tab(@);
-l l.
-T{
-Tool
-T}@T{
-Description
-T}
-_
-T{
-\f[V]wakatime\f[R]
-T}@T{
-Developer time tracking
-T}
-T{
-\f[V]tailscale\f[R]
-T}@T{
-Mesh VPN client
 T}
 .TE
 .SS Recommended
@@ -3451,29 +3446,16 @@ T}@T{
 Syntax-highlighted \f[V]cat\f[R]
 T}
 T{
-\f[V]btop\f[R]
-T}@T{
-Modern resource monitor
-T}
-T{
-\f[V]dust\f[R]
-T}@T{
-Disk usage tree (Rust)
-T}
-T{
-\f[V]duf\f[R]
-T}@T{
-Disk usage/free overview
-T}
-T{
-\f[V]prettyping\f[R]
-T}@T{
-Colorized ping wrapper
-T}
-T{
 \f[V]ov\f[R]
 T}@T{
-Modern pager (replaces \f[V]less\f[R])
+Modern pager (replaces \f[V]less\f[R]); also backs the \f[V]logs\f[R]
+viewer.
+Not a Rust crate, despite the name collision with an unrelated
+\f[V]ov\f[R] crate on crates.io.
+Prefers \f[V]go install github.com/noborus/ov\[at]latest\f[R] when
+\f[V]go\f[R] is available (always gets the latest release, and covers
+distros like Debian/Ubuntu that don\[cq]t package \f[V]ov\f[R] in their
+base repos); falls back to the system PM (AUR on Arch) otherwise.
 T}
 T{
 \f[V]ripgrep\f[R]
@@ -3481,29 +3463,10 @@ T}@T{
 Fast line search
 T}
 T{
-\f[V]lazygit\f[R]
-T}@T{
-Terminal git UI
-T}
-T{
-\f[V]lazydocker\f[R]
-T}@T{
-Terminal docker UI
-T}
-T{
 \f[V]trash\f[R]
 T}@T{
-Safe delete (\f[V]trash-cli\f[R])
-T}
-T{
-\f[V]kitty\f[R]
-T}@T{
-GPU-accelerated terminal (primary)
-T}
-T{
-\f[V]wezterm\f[R]
-T}@T{
-GPU-accelerated terminal (alternative)
+Safe delete (\f[V]trash-cli\f[R]); backs the \f[V]rm\f[R] and
+\f[V]scrub\f[R] wrappers.
 T}
 T{
 \f[V]python3\f[R]
@@ -3514,12 +3477,144 @@ Note: \f[V]uv\f[R] does not provide \f[V]python3\f[R] on PATH, and
 Arch\[cq]s base does not include it, so it is listed separately.
 All consumers degrade gracefully without it.
 T}
+.TE
+.SS Optional
+.PP
+Single-purpose tools that back one wrapper function (or less) and only
+matter if you already use that specific tool.
+Skipped by \f[V]fish-deps install\f[R]/\f[V]sync\f[R] unless you pass
+\f[V]--optional\f[R].
+.PP
+.TS
+tab(@);
+lw(35.0n) lw(35.0n).
+T{
+Tool
+T}@T{
+Description
+T}
+_
+T{
+\f[V]btop\f[R]
+T}@T{
+Modern resource monitor; backs the \f[V]top\f[R] wrapper (falls back to
+system \f[V]top\f[R]).
+T}
+T{
+\f[V]dust\f[R]
+T}@T{
+Disk usage tree (Rust); one of two backends for the \f[V]du\f[R] wrapper
+(falls back to system \f[V]du\f[R]).
+T}
+T{
+\f[V]duf\f[R]
+T}@T{
+Disk usage/free overview; the other backend for the \f[V]du\f[R] wrapper
+(falls back to system \f[V]du\f[R]).
+T}
+T{
+\f[V]prettyping\f[R]
+T}@T{
+Colorized ping wrapper; backs the \f[V]ping\f[R] wrapper (falls back to
+system \f[V]ping\f[R]).
+T}
+T{
+\f[V]go\f[R]
+T}@T{
+Go toolchain; only used to install \f[V]ov\f[R] via \f[V]go install\f[R]
+(see below), which gets the latest release and doesn\[cq]t depend on
+your distro packaging \f[V]ov\f[R].
+Package name varies by distro (\f[V]go\f[R] on Arch/Homebrew,
+\f[V]golang\f[R]/\f[V]golang-go\f[R] on Debian/Fedora) \[em] install
+manually if the listed package name doesn\[cq]t resolve on your system.
+T}
+T{
+\f[V]lazygit\f[R]
+T}@T{
+Terminal git UI; only referenced by the \f[V]lg\f[R] abbreviation.
+T}
+T{
+\f[V]lazydocker\f[R]
+T}@T{
+Terminal docker UI; backs the \f[V]ld\f[R] wrapper.
+T}
+T{
+\f[V]docker\f[R]
+T}@T{
+Container runtime; gates the Docker context indicator in the right
+prompt and backs the \f[V]ld\f[R] wrapper.
+Both consumers are guarded with \f[V]type -q docker\f[R] and degrade
+gracefully without it.
+Installing the daemon package does not enable/start the service \[em] do
+that yourself if you want it running.
+T}
 T{
 \f[V]yt-dlp\f[R]
 T}@T{
 Video/media downloader; backs the \f[V]yt-dlp\f[R] wrapper function.
-Optional \[em] the wrapper falls back to the system \f[V]yt-dlp\f[R] and
-the rest of the config works without it.
+The wrapper falls back to the system \f[V]yt-dlp\f[R] and the rest of
+the config works without it.
+T}
+T{
+\f[V]screen\f[R]
+T}@T{
+GNU screen; fallback backend for \f[V]jobrunner\f[R] when \f[V]tmux\f[R]
+is unavailable.
+T}
+.TE
+.SS Terminal Emulators
+.PP
+GPU-accelerated terminal emulators.
+Only one is ever relevant to a given user \[em] the one matching
+\f[V]$TERM\f[R] \[em] so neither is installed by default.
+Skipped by \f[V]fish-deps install\f[R]/\f[V]sync\f[R] unless you pass
+\f[V]--terminals\f[R] (or \f[V]--all\f[R]).
+.PP
+.TS
+tab(@);
+lw(35.0n) lw(35.0n).
+T{
+Tool
+T}@T{
+Description
+T}
+_
+T{
+\f[V]kitty\f[R]
+T}@T{
+GPU-accelerated terminal; unlocks kitty-specific abbreviations and
+\f[V]--hyperlink-format=kitty\f[R] in the \f[V]rg\f[R] wrapper when
+\f[V]$TERM = xterm-kitty\f[R].
+T}
+T{
+\f[V]wezterm\f[R]
+T}@T{
+GPU-accelerated terminal; unlocks WezTerm-specific abbreviations when
+it\[cq]s the active terminal.
+T}
+.TE
+.SS Integrations
+.PP
+Opt-in third-party services that require their own account/setup.
+.PP
+.TS
+tab(@);
+l l.
+T{
+Tool
+T}@T{
+Description
+T}
+_
+T{
+\f[V]wakatime\f[R]
+T}@T{
+Developer time tracking
+T}
+T{
+\f[V]tailscale\f[R]
+T}@T{
+Mesh VPN client
 T}
 .TE
 .SS Install Methods
@@ -3539,14 +3634,20 @@ T{
 \f[V]cargo\f[R]
 T}@T{
 Rust tools (\f[V]eza\f[R], \f[V]lsd\f[R], \f[V]bat\f[R], \f[V]dust\f[R],
-\f[V]ov\f[R], \f[V]ripgrep\f[R], \f[V]trashy\f[R], \f[V]zoxide\f[R],
+\f[V]ripgrep\f[R], \f[V]trashy\f[R], \f[V]zoxide\f[R],
 \f[V]starship\f[R]) \[em] always gets the latest crate version
+T}
+T{
+\f[V]go install\f[R]
+T}@T{
+\f[V]ov\f[R] \[em] preferred over the system PM when \f[V]go\f[R] is
+available; always gets the latest release
 T}
 T{
 system PM
 T}@T{
 \f[V]paru\f[R] / \f[V]apt\f[R] / \f[V]brew\f[R] / \f[V]dnf\f[R] / etc.
-\[em] for tools without a crate
+\[em] for tools without a crate or \f[V]go install\f[R] path
 T}
 T{
 \f[V]git clone\f[R]
