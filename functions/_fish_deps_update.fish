@@ -72,6 +72,21 @@ function _fish_deps_update
             continue
         end
 
+        # ov: prefer go install (always fetches latest); fall back to system PM
+        if test "$special" = go-ov
+            if type -q go
+                echo "Updating $bin..."
+                go install github.com/noborus/ov@latest
+                set updated_any 1
+            else if test -n "$pm_pkg"; and test -n "$pm"
+                echo "Updating $bin (go unavailable, using system PM)..."
+                _fish_deps_pm_upgrade $pm_pkg
+                set updated_any 1
+            end
+            set i (math $i + 1)
+            continue
+        end
+
         # lazydocker: re-run the official install/update script
         if test "$special" = curl-lazydocker
             echo "Updating $bin..."

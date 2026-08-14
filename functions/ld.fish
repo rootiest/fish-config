@@ -11,9 +11,21 @@
 #   Launches lazydocker targeting the currently active Docker context by
 #   resolving the host endpoint from docker context inspect.
 #
+# EXIT STATUS
+#   1  docker or lazydocker is not installed
+#
 # EXAMPLE
 #   ld
 function ld --description 'Run lazydocker on the current Docker context'
+    if not type -q docker
+        echo "ld: docker is not installed" >&2
+        return 1
+    end
+    if not type -q lazydocker
+        echo "ld: lazydocker is not installed" >&2
+        return 1
+    end
+
     # Fetch the host endpoint of the currently active Docker context
     set -l current_host (docker context inspect --format '{{.Endpoints.docker.Host}}')
 
