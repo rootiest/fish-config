@@ -1135,6 +1135,31 @@ Example:
 mkdir \[ti]/projects/myapp/src
 \f[R]
 .fi
+.SS mv
+.IP
+.nf
+\f[C]
+Synopsis:  mv [args...]
+
+Wraps mv to automatically collapse nested directories of the same name.
+When extracting archives results in redundant structures (e.g.,
+themes/themes/), calling \[ga]mv themes/themes themes\[ga] will gracefully
+move the inner contents up one level and remove the empty outer shell.
+
+Opinionated component (C1): when disabled via __fish_config_op_aliases,
+behaves exactly like bare command mv.
+
+Arguments:
+  args...  Arguments forwarded to standard mv
+
+Exit Status:
+  0  Operation succeeded
+  >0 Standard mv failure, or failed to collapse directory
+
+Example:
+mv \[ti]/.config/btop/themes/themes \[ti]/.config/btop/themes
+\f[R]
+.fi
 .SS poke
 .IP
 .nf

@@ -792,6 +792,28 @@ functions). They are active in all interactive sessions.
     Example:
     mkdir ~/projects/myapp/src
 
+### mv
+
+    Synopsis:  mv [args...]
+
+    Wraps mv to automatically collapse nested directories of the same name.
+    When extracting archives results in redundant structures (e.g.,
+    themes/themes/), calling `mv themes/themes themes` will gracefully
+    move the inner contents up one level and remove the empty outer shell.
+
+    Opinionated component (C1): when disabled via __fish_config_op_aliases,
+    behaves exactly like bare command mv.
+
+    Arguments:
+      args...  Arguments forwarded to standard mv
+
+    Exit Status:
+      0  Operation succeeded
+      >0 Standard mv failure, or failed to collapse directory
+
+    Example:
+    mv ~/.config/btop/themes/themes ~/.config/btop/themes
+
 ### poke
 
     Synopsis:  poke <file> [file...]
