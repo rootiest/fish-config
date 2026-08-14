@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightCatppuccin from '@catppuccin/starlight';
+import starlightLlmsTxt from 'starlight-llms-txt';
 import sidebar from './src/sidebar.json' with { type: 'json' };
 
 export default defineConfig({
@@ -34,6 +35,7 @@ export default defineConfig({
           dark: { flavor: "mocha", accent: "green" },
           light: { flavor: "latte", accent: "sky" },
         }),
+        starlightLlmsTxt(),
       ],
       expressiveCode: {
         // Shiki ships both Catppuccin flavours; Starlight picks by the

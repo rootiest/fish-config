@@ -20,6 +20,12 @@ python3 docs/build-manual.py --site
 `docs/verify-manual.py` validates both sources before you build; run it
 first if you've touched a header or a manual page.
 
+## llms.txt
+
+The [`starlight-llms-txt`](https://www.npmjs.com/package/starlight-llms-txt)
+plugin emits `llms.txt`, `llms-full.txt`, and `llms-small.txt` alongside the
+built pages — no configuration needed, it just walks the generated content.
+
 ## Development
 
 ```fish title="local dev server"
