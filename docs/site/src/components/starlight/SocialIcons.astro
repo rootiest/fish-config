@@ -1,0 +1,46 @@
+---
+import config from 'virtual:starlight/user-config';
+import { Icon } from '@astrojs/starlight/components';
+
+// Maps a social link's `label` to a UnoCSS iconify icon class, letting a
+// link use an icon outside Starlight's built-in set (e.g. a real Gitea
+// logo instead of the generic `code-branch` icon).
+const customIcons: Record<string, string> = {
+  Gitea: 'i-pajamas:gitea',
+};
+
+const links = config.social || [];
+---
+
+{
+  links.length > 0 && (
+    <>
+      {links.map(({ label, href, icon }) => {
+        const customIcon = customIcons[label];
+        return (
+          <a href={href} rel="me" class="sl-flex">
+            <span class="sr-only">{label}</span>
+            {customIcon ? <span class={`social-icon ${customIcon}`} aria-hidden="true" /> : <Icon name={icon} />}
+          </a>
+        );
+      })}
+    </>
+  )
+}
+
+<style>
+  @layer starlight.core {
+    a {
+      color: var(--sl-color-text-accent);
+      padding: 0.5em;
+      margin: -0.5em;
+    }
+    a:hover {
+      color: var(--sl-color-white);
+    }
+    .social-icon {
+      width: 1em;
+      height: 1em;
+    }
+  }
+</style>
