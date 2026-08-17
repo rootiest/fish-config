@@ -3319,13 +3319,18 @@ The following plugins are fully managed by Fisher. Their files are installed
 into the repo directory by Fisher and are listed in `.gitignore` — do not
 commit them. Fisher installs and updates them automatically.
 
-- `jorgebucaran/fisher` — Plugin manager itself
-- `meaningful-ooo/sponge` — Remove failed commands from history
+- [`jorgebucaran/fisher`](https://github.com/jorgebucaran/fisher) — Plugin manager itself
+- [`meaningful-ooo/sponge`](https://github.com/meaningful-ooo/sponge) — Remove failed commands from history
 
 ## Sponge History Filtering
 
 Sponge removes failed commands from history and, via conf.d/sponge_privacy.fish,
-also filters privacy-sensitive commands through three layers:
+also filters privacy-sensitive commands through three layers. Detection is
+heuristic — pattern- and variable-name-based — so this reduces the risk of a
+credential landing in persistent history; it is not a guarantee that no
+secret can ever reach it, and it is not a substitute for rotating a
+credential that gets typed in plaintext. Treat it as a safety net, not a
+vault.
 
 Layer 1 — Static patterns (universal, persistent across sessions):
 Commands matching any of these structural signatures are never recorded:
@@ -3349,6 +3354,20 @@ next login automatically.
 Layer 3 — Per-command filter (sponge_filter_secrets):
 Catches credentials in variables exported after login, such as tokens
 sourced from a project .env file mid-session.
+
+A match is actively deleted from history, not stored and redacted. Sponge
+queues a matched command on `fish_postexec` and purges anything past
+`sponge_delay` entries on the very next `fish_prompt`, immediately forcing
+a `history save`. With this config's (upstream) defaults, that means a
+matched command is gone from disk within about one prompt cycle — it is
+not left sitting in persistent history for the rest of the session.
+
+This timing depends on `sponge_purge_only_on_exit` staying `false`, which
+is sponge's own default and is not overridden here. Turning it on defers
+all purging to the `fish_exit` event instead of the next prompt — and
+because `fish_exit` does not fire on a killed or crashed session, a
+matched command purged only on exit can survive indefinitely if the shell
+never exits cleanly. Leave this setting off.
 
 To add your own persistent patterns:
 
@@ -3377,11 +3396,11 @@ releases. Installing them through Fisher would overwrite these customizations.
 
 Bundled components and their upstream origins:
 
-- `catppuccin/fish` → `themes/` + `conf.d/theme.fish`
-- `PatrickF1/fzf.fish` → `functions/_fzf_*.fish` + `conf.d/fzf.fish`
-- `franciscolourenco/done` → `conf.d/done.fish`
-- `jorgebucaran/autopair.fish` → `functions/_autopair_*.fish` + `conf.d/autopair.fish`
-- `nickeb96/puffer-fish` → `functions/_puffer_fish_*.fish` + `conf.d/puffer.fish`
+- [`catppuccin/fish`](https://github.com/catppuccin/fish) → `themes/` + `conf.d/theme.fish`
+- [`PatrickF1/fzf.fish`](https://github.com/PatrickF1/fzf.fish) → `functions/_fzf_*.fish` + `conf.d/fzf.fish`
+- [`franciscolourenco/done`](https://github.com/franciscolourenco/done) → `conf.d/done.fish`
+- [`jorgebucaran/autopair.fish`](https://github.com/jorgebucaran/autopair.fish) → `functions/_autopair_*.fish` + `conf.d/autopair.fish`
+- [`nickeb96/puffer-fish`](https://github.com/nickeb96/puffer-fish) → `functions/_puffer_fish_*.fish` + `conf.d/puffer.fish`
 
 Do not run `fisher install` for these — it will overwrite the customized
 versions. To update their behavior, edit the relevant bundled files directly.
@@ -3390,8 +3409,8 @@ versions. To update their behavior, edit the relevant bundled files directly.
 
 The `fish_plugins` file at the config root:
 
-- `jorgebucaran/fisher` — Plugin manager itself
-- `meaningful-ooo/sponge` — Remove failed commands from history
+- [`jorgebucaran/fisher`](https://github.com/jorgebucaran/fisher) — Plugin manager itself
+- [`meaningful-ooo/sponge`](https://github.com/meaningful-ooo/sponge) — Remove failed commands from history
 
 To update all Fisher-managed plugins, run `fisher update` or `fish-deps
 update` which calls it as its first step.
