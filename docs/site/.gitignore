@@ -3,6 +3,9 @@ dist/
 # generated types
 .astro/
 
+# starlight-plugin-icons safelist cache
+.starlight-icons/
+
 # dependencies
 node_modules/
 

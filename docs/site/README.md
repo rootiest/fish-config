@@ -26,6 +26,18 @@ The [`starlight-llms-txt`](https://www.npmjs.com/package/starlight-llms-txt)
 plugin emits `llms.txt`, `llms-full.txt`, and `llms-small.txt` alongside the
 built pages — no configuration needed, it just walks the generated content.
 
+## Icons
+
+[`starlight-plugin-icons`](https://docs.rettend.me/starlight-plugin-icons)
++ [UnoCSS](https://unocss.dev) (`uno.config.ts`) render icons from any
+[Iconify](https://icones.js.org) set as `i-<collection>:<name>` classes.
+The Gitea link in the header uses it (see
+`src/components/starlight/SocialIcons.astro`) to show the real Gitea logo
+instead of Starlight's generic `code-branch` icon. Sidebar (`sidebar:
+true`) and codeblock (`codeblock: true`) icon support are wired up in
+`astro.config.mjs` but unused so far — see the plugin docs for the
+`icon:` sidebar syntax if you want to add them.
+
 ## Development
 
 ```fish title="local dev server"
