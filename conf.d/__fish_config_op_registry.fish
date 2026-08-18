@@ -16,12 +16,15 @@ set -g __fish_config_op_registry_keys \
     bash_expands: \
     cat: \
     claude: \
+    done: \
     du: \
     edit: \
     fish_right_prompt: \
     help: \
+    hist: \
     key_bindings: \
     less: \
+    logs: \
     ls: \
     mkdir: \
     mv: \
@@ -29,10 +32,14 @@ set -g __fish_config_op_registry_keys \
     puffer: \
     rg: \
     rm: \
+    split: \
+    spwin: \
     ssh: \
     starship: \
+    tab: \
     theme: \
     top: \
+    upgrade: \
     yt-dlp: \
     zoxide:
 
@@ -46,12 +53,15 @@ set -g __fish_config_op_registry_values \
     "overrides/key-bindings" \
     "aliases/filesystem" \
     "aliases/dev-tools" \
+    "integrations/notifications" \
     "aliases/filesystem" \
     "aliases/dev-tools" \
     "overrides/prompt" \
     "aliases/shell-tools" \
+    "integrations/history-logs" \
     "overrides/key-bindings" \
     "aliases/shell-tools" \
+    "integrations/history-logs" \
     "aliases/filesystem" \
     "aliases/filesystem" \
     "aliases/filesystem" \
@@ -59,10 +69,14 @@ set -g __fish_config_op_registry_values \
     "overrides/key-bindings" \
     "aliases/search" \
     "aliases/filesystem" \
+    "integrations/window-mgmt" \
+    "integrations/window-mgmt" \
     "aliases/network" \
     "overrides/prompt" \
+    "integrations/window-mgmt" \
     "overrides/prompt" \
     "aliases/monitor" \
+    "integrations/pkg-upgrade" \
     "aliases/network" \
     "aliases/filesystem"
 

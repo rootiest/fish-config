@@ -4,6 +4,9 @@
 # CATEGORY
 #   11-pager-and-logging
 #
+# COMPONENT
+#   integrations/history-logs
+#
 # SYNOPSIS
 #   logs [-h] [-c <category>]
 #
@@ -35,7 +38,7 @@
 #   logs -c scrollback
 function logs --description 'Browse terminal log files interactively with fzf'
     # Opinionated guard (C4): integrations disabled
-    if not __fish_config_op_enabled __fish_config_op_integrations
+    if not __fish_config_op_enabled (status current-function)
         set -l c_err (set_color red)
         set -l c_reset (set_color normal)
         echo "$c_err"'logs: disabled by __fish_config_op_integrations'"$c_reset" >&2
