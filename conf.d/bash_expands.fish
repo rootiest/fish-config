@@ -1,13 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# COMPONENT
+#   overrides/key-bindings
+
 # Provides bash-style history expansion functions for abbreviations.
 # These functions are gated by the C3 overrides switch.
 
 # Execute expand_bang_all
 function expand_bang_all --description 'Execute expand_bang_all'
     # Opinionated guard (C3): no expansion when overrides are disabled.
-    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+    __fish_config_op_enabled (status basename); or return 1
 
     set -l token $argv[1]
     if test -z "$token"; set token (commandline -t); end
@@ -23,7 +26,7 @@ end
 # Execute expand_bang_caret
 function expand_bang_caret --description 'Execute expand_bang_caret'
     # Opinionated guard (C3): no expansion when overrides are disabled.
-    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+    __fish_config_op_enabled (status basename); or return 1
 
     # Split the last history item into a list
     set -l tokens (string split -n ' ' -- $history[1])
@@ -36,7 +39,7 @@ end
 # Execute expand_bang_minus_n
 function expand_bang_minus_n --description 'Execute expand_bang_minus_n'
     # Opinionated guard (C3): no expansion when overrides are disabled.
-    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+    __fish_config_op_enabled (status basename); or return 1
 
     set -l token $argv[1]
     if test -z "$token"; set token (commandline -t); end
@@ -58,7 +61,7 @@ end
 # Execute expand_bang_search
 function expand_bang_search --description 'Execute expand_bang_search'
     # Opinionated guard (C3): no expansion when overrides are disabled.
-    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+    __fish_config_op_enabled (status basename); or return 1
 
     set -l token $argv[1]
     if test -z "$token"
@@ -84,7 +87,7 @@ end
 # Execute expand_bang_string
 function expand_bang_string --description 'Execute expand_bang_string'
     # Opinionated guard (C3): no expansion when overrides are disabled.
-    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+    __fish_config_op_enabled (status basename); or return 1
 
     # Fish 4.x passes the matched token as argv[1]
     set -l token $argv[1]
@@ -112,7 +115,7 @@ end
 # Execute expand_typo_sub
 function expand_typo_sub --description 'Execute expand_typo_sub'
     # Opinionated guard (C3): no expansion when overrides are disabled.
-    __fish_config_op_enabled __fish_config_op_overrides; or return 1
+    __fish_config_op_enabled (status basename); or return 1
 
     # In newer Fish, the matched token is often passed as $argv[1]
     # if the abbr is set up correctly. We'll fallback to commandline just in case.

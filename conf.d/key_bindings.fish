@@ -8,6 +8,9 @@
 # This file defines custom key bindings for the Fish shell.
 # It is sourced by Fish on startup.
 
+# COMPONENT
+#   overrides/key-bindings
+
 # ────────────────── Bind Prewious Path Head to Ctrl+G ─────────────────
 # Bindings to insert the previous path head into the command line
 # Behaves like `!$:h` does in bash
@@ -48,7 +51,11 @@ function fish_user_key_bindings
 
     # Custom key chords are opinionated (C3 overrides); skip them entirely
     # when overrides are disabled so stock bindings remain untouched.
-    __fish_config_op_enabled __fish_config_op_overrides; or return
+    # NOTE: (status basename), not (status current-function) -- this guard
+    # lives inside fish's own reserved fish_user_key_bindings function, whose
+    # name is not this file's identity; the registry key is this file's
+    # bare basename, key_bindings.
+    __fish_config_op_enabled (status basename); or return
 
     #   ───────────────────────────── Set Bindings ─────────────────────────────
     #
