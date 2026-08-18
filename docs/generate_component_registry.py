@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Generate the committed opinionated-component registry.
+
+Walks every `# COMPONENT` header in functions/*.fish, conf.d/*.fish, and
+config.fish and writes conf.d/__fish_config_op_registry.fish, the fish
+data file __fish_config_op_registry_lookup reads at shell startup.
+
+Run manually (via __fish_config_op_registry_rebuild) after editing a
+# COMPONENT header, and automatically as a pre-step in build-manual.py
+before the manual is built.
+"""
+
+import sys
+from pathlib import Path
+
+import manualtools as mt
+
+DOCS = Path(__file__).parent
+REPO = DOCS.parent
+OUTPUT = REPO / "conf.d" / "__fish_config_op_registry.fish"
+
+
+def collect_components() -> dict[str, list[str]]:
+    """Gather every `# COMPONENT` header across the whole repo."""
+    out = mt.parse_components(REPO / "functions")
+    out.update(mt.parse_components(REPO / "conf.d"))
+    out.update(mt.parse_component_file(REPO / "config.fish"))
+    return out
+
+
+def build_registry(components: dict[str, list[str]]) -> tuple[dict[str, list[str]], list[str]]:
+    """Turn {identity: [raw COMPONENT lines]} into ({"identity:site": [tags]}, warnings).
+
+    A site with both always/on and always/off tagged is a contradiction:
+    both are stripped and a warning is emitted, but generation continues
+    -- any other real tag on that same site survives. A site whose
+    effective tag set is empty after stripping produces no registry entry
+    at all, which __fish_config_op_enabled already treats as always/on
+    (fail-open) at guard time -- see spec §4.5.
+    """
+    registry: dict[str, list[str]] = {}
+    warnings: list[str] = []
+    for identity, raw_lines in components.items():
+        by_site: dict[str, list[str]] = {}
+        for site, tag in mt.parse_component_lines(raw_lines):
+            by_site.setdefault(site, []).append(tag)
+        for site, tags in by_site.items():
+            if "always/on" in tags and "always/off" in tags:
+                label = identity if not site else f"{identity}:{site}"
+                warnings.append(
+                    f"{label}: both always/on and always/off tagged; ignoring both"
+                )
+                tags = [t for t in tags if t not in ("always/on", "always/off")]
+            if tags:
+                registry[f"{identity}:{site}"] = tags
+    return registry, warnings
+
+
+def render(registry: dict[str, list[str]]) -> str:
+    keys = sorted(registry)
+    lines = [
+        "# Copyright (C) 2026 Rootiest",
+        "# SPDX-License-Identifier: AGPL-3.0-or-later",
+        "#",
+        "# GENERATED FILE --- do not edit by hand.",
+        "# Regenerate with __fish_config_op_registry_rebuild after editing a",
+        "# # COMPONENT header, or automatically via docs/build-manual.py.",
+        "# Source: docs/generate_component_registry.py",
+        "",
+    ]
+    if not keys:
+        lines.append("set -g __fish_config_op_registry_keys")
+        lines.append("set -g __fish_config_op_registry_values")
+        return "\n".join(lines) + "\n"
+
+    lines.append("set -g __fish_config_op_registry_keys \\")
+    lines += [f"    {k} \\" for k in keys[:-1]] + [f"    {keys[-1]}"]
+    lines.append("")
+
+    values = ['"' + " ".join(registry[k]) + '"' for k in keys]
+    lines.append("set -g __fish_config_op_registry_values \\")
+    lines += [f"    {v} \\" for v in values[:-1]] + [f"    {values[-1]}"]
+    lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    components = collect_components()
+    registry, warnings = build_registry(components)
+    for w in warnings:
+        print(f"  WARN  {w}", file=sys.stderr)
+    OUTPUT.write_text(render(registry))
+    print(f"wrote {OUTPUT} ({len(registry)} entries)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).parent))
+    raise SystemExit(main())

@@ -900,6 +900,75 @@ def test_parse_component_file_single_file():
     assert got == {"config": ["site greeting-block: greeting/greeting-message"]}
 
 
+def test_build_registry_strips_on_off_contradiction_with_warning():
+    import generate_component_registry as gcr
+
+    components = {"contradictory_fn": ["always/on", "always/off", "aliases/filesystem"]}
+    registry, warnings = gcr.build_registry(components)
+    assert registry["contradictory_fn:"] == ["aliases/filesystem"], (
+        f"the non-contradictory tag should survive: {registry}"
+    )
+    assert len(warnings) == 1 and "contradictory_fn" in warnings[0]
+
+
+def test_build_registry_drops_empty_effective_tag_sets():
+    import generate_component_registry as gcr
+
+    components = {"only_contradictory": ["always/on", "always/off"]}
+    registry, warnings = gcr.build_registry(components)
+    assert "only_contradictory:" not in registry, (
+        "a site stripped down to nothing must produce no registry entry "
+        "(fail-open: absence of an entry already means always/on at guard time)"
+    )
+    assert len(warnings) == 1
+
+
+def test_build_registry_keeps_sites_independent():
+    import generate_component_registry as gcr
+
+    components = {
+        "smart_exit": [
+            "site exit-plain: overrides/key-bindings",
+            "site logging-guard: logging/terminal-capture",
+        ]
+    }
+    registry, warnings = gcr.build_registry(components)
+    assert registry["smart_exit:exit-plain"] == ["overrides/key-bindings"]
+    assert registry["smart_exit:logging-guard"] == ["logging/terminal-capture"]
+    assert not warnings
+
+
+def test_render_registry_is_valid_fish_and_round_trips():
+    """Sourcing render()'s output must leave the two arrays in the exact
+    shape __fish_config_op_registry_lookup expects -- checked via the real
+    lookup helper (functions/__fish_config_op_registry_lookup.fish, Task
+    2) rather than re-parsing the generated text by hand."""
+    import subprocess
+
+    import generate_component_registry as gcr
+
+    registry = {
+        "rm:": ["aliases/filesystem"],
+        "smart_exit:exit-plain": ["overrides/key-bindings"],
+    }
+    text = gcr.render(registry)
+
+    repo = Path(__file__).parent.parent
+    proc = subprocess.run(
+        [
+            "fish", "-c",
+            f"source {repo}/functions/__fish_config_op_registry_lookup.fish; "
+            "source /dev/stdin; "
+            "__fish_config_op_registry_lookup rm ''; echo status=$status",
+        ],
+        input=text,
+        capture_output=True,
+        text=True,
+    )
+    assert "aliases/filesystem" in proc.stdout, f"unexpected output: {proc.stdout!r} {proc.stderr!r}"
+    assert "status=0" in proc.stdout, f"lookup did not report found: {proc.stdout!r}"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 
