@@ -89,7 +89,7 @@ function config-settings --description 'Interactive TUI for managing fish config
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""k j$c_reset    Move cursor up / down"
                 echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Toggle pages: OFF ← DEFAULT → ON"
                 echo "  $c_flag""Enter$c_reset         Open sub-category page (Universal / Session);"
-                echo "                 edit value (Sponge / Paths pages)"
+                echo "                edit value (Sponge / Paths pages)"
                 echo "  $c_flag← / h$c_reset         Clear value to default (value rows)"
                 echo "  $c_flag""Tab / S-Tab$c_reset   Next / previous page"
                 echo "  $c_flag""q$c_reset / $c_flag""Esc$c_reset       Exit"
