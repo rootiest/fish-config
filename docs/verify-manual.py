@@ -233,16 +233,15 @@ def test_every_component_resolves_to_a_taxonomy_entry():
     assert not unknown, "# COMPONENT tags with no taxonomy entry:\n  " + "\n  ".join(unknown)
 
 
-def test_c0_tags_never_combine_with_contradiction_unwarned():
-    """Every always/on + always/off contradiction must be one this repo's
-    own generator would warn about -- this is a direct repo-content check,
-    independent of running the generator, so CI catches it even if
-    someone forgets to regenerate."""
+def warn_c0_tags_never_combine_with_contradiction():
+    """Warn -- never fail -- on always/on + always/off contradictions this
+    repo's own generator would warn about -- this is a direct repo-content
+    check, independent of running the generator, so CI surfaces them even
+    if someone forgets to regenerate. Warnings are non-fatal (spec §4.5);
+    this exists to print them prominently in CI output."""
     from generate_component_registry import build_registry
 
     _, warnings = build_registry(_parsed_components())
-    # No assertion failure here by design: warnings are non-fatal (spec
-    # §4.5). This test exists to print them prominently in CI output.
     for w in warnings:
         print(f"  WARN  {w}")
 
@@ -268,6 +267,18 @@ def warn_public_functions_without_category():
         print("        " + ", ".join(orphans))
 
 
+# The guard's own supporting infrastructure: these files' bodies (function
+# signature, SYNOPSIS/EXAMPLE prose) legitimately contain the literal text
+# "__fish_config_op_enabled" without being a *caller* of the guard, so they
+# are permanently exempt from warn_functions_without_component's substring
+# check below.
+_GUARD_INFRA_FILES = {
+    "__fish_config_op_enabled.fish",
+    "__fish_config_op_cascade.fish",
+    "__fish_config_op_registry_lookup.fish",
+}
+
+
 def warn_functions_without_component():
     """Warn -- never fail -- on a documented function calling the
     opinionated guard but carrying no `# COMPONENT` section.
@@ -280,6 +291,8 @@ def warn_functions_without_component():
     components = _parsed_components()
     orphans = []
     for p in list((repo / "functions").glob("*.fish")) + list((repo / "conf.d").glob("*.fish")):
+        if p.name in _GUARD_INFRA_FILES:
+            continue
         text = p.read_text(encoding="utf-8")
         if "__fish_config_op_enabled" not in text or "# SYNOPSIS" not in text:
             continue
@@ -1149,6 +1162,7 @@ def main() -> int:
     warn_public_functions_without_category()
     warn_functions_without_component()
     warn_unused_taxonomy_entries()
+    warn_c0_tags_never_combine_with_contradiction()
     print(f"\n{len(TESTS) - failed}/{len(TESTS)} passed")
     return 1 if failed else 0
 
