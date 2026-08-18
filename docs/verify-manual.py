@@ -131,11 +131,9 @@ def _parsed_functions() -> dict[str, dict[str, list[str]]]:
 
 
 def _parsed_components() -> dict[str, list[str]]:
-    repo = Path(__file__).parent.parent
-    out = mt.parse_components(repo / "functions")
-    out.update(mt.parse_components(repo / "conf.d"))
-    out.update(mt.parse_component_file(repo / "config.fish"))
-    return out
+    import generate_component_registry as gcr
+
+    return gcr.collect_components()
 
 
 _C0_TAGS = {"always/on", "always/off"}
@@ -1120,6 +1118,19 @@ def test_build_manual_regenerates_registry_before_building():
     assert hasattr(build_manual, "generate_component_registry"), (
         "build-manual.py must import generate_component_registry so its "
         "main() can be called as a pre-step before --site/--concat run"
+    )
+
+
+def test_committed_registry_matches_headers():
+    """The committed conf.d/__fish_config_op_registry.fish must match what
+    generate_component_registry.py would produce right now from the current
+    `# COMPONENT` headers -- otherwise CI has nothing catching drift."""
+    import generate_component_registry as gcr
+
+    registry, _ = gcr.build_registry(gcr.collect_components())
+    assert gcr.render(registry) == gcr.OUTPUT.read_text(), (
+        "conf.d/__fish_config_op_registry.fish is stale — run "
+        "__fish_config_op_registry_rebuild"
     )
 
 

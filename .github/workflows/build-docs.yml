@@ -11,6 +11,8 @@ on:
       - "docs/verify-manual.py"
       - "docs/site/**"
       - "functions/**"
+      - "conf.d/**"
+      - "config.fish"
   workflow_dispatch:
 
 jobs:

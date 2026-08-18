@@ -182,7 +182,7 @@ function __config_settings_draw
 
     # ── Keybind hint ──────────────────────────────────────────────────────
     # string pad is width-aware (arrows count as 1 column)
-    set -l hint " ↑↓/kj move  ←→/hl set  Tab page  q quit"
+    set -l hint " ↑↓/kj move ←→/hl set Enter sub-cats Tab pg q quit"
     printf '%s│%s%s%s│\n' $p $c_dim (string pad -r -w $iw -- $hint) $c_reset
 
     # ── Bottom border ─────────────────────────────────────────────────────

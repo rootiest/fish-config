@@ -105,7 +105,7 @@ def main() -> int:
     for w in warnings:
         print(f"  WARN  {w}", file=sys.stderr)
     OUTPUT.write_text(render(registry))
-    print(f"wrote {OUTPUT} ({len(registry)} entries)")
+    print(f"wrote {OUTPUT} ({len(registry)} entries)", file=sys.stderr)
     return 0
 
 

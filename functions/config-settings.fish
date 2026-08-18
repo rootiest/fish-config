@@ -20,7 +20,10 @@
 #                 path, and the user-dots convenience symlink toggle (Dots link)
 #
 #   Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON; DEFAULT erases
-#   the variable so the master switch / built-in default applies. Value rows
+#   the variable so the master switch / built-in default applies. On the
+#   Universal/Session pages, Enter on a category row (C1–C6) opens that
+#   category's sub-category drill-down page for finer-grained toggles;
+#   Escape backs out to the category list. Value rows
 #   (Sponge, Paths) use Enter to edit inline; ← / h clears to default. List rows
 #   (e.g. Extra secret, OK codes) accept values separated by commas and/or
 #   whitespace — "A, B", "A,B" and "A B" all yield the same two entries.
@@ -49,7 +52,10 @@
 #     ↑ ↓ / k j     Move cursor
 #     ← → / h l     Toggle rows: OFF ← DEFAULT → ON
 #     ←  / h        Value rows: clear to default
-#     Enter         Value rows: edit inline (Sponge / Paths pages)
+#     Enter         Category rows (Universal/Session): open sub-category
+#                   drill-down page. Value rows: edit inline (Sponge /
+#                   Paths pages)
+#     Escape        Sub-category page: back out to the category list
 #     Tab / S-Tab   Next / previous page
 #     q / Escape    Exit
 #
@@ -82,7 +88,8 @@ function config-settings --description 'Interactive TUI for managing fish config
                 echo "$c_head""Navigation:$c_reset"
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""k j$c_reset    Move cursor up / down"
                 echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Toggle pages: OFF ← DEFAULT → ON"
-                echo "  $c_flag""Enter$c_reset         Edit value (Sponge / Paths pages)"
+                echo "  $c_flag""Enter$c_reset         Open sub-category page (Universal / Session);"
+                echo "                 edit value (Sponge / Paths pages)"
                 echo "  $c_flag← / h$c_reset         Clear value to default (value rows)"
                 echo "  $c_flag""Tab / S-Tab$c_reset   Next / previous page"
                 echo "  $c_flag""q$c_reset / $c_flag""Esc$c_reset       Exit"
@@ -216,9 +223,11 @@ function config-settings --description 'Interactive TUI for managing fish config
             case tab
                 set cur_page (math "($cur_page + 1) % 4")
                 set cur_row 0
+                set in_subcat 0
             case backtab
                 set cur_page (math "($cur_page + 3) % 4")
                 set cur_row 0
+                set in_subcat 0
             case right l
                 if test $cur_page -le 1
                     # Toggle page: step toward ON

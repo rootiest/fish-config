@@ -71,9 +71,19 @@ function __config_settings_draw_subcat
     set -l desc_w (math $iw - 34)
 
     set -l cat_label (string replace -r '^__fish_config_op_' '' -- $category_var)
-    set -l title_dashes (math $iw - (string length -- $cat_label) - 19)
-    printf '%s┌─%s Sub-categories: %s %s┐\n' \
-        $p $c_head "$cat_label$c_reset" (string repeat -n (math "max(0, $title_dashes)") '─')
+    # Scope indicator: toggling a row on this page writes -U (Universal,
+    # persistent) or -g (Session, this-shell-only) -- the title must say
+    # which, since it isn't otherwise visible anywhere on the page.
+    set -l scope_label Universal
+    test "$cur_scope" = session; and set scope_label Session
+    # Title layout is "┌─ Sub-categories: <label> (<scope>) ───┐"; the
+    # dash count must absorb every visible char added around cat_label so
+    # the line still totals iw+2, matching the surrounding box exactly --
+    # see the DESCRIPTION doc comment above for why this is hand-verified,
+    # not eyeballed.
+    set -l title_dashes (math $iw - (string length -- $cat_label) - (string length -- $scope_label) - 22)
+    printf '%s┌─%s Sub-categories: %s (%s)%s %s┐\n' \
+        $p $c_head "$cat_label" $scope_label "$c_reset" (string repeat -n (math "max(0, $title_dashes)") '─')
 
     printf '%s│%s│\n' $p $HBR
 
