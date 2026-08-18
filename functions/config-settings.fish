@@ -110,6 +110,12 @@ function config-settings --description 'Interactive TUI for managing fish config
         __fish_config_op_greeting \
         __fish_config_opinionated
 
+    # ── Drill-down navigation state (Universal/Session pages only) ────────
+    # in_subcat: 1 while viewing a category's sub-category page (Enter to
+    # open, Escape to back out). subcat_row: cursor row within that page.
+    set -l in_subcat 0
+    set -l subcat_row 0
+
     # ── Value-page row metadata (parallel: var / type) ────────────────────
     set -l sponge_vars sponge_delay sponge_purge_only_on_exit sponge_allow_previously_successful sponge_successful_exit_codes __fish_sponge_extra_sensitive
     set -l sponge_types int bool bool list list
@@ -143,9 +149,17 @@ function config-settings --description 'Interactive TUI for managing fish config
     function __cs_dispatch_draw --no-scope-shadowing
         switch $cur_page
             case 0
-                __config_settings_draw $cur_row universal $toggle_vars
+                if test $in_subcat -eq 1
+                    __config_settings_draw_subcat $subcat_row universal $toggle_vars[(math $cur_row + 1)]
+                else
+                    __config_settings_draw $cur_row universal $toggle_vars
+                end
             case 1
-                __config_settings_draw $cur_row session $toggle_vars
+                if test $in_subcat -eq 1
+                    __config_settings_draw_subcat $subcat_row session $toggle_vars[(math $cur_row + 1)]
+                else
+                    __config_settings_draw $cur_row session $toggle_vars
+                end
             case 2
                 __config_settings_draw_value $cur_row sponge
             case 3
@@ -174,12 +188,22 @@ function config-settings --description 'Interactive TUI for managing fish config
 
         switch $key
             case up k
-                set cur_row (math "max(0, $cur_row - 1)")
+                if test $in_subcat -eq 1
+                    set subcat_row (math "max(0, $subcat_row - 1)")
+                else
+                    set cur_row (math "max(0, $cur_row - 1)")
+                end
             case down j
-                # Hoist the page index: fish cannot expand a command-substitution
-                # index inside a quoted math string.
-                set -l pidx (math $cur_page + 1)
-                set cur_row (math "min($page_rows[$pidx] - 1, $cur_row + 1)")
+                if test $in_subcat -eq 1
+                    # TODO(Task 18): replace the stubbed 4-row max with the real
+                    # per-category count from __config_settings_subcats.
+                    set subcat_row (math "min(3, $subcat_row + 1)")
+                else
+                    # Hoist the page index: fish cannot expand a command-substitution
+                    # index inside a quoted math string.
+                    set -l pidx (math $cur_page + 1)
+                    set cur_row (math "min($page_rows[$pidx] - 1, $cur_row + 1)")
+                end
             case tab
                 set cur_page (math "($cur_page + 1) % 4")
                 set cur_row 0
@@ -246,7 +270,12 @@ function config-settings --description 'Interactive TUI for managing fish config
                     end
                 end
             case enter
-                if test $cur_page -ge 2
+                if test $cur_page -le 1
+                    if test $in_subcat -eq 0 -a $cur_row -le 5
+                        set in_subcat 1
+                        set subcat_row 0
+                    end
+                else if test $cur_page -ge 2
                     set -l v_vars $sponge_vars
                     set -l v_types $sponge_types
                     set -l v_defaults $sponge_defaults
@@ -313,8 +342,14 @@ function config-settings --description 'Interactive TUI for managing fish config
                         set did_redraw 1
                     end
                 end
-            case q Q quit escape
+            case q Q quit
                 break
+            case escape
+                if test $in_subcat -eq 1
+                    set in_subcat 0
+                else
+                    break
+                end
         end
 
         # Skip redraw entirely when the key reader timed out with no resize
