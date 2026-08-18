@@ -8,7 +8,9 @@
 
 set -g __fish_config_op_registry_keys \
     __auto_source_fallback_venv: \
+    __fish_config_sync_logging: \
     __fish_user_dots_link: \
+    _zellij_dump_log: \
     agy: \
     auto-pull: \
     autopair: \
@@ -23,6 +25,8 @@ set -g __fish_config_op_registry_keys \
     help: \
     hist: \
     key_bindings: \
+    kitty-logging: \
+    kitty-watcher-reminder: \
     less: \
     logs: \
     ls: \
@@ -38,6 +42,7 @@ set -g __fish_config_op_registry_keys \
     starship: \
     tab: \
     theme: \
+    tmux-logging: \
     top: \
     upgrade: \
     yt-dlp: \
@@ -45,7 +50,9 @@ set -g __fish_config_op_registry_keys \
 
 set -g __fish_config_op_registry_values \
     "autoexec/venv" \
+    "logging/terminal-capture" \
     "autoexec/sync" \
+    "logging/multiplexer-capture" \
     "aliases/dev-tools" \
     "autoexec/sync autoexec/sync" \
     "overrides/key-bindings" \
@@ -60,6 +67,8 @@ set -g __fish_config_op_registry_values \
     "aliases/shell-tools" \
     "integrations/history-logs" \
     "overrides/key-bindings" \
+    "logging/terminal-capture" \
+    "logging/terminal-capture" \
     "aliases/shell-tools" \
     "integrations/history-logs" \
     "aliases/filesystem" \
@@ -75,6 +84,7 @@ set -g __fish_config_op_registry_values \
     "overrides/prompt" \
     "integrations/window-mgmt" \
     "overrides/prompt" \
+    "logging/multiplexer-capture" \
     "aliases/monitor" \
     "integrations/pkg-upgrade" \
     "aliases/network" \

@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# COMPONENT
+#   logging/terminal-capture
+#
 # SYNOPSIS
 #   __fish_config_sync_logging
 #
@@ -29,7 +32,7 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     set -l yay_wrapper "$HOME/.local/bin/yay"
     set -l wrapper_version 1
 
-    if __fish_config_op_enabled __fish_config_op_logging
+    if __fish_config_op_enabled (status current-function)
         # Logging enabled: remove sentinel and regenerate wrappers if binaries exist
         rm -f $sentinel
 
