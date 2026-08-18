@@ -4,6 +4,9 @@
 # CATEGORY
 #   03-editors-and-viewers
 #
+# COMPONENT
+#   aliases/dev-tools
+#
 # SYNOPSIS
 #   edit [-V|-t] [-e EDITOR] [-c] [-x TEXT] [-n] [-v|-s] [FILE...]
 #
@@ -50,7 +53,7 @@ function edit --description 'Open files in a terminal or GUI editor with fallbac
     set -l c_reset (set_color normal)
 
     # Opinionated guard (C1): fall back to the legacy bare-editor behavior.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         if set -q EDITOR; and test -n "$EDITOR"
             $EDITOR $argv
         else if type -q nvim

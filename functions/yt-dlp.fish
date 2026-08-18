@@ -4,6 +4,9 @@
 # CATEGORY
 #   13-media-and-utilities
 #
+# COMPONENT
+#   aliases/network
+#
 # SYNOPSIS
 #   yt-dlp [args...] URL [URL...]
 #
@@ -29,7 +32,7 @@
 #   yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
 function yt-dlp --description 'yt-dlp with embedding + SponsorBlock defaults'
     # Opinionated guard (C1): fall back to bare command yt-dlp when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command yt-dlp $argv
         return $status
     end

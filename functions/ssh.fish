@@ -4,6 +4,9 @@
 # CATEGORY
 #   08-terminal-management
 #
+# COMPONENT
+#   aliases/network
+#
 # SYNOPSIS
 #   ssh [args...]
 #
@@ -20,7 +23,7 @@
 #   ssh user@host
 function ssh --description 'Alias ssh to kitten ssh when using Kitty terminal'
     # Opinionated guard (C1): fall back to bare command ssh when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command ssh $argv
         return $status
     end

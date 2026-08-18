@@ -4,6 +4,9 @@
 # CATEGORY
 #   12-ai-and-developer-tools
 #
+# COMPONENT
+#   aliases/dev-tools
+#
 # DEPENDENCIES
 #   agents-init
 #
@@ -35,7 +38,7 @@
 #   agy -i "initial prompt"
 #   agy models
 function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ sub-repo before launch'
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command agy $argv
         return $status
     end

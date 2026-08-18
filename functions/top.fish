@@ -4,6 +4,9 @@
 # CATEGORY
 #   07-system-and-monitoring
 #
+# COMPONENT
+#   aliases/monitor
+#
 # SYNOPSIS
 #   top [args...]
 #
@@ -18,7 +21,7 @@
 #   top
 function top --wraps='btop' --description 'Use btop as a modern replacement for top'
     # Opinionated guard (C1): fall back to bare command top when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command top $argv
         return $status
     end

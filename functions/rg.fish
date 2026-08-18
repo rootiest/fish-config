@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# COMPONENT
+#   aliases/search
+#
 # SYNOPSIS
 #   rg [args...]
 #
@@ -21,7 +24,7 @@
 #   rg -l "TODO" ~/projects/myapp
 function rg --description 'alias rg=rg --hyperlink-format=kitty'
     # Opinionated guard (C1): fall back to bare command rg when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command rg $argv
         return $status
     end

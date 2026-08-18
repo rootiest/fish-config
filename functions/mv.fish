@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# COMPONENT
+#   aliases/filesystem
+#
 # SYNOPSIS
 #   mv [args...]
 #
@@ -27,7 +30,7 @@
 #   mv ~/.config/btop/themes/themes ~/.config/btop/themes
 function mv --wraps='mv' --description 'Move files with auto-collapse for nested directories'
     # Opinionated guard (C1): fall back to bare command mv when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command mv $argv
         return $status
     end

@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# COMPONENT
+#   aliases/filesystem
+#
 # SYNOPSIS
 #   du [--disk|--dir|--dua] [args...]
 #
@@ -23,7 +26,7 @@
 #   du --disk
 function du --description 'Execute du'
     # Opinionated guard (C1): fall back to bare command du when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command du $argv
         return $status
     end

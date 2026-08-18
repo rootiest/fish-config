@@ -3,6 +3,9 @@
 # Adapted from icezyclon/zoxide.fish (MIT)
 # Heavily customized for Fish 4.x compatibility and performance
 
+# COMPONENT
+#   aliases/filesystem
+
 if status is-interactive
 
     if type -q zoxide
@@ -65,7 +68,7 @@ if status is-interactive
 
         # Shadowing cd with zoxide is opinionated (C1 aliasing); z and zi
         # remain available either way.
-        if __fish_config_op_enabled __fish_config_op_aliases
+        if __fish_config_op_enabled (status basename)
             alias cd=z
         end
 
