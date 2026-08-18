@@ -87,7 +87,7 @@ set -g __fish_config_op_registry_values \
     "aliases/dev-tools" \
     "aliases/filesystem" \
     "overrides/key-bindings" \
-    "aliases/filesystem" \
+    "overrides/environment" \
     "overrides/environment" \
     "overrides/key-bindings" \
     "greeting/greeting-message" \

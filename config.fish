@@ -22,7 +22,7 @@
 # truthy value — set -U __fish_config_op_logging on
 
 # COMPONENT
-#   site cachyos-tricks: aliases/filesystem
+#   site cachyos-tricks: overrides/environment
 #   site cachyos-strip-aliases: aliases/filesystem
 #   site cachyos-strip-overrides: overrides/key-bindings
 #   site pager-editor-gpg: overrides/environment
