@@ -62,7 +62,8 @@ set -g __fish_config_op_registry_keys \
     tmux-logging: \
     top: \
     tricks:aliases-tricks \
-    tricks:overrides-tricks \
+    tricks:tricks-bang \
+    tricks:tricks-manpager \
     upgrade: \
     wakatime:wakatime-autoexec \
     wakatime:wakatime-hook \
@@ -127,6 +128,7 @@ set -g __fish_config_op_registry_values \
     "logging/multiplexer-capture" \
     "aliases/monitor" \
     "aliases/filesystem" \
+    "overrides/key-bindings" \
     "overrides/environment" \
     "integrations/pkg-upgrade" \
     "autoexec/telemetry" \

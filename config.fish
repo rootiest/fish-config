@@ -7,7 +7,7 @@
 
 #   ───────────────────── Opinionated component guards ─────────────────────
 # Opinionated components (AGENTS.md Task #3) are wrapped in
-# __fish_config_op_enabled <category> guards throughout this file and conf.d/.
+# __fish_config_op_enabled <identity> [<site>] guards throughout this file and conf.d/.
 # The helper always evaluates the master switch __fish_config_opinionated
 # first (falsy disables everything), then the per-category opt-out variable:
 #   __fish_config_op_aliases       C1 — command shadows / flag injection

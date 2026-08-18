@@ -9,7 +9,8 @@
 
 # COMPONENT
 #   site aliases-tricks: aliases/filesystem
-#   site overrides-tricks: overrides/environment
+#   site tricks-manpager: overrides/environment
+#   site tricks-bang: overrides/key-bindings
 
 ## Environment setup
 # Apply .profile: use this to put fish compatible .profile stuff in
@@ -28,7 +29,7 @@ end
 
 # Format man pages using bat (only if bat is installed)
 # Overriding $MANPAGER is opinionated (C3 overrides)
-if type -q bat; and __fish_config_op_enabled (status basename) overrides-tricks
+if type -q bat; and __fish_config_op_enabled (status basename) tricks-manpager
     set -gx MANROFFOPT -c
     set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 end
@@ -41,7 +42,7 @@ set -gx __done_notification_urgency_level low
 # Functions needed for !! and !$ https://github.com/oh-my-fish/plugin-bang-bang
 # The bang-bang system is opinionated (C3 overrides) and is gated atomically
 # here, in conf.d/abbr.fish, conf.d/puffer.fish, and functions/expand_*.fish.
-if __fish_config_op_enabled (status basename) overrides-tricks
+if __fish_config_op_enabled (status basename) tricks-bang
     function __history_previous_command
         switch (commandline -t)
             case "!"
