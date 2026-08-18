@@ -159,7 +159,7 @@ def _load_taxonomy() -> dict[str, set[str]]:
         taxonomy[category] = {
             m.group(1)
             for ln in body.split("\n")
-            if (m := re.match(r"^## (\S+)$", ln))
+            if (m := re.match(r"^## ([a-z][a-z0-9-]*)$", ln))
         }
     return taxonomy
 
