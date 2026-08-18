@@ -21,12 +21,23 @@
 # C5 is the one exception: it defaults to disabled and needs an explicit
 # truthy value — set -U __fish_config_op_logging on
 
+# COMPONENT
+#   site cachyos-tricks: aliases/filesystem
+#   site cachyos-strip-aliases: aliases/filesystem
+#   site cachyos-strip-overrides: overrides/key-bindings
+#   site pager-editor-gpg: overrides/environment
+#   site exit-wiring: overrides/key-bindings
+#   site path-setup: overrides/environment
+#   site cdpath: overrides/environment
+#   site vi-mode: overrides/key-bindings
+#   site greeting-stamp: greeting/greeting-message
+
 #   ──────────────────────── Source CachyOS configs ────────────────────────
 if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
     source /usr/share/cachyos-fish-config/cachyos-config.fish
     # Surgically overriding the distro config is opinionated (C3 overrides):
     # skip it entirely when overrides are disabled, keeping CachyOS defaults.
-    if __fish_config_op_enabled __fish_config_op_overrides
+    if __fish_config_op_enabled (status basename) cachyos-tricks
         # Source our tricks over the cachyOS config
         test -f "$__fish_config_dir/conf.d/tricks.fish"
         and source "$__fish_config_dir/conf.d/tricks.fish"
@@ -41,7 +52,7 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
     # The distro config ships opinionated pieces of its own (it is the origin
     # of tricks.fish); strip them when the matching category is disabled so
     # the guards hold on CachyOS systems too.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status basename) cachyos-strip-aliases
         for _fname in grep fgrep egrep dir vdir wget
             functions -q $_fname; and functions --erase $_fname
         end
@@ -53,7 +64,7 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
             and source $__fish_data_dir/functions/$_fname.fish
         end
     end
-    if not __fish_config_op_enabled __fish_config_op_overrides
+    if not __fish_config_op_enabled (status basename) cachyos-strip-overrides
         for _fname in __history_previous_command __history_previous_command_arguments
             functions -q $_fname; and functions --erase $_fname
         end
@@ -95,7 +106,7 @@ set -q WORDLIST; or set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
 
 #   ─────────────────────────── Pager variables ────────────────────────────
 # Overriding $PAGER, $EDITOR, and $GPG_TTY is opinionated (C3 overrides)
-if __fish_config_op_enabled __fish_config_op_overrides
+if __fish_config_op_enabled (status basename) pager-editor-gpg
     if type -q ov
         set -gx PAGER ov
     else if type -q less
@@ -136,7 +147,7 @@ and set -gx SCROLLBACK_HISTORY_MAX_FILES $__fish_scrollback_history_max_files
 # Wire up a clean exit function that won't fire on background subshells
 # Replacing the exit builtin is opinionated (C3 overrides); smart_exit also
 # guards itself so a live toggle takes effect without restarting the shell.
-if status is-interactive; and __fish_config_op_enabled __fish_config_op_overrides
+if status is-interactive; and __fish_config_op_enabled (status basename) exit-wiring
     function exit --description 'Safe interactive exit'
         # If the smart_exit file exists in our function path, invoke it explicitly
         if functions -q smart_exit
@@ -153,7 +164,7 @@ end
 #   the cargo bin directory is moved to the end of the PATH, which can help avoid conflicts
 #   with system-installed Rust tools while still allowing user-installed cargo binaries to be found.
 #   PATH setup is opinionated (C3 overrides)
-if __fish_config_op_enabled __fish_config_op_overrides
+if __fish_config_op_enabled (status basename) path-setup
     fish_add_path $HOME/.local/bin # Standard user-local executables (XDG spec)
     fish_add_path $HOME/.local/share/../bin # Alternative/legacy path for local user binaries
     fish_add_path $HOME/Applications # User-installed applications and standalone apps
@@ -176,7 +187,7 @@ end
 # so if you have a directory named 'myproject' in the current directory,
 # running 'cd myproject' will take you there instead of $HOME/projects/myproject.
 # CDPATH injection is opinionated (C3 overrides)
-if __fish_config_op_enabled __fish_config_op_overrides
+if __fish_config_op_enabled (status basename) cdpath
     set -gx CDPATH . $HOME/projects $HOME
 end
 
@@ -191,7 +202,7 @@ if status is-interactive
     #   This is optional but can improve the user experience for those who prefer Vi-style key bindings.
     #   Global Vi mode is opinionated (C3 overrides); without it fish keeps its
     #   default Emacs-style bindings.
-    if __fish_config_op_enabled __fish_config_op_overrides
+    if __fish_config_op_enabled (status basename) vi-mode
         set -g fish_key_bindings fish_vi_key_bindings
     end
 
@@ -251,7 +262,7 @@ if status is-interactive
     # function that distro configs set (e.g., CachyOS defines it as fastfetch).
     # This runs last inside the interactive block so our empty definition wins
     # over whatever cachyos-config.fish or vendor conf.d installed.
-    if not __fish_config_op_enabled __fish_config_op_greeting
+    if not __fish_config_op_enabled (status basename) greeting-stamp
         function fish_greeting
         end
     end

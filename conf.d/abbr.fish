@@ -8,6 +8,10 @@
 # This file contains all the abbreviations for the terminal.
 # It is sourced by Fish on startup.
 
+# COMPONENT
+#   site abbr-integrations: integrations/terminal-abbrs
+#   site abbr-overrides: overrides/key-bindings
+
 # Neovim
 # @category Editors
 # @desc nvim
@@ -155,7 +159,7 @@ abbr -a ag. agy .
 # @desc exit
 abbr -a /exit exit
 # Window-management abbreviations are opinionated (C4 integrations)
-if __fish_config_op_enabled __fish_config_op_integrations
+if __fish_config_op_enabled (status basename) abbr-integrations
     if test "$TERM" = xterm-kitty
         # @category Terminal Windows, Tabs, and Panes
         # @desc Close current pane/window
@@ -208,7 +212,7 @@ abbr -a speedtest-fast fast-cli
 
 # Kitty/WezTerm window-management abbreviations are opinionated (C4
 # integrations): they assume an active Kitty or WezTerm session.
-if __fish_config_op_enabled __fish_config_op_integrations
+if __fish_config_op_enabled (status basename) abbr-integrations
     # Window Creation (OS Windows)
     if test "$TERM" = xterm-kitty
         # @category Terminal Windows, Tabs, and Panes
@@ -666,7 +670,7 @@ abbr -a url-open open-url
 ### History Expansions and Substitutions ###
 # Bash-style history expansion is opinionated (C3 overrides), gated atomically
 # with conf.d/tricks.fish, conf.d/puffer.fish, and functions/expand_*.fish.
-if __fish_config_op_enabled __fish_config_op_overrides
+if __fish_config_op_enabled (status basename) abbr-overrides
     # @category History Expansion
     # @name !^
     # @desc Expand to the first argument of the previous command

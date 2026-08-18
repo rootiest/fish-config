@@ -6,12 +6,16 @@
 # bars are preserved, renders the captured animation to a clean static log
 # (via scripts/clean_progress_log.py), and prunes old logs.
 
+# COMPONENT
+#   site paru-autoexec: autoexec/pkg-wrappers
+#   site paru-logging: logging/pkg-logs
+
 # Auto-generating a wrapper in ~/.local/bin is opinionated (C2 auto-exec).
 # Wrapper generation is also gated by C5 (Logging & Capture).
-__fish_config_op_enabled __fish_config_op_autoexec; or return
+__fish_config_op_enabled (status basename) paru-autoexec; or return
 
 # C5 — Logging & Capture: remove generated wrapper and skip when logging is off
-if not __fish_config_op_enabled __fish_config_op_logging
+if not __fish_config_op_enabled (status basename) paru-logging
     if test -f "$HOME/.local/bin/paru"
         and grep -q "# paru-wrapper-version:" "$HOME/.local/bin/paru" 2>/dev/null
         rm -f "$HOME/.local/bin/paru"

@@ -7,6 +7,10 @@
 #
 # Runs exactly once on the first interactive fish session after install.
 # To reset for testing, run: set -Ue __fish_config_first_run_complete
+#
+# COMPONENT
+#   site first-run-greeting: greeting/first-run
+#   site first-run-bootstrap: autoexec/plugin-management
 
 # Exit early in non-interactive shells (scripts, completions, subshells)
 if not status is-interactive
@@ -36,7 +40,7 @@ end
 # Printing a first-run welcome banner is opinionated (C6 greeting). The
 # first-run state variable is already set unconditionally above, so
 # disabling the greeting never re-triggers this file.
-if __fish_config_op_enabled __fish_config_op_greeting
+if __fish_config_op_enabled (status basename) first-run-greeting
     echo ""
     echo "  Welcome to your fish shell configuration!"
     echo "  Run 'help config' for offline documentation."
@@ -48,7 +52,7 @@ end
 # Startup side-effects below (Fisher curl, fisher update, theme apply) are
 # opinionated (C2 auto-execution). The first-run state variable is already
 # set above either way, so disabling auto-exec never re-triggers this file.
-if not __fish_config_op_enabled __fish_config_op_autoexec
+if not __fish_config_op_enabled (status basename) first-run-bootstrap
     return
 end
 
