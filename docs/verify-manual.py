@@ -938,6 +938,42 @@ def test_build_registry_keeps_sites_independent():
     assert not warnings
 
 
+def test_collect_components_merges_identity_collisions_across_sources():
+    """functions/auto-pull.fish and conf.d/auto-pull.fish both self-identify
+    as "auto-pull" at runtime -- the guard only ever has the bare
+    status current-function/basename string to look up with -- so
+    collect_components must concatenate their raw COMPONENT lines
+    rather than letting conf.d's entry silently overwrite functions'."""
+    import generate_component_registry as gcr
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "functions").mkdir()
+        (root / "conf.d").mkdir()
+        (root / "functions" / "auto-pull.fish").write_text(
+            "# COMPONENT\n"
+            "#   autoexec/sync\n"
+            "function auto-pull\n"
+            "end\n"
+        )
+        (root / "conf.d" / "auto-pull.fish").write_text(
+            "# COMPONENT\n"
+            "#   autoexec/sync\n"
+        )
+        (root / "config.fish").write_text("")
+
+        orig_repo = gcr.REPO
+        try:
+            gcr.REPO = root
+            got = gcr.collect_components()
+        finally:
+            gcr.REPO = orig_repo
+
+    assert got["auto-pull"] == ["autoexec/sync", "autoexec/sync"], (
+        f"both sources' tags should survive the merge, not overwrite: {got}"
+    )
+
+
 def test_render_registry_is_valid_fish_and_round_trips():
     """Sourcing render()'s output must leave the two arrays in the exact
     shape __fish_config_op_registry_lookup expects -- checked via the real

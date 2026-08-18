@@ -23,10 +23,23 @@ OUTPUT = REPO / "conf.d" / "__fish_config_op_registry.fish"
 
 
 def collect_components() -> dict[str, list[str]]:
-    """Gather every `# COMPONENT` header across the whole repo."""
-    out = mt.parse_components(REPO / "functions")
-    out.update(mt.parse_components(REPO / "conf.d"))
-    out.update(mt.parse_component_file(REPO / "config.fish"))
+    """Gather every `# COMPONENT` header across the whole repo.
+
+    Concatenates raw component lines when the same identity appears in
+    more than one source (e.g. functions/auto-pull.fish and
+    conf.d/auto-pull.fish both self-identify as "auto-pull" at runtime,
+    since the guard can only ever look up the bare status
+    current-function/basename string) rather than letting one silently
+    overwrite the other.
+    """
+    out: dict[str, list[str]] = {}
+    for source in (
+        mt.parse_components(REPO / "functions"),
+        mt.parse_components(REPO / "conf.d"),
+        mt.parse_component_file(REPO / "config.fish"),
+    ):
+        for identity, lines in source.items():
+            out.setdefault(identity, []).extend(lines)
     return out
 
 
