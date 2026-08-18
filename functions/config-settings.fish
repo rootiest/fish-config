@@ -146,24 +146,34 @@ function config-settings --description 'Interactive TUI for managing fish config
     trap 'printf "\e[?25h"; set -g __config_settings_exit 1' INT
 
     # ── Draw dispatch (page 0/1 = toggle table; 2/3 = value page) ─────────
+    # Records the actual line count of whatever it just drew into panel_h,
+    # so every erase (redraw loop, inline editor, final cleanup) matches
+    # reality -- the sub-category page is n+7 lines (2-6 sub-categories:
+    # 9-13 lines), never the category list's fixed 16.
     function __cs_dispatch_draw --no-scope-shadowing
         switch $cur_page
             case 0
                 if test $in_subcat -eq 1
                     __config_settings_draw_subcat $subcat_row universal $toggle_vars[(math $cur_row + 1)]
+                    set panel_h (math 7 + (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])))
                 else
                     __config_settings_draw $cur_row universal $toggle_vars
+                    set panel_h 16
                 end
             case 1
                 if test $in_subcat -eq 1
                     __config_settings_draw_subcat $subcat_row session $toggle_vars[(math $cur_row + 1)]
+                    set panel_h (math 7 + (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])))
                 else
                     __config_settings_draw $cur_row session $toggle_vars
+                    set panel_h 16
                 end
             case 2
                 __config_settings_draw_value $cur_row sponge
+                set panel_h 16
             case 3
                 __config_settings_draw_value $cur_row paths
+                set panel_h 16
         end
     end
     __cs_dispatch_draw
@@ -219,11 +229,16 @@ function config-settings --description 'Interactive TUI for managing fish config
                     # one but sitting on its row 0 (the category's own
                     # toggle). Only row >= 1 of a sub-category page
                     # resolves to a different, sub-category variable.
-                    set -l varname $toggle_vars[(math $cur_row + 1)]
+                    # Hoist the category variable into a plain local first --
+                    # fish cannot expand a command-substitution index
+                    # ("$toggle_vars[(math ...)]") inside a quoted string
+                    # (same reason the down/j case above hoists $pidx).
+                    set -l cvar $toggle_vars[(math $cur_row + 1)]
+                    set -l varname $cvar
                     if test $in_subcat -eq 1 -a $subcat_row -ne 0
-                        set -l rows (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])
+                        set -l rows (__config_settings_subcats $cvar)
                         set -l fields (string split -- \t $rows[$subcat_row])
-                        set varname "$toggle_vars[(math $cur_row + 1)]"_(string replace -a -- '-' '_' $fields[1])
+                        set varname "$cvar"_(string replace -a -- '-' '_' $fields[1])
                     end
                     set -l cur_val (__config_settings_get_val $varname $scope)
                     set -l next_val on
@@ -250,15 +265,16 @@ function config-settings --description 'Interactive TUI for managing fish config
                 if test $cur_page -le 1
                     set -l scope universal
                     test $cur_page -eq 1; and set scope session
-                    # Same varname resolution as the right/l case above:
-                    # row 0 (or not in a sub-category page) -> the category
-                    # variable; row >= 1 of a sub-category page -> the
-                    # selected sub-category variable.
-                    set -l varname $toggle_vars[(math $cur_row + 1)]
+                    # Same varname resolution as the right/l case above
+                    # (hoisted local -- see the comment there for why the
+                    # command-substitution index can't be inlined into the
+                    # quoted string directly).
+                    set -l cvar $toggle_vars[(math $cur_row + 1)]
+                    set -l varname $cvar
                     if test $in_subcat -eq 1 -a $subcat_row -ne 0
-                        set -l rows (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])
+                        set -l rows (__config_settings_subcats $cvar)
                         set -l fields (string split -- \t $rows[$subcat_row])
-                        set varname "$toggle_vars[(math $cur_row + 1)]"_(string replace -a -- '-' '_' $fields[1])
+                        set varname "$cvar"_(string replace -a -- '-' '_' $fields[1])
                     end
                     set -l cur_val (__config_settings_get_val $varname $scope)
                     set -l next_val off
