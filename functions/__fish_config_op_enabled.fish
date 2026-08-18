@@ -61,7 +61,7 @@ function __fish_config_op_enabled --description 'Guard for an opinionated compon
     for tag in $tags
         set -l parts (string split -m 1 -- / $tag)
         set -l category_var "__fish_config_op_$parts[1]"
-        set -l subcat_var "__fish_config_op_$parts[1]_$parts[2]"
+        set -l subcat_var "__fish_config_op_$parts[1]_"(string replace -a -- '-' '_' $parts[2])
         __fish_config_op_cascade $category_var $subcat_var
         or return 1
     end
