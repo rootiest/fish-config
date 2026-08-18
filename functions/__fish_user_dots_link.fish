@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# COMPONENT
+#   autoexec/sync
+#
 # SYNOPSIS
 #   __fish_user_dots_link
 #
@@ -41,7 +44,7 @@ function __fish_user_dots_link --description 'Manage the user-dots convenience s
     end
 
     # Enabled: creation is a C2 startup side-effect.
-    __fish_config_op_enabled __fish_config_op_autoexec; or return 0
+    __fish_config_op_enabled (status current-function); or return 0
 
     test -d "$__fish_user_dots_path"; or return 0
     if test -L "$link"

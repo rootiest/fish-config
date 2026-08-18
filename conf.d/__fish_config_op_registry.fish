@@ -7,7 +7,10 @@
 # Source: docs/generate_component_registry.py
 
 set -g __fish_config_op_registry_keys \
+    __auto_source_fallback_venv: \
+    __fish_user_dots_link: \
     agy: \
+    auto-pull: \
     bash: \
     cat: \
     claude: \
@@ -27,7 +30,10 @@ set -g __fish_config_op_registry_keys \
     zoxide:
 
 set -g __fish_config_op_registry_values \
+    "autoexec/venv" \
+    "autoexec/sync" \
     "aliases/dev-tools" \
+    "autoexec/sync autoexec/sync" \
     "aliases/shell-tools" \
     "aliases/filesystem" \
     "aliases/dev-tools" \

@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# COMPONENT
+#   autoexec/venv
+#
 # SYNOPSIS
 #   __auto_source_fallback_venv
 #
@@ -16,7 +19,7 @@ function __auto_source_fallback_venv --on-variable PWD
     status --is-command-substitution; and return
 
     # Opinionated guard (C2): no automatic venv activation when disabled.
-    __fish_config_op_enabled __fish_config_op_autoexec; or return
+    __fish_config_op_enabled (status current-function); or return
 
     # 1. Skip if direnv is already managing this directory
     if set -q DIRENV_DIR; or test -e ".envrc"
