@@ -195,9 +195,8 @@ function config-settings --description 'Interactive TUI for managing fish config
                 end
             case down j
                 if test $in_subcat -eq 1
-                    # TODO(Task 18): replace the stubbed 4-row max with the real
-                    # per-category count from __config_settings_subcats.
-                    set subcat_row (math "min(3, $subcat_row + 1)")
+                    set -l n (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)]))
+                    set subcat_row (math "min($n, $subcat_row + 1)")
                 else
                     # Hoist the page index: fish cannot expand a command-substitution
                     # index inside a quoted math string.
@@ -215,7 +214,17 @@ function config-settings --description 'Interactive TUI for managing fish config
                     # Toggle page: step toward ON
                     set -l scope universal
                     test $cur_page -eq 1; and set scope session
+                    # Default: the category variable itself -- correct both
+                    # when not in a sub-category page at all, and when in
+                    # one but sitting on its row 0 (the category's own
+                    # toggle). Only row >= 1 of a sub-category page
+                    # resolves to a different, sub-category variable.
                     set -l varname $toggle_vars[(math $cur_row + 1)]
+                    if test $in_subcat -eq 1 -a $subcat_row -ne 0
+                        set -l rows (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])
+                        set -l fields (string split -- \t $rows[$subcat_row])
+                        set varname "$toggle_vars[(math $cur_row + 1)]"_(string replace -a -- '-' '_' $fields[1])
+                    end
                     set -l cur_val (__config_settings_get_val $varname $scope)
                     set -l next_val on
                     test "$cur_val" = off; and set next_val DEFAULT
@@ -241,7 +250,16 @@ function config-settings --description 'Interactive TUI for managing fish config
                 if test $cur_page -le 1
                     set -l scope universal
                     test $cur_page -eq 1; and set scope session
+                    # Same varname resolution as the right/l case above:
+                    # row 0 (or not in a sub-category page) -> the category
+                    # variable; row >= 1 of a sub-category page -> the
+                    # selected sub-category variable.
                     set -l varname $toggle_vars[(math $cur_row + 1)]
+                    if test $in_subcat -eq 1 -a $subcat_row -ne 0
+                        set -l rows (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])
+                        set -l fields (string split -- \t $rows[$subcat_row])
+                        set varname "$toggle_vars[(math $cur_row + 1)]"_(string replace -a -- '-' '_' $fields[1])
+                    end
                     set -l cur_val (__config_settings_get_val $varname $scope)
                     set -l next_val off
                     test "$cur_val" = on; and set next_val DEFAULT
