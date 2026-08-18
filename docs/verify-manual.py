@@ -827,6 +827,79 @@ def test_site_avoids_reserved_dir():
     )
 
 
+def test_parse_component_lines_default_and_named_sites():
+    lines = [
+        "aliases/filesystem",
+        "site exit-plain: overrides/key-bindings",
+        "site logging-guard: logging/terminal-capture",
+        "",
+        "  ",
+    ]
+    got = mt.parse_component_lines(lines)
+    assert got == [
+        ("", "aliases/filesystem"),
+        ("exit-plain", "overrides/key-bindings"),
+        ("logging-guard", "logging/terminal-capture"),
+    ], f"unexpected parse: {got}"
+
+
+def test_parse_components_includes_underscore_prefixed_and_uncategorised():
+    """Unlike parse_functions, parse_components has no # CATEGORY gate and
+    no underscore exclusion -- every guarded identity must be visible."""
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "__private_helper.fish").write_text(
+            "# COMPONENT\n"
+            "#   logging/terminal-capture\n"
+            "function __private_helper\n"
+            "end\n"
+        )
+        (root / "no_category.fish").write_text(
+            "# COMPONENT\n"
+            "#   aliases/filesystem\n"
+            "#\n"
+            "# SYNOPSIS\n"
+            "#   no_category\n"
+            "function no_category\n"
+            "end\n"
+        )
+        got = mt.parse_components(root)
+    assert got["__private_helper"] == ["logging/terminal-capture"]
+    assert got["no_category"] == ["aliases/filesystem"]
+
+
+def test_parse_components_resolves_multi_header_file_to_function_name():
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "multi.fish").write_text(
+            "# COMPONENT\n"
+            "#   aliases/filesystem\n"
+            "function first_fn\n"
+            "end\n"
+            "\n"
+            "# COMPONENT\n"
+            "#   aliases/network\n"
+            "function second_fn\n"
+            "end\n"
+        )
+        got = mt.parse_components(root)
+    assert got == {
+        "first_fn": ["aliases/filesystem"],
+        "second_fn": ["aliases/network"],
+    }, f"unexpected resolution: {got}"
+
+
+def test_parse_component_file_single_file():
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "config.fish"
+        path.write_text(
+            "# COMPONENT\n"
+            "#   site greeting-block: greeting/greeting-message\n"
+        )
+        got = mt.parse_component_file(path)
+    assert got == {"config": ["site greeting-block: greeting/greeting-message"]}
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 
