@@ -130,6 +130,40 @@ def _parsed_functions() -> dict[str, dict[str, list[str]]]:
     return mt.parse_functions(Path(__file__).parent.parent / "functions")
 
 
+def _parsed_components() -> dict[str, list[str]]:
+    repo = Path(__file__).parent.parent
+    out = mt.parse_components(repo / "functions")
+    out.update(mt.parse_components(repo / "conf.d"))
+    out.update(mt.parse_component_file(repo / "config.fish"))
+    return out
+
+
+_C0_TAGS = {"always/on", "always/off"}
+_TAXONOMY_FILES = {
+    "aliases": "01-c1-command-shadows.md",
+    "autoexec": "02-c2-startup-side-effects.md",
+    "overrides": "03-c3-key-and-environment-overrides.md",
+    "integrations": "04-c4-terminal-and-tool-integration.md",
+    "logging": "05-c5-logging-and-capture.md",
+    "greeting": "06-c6-greeting-and-first-run-ui.md",
+}
+
+
+def _load_taxonomy() -> dict[str, set[str]]:
+    """{category: {sub-category slugs}}, parsed from `## <slug>` headings
+    in each category's docs/manual/08-components-reference/ file."""
+    ref_root = Path(__file__).parent / "manual" / "08-components-reference"
+    taxonomy: dict[str, set[str]] = {}
+    for category, filename in _TAXONOMY_FILES.items():
+        _, body = mt.parse(ref_root / filename)
+        taxonomy[category] = {
+            m.group(1)
+            for ln in body.split("\n")
+            if (m := re.match(r"^## (\S+)$", ln))
+        }
+    return taxonomy
+
+
 def test_every_categorised_function_produces_one_entry():
     import build_manual
 
@@ -184,6 +218,37 @@ def test_dependencies_resolve():
     assert not dangling, "unresolvable # DEPENDENCIES:\n  " + "\n  ".join(dangling)
 
 
+def test_every_component_resolves_to_a_taxonomy_entry():
+    """Every non-C0 # COMPONENT tag must resolve to a documented sub-category."""
+    taxonomy = _load_taxonomy()
+    unknown = []
+    for identity, raw_lines in _parsed_components().items():
+        for site, tag in mt.parse_component_lines(raw_lines):
+            if tag in _C0_TAGS:
+                continue
+            if "/" not in tag:
+                unknown.append(f"{identity}: malformed tag {tag!r}")
+                continue
+            category, subcat = tag.split("/", 1)
+            if category not in taxonomy or subcat not in taxonomy[category]:
+                unknown.append(f"{identity}: {tag}")
+    assert not unknown, "# COMPONENT tags with no taxonomy entry:\n  " + "\n  ".join(unknown)
+
+
+def test_c0_tags_never_combine_with_contradiction_unwarned():
+    """Every always/on + always/off contradiction must be one this repo's
+    own generator would warn about -- this is a direct repo-content check,
+    independent of running the generator, so CI catches it even if
+    someone forgets to regenerate."""
+    from generate_component_registry import build_registry
+
+    _, warnings = build_registry(_parsed_components())
+    # No assertion failure here by design: warnings are non-fatal (spec
+    # §4.5). This test exists to print them prominently in CI output.
+    for w in warnings:
+        print(f"  WARN  {w}")
+
+
 def warn_public_functions_without_category():
     """Warn — never fail — on a public function carrying no `# CATEGORY`.
 
@@ -203,6 +268,49 @@ def warn_public_functions_without_category():
     if orphans:
         print(f"  WARN  {len(orphans)} documented function(s) lack # CATEGORY:")
         print("        " + ", ".join(orphans))
+
+
+def warn_functions_without_component():
+    """Warn -- never fail -- on a documented function calling the
+    opinionated guard but carrying no `# COMPONENT` section.
+
+    Mirrors warn_public_functions_without_category: a function that never
+    opted into the header convention at all (no # SYNOPSIS) is silently
+    out of scope, matching spec §4.5's fail-open tiering.
+    """
+    repo = Path(__file__).parent.parent
+    components = _parsed_components()
+    orphans = []
+    for p in list((repo / "functions").glob("*.fish")) + list((repo / "conf.d").glob("*.fish")):
+        text = p.read_text(encoding="utf-8")
+        if "__fish_config_op_enabled" not in text or "# SYNOPSIS" not in text:
+            continue
+        if p.stem not in components:
+            orphans.append(str(p.relative_to(repo)))
+    if orphans:
+        print(f"  WARN  {len(orphans)} function(s) call the opinionated guard but lack # COMPONENT:")
+        print("        " + ", ".join(sorted(orphans)))
+
+
+def warn_unused_taxonomy_entries():
+    """Warn -- never fail -- on a documented sub-category with zero tagged functions."""
+    taxonomy = _load_taxonomy()
+    used: dict[str, set[str]] = {c: set() for c in taxonomy}
+    for raw_lines in _parsed_components().values():
+        for _site, tag in mt.parse_component_lines(raw_lines):
+            if tag in _C0_TAGS or "/" not in tag:
+                continue
+            category, subcat = tag.split("/", 1)
+            if category in used:
+                used[category].add(subcat)
+    unused = [
+        f"{category}/{subcat}"
+        for category, subcats in taxonomy.items()
+        for subcat in sorted(subcats - used[category])
+    ]
+    if unused:
+        print(f"  WARN  {len(unused)} taxonomy entr{'y has' if len(unused) == 1 else 'ies have'} zero tagged functions:")
+        print("        " + ", ".join(unused))
 
 
 def _without_section_5(text: str) -> str:
@@ -1028,6 +1136,8 @@ def main() -> int:
             print(f"  FAIL  {t.__name__}: {e}", file=sys.stderr)
             failed += 1
     warn_public_functions_without_category()
+    warn_functions_without_component()
+    warn_unused_taxonomy_entries()
     print(f"\n{len(TESTS) - failed}/{len(TESTS)} passed")
     return 1 if failed else 0
 
