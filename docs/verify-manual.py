@@ -1005,6 +1005,16 @@ def test_render_registry_is_valid_fish_and_round_trips():
     assert "status=0" in proc.stdout, f"lookup did not report found: {proc.stdout!r}"
 
 
+def test_build_manual_regenerates_registry_before_building():
+    """docs/build-manual.py must regenerate the registry as a pre-step."""
+    import build_manual
+
+    assert hasattr(build_manual, "generate_component_registry"), (
+        "build-manual.py must import generate_component_registry so its "
+        "main() can be called as a pre-step before --site/--concat run"
+    )
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 
