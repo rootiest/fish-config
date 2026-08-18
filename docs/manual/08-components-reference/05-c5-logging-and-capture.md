@@ -112,3 +112,22 @@ Note: C3 and C5 compose independently. C3 controls whether the smart_exit
 wrapper is active at all; C5 controls only the scrollback-capture block
 inside it. With C3 disabled, exit is plain builtin exit regardless of C5.
 
+## Sub-categories
+
+`__fish_config_op_logging` sub-divides into three sub-categories, each
+with its own `__fish_config_op_logging_<slug>` toggle (all still opt-in
+by default, inherited from C5's own opt-in behavior -- see §3 of the
+design spec):
+
+## terminal-capture
+
+Kitty watcher scrollback capture, and `smart_exit`'s logging-guard path.
+
+## multiplexer-capture
+
+tmux `pipe-pane` and zellij `dump-screen` capture.
+
+## pkg-logs
+
+`paru`/`yay` AUR log wrappers.
+

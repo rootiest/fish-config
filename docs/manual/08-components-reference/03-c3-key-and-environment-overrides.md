@@ -33,3 +33,23 @@ When C3 is disabled, `exit` falls back to `builtin exit` with no scrollback
 capture, no Kitty IPC, and no file I/O on exit. The scrollback capture block
 is independently controlled by C5 (see below).
 
+## Sub-categories
+
+`__fish_config_op_overrides` sub-divides into three sub-categories, each
+with its own `__fish_config_op_overrides_<slug>` toggle:
+
+## key-bindings
+
+Vi mode, autopair, puffer key intercepts, bang-bang history expansion,
+and `smart_exit`'s plain-exit path.
+
+## environment
+
+`$PATH`, `$PAGER`/`$EDITOR`/`$GPG_TTY`, and `$CDPATH`.
+
+## prompt
+
+Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
+theming (`$FZF_DEFAULT_OPTS`) -- all driven by the same guard as a single
+unit, not independently toggleable from each other.
+

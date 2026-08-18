@@ -13,3 +13,16 @@ When C6 is disabled, no greeting is printed by this config. Any greeting
 set by the distro or other configs runs normally — this config simply does
 not override it.
 
+## Sub-categories
+
+`__fish_config_op_greeting` sub-divides into two sub-categories, each
+with its own `__fish_config_op_greeting_<slug>` toggle:
+
+## first-run
+
+The first-run welcome banner.
+
+## greeting-message
+
+The per-session `fish_greeting` override.
+
