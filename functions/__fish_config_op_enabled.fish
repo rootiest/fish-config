@@ -2,63 +2,68 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SYNOPSIS
-#   __fish_config_op_enabled <category_variable>
+#   __fish_config_op_enabled <identity> [<site>]
 #
 # DESCRIPTION
-#   Guard predicate for opinionated components (AGENTS.md Task #3).
-#   The category variable is evaluated first via __fish_variable_check:
-#   an explicit truthy value (1/true/yes/on/y) enables the component
-#   regardless of the master switch; an explicit falsy value
-#   (0/false/no/off/n) disables it regardless of the master switch.
-#   Only when the category variable is unset or unrecognized (status 2
-#   or 3) does the master switch __fish_config_opinionated apply: a
-#   falsy master disables every unset-category component at once.
-#   Unset master with unset category → enabled (active by default).
+#   Guard predicate for an opinionated component. <identity> is computed
+#   by the caller, never hand-typed as a category name: (status
+#   current-function) inside a function body, (status basename) at
+#   top-level conf.d/*.fish or config.fish code (fish has no API for a
+#   callee to introspect its own caller, so the caller must compute and
+#   pass its own identity -- see the spec's "A note on self-identifying").
+#   A trailing .fish is stripped so a status-basename identity and a
+#   status-current-function identity land in the same key space.
 #
-#   One exception: __fish_config_op_logging (C5) is opt-in, because it
-#   writes terminal output to disk. Unset or unrecognized means disabled,
-#   and the master switch cannot enable it — only an explicit truthy
-#   value turns logging on.
+#   Looks up "<identity>:<site>" (site defaults to the empty/unnamed site)
+#   in the generated component registry. No registry entry (unclassified,
+#   or a doc header with no # COMPONENT section) resolves to enabled --
+#   the same fail-open default as an explicit `always/on` tag, so
+#   user-authored and third-party functions that never call this guard in
+#   the first place are unaffected, and one that somehow does is never
+#   silently broken by a missing header. A found `always/off` tag
+#   disables unconditionally; a found `always/on` tag enables
+#   unconditionally, short-circuiting before any other tagged
+#   sub-category is evaluated. Otherwise every tagged sub-category must
+#   pass the cascade (AND semantics).
 #
 # ARGUMENTS
-#   category_variable  Name (without $) of the category opt-out variable:
-#                      __fish_config_op_aliases, __fish_config_op_autoexec,
-#                      __fish_config_op_overrides,
-#                      __fish_config_op_integrations,
-#                      __fish_config_op_logging, or
-#                      __fish_config_op_greeting
+#   identity  (status current-function) or (status basename)
+#   site      Optional site slug (see # COMPONENT header grammar);
+#             omitted for the default/unnamed site
 #
 # EXIT STATUS
-#   0  Component enabled (category explicitly truthy; or category unset and master not falsy — except C5 logging, which requires an explicit truthy value)
-#   1  Component disabled (category explicitly falsy; or category unset and master falsy; or C5 logging unset; or no argument with falsy master)
+#   0  Component enabled
+#   1  Component disabled
 #
 # EXAMPLE
-#   if __fish_config_op_enabled __fish_config_op_aliases
+#   if not __fish_config_op_enabled (status current-function)
 #       alias grep='grep --color=auto'
 #   end
-function __fish_config_op_enabled --description 'Check whether an opinionated component category is enabled'
-    __fish_variable_check $argv[1]
-    set -l cat_status $status
+#   if not __fish_config_op_enabled (status current-function) exit-plain
+#       builtin exit
+#   end
+function __fish_config_op_enabled --description 'Guard for an opinionated component, identified by its own caller'
+    set -l identity (string replace -r '\.fish$' '' -- $argv[1])
+    set -l site $argv[2]
 
-    if test $cat_status -eq 0
+    set -l tags (__fish_config_op_registry_lookup $identity $site)
+    if test $status -ne 0
         return 0
     end
 
-    if test $cat_status -eq 1
+    if contains -- always/off $tags
         return 1
     end
-
-    # C5 logging is opt-in: it writes terminal output to disk, so an unset or
-    # unrecognized value means off — the master switch cannot enable it.
-    if test "$argv[1]" = __fish_config_op_logging
-        return 1
+    if contains -- always/on $tags
+        return 0
     end
 
-    # Status 3 (garbage) defers to master — an unrecognized value is not an opt-out.
-    __fish_variable_check __fish_config_opinionated
-    if test $status -eq 1
-        return 1
+    for tag in $tags
+        set -l parts (string split -m 1 -- / $tag)
+        set -l category_var "__fish_config_op_$parts[1]"
+        set -l subcat_var "__fish_config_op_$parts[1]_$parts[2]"
+        __fish_config_op_cascade $category_var $subcat_var
+        or return 1
     end
-
     return 0
 end
