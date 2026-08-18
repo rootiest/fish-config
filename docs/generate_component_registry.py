@@ -67,7 +67,7 @@ def build_registry(components: dict[str, list[str]]) -> tuple[dict[str, list[str
                 )
                 tags = [t for t in tags if t not in ("always/on", "always/off")]
             if tags:
-                registry[f"{identity}:{site}"] = tags
+                registry[f"{identity}:{site}"] = list(dict.fromkeys(tags))
     return registry, warnings
 
 
@@ -81,6 +81,12 @@ def render(registry: dict[str, list[str]]) -> str:
         "# Regenerate with __fish_config_op_registry_rebuild after editing a",
         "# # COMPONENT header, or automatically via docs/build-manual.py.",
         "# Source: docs/generate_component_registry.py",
+        "#",
+        "# This file must be sourced before any other conf.d/*.fish file that",
+        "# calls the opinionated guard. That currently holds only because fish's",
+        "# glob-based conf.d loading happens to sort this filename first",
+        "# alphabetically among the guard-calling files -- do not rename it",
+        "# without preserving that ordering.",
         "",
     ]
     if not keys:
@@ -88,8 +94,9 @@ def render(registry: dict[str, list[str]]) -> str:
         lines.append("set -g __fish_config_op_registry_values")
         return "\n".join(lines) + "\n"
 
+    quoted_keys = [f'"{k}"' for k in keys]
     lines.append("set -g __fish_config_op_registry_keys \\")
-    lines += [f"    {k} \\" for k in keys[:-1]] + [f"    {keys[-1]}"]
+    lines += [f"    {k} \\" for k in quoted_keys[:-1]] + [f"    {quoted_keys[-1]}"]
     lines.append("")
 
     values = ['"' + " ".join(registry[k]) + '"' for k in keys]
