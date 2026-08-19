@@ -1097,8 +1097,16 @@ def test_render_registry_is_valid_fish_and_round_trips():
     """Sourcing render()'s output must leave the two arrays in the exact
     shape __fish_config_op_registry_lookup expects -- checked via the real
     lookup helper (functions/__fish_config_op_registry_lookup.fish, Task
-    2) rather than re-parsing the generated text by hand."""
+    2) rather than re-parsing the generated text by hand.
+
+    Written to a real temp file rather than piped through `source
+    /dev/stdin`: fish 3.7 (Ubuntu 24.04's packaged version, used in CI)
+    rejects `/dev/stdin` with "is not a file" when it's backed by a pipe,
+    even though fish 4.8 accepts it -- sourcing an actual file on disk is
+    the portable form across fish versions.
+    """
     import subprocess
+    import tempfile
 
     import generate_component_registry as gcr
 
@@ -1109,17 +1117,19 @@ def test_render_registry_is_valid_fish_and_round_trips():
     text = gcr.render(registry)
 
     repo = Path(__file__).parent.parent
-    proc = subprocess.run(
-        [
-            "fish", "-c",
-            f"source {repo}/functions/__fish_config_op_registry_lookup.fish; "
-            "source /dev/stdin; "
-            "__fish_config_op_registry_lookup rm ''; echo status=$status",
-        ],
-        input=text,
-        capture_output=True,
-        text=True,
-    )
+    with tempfile.TemporaryDirectory() as d:
+        registry_path = Path(d) / "registry.fish"
+        registry_path.write_text(text)
+        proc = subprocess.run(
+            [
+                "fish", "-c",
+                f"source {repo}/functions/__fish_config_op_registry_lookup.fish; "
+                f"source {registry_path}; "
+                "__fish_config_op_registry_lookup rm ''; echo status=$status",
+            ],
+            capture_output=True,
+            text=True,
+        )
     assert "aliases/filesystem" in proc.stdout, f"unexpected output: {proc.stdout!r} {proc.stderr!r}"
     assert "status=0" in proc.stdout, f"lookup did not report found: {proc.stdout!r}"
 
