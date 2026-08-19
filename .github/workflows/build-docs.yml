@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y pandoc python3-yaml
+          sudo apt-get install -y pandoc python3-yaml fish
 
       - name: Generate concatenated markdown
         run: python3 docs/build-manual.py --concat -o docs/fish-config.md
