@@ -80,5 +80,5 @@ jobs:
           git config user.email "actions@gitea"
           git add docs/fish-config.md docs/fish-config.1 conf.d/__fish_config_op_registry.fish
           git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore(docs): regenerate manual and man page"
+          git commit -m "chore(docs): regenerate manual, man page, and component registry"
           git push
