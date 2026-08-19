@@ -2366,7 +2366,10 @@ functions). They are active in all interactive sessions.
                   path, and the user-dots convenience symlink toggle (Dots link)
 
     Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON; DEFAULT erases
-    the variable so the master switch / built-in default applies. Value rows
+    the variable so the master switch / built-in default applies. On the
+    Universal/Session pages, Enter on a category row (C1–C6) opens that
+    category's sub-category drill-down page for finer-grained toggles;
+    Escape backs out to the category list. Value rows
     (Sponge, Paths) use Enter to edit inline; ← / h clears to default. List rows
     (e.g. Extra secret, OK codes) accept values separated by commas and/or
     whitespace — "A, B", "A,B" and "A B" all yield the same two entries.
@@ -2395,7 +2398,10 @@ functions). They are active in all interactive sessions.
       ↑ ↓ / k j     Move cursor
       ← → / h l     Toggle rows: OFF ← DEFAULT → ON
       ←  / h        Value rows: clear to default
-      Enter         Value rows: edit inline (Sponge / Paths pages)
+      Enter         Category rows (Universal/Session): open sub-category
+                    drill-down page. Value rows: edit inline (Sponge /
+                    Paths pages)
+      Escape        Sub-category page: back out to the category list
       Tab / S-Tab   Next / previous page
       q / Escape    Exit
 
@@ -2963,6 +2969,19 @@ NOTE:
   - Disabled integration commands (spwin, tab, split, hist, logs, upgrade) print an error naming the variable that disabled them.
   - On CachyOS, the distro fish config's own aliases, history override, and bang-bang bindings are stripped per category as well.
 
+### Sub-categories
+
+Each of the six categories further sub-divides into two to six
+sub-categories, each with its own `__fish_config_op_<category>_<subcategory>`
+variable (e.g. `__fish_config_op_aliases_filesystem`). These follow the
+exact same truthy/falsy/unset cascade one level deeper: an explicit
+sub-category value overrides the master switch and the parent category's
+setting, and an unset sub-category inherits from its parent category (which
+in turn inherits from `__fish_config_opinionated`). Run config-settings and
+press Enter on a category row to browse and toggle its sub-categories
+interactively. See Components Reference for the
+full sub-category breakdown of every category.
+
 
 ## Prompt and Theme
 
@@ -3044,6 +3063,21 @@ category variable.
     C5         Logging and Capture — Session logs, command duration
     C6         Greeting & First-Run UI — Custom startup banner
 
+Each category further sub-divides into two to six sub-categories (24 in
+total) with their own `__fish_config_op_<category>_<subcategory>` toggles
+-- see that category's page for its sub-category list.
+
+## Per-function overrides: `C0`/`always`
+
+Every guarded function or file can also carry a reserved `always/on` or
+`always/off` tag in its `# COMPONENT` header, independent of every C1-C6
+category and sub-category toggle and invisible to `config-settings`. An
+`always/off` tag disables that function unconditionally; an `always/on`
+tag enables it unconditionally, ignoring the state of every other tagged
+sub-category. This is a per-function escape hatch for cases too granular
+or too idiosyncratic to justify a taxonomy entry -- edit the header
+directly and run `__fish_config_op_registry_rebuild` to apply the change.
+
 ## C1 — Command Shadows
 
 Disabling `__fish_config_op_aliases` restores standard system behavior for
@@ -3074,6 +3108,38 @@ all of these commands.
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.
+
+### Sub-categories
+
+`__fish_config_op_aliases` sub-divides into six sub-categories, each with
+its own `__fish_config_op_aliases_<slug>` toggle:
+
+### filesystem
+
+`ls`, `cat`, `cd`, `du`, `mkdir`, `rm`, `mv`, and `cd`/zoxide navigation --
+the everyday filesystem-inspection and -modification shadows.
+
+### search
+
+`rg`, with its Kitty hyperlink formatting.
+
+### network
+
+`ping`, `ssh`, and `yt-dlp` -- shadows that talk to the network.
+
+### monitor
+
+`top` -> `btop`.
+
+### shell-tools
+
+`bash` (XDG bashrc + `$SHELL` reset), `less` (`$PAGER` fallback chain),
+and the `help config` interception.
+
+### dev-tools
+
+`claude` (AGENTS.md/CLAUDE.md auto-linking) and `edit` (multi-editor
+launcher), plus `agy`.
 
 ## C2 — Startup Side-Effects
 
@@ -3118,6 +3184,31 @@ branches, or repos without a remote. The handler fires once per repo entry
 (not on every sub-directory `cd`). The registry is machine-local at
 `$__fish_user_dots_path/auto-pull.list` (defaults to `~/.config/.user-dots/fish/auto-pull.list`) and is never committed.
 
+### Sub-categories
+
+`__fish_config_op_autoexec` sub-divides into five sub-categories, each
+with its own `__fish_config_op_autoexec_<slug>` toggle:
+
+### plugin-management
+
+Fisher bootstrap on first run.
+
+### pkg-wrappers
+
+`paru`/`yay` wrapper generation.
+
+### venv
+
+Automatic Python virtualenv activation.
+
+### telemetry
+
+The WakaTime hook's startup bootstrap.
+
+### sync
+
+Auto-pull background fast-forward, and the user-dots convenience symlink.
+
 ## C3 — Key and Environment Overrides
 
 These change fundamental shell behavior: how keys work, which pager opens,
@@ -3151,6 +3242,26 @@ When C3 is disabled, `exit` falls back to `builtin exit` with no scrollback
 capture, no Kitty IPC, and no file I/O on exit. The scrollback capture block
 is independently controlled by C5 (see below).
 
+### Sub-categories
+
+`__fish_config_op_overrides` sub-divides into three sub-categories, each
+with its own `__fish_config_op_overrides_<slug>` toggle:
+
+### key-bindings
+
+Vi mode, autopair, puffer key intercepts, bang-bang history expansion,
+and `smart_exit`'s plain-exit path.
+
+### environment
+
+`$PATH`, `$PAGER`/`$EDITOR`/`$GPG_TTY`, and `$CDPATH`.
+
+### prompt
+
+Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
+theming (`$FZF_DEFAULT_OPTS`) -- all driven by the same guard as a single
+unit, not independently toggleable from each other.
+
 ## C4 — Terminal and Tool Integration
 
 These features couple the shell to specific external tools. Disabling
@@ -3172,6 +3283,31 @@ These features couple the shell to specific external tools. Disabling
 Disabled integration commands (`spwin`, `tab`, `split`, `hist`, `logs`, `upgrade`) print
 a colored error to stderr naming the variable that disabled them rather than
 silently failing.
+
+### Sub-categories
+
+`__fish_config_op_integrations` sub-divides into five sub-categories,
+each with its own `__fish_config_op_integrations_<slug>` toggle:
+
+### terminal-abbrs
+
+The Kitty/WezTerm abbreviation set.
+
+### window-mgmt
+
+`spwin`, `tab`, `split`.
+
+### notifications
+
+`done`'s completion notifications, and the WakaTime activity hook.
+
+### history-logs
+
+`hist`, `logs`.
+
+### pkg-upgrade
+
+`upgrade`.
 
 ## C5 — Logging and Capture
 
@@ -3285,6 +3421,25 @@ Note: C3 and C5 compose independently. C3 controls whether the smart_exit
 wrapper is active at all; C5 controls only the scrollback-capture block
 inside it. With C3 disabled, exit is plain builtin exit regardless of C5.
 
+### Sub-categories
+
+`__fish_config_op_logging` sub-divides into three sub-categories, each
+with its own `__fish_config_op_logging_<slug>` toggle (all still opt-in
+by default, inherited from C5's own opt-in behavior -- see §3 of the
+design spec):
+
+### terminal-capture
+
+Kitty watcher scrollback capture, and `smart_exit`'s logging-guard path.
+
+### multiplexer-capture
+
+tmux `pipe-pane` and zellij `dump-screen` capture.
+
+### pkg-logs
+
+`paru`/`yay` AUR log wrappers.
+
 ## C6 — Greeting and First-Run UI
 
     Component                  What it shows
@@ -3297,6 +3452,19 @@ inside it. With C3 disabled, exit is plain builtin exit regardless of C5.
 When C6 is disabled, no greeting is printed by this config. Any greeting
 set by the distro or other configs runs normally — this config simply does
 not override it.
+
+### Sub-categories
+
+`__fish_config_op_greeting` sub-divides into two sub-categories, each
+with its own `__fish_config_op_greeting_<slug>` toggle:
+
+### first-run
+
+The first-run welcome banner.
+
+### greeting-message
+
+The per-session `fish_greeting` override.
 
 # 9. FISHER PLUGINS
 
@@ -3739,6 +3907,13 @@ Keep one category active under a master disable:
 Re-enable everything:
 
     set -Ue __fish_config_opinionated
+
+Each category also has two to six sub-categories (e.g.
+`__fish_config_op_aliases_filesystem`) that can be checked, disabled, or
+reset the same way — `set -U __fish_config_op_<category>_<subcategory> off`
+and `set -Ue __fish_config_op_<category>_<subcategory>` work identically to
+the category-level recipes above, just one level more granular. See
+Components Reference for the full list.
 
 For an interactive alternative to setting these variables by hand, run `config-settings`.
 

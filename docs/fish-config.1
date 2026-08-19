@@ -2933,7 +2933,10 @@ across four pages, without having to type or remember variable names:
               path, and the user-dots convenience symlink toggle (Dots link)
 
 Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON; DEFAULT erases
-the variable so the master switch / built-in default applies. Value rows
+the variable so the master switch / built-in default applies. On the
+Universal/Session pages, Enter on a category row (C1\[en]C6) opens that
+category\[aq]s sub-category drill-down page for finer-grained toggles;
+Escape backs out to the category list. Value rows
 (Sponge, Paths) use Enter to edit inline; ← / h clears to default. List rows
 (e.g. Extra secret, OK codes) accept values separated by commas and/or
 whitespace \[em] \[dq]A, B\[dq], \[dq]A,B\[dq] and \[dq]A B\[dq] all yield the same two entries.
@@ -2962,7 +2965,10 @@ Navigation:
   ↑ ↓ / k j     Move cursor
   ← → / h l     Toggle rows: OFF ← DEFAULT → ON
   ←  / h        Value rows: clear to default
-  Enter         Value rows: edit inline (Sponge / Paths pages)
+  Enter         Category rows (Universal/Session): open sub-category
+                drill-down page. Value rows: edit inline (Sponge /
+                Paths pages)
+  Escape        Sub-category page: back out to the category list
   Tab / S-Tab   Next / previous page
   q / Escape    Exit
 
@@ -3831,6 +3837,21 @@ abbreviations, hooks) take effect in new shells.
 print an error naming the variable that disabled them.
 - On CachyOS, the distro fish config\[cq]s own aliases, history
 override, and bang-bang bindings are stripped per category as well.
+.SS Sub-categories
+.PP
+Each of the six categories further sub-divides into two to six
+sub-categories, each with its own
+\f[V]__fish_config_op_<category>_<subcategory>\f[R] variable
+(e.g.\ \f[V]__fish_config_op_aliases_filesystem\f[R]).
+These follow the exact same truthy/falsy/unset cascade one level deeper:
+an explicit sub-category value overrides the master switch and the
+parent category\[cq]s setting, and an unset sub-category inherits from
+its parent category (which in turn inherits from
+\f[V]__fish_config_opinionated\f[R]).
+Run config-settings and press Enter on a category row to browse and
+toggle its sub-categories interactively.
+See Components Reference for the full sub-category breakdown of every
+category.
 .SS Prompt and Theme
 .SS Starship
 .PP
@@ -3936,6 +3957,23 @@ C5         Logging and Capture \[em] Session logs, command duration
 C6         Greeting & First-Run UI \[em] Custom startup banner
 \f[R]
 .fi
+.PP
+Each category further sub-divides into two to six sub-categories (24 in
+total) with their own
+\f[V]__fish_config_op_<category>_<subcategory>\f[R] toggles \[en] see
+that category\[cq]s page for its sub-category list.
+.SS Per-function overrides: \f[V]C0\f[R]/\f[V]always\f[R]
+.PP
+Every guarded function or file can also carry a reserved
+\f[V]always/on\f[R] or \f[V]always/off\f[R] tag in its
+\f[V]# COMPONENT\f[R] header, independent of every C1-C6 category and
+sub-category toggle and invisible to \f[V]config-settings\f[R].
+An \f[V]always/off\f[R] tag disables that function unconditionally; an
+\f[V]always/on\f[R] tag enables it unconditionally, ignoring the state
+of every other tagged sub-category.
+This is a per-function escape hatch for cases too granular or too
+idiosyncratic to justify a taxonomy entry \[en] edit the header directly
+and run \f[V]__fish_config_op_registry_rebuild\f[R] to apply the change.
 .SS C1 \[em] Command Shadows
 .PP
 Disabling \f[V]__fish_config_op_aliases\f[R] restores standard system
@@ -3971,6 +4009,35 @@ edit               multi-editor launcher (GUI/term + fallbacks)  $EDITOR/nvim/na
 When C1 is disabled, \f[V]rm\f[R] uses bare \f[V]command rm\f[R] with no
 wrapper \[em] files are permanently deleted, not trashed.
 There is no intermediate safety net.
+.SS Sub-categories
+.PP
+\f[V]__fish_config_op_aliases\f[R] sub-divides into six sub-categories,
+each with its own \f[V]__fish_config_op_aliases_<slug>\f[R] toggle:
+.SS filesystem
+.PP
+\f[V]ls\f[R], \f[V]cat\f[R], \f[V]cd\f[R], \f[V]du\f[R],
+\f[V]mkdir\f[R], \f[V]rm\f[R], \f[V]mv\f[R], and \f[V]cd\f[R]/zoxide
+navigation \[en] the everyday filesystem-inspection and -modification
+shadows.
+.SS search
+.PP
+\f[V]rg\f[R], with its Kitty hyperlink formatting.
+.SS network
+.PP
+\f[V]ping\f[R], \f[V]ssh\f[R], and \f[V]yt-dlp\f[R] \[en] shadows that
+talk to the network.
+.SS monitor
+.PP
+\f[V]top\f[R] -> \f[V]btop\f[R].
+.SS shell-tools
+.PP
+\f[V]bash\f[R] (XDG bashrc + \f[V]$SHELL\f[R] reset), \f[V]less\f[R]
+(\f[V]$PAGER\f[R] fallback chain), and the \f[V]help config\f[R]
+interception.
+.SS dev-tools
+.PP
+\f[V]claude\f[R] (AGENTS.md/CLAUDE.md auto-linking) and \f[V]edit\f[R]
+(multi-editor launcher), plus \f[V]agy\f[R].
 .SS C2 \[em] Startup Side-Effects
 .PP
 These run automatically without any user action.
@@ -4025,6 +4092,27 @@ The registry is machine-local at
 \f[V]$__fish_user_dots_path/auto-pull.list\f[R] (defaults to
 \f[V]\[ti]/.config/.user-dots/fish/auto-pull.list\f[R]) and is never
 committed.
+.SS Sub-categories
+.PP
+\f[V]__fish_config_op_autoexec\f[R] sub-divides into five
+sub-categories, each with its own
+\f[V]__fish_config_op_autoexec_<slug>\f[R] toggle:
+.SS plugin-management
+.PP
+Fisher bootstrap on first run.
+.SS pkg-wrappers
+.PP
+\f[V]paru\f[R]/\f[V]yay\f[R] wrapper generation.
+.SS venv
+.PP
+Automatic Python virtualenv activation.
+.SS telemetry
+.PP
+The WakaTime hook\[cq]s startup bootstrap.
+.SS sync
+.PP
+Auto-pull background fast-forward, and the user-dots convenience
+symlink.
 .SS C3 \[em] Key and Environment Overrides
 .PP
 These change fundamental shell behavior: how keys work, which pager
@@ -4064,6 +4152,24 @@ When C3 is disabled, \f[V]exit\f[R] falls back to \f[V]builtin exit\f[R]
 with no scrollback capture, no Kitty IPC, and no file I/O on exit.
 The scrollback capture block is independently controlled by C5 (see
 below).
+.SS Sub-categories
+.PP
+\f[V]__fish_config_op_overrides\f[R] sub-divides into three
+sub-categories, each with its own
+\f[V]__fish_config_op_overrides_<slug>\f[R] toggle:
+.SS key-bindings
+.PP
+Vi mode, autopair, puffer key intercepts, bang-bang history expansion,
+and \f[V]smart_exit\f[R]\[cq]s plain-exit path.
+.SS environment
+.PP
+\f[V]$PATH\f[R], \f[V]$PAGER\f[R]/\f[V]$EDITOR\f[R]/\f[V]$GPG_TTY\f[R],
+and \f[V]$CDPATH\f[R].
+.SS prompt
+.PP
+Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
+theming (\f[V]$FZF_DEFAULT_OPTS\f[R]) \[en] all driven by the same guard
+as a single unit, not independently toggleable from each other.
 .SS C4 \[em] Terminal and Tool Integration
 .PP
 These features couple the shell to specific external tools.
@@ -4090,6 +4196,27 @@ Disabled integration commands (\f[V]spwin\f[R], \f[V]tab\f[R],
 \f[V]split\f[R], \f[V]hist\f[R], \f[V]logs\f[R], \f[V]upgrade\f[R])
 print a colored error to stderr naming the variable that disabled them
 rather than silently failing.
+.SS Sub-categories
+.PP
+\f[V]__fish_config_op_integrations\f[R] sub-divides into five
+sub-categories, each with its own
+\f[V]__fish_config_op_integrations_<slug>\f[R] toggle:
+.SS terminal-abbrs
+.PP
+The Kitty/WezTerm abbreviation set.
+.SS window-mgmt
+.PP
+\f[V]spwin\f[R], \f[V]tab\f[R], \f[V]split\f[R].
+.SS notifications
+.PP
+\f[V]done\f[R]\[cq]s completion notifications, and the WakaTime activity
+hook.
+.SS history-logs
+.PP
+\f[V]hist\f[R], \f[V]logs\f[R].
+.SS pkg-upgrade
+.PP
+\f[V]upgrade\f[R].
 .SS C5 \[em] Logging and Capture
 .PP
 Five components capture shell output to disk.
@@ -4242,6 +4369,23 @@ Note: C3 and C5 compose independently.
 C3 controls whether the smart_exit wrapper is active at all; C5 controls
 only the scrollback-capture block inside it.
 With C3 disabled, exit is plain builtin exit regardless of C5.
+.SS Sub-categories
+.PP
+\f[V]__fish_config_op_logging\f[R] sub-divides into three
+sub-categories, each with its own
+\f[V]__fish_config_op_logging_<slug>\f[R] toggle (all still opt-in by
+default, inherited from C5\[cq]s own opt-in behavior \[en] see §3 of the
+design spec):
+.SS terminal-capture
+.PP
+Kitty watcher scrollback capture, and \f[V]smart_exit\f[R]\[cq]s
+logging-guard path.
+.SS multiplexer-capture
+.PP
+tmux \f[V]pipe-pane\f[R] and zellij \f[V]dump-screen\f[R] capture.
+.SS pkg-logs
+.PP
+\f[V]paru\f[R]/\f[V]yay\f[R] AUR log wrappers.
 .SS C6 \[em] Greeting and First-Run UI
 .IP
 .nf
@@ -4258,6 +4402,16 @@ fish_greeting override     Empty function defined late in config.fish to
 When C6 is disabled, no greeting is printed by this config.
 Any greeting set by the distro or other configs runs normally \[em] this
 config simply does not override it.
+.SS Sub-categories
+.PP
+\f[V]__fish_config_op_greeting\f[R] sub-divides into two sub-categories,
+each with its own \f[V]__fish_config_op_greeting_<slug>\f[R] toggle:
+.SS first-run
+.PP
+The first-run welcome banner.
+.SS greeting-message
+.PP
+The per-session \f[V]fish_greeting\f[R] override.
 .SH 9. FISHER PLUGINS
 .PP
 Fisher is bootstrapped automatically on the \f[B]first interactive
@@ -4886,6 +5040,15 @@ Re-enable everything:
 set -Ue __fish_config_opinionated
 \f[R]
 .fi
+.PP
+Each category also has two to six sub-categories (e.g.
+\f[V]__fish_config_op_aliases_filesystem\f[R]) that can be checked,
+disabled, or reset the same way \[em]
+\f[V]set -U __fish_config_op_<category>_<subcategory> off\f[R] and
+\f[V]set -Ue __fish_config_op_<category>_<subcategory>\f[R] work
+identically to the category-level recipes above, just one level more
+granular.
+See Components Reference for the full list.
 .PP
 For an interactive alternative to setting these variables by hand, run
 \f[V]config-settings\f[R].
