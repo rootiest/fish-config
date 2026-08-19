@@ -43,3 +43,28 @@ branches, or repos without a remote. The handler fires once per repo entry
 (not on every sub-directory `cd`). The registry is machine-local at
 `$__fish_user_dots_path/auto-pull.list` (defaults to `~/.config/.user-dots/fish/auto-pull.list`) and is never committed.
 
+## Sub-categories
+
+`__fish_config_op_autoexec` sub-divides into five sub-categories, each
+with its own `__fish_config_op_autoexec_<slug>` toggle:
+
+## plugin-management
+
+Fisher bootstrap on first run.
+
+## pkg-wrappers
+
+`paru`/`yay` wrapper generation.
+
+## venv
+
+Automatic Python virtualenv activation.
+
+## telemetry
+
+The WakaTime hook's startup bootstrap.
+
+## sync
+
+Auto-pull background fast-forward, and the user-dots convenience symlink.
+

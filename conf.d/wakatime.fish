@@ -5,11 +5,15 @@
 # see: https://github.com/ik11235/wakatime.fish
 ###
 
+# COMPONENT
+#   site wakatime-autoexec: autoexec/telemetry
+#   site wakatime-hook: integrations/notifications
+
 # Local modification: opinionated guard (AGENTS.md Task #3). WakaTime
 # reporting is classified under both C2 auto-execution and C4 integrations;
 # disabling either category skips registering the hook.
-__fish_config_op_enabled __fish_config_op_autoexec; or exit
-__fish_config_op_enabled __fish_config_op_integrations; or exit
+__fish_config_op_enabled (status basename) wakatime-autoexec; or exit
+__fish_config_op_enabled (status basename) wakatime-hook; or exit
 
 function __register_wakatime_fish_before_exec -e fish_postexec
   if set -q FISH_WAKATIME_DISABLED

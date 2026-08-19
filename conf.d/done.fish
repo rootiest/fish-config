@@ -19,6 +19,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+# COMPONENT
+#   integrations/notifications
 
 if not status is-interactive
     exit
@@ -26,7 +29,7 @@ end
 
 # Local modification: opinionated guard (AGENTS.md Task #3). Desktop
 # notifications assume a graphical session, classified as C4 integrations.
-__fish_config_op_enabled __fish_config_op_integrations; or exit
+__fish_config_op_enabled (status basename); or exit
 
 set -g __done_version 1.19.1
 

@@ -237,6 +237,13 @@ Re-enable everything:
 
     set -Ue __fish_config_opinionated
 
+Each category also has two to six sub-categories (e.g.
+`__fish_config_op_aliases_filesystem`) that can be checked, disabled, or
+reset the same way — `set -U __fish_config_op_<category>_<subcategory> off`
+and `set -Ue __fish_config_op_<category>_<subcategory>` work identically to
+the category-level recipes above, just one level more granular. See
+[Components Reference](/08-components-reference/) for the full list.
+
 For an interactive alternative to setting these variables by hand, run `config-settings`.
 
 ---

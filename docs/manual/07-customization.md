@@ -145,6 +145,19 @@ NOTE:
   - Disabled integration commands (spwin, tab, split, hist, logs, upgrade) print an error naming the variable that disabled them.
   - On CachyOS, the distro fish config's own aliases, history override, and bang-bang bindings are stripped per category as well.
 
+### Sub-categories
+
+Each of the six categories further sub-divides into two to six
+sub-categories, each with its own `__fish_config_op_<category>_<subcategory>`
+variable (e.g. `__fish_config_op_aliases_filesystem`). These follow the
+exact same truthy/falsy/unset cascade one level deeper: an explicit
+sub-category value overrides the master switch and the parent category's
+setting, and an unset sub-category inherits from its parent category (which
+in turn inherits from `__fish_config_opinionated`). Run config-settings and
+press Enter on a category row to browse and toggle its sub-categories
+interactively. See [Components Reference](/08-components-reference/) for the
+full sub-category breakdown of every category.
+
 
 ## Prompt and Theme
 

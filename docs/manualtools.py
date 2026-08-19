@@ -62,6 +62,7 @@ HEADER_LABEL = re.compile(r"^#\s+([A-Z][A-Z ]*[A-Z])\s*$")
 FUNC_DEF = re.compile(r"^\s*function\s+(\S+)")
 SECTIONS = (
     "CATEGORY",
+    "COMPONENT",
     "DEPENDENCIES",
     "SYNOPSIS",
     "DESCRIPTION",
@@ -109,6 +110,19 @@ def _trailing_blanks(lines: list[str]) -> int:
     return n
 
 
+def _block_identity(path: Path, lines: list[str], end: int, blocks_count: int) -> str:
+    """Resolve a header block's associated name.
+
+    A file carrying exactly one header is associated with its own stem, so
+    a `function` nested inside a `type -q` guard still resolves. A file
+    with several headers walks forward to the next `function` definition.
+    """
+    if blocks_count == 1:
+        return path.stem
+    after = (m.group(1) for ln in lines[end:] if (m := FUNC_DEF.match(ln)))
+    return next(after, path.stem)
+
+
 def parse_functions(root: Path) -> dict[str, dict[str, list[str]]]:
     """Parse the comment header above every documented public function.
 
@@ -128,11 +142,7 @@ def parse_functions(root: Path) -> dict[str, dict[str, list[str]]]:
         lines = path.read_text(encoding="utf-8").split("\n")
         blocks = _header_blocks(lines)
         for end, sections in blocks:
-            if len(blocks) == 1:
-                name = path.stem
-            else:
-                after = (m.group(1) for ln in lines[end:] if (m := FUNC_DEF.match(ln)))
-                name = next(after, path.stem)
+            name = _block_identity(path, lines, end, len(blocks))
             if name.startswith("_") or "CATEGORY" not in sections:
                 continue
             out[name] = {
@@ -182,6 +192,63 @@ def parse_abbreviations(root: Path) -> dict[str, list[dict]]:
                 category = None
                 desc = None
                 name_override = None
+    return out
+
+
+SITE_LINE_RE = re.compile(r"^site\s+(\S+):\s*(\S+)$")
+
+
+def parse_component_lines(lines: list[str]) -> list[tuple[str, str]]:
+    """Parse raw `# COMPONENT` body lines into (site, tag) pairs.
+
+    A line of the form `site <slug>: <tag>` scopes <tag> to that site; a
+    bare `<tag>` line belongs to the default (unnamed) site, keyed "".
+    Blank lines are skipped.
+    """
+    out: list[tuple[str, str]] = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        m = SITE_LINE_RE.match(line)
+        if m:
+            out.append((m.group(1), m.group(2)))
+        else:
+            out.append(("", line))
+    return out
+
+
+def _parse_component_blocks(path: Path) -> dict[str, list[str]]:
+    """Parse every `# COMPONENT` header block in one file.
+
+    Unlike parse_functions, there is no `# CATEGORY` gate and no
+    underscore exclusion: component classification applies to every
+    function/script, public or private, documented in the manual or not
+    -- the registry needs to see every guarded identity, not just the
+    ones that appear in the public function reference.
+    """
+    lines = path.read_text(encoding="utf-8").split("\n")
+    blocks = _header_blocks(lines)
+    out: dict[str, list[str]] = {}
+    for end, sections in blocks:
+        if "COMPONENT" not in sections:
+            continue
+        name = _block_identity(path, lines, end, len(blocks))
+        body = sections["COMPONENT"]
+        out[name] = body[: len(body) - _trailing_blanks(body)]
+    return out
+
+
+def parse_component_file(path: Path) -> dict[str, list[str]]:
+    """Parse `# COMPONENT` header block(s) in one specific file (e.g. config.fish)."""
+    return _parse_component_blocks(path)
+
+
+def parse_components(root: Path) -> dict[str, list[str]]:
+    """Parse `# COMPONENT` header blocks across every `*.fish` file under root."""
+    out: dict[str, list[str]] = {}
+    for path in sorted(root.glob("*.fish")):
+        out.update(_parse_component_blocks(path))
     return out
 
 

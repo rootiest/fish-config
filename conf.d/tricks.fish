@@ -7,6 +7,11 @@
 #          │       system aliases, and history/backup utilities       │
 #          ╰──────────────────────────────────────────────────────────╯
 
+# COMPONENT
+#   site aliases-tricks: aliases/filesystem
+#   site tricks-manpager: overrides/environment
+#   site tricks-bang: overrides/key-bindings
+
 ## Environment setup
 # Apply .profile: use this to put fish compatible .profile stuff in
 if test -f ~/.fish_profile
@@ -24,7 +29,7 @@ end
 
 # Format man pages using bat (only if bat is installed)
 # Overriding $MANPAGER is opinionated (C3 overrides)
-if type -q bat; and __fish_config_op_enabled __fish_config_op_overrides
+if type -q bat; and __fish_config_op_enabled (status basename) tricks-manpager
     set -gx MANROFFOPT -c
     set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 end
@@ -37,7 +42,7 @@ set -gx __done_notification_urgency_level low
 # Functions needed for !! and !$ https://github.com/oh-my-fish/plugin-bang-bang
 # The bang-bang system is opinionated (C3 overrides) and is gated atomically
 # here, in conf.d/abbr.fish, conf.d/puffer.fish, and functions/expand_*.fish.
-if __fish_config_op_enabled __fish_config_op_overrides
+if __fish_config_op_enabled (status basename) tricks-bang
     function __history_previous_command
         switch (commandline -t)
             case "!"
@@ -83,7 +88,7 @@ end
 # Fish command history override to show timestamps
 # Shadowing the history command is opinionated (C1 aliasing); when disabled,
 # the function is never defined and fish's stock history behavior applies.
-if __fish_config_op_enabled __fish_config_op_aliases
+if __fish_config_op_enabled (status basename) aliases-tricks
     function history
         builtin history --show-time='%F %T '
     end
@@ -123,7 +128,7 @@ alias .....='cd ../../../..'
 alias ......='cd ../../../../..'
 
 # Silent flag injection into POSIX tools is opinionated (C1 aliasing)
-if __fish_config_op_enabled __fish_config_op_aliases
+if __fish_config_op_enabled (status basename) aliases-tricks
     # Tools & Core command color overrides
     # @category Shell Aliases
     # @desc dir --color=auto

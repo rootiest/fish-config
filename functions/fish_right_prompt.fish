@@ -4,6 +4,9 @@
 # CATEGORY
 #   08-terminal-management
 #
+# COMPONENT
+#   overrides/prompt
+#
 # SYNOPSIS
 #   fish_right_prompt
 #
@@ -31,7 +34,7 @@ function fish_right_prompt
     # Docker context — only relevant alongside the starship prompt, and only
     # when docker is actually installed (guarded like every other optional
     # integration in this config).
-    if type -q docker; and type -q starship; and __fish_config_op_enabled __fish_config_op_overrides
+    if type -q docker; and type -q starship; and __fish_config_op_enabled (status current-function)
         set -l docker_ctx (docker context show 2>/dev/null)
         if test -n "$docker_ctx"; and test "$docker_ctx" != default
             set_color blue

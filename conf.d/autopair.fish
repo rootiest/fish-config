@@ -1,8 +1,11 @@
 status is-interactive || exit
 
+# COMPONENT
+#   overrides/key-bindings
+
 # Local modification: opinionated guard (AGENTS.md Task #3). Bracket
 # auto-pairing intercepts single-character input, classified as C3 overrides.
-__fish_config_op_enabled __fish_config_op_overrides || exit
+__fish_config_op_enabled (status basename) || exit
 
 set --global autopair_left "(" "[" "{" '"' "'"
 set --global autopair_right ")" "]" "}" '"' "'"

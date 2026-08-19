@@ -6,12 +6,16 @@
 # bars are preserved, renders the captured animation to a clean static log
 # (via scripts/clean_progress_log.py), and prunes old logs.
 
+# COMPONENT
+#   site yay-autoexec: autoexec/pkg-wrappers
+#   site yay-logging: logging/pkg-logs
+
 # Auto-generating a wrapper in ~/.local/bin is opinionated (C2 auto-exec).
 # Wrapper generation is also gated by C5 (Logging & Capture).
-__fish_config_op_enabled __fish_config_op_autoexec; or return
+__fish_config_op_enabled (status basename) yay-autoexec; or return
 
 # C5 — Logging & Capture: remove generated wrapper and skip when logging is off
-if not __fish_config_op_enabled __fish_config_op_logging
+if not __fish_config_op_enabled (status basename) yay-logging
     if test -f "$HOME/.local/bin/yay"
         and grep -q "# yay-wrapper-version:" "$HOME/.local/bin/yay" 2>/dev/null
         rm -f "$HOME/.local/bin/yay"

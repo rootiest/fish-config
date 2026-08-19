@@ -320,6 +320,14 @@ set -Ue __fish_config_op_greeting
 
 Command shadows react immediately; bindings, prompt, and abbreviations take effect in new shells. With aliases disabled, `rm` deletes permanently again instead of trashing. See `help config opinionated` for the full component list.
 
+Each category further sub-divides into two to six sub-categories with
+their own `__fish_config_op_<category>_<subcategory>` toggles (e.g.
+`__fish_config_op_aliases_filesystem`), following the exact same
+truthy/falsy/unset cascade one level deeper. Run `config-settings` and
+press Enter on a category row to browse and toggle its sub-categories, or
+see the [Components Reference](https://fish.rootiest.fyi/08-components-reference/)
+for the full sub-category list per category.
+
 ---
 
 ## Attribution

@@ -5,6 +5,9 @@
 #          │                  help config wrapper                     │
 #          ╰──────────────────────────────────────────────────────────╯
 #
+# COMPONENT
+#    aliases/shell-tools
+#
 # SYNOPSIS
 #    help [topic] [sub-topic...]
 #    help config [section] [-w|--html] [-m|--man] [-h|--help]
@@ -50,7 +53,7 @@ end
 # --- Wrapper Definition ---
 function help --wraps help --description "Custom wrapper to intercept 'help config'"
     # Opinionated guard (C1): fall back to the native fish help when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         __original_help $argv
         return $status
     end

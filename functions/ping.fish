@@ -4,6 +4,9 @@
 # CATEGORY
 #   10-network
 #
+# COMPONENT
+#   aliases/network
+#
 # SYNOPSIS
 #   ping [args...]
 #
@@ -21,7 +24,7 @@
 #   ping --legend google.com
 function ping --description 'prettyping with default nolegend'
     # Opinionated guard (C1): fall back to bare command ping when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command ping $argv
         return $status
     end

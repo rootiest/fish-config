@@ -22,3 +22,28 @@ Disabled integration commands (`spwin`, `tab`, `split`, `hist`, `logs`, `upgrade
 a colored error to stderr naming the variable that disabled them rather than
 silently failing.
 
+## Sub-categories
+
+`__fish_config_op_integrations` sub-divides into five sub-categories,
+each with its own `__fish_config_op_integrations_<slug>` toggle:
+
+## terminal-abbrs
+
+The Kitty/WezTerm abbreviation set.
+
+## window-mgmt
+
+`spwin`, `tab`, `split`.
+
+## notifications
+
+`done`'s completion notifications, and the WakaTime activity hook.
+
+## history-logs
+
+`hist`, `logs`.
+
+## pkg-upgrade
+
+`upgrade`.
+

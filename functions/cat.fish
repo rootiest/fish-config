@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# COMPONENT
+#   aliases/filesystem
+#
 # SYNOPSIS
 #   cat [args...]
 #
@@ -21,7 +24,7 @@
 #   cat ~/projects/myapp
 function cat --wraps='bat' --description 'Use bat for files, ls for directories, and raw cat for ANSI logs'
     # Opinionated guard (C1): fall back to bare command cat when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command cat $argv
         return $status
     end

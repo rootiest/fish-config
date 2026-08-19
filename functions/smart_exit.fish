@@ -4,6 +4,10 @@
 # CATEGORY
 #   11-pager-and-logging
 #
+# COMPONENT
+#   site exit-plain: overrides/key-bindings
+#   site logging-guard: logging/terminal-capture
+#
 # SYNOPSIS
 #   smart_exit [-h] [-n]
 #
@@ -32,7 +36,7 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
     # Opinionated guard (C3): exit plainly when overrides are disabled.
     # This composes with Task #4's __fish_config_enable_logging, which will
     # gate only the scrollback capture while leaving the exit wrapper active.
-    if not __fish_config_op_enabled __fish_config_op_overrides
+    if not __fish_config_op_enabled (status current-function) exit-plain
         builtin exit $argv
     end
 
@@ -60,7 +64,7 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
     # C5 — Logging & Capture: skip all capture when logging is disabled.
     # When disabled, tell Kitty the window is handled so its watcher doesn't
     # capture either — belt-and-suspenders alongside the sentinel file.
-    if not __fish_config_op_enabled __fish_config_op_logging
+    if not __fish_config_op_enabled (status current-function) logging-guard
         if test -n "$KITTY_WINDOW_ID"
             kitty @ set-user-vars "logged_by_shell=true" 2>/dev/null
         end

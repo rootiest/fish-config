@@ -1,12 +1,16 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
+
+# COMPONENT
+#   overrides/prompt
+
 #
 # Defines fish_prompt only when starship is installed.
 # Without starship, fish's built-in prompt already emits OSC 133;A
 # on the prompt line itself, so no wrapper is needed.
 
 # Replacing the prompt is opinionated (C3 overrides)
-__fish_config_op_enabled __fish_config_op_overrides; or return
+__fish_config_op_enabled (status basename); or return
 
 type -q starship; or return
 

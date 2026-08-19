@@ -1,5 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
+
+# COMPONENT
+#   logging/terminal-capture
+
 #
 # C5 — Logging & Capture: a non-blocking, per-session reminder shown inside Kitty
 # when the fish-config scrollback watcher is not yet set up. It never blocks the
@@ -10,7 +14,7 @@
 status is-interactive; or exit
 type -q kitty; or exit
 set -q KITTY_WINDOW_ID; or exit
-__fish_config_op_enabled __fish_config_op_logging; or exit
+__fish_config_op_enabled (status basename); or exit
 __fish_variable_check __fish_config_kitty_watcher_dismissed; and exit
 __kitty_logging_has_watcher; and exit
 

@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# COMPONENT
+#   aliases/shell-tools
+#
 # SYNOPSIS
 #   bash [args...]
 #
@@ -18,7 +21,7 @@
 #   bash
 function bash --wraps='bash' --description 'bash switches to bash shell'
     # Opinionated guard (C1): fall back to bare command bash when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command bash $argv
         return $status
     end

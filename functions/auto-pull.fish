@@ -4,6 +4,9 @@
 # CATEGORY
 #   04-git-and-version-control
 #
+# COMPONENT
+#   autoexec/sync
+#
 # SYNOPSIS
 #   auto-pull [list]
 #   auto-pull add [PATH]
@@ -136,7 +139,7 @@ function auto-pull --description 'Manage the auto-pull repository registry'
             return 0
 
         case status
-            if __fish_config_op_enabled __fish_config_op_autoexec
+            if __fish_config_op_enabled (status current-function)
                 echo "$c_ok""auto-pull: ENABLED$c_reset $c_dim(C2 auto-execution on)$c_reset"
             else
                 echo "$c_warn""auto-pull: DISABLED$c_reset $c_dim(via __fish_config_op_autoexec)$c_reset"

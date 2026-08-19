@@ -4,6 +4,9 @@
 # CATEGORY
 #   04-git-and-version-control
 #
+# COMPONENT
+#   integrations/history-logs
+#
 # SYNOPSIS
 #   hist
 #
@@ -15,7 +18,7 @@
 #   hist
 function hist --description 'Search fish history and put it in the prompt'
     # Opinionated guard (C4): integrations disabled
-    if not __fish_config_op_enabled __fish_config_op_integrations
+    if not __fish_config_op_enabled (status current-function)
         set -l c_err (set_color red)
         set -l c_reset (set_color normal)
         echo "$c_err"'hist: disabled by __fish_config_op_integrations'"$c_reset" >&2

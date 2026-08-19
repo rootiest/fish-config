@@ -130,6 +130,38 @@ def _parsed_functions() -> dict[str, dict[str, list[str]]]:
     return mt.parse_functions(Path(__file__).parent.parent / "functions")
 
 
+def _parsed_components() -> dict[str, list[str]]:
+    import generate_component_registry as gcr
+
+    return gcr.collect_components()
+
+
+_C0_TAGS = {"always/on", "always/off"}
+_TAXONOMY_FILES = {
+    "aliases": "01-c1-command-shadows.md",
+    "autoexec": "02-c2-startup-side-effects.md",
+    "overrides": "03-c3-key-and-environment-overrides.md",
+    "integrations": "04-c4-terminal-and-tool-integration.md",
+    "logging": "05-c5-logging-and-capture.md",
+    "greeting": "06-c6-greeting-and-first-run-ui.md",
+}
+
+
+def _load_taxonomy() -> dict[str, set[str]]:
+    """{category: {sub-category slugs}}, parsed from `## <slug>` headings
+    in each category's docs/manual/08-components-reference/ file."""
+    ref_root = Path(__file__).parent / "manual" / "08-components-reference"
+    taxonomy: dict[str, set[str]] = {}
+    for category, filename in _TAXONOMY_FILES.items():
+        _, body = mt.parse(ref_root / filename)
+        taxonomy[category] = {
+            m.group(1)
+            for ln in body.split("\n")
+            if (m := re.match(r"^## ([a-z][a-z0-9-]*)$", ln))
+        }
+    return taxonomy
+
+
 def test_every_categorised_function_produces_one_entry():
     import build_manual
 
@@ -184,6 +216,36 @@ def test_dependencies_resolve():
     assert not dangling, "unresolvable # DEPENDENCIES:\n  " + "\n  ".join(dangling)
 
 
+def test_every_component_resolves_to_a_taxonomy_entry():
+    """Every non-C0 # COMPONENT tag must resolve to a documented sub-category."""
+    taxonomy = _load_taxonomy()
+    unknown = []
+    for identity, raw_lines in _parsed_components().items():
+        for site, tag in mt.parse_component_lines(raw_lines):
+            if tag in _C0_TAGS:
+                continue
+            if "/" not in tag:
+                unknown.append(f"{identity}: malformed tag {tag!r}")
+                continue
+            category, subcat = tag.split("/", 1)
+            if category not in taxonomy or subcat not in taxonomy[category]:
+                unknown.append(f"{identity}: {tag}")
+    assert not unknown, "# COMPONENT tags with no taxonomy entry:\n  " + "\n  ".join(unknown)
+
+
+def warn_c0_tags_never_combine_with_contradiction():
+    """Warn -- never fail -- on always/on + always/off contradictions this
+    repo's own generator would warn about -- this is a direct repo-content
+    check, independent of running the generator, so CI surfaces them even
+    if someone forgets to regenerate. Warnings are non-fatal (spec §4.5);
+    this exists to print them prominently in CI output."""
+    from generate_component_registry import build_registry
+
+    _, warnings = build_registry(_parsed_components())
+    for w in warnings:
+        print(f"  WARN  {w}")
+
+
 def warn_public_functions_without_category():
     """Warn — never fail — on a public function carrying no `# CATEGORY`.
 
@@ -203,6 +265,63 @@ def warn_public_functions_without_category():
     if orphans:
         print(f"  WARN  {len(orphans)} documented function(s) lack # CATEGORY:")
         print("        " + ", ".join(orphans))
+
+
+# The guard's own supporting infrastructure: these files' bodies (function
+# signature, SYNOPSIS/EXAMPLE prose) legitimately contain the literal text
+# "__fish_config_op_enabled" without being a *caller* of the guard, so they
+# are permanently exempt from warn_functions_without_component's substring
+# check below.
+_GUARD_INFRA_FILES = {
+    "__fish_config_op_enabled.fish",
+    "__fish_config_op_cascade.fish",
+    "__fish_config_op_registry_lookup.fish",
+}
+
+
+def warn_functions_without_component():
+    """Warn -- never fail -- on a documented function calling the
+    opinionated guard but carrying no `# COMPONENT` section.
+
+    Mirrors warn_public_functions_without_category: a function that never
+    opted into the header convention at all (no # SYNOPSIS) is silently
+    out of scope, matching spec §4.5's fail-open tiering.
+    """
+    repo = Path(__file__).parent.parent
+    components = _parsed_components()
+    orphans = []
+    for p in list((repo / "functions").glob("*.fish")) + list((repo / "conf.d").glob("*.fish")):
+        if p.name in _GUARD_INFRA_FILES:
+            continue
+        text = p.read_text(encoding="utf-8")
+        if "__fish_config_op_enabled" not in text or "# SYNOPSIS" not in text:
+            continue
+        if p.stem not in components:
+            orphans.append(str(p.relative_to(repo)))
+    if orphans:
+        print(f"  WARN  {len(orphans)} function(s) call the opinionated guard but lack # COMPONENT:")
+        print("        " + ", ".join(sorted(orphans)))
+
+
+def warn_unused_taxonomy_entries():
+    """Warn -- never fail -- on a documented sub-category with zero tagged functions."""
+    taxonomy = _load_taxonomy()
+    used: dict[str, set[str]] = {c: set() for c in taxonomy}
+    for raw_lines in _parsed_components().values():
+        for _site, tag in mt.parse_component_lines(raw_lines):
+            if tag in _C0_TAGS or "/" not in tag:
+                continue
+            category, subcat = tag.split("/", 1)
+            if category in used:
+                used[category].add(subcat)
+    unused = [
+        f"{category}/{subcat}"
+        for category, subcats in taxonomy.items()
+        for subcat in sorted(subcats - used[category])
+    ]
+    if unused:
+        print(f"  WARN  {len(unused)} taxonomy entr{'y has' if len(unused) == 1 else 'ies have'} zero tagged functions:")
+        print("        " + ", ".join(unused))
 
 
 def _without_section_5(text: str) -> str:
@@ -827,6 +946,207 @@ def test_site_avoids_reserved_dir():
     )
 
 
+def test_parse_component_lines_default_and_named_sites():
+    lines = [
+        "aliases/filesystem",
+        "site exit-plain: overrides/key-bindings",
+        "site logging-guard: logging/terminal-capture",
+        "",
+        "  ",
+    ]
+    got = mt.parse_component_lines(lines)
+    assert got == [
+        ("", "aliases/filesystem"),
+        ("exit-plain", "overrides/key-bindings"),
+        ("logging-guard", "logging/terminal-capture"),
+    ], f"unexpected parse: {got}"
+
+
+def test_parse_components_includes_underscore_prefixed_and_uncategorised():
+    """Unlike parse_functions, parse_components has no # CATEGORY gate and
+    no underscore exclusion -- every guarded identity must be visible."""
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "__private_helper.fish").write_text(
+            "# COMPONENT\n"
+            "#   logging/terminal-capture\n"
+            "function __private_helper\n"
+            "end\n"
+        )
+        (root / "no_category.fish").write_text(
+            "# COMPONENT\n"
+            "#   aliases/filesystem\n"
+            "#\n"
+            "# SYNOPSIS\n"
+            "#   no_category\n"
+            "function no_category\n"
+            "end\n"
+        )
+        got = mt.parse_components(root)
+    assert got["__private_helper"] == ["logging/terminal-capture"]
+    assert got["no_category"] == ["aliases/filesystem"]
+
+
+def test_parse_components_resolves_multi_header_file_to_function_name():
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "multi.fish").write_text(
+            "# COMPONENT\n"
+            "#   aliases/filesystem\n"
+            "function first_fn\n"
+            "end\n"
+            "\n"
+            "# COMPONENT\n"
+            "#   aliases/network\n"
+            "function second_fn\n"
+            "end\n"
+        )
+        got = mt.parse_components(root)
+    assert got == {
+        "first_fn": ["aliases/filesystem"],
+        "second_fn": ["aliases/network"],
+    }, f"unexpected resolution: {got}"
+
+
+def test_parse_component_file_single_file():
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "config.fish"
+        path.write_text(
+            "# COMPONENT\n"
+            "#   site greeting-block: greeting/greeting-message\n"
+        )
+        got = mt.parse_component_file(path)
+    assert got == {"config": ["site greeting-block: greeting/greeting-message"]}
+
+
+def test_build_registry_strips_on_off_contradiction_with_warning():
+    import generate_component_registry as gcr
+
+    components = {"contradictory_fn": ["always/on", "always/off", "aliases/filesystem"]}
+    registry, warnings = gcr.build_registry(components)
+    assert registry["contradictory_fn:"] == ["aliases/filesystem"], (
+        f"the non-contradictory tag should survive: {registry}"
+    )
+    assert len(warnings) == 1 and "contradictory_fn" in warnings[0]
+
+
+def test_build_registry_drops_empty_effective_tag_sets():
+    import generate_component_registry as gcr
+
+    components = {"only_contradictory": ["always/on", "always/off"]}
+    registry, warnings = gcr.build_registry(components)
+    assert "only_contradictory:" not in registry, (
+        "a site stripped down to nothing must produce no registry entry "
+        "(fail-open: absence of an entry already means always/on at guard time)"
+    )
+    assert len(warnings) == 1
+
+
+def test_build_registry_keeps_sites_independent():
+    import generate_component_registry as gcr
+
+    components = {
+        "smart_exit": [
+            "site exit-plain: overrides/key-bindings",
+            "site logging-guard: logging/terminal-capture",
+        ]
+    }
+    registry, warnings = gcr.build_registry(components)
+    assert registry["smart_exit:exit-plain"] == ["overrides/key-bindings"]
+    assert registry["smart_exit:logging-guard"] == ["logging/terminal-capture"]
+    assert not warnings
+
+
+def test_collect_components_merges_identity_collisions_across_sources():
+    """functions/auto-pull.fish and conf.d/auto-pull.fish both self-identify
+    as "auto-pull" at runtime -- the guard only ever has the bare
+    status current-function/basename string to look up with -- so
+    collect_components must concatenate their raw COMPONENT lines
+    rather than letting conf.d's entry silently overwrite functions'."""
+    import generate_component_registry as gcr
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "functions").mkdir()
+        (root / "conf.d").mkdir()
+        (root / "functions" / "auto-pull.fish").write_text(
+            "# COMPONENT\n"
+            "#   autoexec/sync\n"
+            "function auto-pull\n"
+            "end\n"
+        )
+        (root / "conf.d" / "auto-pull.fish").write_text(
+            "# COMPONENT\n"
+            "#   autoexec/sync\n"
+        )
+        (root / "config.fish").write_text("")
+
+        orig_repo = gcr.REPO
+        try:
+            gcr.REPO = root
+            got = gcr.collect_components()
+        finally:
+            gcr.REPO = orig_repo
+
+    assert got["auto-pull"] == ["autoexec/sync", "autoexec/sync"], (
+        f"both sources' tags should survive the merge, not overwrite: {got}"
+    )
+
+
+def test_render_registry_is_valid_fish_and_round_trips():
+    """Sourcing render()'s output must leave the two arrays in the exact
+    shape __fish_config_op_registry_lookup expects -- checked via the real
+    lookup helper (functions/__fish_config_op_registry_lookup.fish, Task
+    2) rather than re-parsing the generated text by hand."""
+    import subprocess
+
+    import generate_component_registry as gcr
+
+    registry = {
+        "rm:": ["aliases/filesystem"],
+        "smart_exit:exit-plain": ["overrides/key-bindings"],
+    }
+    text = gcr.render(registry)
+
+    repo = Path(__file__).parent.parent
+    proc = subprocess.run(
+        [
+            "fish", "-c",
+            f"source {repo}/functions/__fish_config_op_registry_lookup.fish; "
+            "source /dev/stdin; "
+            "__fish_config_op_registry_lookup rm ''; echo status=$status",
+        ],
+        input=text,
+        capture_output=True,
+        text=True,
+    )
+    assert "aliases/filesystem" in proc.stdout, f"unexpected output: {proc.stdout!r} {proc.stderr!r}"
+    assert "status=0" in proc.stdout, f"lookup did not report found: {proc.stdout!r}"
+
+
+def test_build_manual_regenerates_registry_before_building():
+    """docs/build-manual.py must regenerate the registry as a pre-step."""
+    import build_manual
+
+    assert hasattr(build_manual, "generate_component_registry"), (
+        "build-manual.py must import generate_component_registry so its "
+        "main() can be called as a pre-step before --site/--concat run"
+    )
+
+
+def test_committed_registry_matches_headers():
+    """The committed conf.d/__fish_config_op_registry.fish must match what
+    generate_component_registry.py would produce right now from the current
+    `# COMPONENT` headers -- otherwise CI has nothing catching drift."""
+    import generate_component_registry as gcr
+
+    registry, _ = gcr.build_registry(gcr.collect_components())
+    assert gcr.render(registry) == gcr.OUTPUT.read_text(), (
+        "conf.d/__fish_config_op_registry.fish is stale — run "
+        "__fish_config_op_registry_rebuild"
+    )
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 
@@ -840,6 +1160,9 @@ def main() -> int:
             print(f"  FAIL  {t.__name__}: {e}", file=sys.stderr)
             failed += 1
     warn_public_functions_without_category()
+    warn_functions_without_component()
+    warn_unused_taxonomy_entries()
+    warn_c0_tags_never_combine_with_contradiction()
     print(f"\n{len(TESTS) - failed}/{len(TESTS)} passed")
     return 1 if failed else 0
 

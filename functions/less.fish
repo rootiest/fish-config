@@ -4,6 +4,9 @@
 # CATEGORY
 #   03-editors-and-viewers
 #
+# COMPONENT
+#   aliases/shell-tools
+#
 # SYNOPSIS
 #   less [args...]
 #
@@ -18,7 +21,7 @@
 #   less /var/log/syslog
 function less --wraps='ov' --description 'Pager wrapper: $PAGER → ov → less → more → cat'
     # Opinionated guard (C1): fall back to bare command less when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command less $argv
         return $status
     end

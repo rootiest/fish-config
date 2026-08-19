@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 import manualtools as mt
+import generate_component_registry
 
 DOCS = Path(__file__).parent
 MANUAL = DOCS / "manual"
@@ -839,6 +840,8 @@ def main() -> int:
 
     if not (args.concat or args.site):
         ap.error("nothing to do: pass --concat and/or --site")
+
+    generate_component_registry.main()
 
     if args.site:
         src = DOCS / "site" / "src"

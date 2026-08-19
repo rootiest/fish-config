@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# COMPONENT
+#   aliases/filesystem
+#
 # SYNOPSIS
 #   ls [args...]
 #
@@ -20,7 +23,7 @@
 #   ls -a ~/projects
 function ls --description 'List all files'
     # Opinionated guard (C1): fall back to bare command ls when disabled.
-    if not __fish_config_op_enabled __fish_config_op_aliases
+    if not __fish_config_op_enabled (status current-function)
         command ls $argv
         return $status
     end

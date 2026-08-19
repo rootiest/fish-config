@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# COMPONENT
+#   logging/multiplexer-capture
+#
 # SYNOPSIS
 #   _zellij_dump_log
 #
@@ -23,7 +26,7 @@
 # EXAMPLE
 #   _zellij_dump_log
 function _zellij_dump_log --description 'Dump the current Zellij pane scrollback to a log file, with pruning'
-    __fish_config_op_enabled __fish_config_op_logging; or return 0
+    __fish_config_op_enabled (status current-function); or return 0
     set -q ZELLIJ; or return 0
     type -q zellij; or return 0
 

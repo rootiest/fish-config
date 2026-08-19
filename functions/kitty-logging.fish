@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# COMPONENT
+#   logging/terminal-capture
+#
 # SYNOPSIS
 #   kitty-logging [install | uninstall | status | dismiss] [-h]
 #
@@ -97,7 +100,7 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
             else
                 echo "  Watcher file:  $c_warn""not installed$c_reset"
             end
-            if __fish_config_op_enabled __fish_config_op_logging
+            if __fish_config_op_enabled (status current-function)
                 echo "  C5 logging:    $c_ok""enabled$c_reset"
             else
                 echo "  C5 logging:    $c_warn""disabled$c_reset (capture is currently inert)"
@@ -143,7 +146,7 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
             end
             echo "$c_ok""→ Installed.$c_reset Watcher wired into $conf"
             echo "  $c_dim""Restart Kitty (new windows) for it to take effect.$c_reset"
-            if not __fish_config_op_enabled __fish_config_op_logging
+            if not __fish_config_op_enabled (status current-function)
                 echo "  $c_warn""Note: C5 logging is disabled, so capture is currently inert.$c_reset"
             end
             return 0

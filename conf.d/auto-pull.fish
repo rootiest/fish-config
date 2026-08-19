@@ -14,8 +14,11 @@
 # Manage the registry with: auto-pull add / remove / list / status
 
 # C2 guard: when auto-execution is disabled, do not register the handler.
-__fish_config_op_enabled __fish_config_op_autoexec; or exit
+__fish_config_op_enabled (status basename); or exit
 
+# COMPONENT
+#   autoexec/sync
+#
 # SYNOPSIS
 #   __auto_pull_on_pwd (event handler, --on-variable PWD)
 #

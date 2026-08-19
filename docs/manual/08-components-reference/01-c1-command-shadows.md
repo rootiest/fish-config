@@ -31,3 +31,35 @@ all of these commands.
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.
 
+## Sub-categories
+
+`__fish_config_op_aliases` sub-divides into six sub-categories, each with
+its own `__fish_config_op_aliases_<slug>` toggle:
+
+## filesystem
+
+`ls`, `cat`, `cd`, `du`, `mkdir`, `rm`, `mv`, and `cd`/zoxide navigation --
+the everyday filesystem-inspection and -modification shadows.
+
+## search
+
+`rg`, with its Kitty hyperlink formatting.
+
+## network
+
+`ping`, `ssh`, and `yt-dlp` -- shadows that talk to the network.
+
+## monitor
+
+`top` -> `btop`.
+
+## shell-tools
+
+`bash` (XDG bashrc + `$SHELL` reset), `less` (`$PAGER` fallback chain),
+and the `help config` interception.
+
+## dev-tools
+
+`claude` (AGENTS.md/CLAUDE.md auto-linking) and `edit` (multi-editor
+launcher), plus `agy`.
+
