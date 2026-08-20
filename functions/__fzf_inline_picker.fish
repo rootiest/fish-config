@@ -5,23 +5,29 @@
 #   __fzf_inline_picker
 #
 # DESCRIPTION
-#   Opens an interactive fzf session and injects the selected item directly
-#   into the command line at the cursor position. Bound to @@ by default.
+#   Bound to the @ key. Self-inserts @ normally; on a second consecutive @
+#   (detected by looking behind at the current token rather than making fish
+#   buffer ahead for a chord), opens an interactive fzf session and replaces
+#   the bare @ with the selected item. Cancelling leaves a literal @@ behind.
 #   Repaints the prompt after selection or cancellation.
 #
 # EXIT STATUS
-#   0  Always; no-op if fzf is cancelled
+#   0  Always
 #
 # EXAMPLE
-#   # Press @@ at the command prompt to open fzf and insert the selected item.
+#   # Press @ twice at the command prompt to open fzf and insert the
+#   # selected item in place of the second @, then keep typing to extend it
+#   # (e.g. a trailing /subdir).
 function __fzf_inline_picker
-    # Open fzf and capture selection
-    set -l selection (fzf)
-
-    if test -n "$selection"
-        # Injects text instantly at the cursor
-        commandline -i (string escape -- $selection)
+    if test (commandline -t) = @
+        set -l selection (fzf)
+        if test -n "$selection"
+            commandline -t -- (string escape -- $selection)
+        else
+            commandline -t -- @@
+        end
+        commandline -f repaint
+    else
+        commandline -i @
     end
-    # Refresh the line display
-    commandline -f repaint
 end
