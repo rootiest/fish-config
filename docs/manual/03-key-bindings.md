@@ -42,9 +42,11 @@ are active in Insert, Normal, and Visual modes unless noted.
                     pressing Enter a second time for certain fast-path
                     commands (speedtest-fast, etc.).
 
-    @@              FZF inline picker. Type @@ anywhere on the command
-                    line to open an fzf picker and insert a selection
-                    at the cursor position.
+    @@              FZF inline picker. Type @ twice anywhere on the
+                    command line to open an fzf picker and replace the
+                    @@ with the selection. The @@ must be typed as its
+                    own token: "cat @@" triggers it, but "cat@@" does
+                    not.
 
     Ctrl+Right      Accept autosuggestion one word/directory segment
                     at a time. (Restores Fish 3.x behavior by binding

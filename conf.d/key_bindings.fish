@@ -65,7 +65,6 @@ function fish_user_key_bindings
     bind ctrl-alt-u _replace_command_token
     type -q qalc && bind ctrl-alt-= _qalc_eval
     bind ctrl-enter _smart_execute
-    bind @@ __fzf_inline_picker
     bind ctrl-right nextd-or-forward-word
     bind \e\[1\;5C nextd-or-forward-word
 
@@ -77,8 +76,17 @@ function fish_user_key_bindings
         bind --mode $mode ctrl-alt-u _replace_command_token
         type -q qalc && bind --mode $mode ctrl-alt-= _qalc_eval
         bind --mode $mode ctrl-enter _smart_execute
-        bind --mode $mode @@ __fzf_inline_picker
         bind --mode $mode ctrl-right nextd-or-forward-word
         bind --mode $mode \e\[1\;5C nextd-or-forward-word
     end
+
+    # @ is Emacs/Vi-insert only. Emacs bindings and Vi's "default" (normal)
+    # mode share the same bind_mode name, so a mode-less `bind @` would also
+    # land in Vi normal mode, turning its current no-op @ into a self-insert.
+    # Register the mode-less form only when Vi bindings aren't the active
+    # base, and rely on the explicit insert-mode bind otherwise.
+    if test "$fish_key_bindings" != fish_vi_key_bindings
+        bind @ __fzf_inline_picker
+    end
+    bind --mode insert @ __fzf_inline_picker
 end
