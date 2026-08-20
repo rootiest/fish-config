@@ -45,7 +45,7 @@ are active in Insert, Normal, and Visual modes unless noted.
     @@              FZF inline picker. Type @ twice anywhere on the
                     command line to open an fzf picker and replace the
                     @@ with the selection. The @@ must be typed as its
-                    own token: "test @@" triggers it, but "test@@" does
+                    own token: "cat @@" triggers it, but "cat@@" does
                     not.
 
     Ctrl+Right      Accept autosuggestion one word/directory segment
