@@ -604,9 +604,11 @@ Ctrl+Enter      Smart execute: runs commands instantly without
                 pressing Enter a second time for certain fast-path
                 commands (speedtest-fast, etc.).
 
-\[at]\[at]              FZF inline picker. Type \[at]\[at] anywhere on the command
-                line to open an fzf picker and insert a selection
-                at the cursor position.
+\[at]\[at]              FZF inline picker. Type \[at] twice anywhere on the
+                command line to open an fzf picker and replace the
+                \[at]\[at] with the selection. The \[at]\[at] must be typed as its
+                own token: \[dq]cat \[at]\[at]\[dq] triggers it, but \[dq]cat\[at]\[at]\[dq] does
+                not.
 
 Ctrl+Right      Accept autosuggestion one word/directory segment
                 at a time. (Restores Fish 3.x behavior by binding
