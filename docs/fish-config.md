@@ -2184,6 +2184,38 @@ functions). They are active in all interactive sessions.
     dng2avif photo.dng
     dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 
+### play-media
+
+    Synopsis:  play-media [-p|--player <cmd>]
+               play-media --help
+
+    Opens an fzf picker (with thumbnail/metadata preview via
+    _fzf_preview_media) listing audio and video files under the current
+    directory, and plays the selection(s) in the best available media
+    player. Supports multi-select (Tab) to queue several files at once.
+
+    Player resolution order:
+      1. -p/--player <cmd>   (explicit override, validated as a command)
+      2. $play_media_player  (explicit override, validated as a command)
+      3. xdg-mime default handler for the first selected file's mimetype
+      4. First known player binary found in a built-in list (mpv, vlc)
+
+    The player is launched backgrounded and detached, mirroring open-url,
+    so the shell is never blocked.
+
+    Arguments:
+      -p, --player <cmd>   Force a specific player command
+      -h, --help           Print usage and exit
+
+    Exit Status:
+      0  Player launched (or the picker was cancelled)
+      1  No media files found, invalid --player/$play_media_player, or no
+         player found
+
+    Example:
+    play-media
+    play-media --player mpv
+
 ### spark
 
     Synopsis:  spark [--min=<n>] [--max=<n>] [numbers...]
