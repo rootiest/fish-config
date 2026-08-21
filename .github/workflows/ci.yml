@@ -98,19 +98,21 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Generate site content
+        run: python3 docs/build-manual.py --site
+
       - name: Build documentation site
+        working-directory: docs/site
         run: |
-          python3 docs/build-manual.py --site
-          cd docs/site
           npm ci
           npx astro build
 
       - name: Deploy to Cloudflare Pages
+        working-directory: docs/site
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          cd docs/site
           npx --yes wrangler pages deploy dist/ \
             --project-name=fish-config-docs \
             --branch=main \
