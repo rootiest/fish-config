@@ -17,9 +17,20 @@ on:
       - "integrations/**"
       - "tests/**"
   workflow_dispatch:
+    inputs:
+      job:
+        description: "Job to run"
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - test
+          - build-docs
 
 jobs:
   test:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'test'
     runs-on: racknerd-mini
     steps:
       - name: Checkout
@@ -40,6 +51,11 @@ jobs:
 
   build-docs:
     needs: test
+    if: |
+      always() &&
+      (github.event.inputs.job == 'build-docs' ||
+        ((github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all') &&
+          needs.test.result == 'success'))
     runs-on: racknerd-mini
     steps:
       - name: Checkout
