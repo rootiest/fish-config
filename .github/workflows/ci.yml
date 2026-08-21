@@ -17,9 +17,20 @@ on:
       - "integrations/**"
       - "tests/**"
   workflow_dispatch:
+    inputs:
+      job:
+        description: "Job to run"
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - test
+          - build-docs
 
 jobs:
   test:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'test'
     runs-on: racknerd-mini
     steps:
       - name: Checkout
@@ -29,17 +40,22 @@ jobs:
 
       - name: Install fish
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y software-properties-common
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y software-properties-common
           sudo add-apt-repository -y ppa:fish-shell/release-4
-          sudo apt-get update -qq
-          sudo apt-get install -y fish
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y fish
 
       - name: Run fish config tests
         run: fish tests/run-tests.fish
 
   build-docs:
     needs: test
+    if: |
+      always() &&
+      (github.event.inputs.job == 'build-docs' ||
+        ((github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all') &&
+          needs.test.result == 'success'))
     runs-on: racknerd-mini
     steps:
       - name: Checkout
@@ -49,11 +65,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y software-properties-common
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y software-properties-common
           sudo add-apt-repository -y ppa:fish-shell/release-4
-          sudo apt-get update -qq
-          sudo apt-get install -y pandoc python3-yaml fish
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y pandoc python3-yaml fish
 
       - name: Generate concatenated markdown
         run: python3 docs/build-manual.py --concat -o docs/fish-config.md
