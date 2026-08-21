@@ -98,10 +98,12 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Generate site content
+        run: python3 docs/build-manual.py --site
+
       - name: Build documentation site
+        working-directory: docs/site
         run: |
-          python3 docs/build-manual.py --site
-          cd docs/site
           npm ci
           npx astro build
 
