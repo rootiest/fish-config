@@ -16,6 +16,7 @@ abbreviation system for keyboard-driven workflows.
 - [Personalization](#personalization)
 - [Minimal Mode](#minimal-mode)
 - [Testing](#testing)
+- [Contributing](#contributing)
 - [Attribution](#attribution)
 - [License](#license)
 
@@ -338,6 +339,14 @@ fish tests/run-tests.fish
 ```
 
 Runs before every push (and gates the [documentation build](.github/workflows/ci.yml) in CI, so a broken config can't get published): syntax-lints every `.fish` file, then loads the config in an isolated `HOME`/XDG sandbox — never this checkout itself, since it doubles as a real `~/.config/fish` — and runs functional checks against foundational behavior (XDG/PATH/CDPATH setup, key bindings, abbreviations, core functions, the opinionated-component registry, and more).
+
+---
+
+## Contributing
+
+Interested in contributing? See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the
+branching/PR workflow, commit conventions, fish coding standards, and the
+docs/testing pipeline this repo follows.
 
 ---
 
