@@ -55,8 +55,8 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
         '^\.vagrant$' \
         '^\.clwb$' \
         '^\.idea$' \
-        '^Thumbs\.db:encryptable$'
-    '^\.gemini.*' \
+        '^Thumbs\.db:encryptable$' \
+        '^\.gemini.*' \
         '^\.claude.*' \
         '^\.antigravity.*' \
         '^\.remember.*'
