@@ -33,7 +33,7 @@ if type -q aichat
     function qc --wraps aichat --description 'Quick-chat wrapper around aichat (cli role)'
         if contains -- -h $argv; or contains -- --help $argv
             set -l c_ttl (set_color --bold cyan)
-            set -l c_cmd (set_color --bold white)
+            set -l c_cmd (set_color --bold)
             set -l c_flag (set_color yellow)
             set -l c_txt (set_color normal)
             set -l c_dim (set_color brblack)

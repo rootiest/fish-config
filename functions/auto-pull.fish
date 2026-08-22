@@ -43,7 +43,7 @@
 #   auto-pull remove qmk_firmware
 function auto-pull --description 'Manage the auto-pull repository registry'
     set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold white)
+    set -l c_cmd (set_color --bold)
     set -l c_flag (set_color yellow)
     set -l c_ok (set_color green)
     set -l c_warn (set_color yellow)

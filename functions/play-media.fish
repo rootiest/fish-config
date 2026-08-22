@@ -36,15 +36,23 @@
 #   play-media
 #   play-media --player mpv
 function play-media --description 'Pick audio/video files with fzf and play them'
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold)
+    set -l c_flag (set_color yellow)
+    set -l c_dim (set_color brblack)
+    set -l c_reset (set_color normal)
+
     argparse h/help p/player= -- $argv
     or return 1
 
     if set -q _flag_help
-        echo "Usage: play-media [-p|--player <cmd>]"
-        echo "Pick audio/video files under the current directory with fzf and play them."
+        echo "$c_head""Usage:$c_reset $c_cmd""play-media$c_reset $c_flag""[-p|--player$c_reset $c_dim<cmd>$c_reset""$c_flag]$c_reset"
         echo
-        echo "  -p, --player <cmd>  Force a specific player command"
-        echo "  -h, --help          Show this help"
+        echo "  Pick audio/video files under the current directory with fzf and play them."
+        echo
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-p$c_reset, $c_flag--player$c_reset $c_dim<cmd>$c_reset  Force a specific player command"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset          Show this help"
         return 0
     end
 

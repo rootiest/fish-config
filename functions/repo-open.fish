@@ -52,17 +52,23 @@
 # NOTES
 #   Typo abbreviation: open-repo (expands to repo-open on space/enter).
 function repo-open --description 'Open the origin remote of the current repo in a browser'
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold)
+    set -l c_flag (set_color yellow)
+    set -l c_reset (set_color normal)
+
     argparse -X 0 h/help p/print r/root -- $argv
     or return 1
 
     if set -q _flag_help
-        echo "Usage: repo-open [-p|--print] [-r|--root]"
-        echo "Open the origin remote's web page for the current repo,"
-        echo "deep-linking to the current branch and sub-directory."
+        echo "$c_head""Usage:$c_reset $c_cmd""repo-open$c_reset $c_flag""[-p|--print] [-r|--root]$c_reset"
+        echo "  Open the origin remote's web page for the current repo,"
+        echo "  deep-linking to the current branch and sub-directory."
         echo
-        echo "  -p, --print  Print the URL instead of opening it"
-        echo "  -r, --root   Link to the repo root, ignoring the current sub-directory"
-        echo "  -h, --help   Show this help"
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-p$c_reset, $c_flag--print$c_reset  Print the URL instead of opening it"
+        echo "  $c_flag-r$c_reset, $c_flag--root$c_reset   Link to the repo root, ignoring the current sub-directory"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset   Show this help"
         return 0
     end
 

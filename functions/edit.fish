@@ -46,7 +46,7 @@
 #   edit --text="hello world"
 function edit --description 'Open files in a terminal or GUI editor with fallbacks'
     set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold white)
+    set -l c_cmd (set_color --bold)
     set -l c_flag (set_color yellow)
     set -l c_err (set_color red)
     set -l c_dim (set_color brblack)

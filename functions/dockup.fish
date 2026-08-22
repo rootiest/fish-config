@@ -30,13 +30,18 @@ function dockup --description 'Pull and restart docker compose containers'
 
     # Handle help flags
     if contains -- -h $argv; or contains -- --help $argv
-        echo (set_color -o yellow)"Usage:"$clr_off" dockup [DIRECTORY]"
+        set -l c_head (set_color --bold cyan)
+        set -l c_cmd (set_color --bold)
+        set -l c_flag (set_color yellow)
+        set -l c_dim (set_color brblack)
+        set -l c_reset (set_color normal)
+        echo "$c_head""Usage:$c_reset $c_cmd""dockup$c_reset $c_dim""[DIRECTORY]$c_reset"
         echo ""
-        echo (set_color -u)"Options:"$clr_off
-        echo "  -h, --help    Show this help message"
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset    Show this help message"
         echo ""
-        echo (set_color -u)"Arguments:"$clr_off
-        echo "  DIRECTORY     Optional path to the compose project (defaults to current dir)"
+        echo "$c_head""Arguments:$c_reset"
+        echo "  $c_dim""DIRECTORY$c_reset     Optional path to the compose project (defaults to current dir)"
         return 0
     end
 

@@ -93,18 +93,24 @@ end
 # EXAMPLE
 #   __fish_deps_help
 function __fish_deps_help
-    set_color cyan; echo "fish-deps — manage fish shell dependencies"; set_color normal
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold)
+    set -l c_flag (set_color yellow)
+    set -l c_dim (set_color brblack)
+    set -l c_reset (set_color normal)
+
+    echo "$c_head""fish-deps$c_reset — manage fish shell dependencies"
     echo ""
-    echo "Usage:"
-    echo "  fish-deps [status]    Check installed/missing deps (default)"
-    echo "  fish-deps install     Install missing deps interactively"
-    echo "  fish-deps update      Update all installed deps"
-    echo "  fish-deps sync        Install missing, then update all"
+    echo "$c_head""Usage:$c_reset"
+    echo "  $c_cmd""fish-deps$c_reset $c_dim""[status]$c_reset    Check installed/missing deps (default)"
+    echo "  $c_cmd""fish-deps$c_reset install     Install missing deps interactively"
+    echo "  $c_cmd""fish-deps$c_reset update      Update all installed deps"
+    echo "  $c_cmd""fish-deps$c_reset sync        Install missing, then update all"
     echo ""
     echo "  install/sync accept:"
-    echo "    --optional   Also offer Optional-tier deps (skipped by default)"
-    echo "    --terminals  Also offer Terminal-Emulator-tier deps (skipped by default)"
-    echo "    --all        Shorthand for --optional --terminals"
+    echo "    $c_flag--optional$c_reset   Also offer Optional-tier deps (skipped by default)"
+    echo "    $c_flag--terminals$c_reset  Also offer Terminal-Emulator-tier deps (skipped by default)"
+    echo "    $c_flag--all$c_reset        Shorthand for --optional --terminals"
     echo ""
     echo "Install method priority: cargo > system PM > git/curl/pipx"
     echo "When multiple methods are available, you will be prompted to choose."

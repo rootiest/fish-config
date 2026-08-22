@@ -38,14 +38,19 @@ function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
 
     # Help Screen
     if set -q _flag_help; or test (count $argv) -eq 0 -a -z "$_flag_input"
-        echo "Usage: dng2avif [options] [input.dng]"
+        set -l c_head (set_color --bold cyan)
+        set -l c_cmd (set_color --bold)
+        set -l c_flag (set_color yellow)
+        set -l c_dim (set_color brblack)
+        set -l c_reset (set_color normal)
+        echo "$c_head""Usage:$c_reset $c_cmd""dng2avif$c_reset $c_flag""[options]$c_reset $c_dim""[input.dng]$c_reset"
         echo ""
-        echo "Options:"
-        echo "  -i, --input FILE    Input DNG file"
-        echo "  -o, --output FILE   Output AVIF file (defaults to input name)"
-        echo "  -q, --quality N     Encoding quality 0-100 (default: 92)"
-        echo "  -s, --speed N       Encoder speed 0-10 (default: 3, 0=slowest)"
-        echo "  -h, --help          Show this help message"
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-i$c_reset, $c_flag--input$c_reset $c_dim""FILE$c_reset    Input DNG file"
+        echo "  $c_flag-o$c_reset, $c_flag--output$c_reset $c_dim""FILE$c_reset   Output AVIF file (defaults to input name)"
+        echo "  $c_flag-q$c_reset, $c_flag--quality$c_reset $c_dim""N$c_reset     Encoding quality 0-100 (default: 92)"
+        echo "  $c_flag-s$c_reset, $c_flag--speed$c_reset $c_dim""N$c_reset       Encoder speed 0-10 (default: 3, 0=slowest)"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset          Show this help message"
         return 0
     end
 

@@ -25,6 +25,12 @@
 # EXAMPLE
 #   detach rsync -a ./data remote:/backup/
 function detach --description 'Execute detach'
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold)
+    set -l c_flag (set_color yellow)
+    set -l c_arg (set_color cyan)
+    set -l c_reset (set_color normal)
+
     set -l show_help 0
     set -l args
 
@@ -45,16 +51,16 @@ function detach --description 'Execute detach'
     end
 
     if test $show_help -eq 1
-        echo "Usage: detach [command...]"
-        echo "Runs a command in the background, fully detached from the terminal."
+        echo "$c_head""Usage:$c_reset $c_cmd""detach$c_reset $c_arg""[command...]$c_reset"
+        echo "  Runs a command in the background, fully detached from the terminal."
         echo
-        echo "Options:"
-        echo "  -h, --help        Show this help message"
-        echo "  --version         Show version information"
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset        Show this help message"
+        echo "  $c_flag--version$c_reset         Show version information"
         echo
-        echo "Example:"
-        echo "  detach firefox"
-        echo "  detach rsync -a ./data remote:/backup/"
+        echo "$c_head""Example:$c_reset"
+        echo "  $c_cmd""detach$c_reset firefox"
+        echo "  $c_cmd""detach$c_reset rsync -a ./data remote:/backup/"
         return
     end
 

@@ -29,16 +29,21 @@ function spark --description 'Sparklines'
     if set --query _flag_version[1]
         echo "spark, version 1.1.0"
     else if set --query _flag_help[1]
-        echo "Usage: spark <numbers ...>"
-        echo "       stdin | spark"
-        echo "Options:"
-        echo "       --min=<number>   Minimum range"
-        echo "       --max=<number>   Maximum range"
-        echo "       -v or --version  Print version"
-        echo "       -h or --help     Print this help message"
-        echo "Examples:"
-        echo "       spark 1 1 2 5 14 42"
-        echo "       seq 64 | sort --random-sort | spark"
+        set -l c_head (set_color --bold cyan)
+        set -l c_cmd (set_color --bold)
+        set -l c_flag (set_color yellow)
+        set -l c_arg (set_color cyan)
+        set -l c_reset (set_color normal)
+        echo "$c_head""Usage:$c_reset $c_cmd""spark$c_reset $c_arg""<numbers ...>$c_reset"
+        echo "       stdin | $c_cmd""spark$c_reset"
+        echo "$c_head""Options:$c_reset"
+        echo "       $c_flag--min$c_reset""=$c_arg<number>$c_reset   Minimum range"
+        echo "       $c_flag--max$c_reset""=$c_arg<number>$c_reset   Maximum range"
+        echo "       $c_flag-v$c_reset or $c_flag--version$c_reset  Print version"
+        echo "       $c_flag-h$c_reset or $c_flag--help$c_reset     Print this help message"
+        echo "$c_head""Examples:$c_reset"
+        echo "       $c_cmd""spark$c_reset 1 1 2 5 14 42"
+        echo "       seq 64 | sort --random-sort | $c_cmd""spark$c_reset"
     else if set --query argv[1]
         printf "%s\n" $argv | spark --min="$_flag_min" --max="$_flag_max"
     else
