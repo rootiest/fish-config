@@ -28,16 +28,20 @@
 function p --description 'Put from clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv
-        echo "Usage: p [OPTIONS]"
+        set -l c_head (set_color --bold cyan)
+        set -l c_cmd (set_color --bold)
+        set -l c_flag (set_color yellow)
+        set -l c_dim (set_color brblack)
+        set -l c_reset (set_color normal)
+        echo "$c_head""Usage:$c_reset $c_cmd""p$c_reset $c_flag""[OPTIONS]$c_reset"
         echo ""
-        echo "Description:"
         echo "  Pastes content from the system clipboard to stdout."
         echo ""
-        echo "Examples:"
-        echo "  p                Print clipboard content"
-        echo "  p > file.txt     Save clipboard to a file"
-        echo "  p | grep 'foo'   Pipe clipboard content to another command"
-        echo "  cat (p)          Use clipboard content as a filename for cat"
+        echo "$c_head""Examples:$c_reset"
+        echo "  $c_cmd""p$c_reset                "$c_dim"Print clipboard content"$c_reset
+        echo "  $c_cmd""p$c_reset > file.txt     "$c_dim"Save clipboard to a file"$c_reset
+        echo "  $c_cmd""p$c_reset | grep 'foo'   "$c_dim"Pipe clipboard content to another command"$c_reset
+        echo "  cat ($c_cmd""p$c_reset)          "$c_dim"Use clipboard content as a filename for cat"$c_reset
         return 0
     end
 

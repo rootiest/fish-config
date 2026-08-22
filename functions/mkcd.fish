@@ -27,7 +27,7 @@
 #   mkcd ~/projects/newapp/src
 function mkcd --description 'Create a directory (with parents) and cd into it'
     set -l c_head (set_color --bold cyan)
-    set -l c_cmd  (set_color --bold white)
+    set -l c_cmd  (set_color --bold)
     set -l c_arg  (set_color cyan)
     set -l c_flag (set_color yellow)
     set -l c_ok   (set_color green)

@@ -41,16 +41,24 @@
 # NOTES
 #   Typo abbreviation: url-open (expands to open-url on space/enter).
 function open-url --description 'Open a URL in the best available web browser'
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold)
+    set -l c_flag (set_color yellow)
+    set -l c_arg (set_color cyan)
+    set -l c_reset (set_color normal)
+
     argparse h/help s/silent v/verbose -- $argv
     or return 1
 
     if set -q _flag_help
-        echo "Usage: open-url [-s|--silent] [-v|--verbose] <url>"
-        echo "Open a URL or file:// URI in the best available web browser."
+        echo "$c_head""Usage:$c_reset $c_cmd""open-url$c_reset $c_flag""[-s|--silent] [-v|--verbose]$c_reset $c_arg""<url>$c_reset"
         echo
-        echo "  -s, --silent   Suppress success output (the default)"
-        echo "  -v, --verbose  Print which browser is being launched"
-        echo "  -h, --help     Show this help"
+        echo "  Open a URL or file:// URI in the best available web browser."
+        echo
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset   Suppress success output (the default)"
+        echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset  Print which browser is being launched"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset     Show this help"
         return 0
     end
 

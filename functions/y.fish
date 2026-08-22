@@ -25,13 +25,18 @@
 function y --description 'Yank to clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv
-        echo "Usage: y [TEXT] or [COMMAND] | y"
+        set -l c_head (set_color --bold cyan)
+        set -l c_cmd (set_color --bold)
+        set -l c_arg (set_color cyan)
+        set -l c_dim (set_color brblack)
+        set -l c_reset (set_color normal)
+        echo "$c_head""Usage:$c_reset $c_cmd""y$c_reset $c_arg""[TEXT]$c_reset or $c_arg""[COMMAND]$c_reset | $c_cmd""y$c_reset"
         echo ""
-        echo "Examples:"
-        echo "  y \"hello world\"    Copy a string directly"
-        echo "  ls | y             Copy output of a command"
-        echo "  y < file.txt       Copy contents of a file"
-        echo "  cat file.txt | y   Another way to copy a file"
+        echo "$c_head""Examples:$c_reset"
+        echo "  $c_cmd""y$c_reset \"hello world\"    "$c_dim"Copy a string directly"$c_reset
+        echo "  ls | $c_cmd""y$c_reset             "$c_dim"Copy output of a command"$c_reset
+        echo "  $c_cmd""y$c_reset < file.txt       "$c_dim"Copy contents of a file"$c_reset
+        echo "  cat file.txt | $c_cmd""y$c_reset   "$c_dim"Another way to copy a file"$c_reset
         return 0
     end
 

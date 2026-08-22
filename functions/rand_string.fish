@@ -39,7 +39,7 @@
 #   much faster for files with >1000 lines.
 function rand_string --description 'Generate random, memorable strings from curated word databases'
     set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold white)
+    set -l c_cmd (set_color --bold)
     set -l c_arg (set_color cyan)
     set -l c_flag (set_color yellow)
     set -l c_rst (set_color normal)

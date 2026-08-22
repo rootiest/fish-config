@@ -63,14 +63,19 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
 
     # Helper function for help menu text
     function _scrub_help
-        echo (set_color --bold cyan)"Usage:"(set_color normal) "scrub [options]"
+        set -l c_head (set_color --bold cyan)
+        set -l c_cmd (set_color --bold)
+        set -l c_flag (set_color yellow)
+        set -l c_reset (set_color normal)
+
+        echo "$c_head""Usage:$c_reset $c_cmd""scrub$c_reset $c_flag""[options]$c_reset"
         echo
-        echo (set_color --bold cyan)"Options:"(set_color normal)
-        echo "  -a, --aggressive Purge advanced development artifacts, logs, and heavyweight caches"
-        echo "  -d, --dry-run    Show files/folders that would be targeted without removing them"
-        echo "  -h, --help       Display this help menu"
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-a$c_reset, $c_flag--aggressive$c_reset Purge advanced development artifacts, logs, and heavyweight caches"
+        echo "  $c_flag-d$c_reset, $c_flag--dry-run$c_reset    Show files/folders that would be targeted without removing them"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       Display this help menu"
         echo
-        echo (set_color --bold cyan)"Standard Targets:"(set_color normal)
+        echo "$c_head""Standard Targets:$c_reset"
         echo "  • OS Metadata:   .DS_Store, ._* (AppleDouble), Thumbs.db, .directory (KDE)"
         echo "  • Editors:       *.swp, *.swo (Vim/Nvim), .netrwhist"
         echo "  • Dev Caches:    __pycache__, .pytest_cache, .turbo, *-debug.log"

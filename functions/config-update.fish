@@ -28,7 +28,7 @@
 #   config-update --force
 function config-update --description 'Pull latest fish config from upstream'
     set -l c_head  (set_color --bold cyan)
-    set -l c_cmd   (set_color --bold white)
+    set -l c_cmd   (set_color --bold)
     set -l c_flag  (set_color yellow)
     set -l c_ok    (set_color green)
     set -l c_warn  (set_color yellow)
