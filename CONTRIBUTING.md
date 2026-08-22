@@ -36,6 +36,12 @@ catch problems on push.
 
 ## Branching & Pull Requests
 
+**If you don't have push access to this repo**, fork it and open your PR
+from a branch on your fork back to `main` here — everything below about
+branch naming and commit hygiene still applies, it just happens on your
+fork instead of a branch of this repo directly. The rest of this section
+assumes you *do* have push access (maintainers, regular contributors).
+
 - **Branch off `main` before starting work.** Don't accumulate uncommitted
   changes directly on `main`. (If you already started editing before
   branching, that's fine — create the branch now, before your first commit;
