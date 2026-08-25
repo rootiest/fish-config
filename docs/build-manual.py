@@ -20,7 +20,13 @@ import generate_component_registry
 DOCS = Path(__file__).parent
 MANUAL = DOCS / "manual"
 FUNCTIONS = DOCS.parent / "functions"
+COMPLETIONS = DOCS.parent / "completions"
 SLUG_DIR = "reference"
+
+# File-tree branches whose real directory contents get listed inline on the
+# Starlight site (never in the plain-text manual/man page, since only the
+# --site path runs box-drawing trees through _as_file_tree).
+EXPANDABLE_TREE_DIRS = {"functions/": FUNCTIONS, "completions/": COMPLETIONS}
 
 
 def _is_function_page(path: Path, root: Path) -> bool:
@@ -366,6 +372,11 @@ def _as_file_tree(para: list[str]) -> str | None:
         depth = len(prefix.replace('\t', '    ')) // 4
         indent = "  " * (depth + 1)
         out.append(f"{indent}- {name} {desc}".rstrip())
+        expand_dir = EXPANDABLE_TREE_DIRS.get(name)
+        if expand_dir is not None and expand_dir.is_dir():
+            child_indent = "  " * (depth + 2)
+            for entry in sorted((p.name for p in expand_dir.iterdir() if p.is_file()), key=str.lower):
+                out.append(f"{child_indent}- {entry}")
     out.append("</FileTree>")
     return "\n".join(out)
 

@@ -828,6 +828,61 @@ def test_as_file_tree_accepts_deeper_trees():
     ), f"unexpected file tree output:\n{out}"
 
 
+def test_as_file_tree_expands_functions_and_completions():
+    """The functions/ and completions/ branches list real directory contents."""
+    import build_manual
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        functions_dir = root / "functions"
+        functions_dir.mkdir()
+        (functions_dir / "zeta.fish").write_text("")
+        (functions_dir / "Alpha.fish").write_text("")
+
+        completions_dir = root / "completions"
+        completions_dir.mkdir()
+        (completions_dir / "bd.fish").write_text("")
+
+        original = dict(build_manual.EXPANDABLE_TREE_DIRS)
+        build_manual.EXPANDABLE_TREE_DIRS["functions/"] = functions_dir
+        build_manual.EXPANDABLE_TREE_DIRS["completions/"] = completions_dir
+        try:
+            para = [
+                "~/.config/fish/",
+                "├── functions/     Custom functions, one per file",
+                "└── completions/   Tab completion scripts",
+            ]
+            out = build_manual._as_file_tree(para)
+        finally:
+            build_manual.EXPANDABLE_TREE_DIRS.clear()
+            build_manual.EXPANDABLE_TREE_DIRS.update(original)
+
+    assert out == (
+        "<FileTree>\n"
+        "- ~/.config/fish/\n"
+        "  - functions/ Custom functions, one per file\n"
+        "    - Alpha.fish\n"
+        "    - zeta.fish\n"
+        "  - completions/ Tab completion scripts\n"
+        "    - bd.fish\n"
+        "</FileTree>"
+    ), f"unexpected file tree output:\n{out}"
+
+
+def test_as_file_tree_leaves_unrelated_branches_unexpanded():
+    """Only the mapped directory names get expanded; everything else is untouched."""
+    import build_manual
+
+    para = [
+        "$__fish_user_dots_path/",
+        "├── secrets.fish   API keys, tokens, passwords, personal identifiers",
+        "└── local.fish     Machine-specific paths, env vars, and sourcing secrets",
+    ]
+    out = build_manual._as_file_tree(para)
+    assert "secrets.fish" in out and "local.fish" in out
+    assert len(out.splitlines()) == 5, f"unexpected expansion of unrelated branches:\n{out}"
+
+
 def test_customization_notes_render_as_aside():
     """The real 07-customization NOTE paragraph converts to one intact <Aside>."""
     import build_manual
