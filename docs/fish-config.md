@@ -3025,11 +3025,14 @@ The primary prompt is Starship, initialized by conf.d/starship.fish.
 Configure it via ~/.config/starship.toml.
 
 conf.d/starship.fish defines a fish_prompt wrapper that only activates when
-starship is in PATH. It emits OSC 133;A (prompt start) immediately before
-Starship renders and OSC 133;B (input start) immediately after, placing both
-markers on the prompt line itself. This allows ov to use them as sticky
-section headers when browsing scrollback logs. Without Starship, fish's
-built-in prompt handles these markers automatically.
+starship is in PATH and C3 overrides are enabled (see Opinionated
+Components above). It emits OSC 133;A (prompt start) immediately before
+Starship renders and OSC 133;B (input start) immediately after, placing
+both markers on the prompt line itself. This allows ov to use them as
+sticky section headers when browsing scrollback logs. It also prints a
+blank line before the prompt, skipped in private mode or on a freshly
+cleared screen. Without Starship, fish's built-in prompt handles these
+markers automatically.
 
 ### Catppuccin Fallback Prompt
 
@@ -3037,50 +3040,87 @@ When Starship is absent or C3 overrides are disabled, a built-in nim-style
 two-line prompt activates from functions/fish_prompt.fish. No external
 dependencies — fish builtins only.
 
-Layout:
+Layout (a dim job line appears between the two rows for each running
+background job):
 
     ┬─[user@host:~/path] (main)
+    │ nvim notes.md
     ╰─>$
 
 Elements:
 
-    user        Yellow (Catppuccin Yellow); red if root
-    @host       Blue (local) or Teal (SSH)
-    ~/path      prompt_pwd abbreviation (Catppuccin Text)
-    (main)      Current git branch in Catppuccin Pink; omitted outside repos
-    ─[V:name]   Active Python venv basename; omitted when none
-    ─[N/I/R/V]  Vi-mode indicator when vi bindings are active
-    ┬─ / ╰─>    Connector lines: Catppuccin Green on success, Red on failure
+    Segment           Meaning
+    ────────────────────────────────────────────────────────────────
+    user              Yellow (Catppuccin Yellow); red if root
+    @host             Blue (local) or Teal (SSH)
+    ~/path            prompt_pwd abbreviation (Catppuccin Text)
+    ─[N/I/R/V/O]      Vi-mode indicator (Normal/Insert/Replace/Visual/Operator);
+                      shown only when vi or hybrid key bindings are active
+    ─[V:name]         Active Python venv basename; omitted when none
+    (main)            Current git branch in Catppuccin Pink, with ↑/↓
+                      upstream-tracking arrows when applicable;
+                      omitted outside repos
+    ┬─ / ╰─>          Connector lines: Catppuccin Green on success,
+                      Red on failure
 
-The right prompt (fish_right_prompt.fish) always renders, regardless of C3
-state. On failure it shows a red ✘ and the exit code; on success it shows
-only the dim timestamp. When starship is installed and C3 is enabled, the
-active Docker context is also shown (if non-default):
+The right prompt (fish_right_prompt.fish) always renders, independently of
+which left prompt is active:
 
-    ✘ 1   󰡨 myctx   Fri Jun 12 00:51:21 2026     ← failed, starship+C3 active
-    ✘ 1   Fri Jun 12 00:51:21 2026               ← failed, fallback prompt
-    Fri Jun 12 00:51:21 2026                     ← success (no ✘)
+    Segment           Shown when
+    ────────────────────────────────────────────────────────────────
+    ✘ <code>          The previous command exited non-zero (red)
+    󰡨 <context>       docker and starship are both installed, C3
+                      overrides are enabled, and the active Docker
+                      context is set and non-default
+    <timestamp>       Always (dim, Catppuccin Overlay0)
+
+The exit-status and Docker segments are independent — for example, right
+after a failing command with a non-default Docker context active:
+
+    ✘ 1  󰡨 myctx  Fri Jun 12 00:51:21 2026
+
+A successful command with the same Docker context shows the segment too:
+
+    󰡨 myctx  Fri Jun 12 00:51:21 2026
+
+And without Starship (or with C3 disabled, or Docker not installed), only
+the exit-status prefix and timestamp ever appear:
+
+    ✘ 1  Fri Jun 12 00:51:21 2026
 
 ### FZF
 
-FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS set in
-integrations/fzf.fish. The colors applied:
+FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS, set in
+conf.d/theme.fish (opinionated; disabled by `__fish_config_op_overrides`,
+see Opinionated Components above). The colors applied:
 
-    Background:   #1E1E2E (base)    #313244 (surface0)
-    Foreground:   #CDD6F4 (text)
-    Highlights:   #F38BA8 (red)     #CBA6F7 (mauve)    #B4BEFE (lavender)
+    Hex        Role                     Catppuccin name
+    ────────────────────────────────────────────────────────
+    #1E1E2E    Background               Base
+    #313244    Highlighted background   Surface0
+    #45475A    Selected background      Surface1
+    #CDD6F4    Foreground               Text
+    #F38BA8    Highlight / header       Red
+    #CBA6F7    Info / prompt            Mauve
+    #B4BEFE    Marker                   Lavender
+    #F5E0DC    Spinner / pointer        Rosewater
+    #6C7086    Border                   Overlay0
 
-To customize, override FZF_DEFAULT_OPTS in local.fish.
+To customize, override FZF_DEFAULT_OPTS in local.fish — it is sourced after
+conf.d/theme.fish on every session, so a `set -Ux FZF_DEFAULT_OPTS ...`
+there always wins.
 
 ### Catppuccin Mocha Syntax Highlighting
 
 The Catppuccin Mocha theme ships with this config in themes/ and is applied
-on first run via `conf.d/first_run.fish`. Colors are stored in fish_variables
-(universal). To switch variants, install a different theme from themes/:
+automatically on first run via `conf.d/first_run.fish` (gated by
+`__fish_config_op_autoexec`; see Opinionated Components above). Colors are
+stored in fish_variables (universal). Three other bundled variants are
+available in themes/ — Latte, Frappé, and Macchiato. To switch:
 
-    fish_config theme save "Catppuccin Latte"
+    fish_config theme choose "Catppuccin Latte"
 
-`---`
+---
 
 # 8. COMPONENTS REFERENCE
 
