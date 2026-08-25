@@ -626,17 +626,40 @@ def test_as_ruled_table_rejects_ambiguous_columns():
 
 
 def test_prettify_leaves_reference_tables_alone():
-    """Column-aligned blocks are data, not shell, and must not be fenced."""
+    """Column-aligned blocks too small for a real table are data, not shell,
+    and must not get shell syntax highlighting — but they still need SOME
+    fence, since indentation alone doesn't survive MDX (see
+    test_prettify_fallback_fences_instead_of_indenting)."""
     import build_manual
 
     table = "    XDG_CONFIG_HOME    ~/.config\n    XDG_CACHE_HOME     ~/.cache"
-    assert "```" not in build_manual.prettify(table), "a reference table got fenced"
+    out = build_manual.prettify(table)
+    assert "```fish" not in out, f"a reference table got shell-highlighted:\n{out}"
+    assert "```text" in out, f"a reference table lost its fence:\n{out}"
 
     binds = "    n / nv / neovim    nvim\n    e                  edit"
-    assert "```" not in build_manual.prettify(binds), "an abbreviation table got fenced"
+    out = build_manual.prettify(binds)
+    assert "```fish" not in out, f"an abbreviation table got shell-highlighted:\n{out}"
+    assert "```text" in out, f"an abbreviation table lost its fence:\n{out}"
 
     shell = "    set -U __fish_user_dots_path /path/to/dots"
     assert "```fish" in build_manual.prettify(shell), "a shell block was not fenced"
+
+
+def test_prettify_fallback_fences_instead_of_indenting():
+    """The catch-all fallback must emit a fenced block, not bare indentation.
+
+    MDX (used for any page that also carries an <Aside> or <FileTree>) has
+    no indented-code-block syntax: a plain 4-space-indented block silently
+    renders as flowed paragraph text there, collapsing every line break. A
+    fenced block is the only fallback shape that's safe in both MDX and
+    plain Markdown.
+    """
+    import build_manual
+
+    para = ["✘ 1   Fri Jun 12 00:51:21 2026     ← failed"]
+    out = build_manual._render_para(para, None, False)
+    assert out == "```text\n" + para[0] + "\n```", f"unexpected fallback output:\n{out}"
 
 
 def test_prettify_titles_paths_and_commented_examples():

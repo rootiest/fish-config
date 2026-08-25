@@ -195,7 +195,7 @@ SHELL_HEADS = frozenset(
     if jobs kitty ls man math mkdir mv nvim npm pacman paru pip pip3 pkg printf
     python python3 rm set shutdown source string sudo switch systemctl test time
     tmux touch trash type wget wezterm while yay zellij zypper
-    fish_default_key_bindings fish_vi_key_bindings
+    fish_default_key_bindings fish_vi_key_bindings fish_config
     """.split()
 )
 
@@ -405,7 +405,13 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
     table = _as_ruled_table(para) or _as_table(para) or _as_file_tree(para)
     if table is not None:
         return table
-    return "\n".join(INDENT + line for line in para)
+    # MDX (used for any page that also carries an <Aside> or <FileTree>)
+    # has no indented-code-block syntax — a plain 4-space-indented block
+    # silently renders as flowed paragraph text there, collapsing every
+    # line break. A fenced block works in both MDX and plain Markdown, so
+    # it's the only fallback that's safe regardless of which one a given
+    # page ends up promoted to.
+    return "```text\n" + "\n".join(para) + "\n```"
 
 
 def _prettify_block(block: list[str], entry_name: str | None) -> str:
