@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import codespans
 import manualtools as mt
 
 # docs/build-manual.py follows this repo's hyphenated CLI-script naming
@@ -470,8 +471,8 @@ def test_prettify_splits_an_entry_block():
         "option table was not converted to a markdown table"
     )
     assert (
-        "\nFalls back to /usr/bin/rm when trash is unavailable." in out
-    ), "trailing prose stayed indented"
+        "\nFalls back to `/usr/bin/rm` when trash is unavailable." in out
+    ), "trailing prose stayed indented (or lost its path code span)"
 
 
 def test_as_table_converts_option_blocks():
@@ -895,7 +896,10 @@ def test_customization_notes_render_as_aside():
     assert aside.count("  - ") == 4, f"expected exactly 4 bullets inside the aside:\n{aside}"
     assert "- Command shadows (rm, cat, ls, ...) react immediately" in aside
     assert "- With aliases disabled, rm falls back to bare `command rm`" in aside
-    assert "- Disabled integration commands (spwin, tab, split, hist, logs, upgrade)" in aside
+    assert (
+        "- Disabled integration commands "
+        "(`spwin`, `tab`, `split`, `hist`, `logs`, `upgrade`)" in aside
+    )
     assert "- On CachyOS, the distro fish config's own aliases" in aside
 
 
@@ -1233,6 +1237,177 @@ def test_committed_registry_matches_headers():
         "conf.d/__fish_config_op_registry.fish is stale — run "
         "__fish_config_op_registry_rebuild"
     )
+
+
+
+# ---------------------------------------------------------------------------
+# codespans: inline code spans added at site-render time
+# ---------------------------------------------------------------------------
+
+_REPO = Path(__file__).parent.parent
+
+
+def _spans(text: str) -> str:
+    return codespans.add_code_spans(text, codespans.vocabulary(_REPO))
+
+
+def test_codespans_wraps_each_half_of_a_flag_pair():
+    """`-a/--all` is the manual's usual way of naming a flag and its alias."""
+    got = _spans("Use -a/--all to include both, or -s/--stdout to print.")
+    assert got == "Use `-a`/`--all` to include both, or `-s`/`--stdout` to print.", got
+
+
+def test_codespans_wraps_override_variables_and_snake_case():
+    got = _spans("Disabled via __fish_config_op_aliases; see _fdc_bins and fish_greeting.")
+    assert got == (
+        "Disabled via `__fish_config_op_aliases`; see `_fdc_bins` and `fish_greeting`."
+    ), got
+
+
+def test_codespans_wraps_paths_vars_env_and_key_chords():
+    cases = {
+        "Sourced from ~/.config/fish/config.fish.": (
+            "Sourced from `~/.config/fish/config.fish`."
+        ),
+        "honoring $XDG_CONFIG_HOME/aichat/roles/cli.md.": (
+            "honoring `$XDG_CONFIG_HOME/aichat/roles/cli.md`."
+        ),
+        "Launches with NO_TMUX=1 set.": "Launches with `NO_TMUX=1` set.",
+        "end the session with Ctrl-D or Ctrl+Alt+F.": (
+            "end the session with `Ctrl-D` or `Ctrl+Alt+F`."
+        ),
+    }
+    for source, want in cases.items():
+        assert _spans(source) == want, f"{source!r} -> {_spans(source)!r}"
+
+
+def test_codespans_leaves_existing_spans_and_fences_alone():
+    body = "\n".join(
+        [
+            "Already `--wrapped` here.",
+            "",
+            "```fish",
+            "rm -e --empty ~/.config/fish",
+            "```",
+            "",
+            "## --not-a-flag-heading",
+            "",
+            "<Aside type=\"note\" title=\"Note\">",
+            "See --verbose.",
+            "</Aside>",
+        ]
+    )
+    got = _spans(body).split("\n")
+    assert got[0] == "Already `--wrapped` here.", got[0]
+    assert got[3] == "rm -e --empty ~/.config/fish", "a fenced line was rewritten"
+    assert got[6] == "## --not-a-flag-heading", "a heading was rewritten"
+    assert got[8].startswith("<Aside"), "component markup was rewritten"
+    assert got[9] == "See `--verbose`.", "aside body was not processed"
+
+
+def test_codespans_leaves_file_tree_bodies_alone():
+    """<FileTree> list items are filenames the component renders itself."""
+    body = "<FileTree>\n- ~/.config/fish/\n  - config.fish\n</FileTree>"
+    assert _spans(body) == body
+
+
+def test_codespans_leaves_links_and_urls_alone():
+    cases = [
+        "See [`fish-deps`](/reference/dependency-management/fish-deps/) for more.",
+        "Clone from ssh://git@host/owner/repo.git today.",
+        "Docs live at https://fish.rootiest.fyi/07-customization/ online.",
+    ]
+    for source in cases:
+        assert _spans(source) == source, f"{source!r} -> {_spans(source)!r}"
+
+
+def test_codespans_ignores_prose_that_only_looks_like_code():
+    """Every one of these has bitten a looser version of the pattern set."""
+    cases = [
+        "the registry -- not the cache -- is rebuilt",
+        "the everyday filesystem-inspection and -modification shadows",
+        "expand !^, !*, !-N and !?str? abbreviations",
+        "grep/cp/mv/wget flag injection",
+        "resolved and/or rejected",
+        "a _really_ important caveat",
+        "the TCP and AGPL acronyms",
+    ]
+    for source in cases:
+        assert _spans(source) == source, f"{source!r} -> {_spans(source)!r}"
+
+
+def test_codespans_wraps_a_command_shadow_chain():
+    got = _spans("Falls back through ov -> bat -> man -> less -> cat.")
+    assert got == "Falls back through `ov` -> `bat` -> `man` -> `less` -> `cat`.", got
+
+
+def test_codespans_wraps_long_runs_of_tool_names_only():
+    """Two names, one of them an English word, is a sentence -- not a list."""
+    got = _spans("Supports paru, yay, pacman, apt, dnf, zypper, yum, brew, and pkg.")
+    assert got == (
+        "Supports `paru`, `yay`, `pacman`, `apt`, `dnf`, `zypper`, `yum`, "
+        "`brew`, and `pkg`."
+    ), got
+    got = _spans("the custom rm function, trashy, or trash-cli")
+    assert got == "the custom rm function, `trashy`, or trash-cli", got
+
+
+def test_codespans_wraps_whole_cells_only_in_command_columns():
+    """A column of expansions becomes code; a column of prose stays prose."""
+    commands = "\n".join(
+        [
+            "| Abbreviation | Description |",
+            "|---|---|",
+            "| `..` | cd .. |",
+            "| `jctl` | journalctl -p 3 -xb |",
+            "| `sudu` | sudo -s |",
+            "| `kt` | kitty (Kitty only) |",
+        ]
+    ).split("\n")
+    got = _spans("\n".join(commands)).split("\n")
+    assert got[2] == "| `..` | `cd ..` |", got[2]
+    assert got[3] == "| `jctl` | `journalctl -p 3 -xb` |", got[3]
+    assert got[4] == "| `sudu` | `sudo -s` |", got[4]
+    assert got[5] == "| `kt` | `kitty` (Kitty only) |", got[5]
+
+    prose = "\n".join(
+        [
+            "| Command | Active behavior |",
+            "|---|---|",
+            "| `cd` | zoxide frecency-based navigation |",
+            "| `top` | btop resource monitor |",
+            "| `mkdir` | verbose path-tree display on creation |",
+            "| `history` | timestamps prepended to every entry |",
+        ]
+    )
+    got = _spans(prose).split("\n")
+    assert got[2] == "| `cd` | `zoxide` frecency-based navigation |", got[2]
+    assert got[3] == "| `top` | `btop` resource monitor |", got[3]
+
+
+def test_codespans_merges_abutting_new_spans():
+    """One command line reads as one span, not as a row of adjacent ones."""
+    got = _spans("| `ls` | eza -l -a --icons --hyperlink | system ls |")
+    assert got == "| `ls` | `eza -l -a --icons --hyperlink` | system ls |", got
+
+
+def test_codespans_vocabulary_comes_from_the_deps_catalog():
+    """A tool added to _fish_deps_catalog.fish needs no second list."""
+    names = codespans.dependency_names(_REPO)
+    assert {"fzf", "zoxide", "prettyping"} <= names, sorted(names)[:20]
+    vocab = codespans.vocabulary(_REPO)
+    assert "zoxide" in vocab.strict, "an unambiguous tool name should be wrappable"
+    assert "find" not in vocab.strict, "an English word must not be wrappable on sight"
+    assert "find" in vocab.full, "…but it still counts as a command-line opener"
+
+
+def test_codespans_is_site_only():
+    """The concat (man page, config-help) keeps the plain-text form."""
+    import build_manual
+
+    text = build_manual.build_concat(Path(__file__).parent / "manual")
+    assert "-r/--resume" in text, "sanity: the bare flag-pair form is what's authored"
+    assert "`-r`/`--resume`" not in text, "code spans leaked into the man-page pipeline"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

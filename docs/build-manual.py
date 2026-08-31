@@ -8,12 +8,14 @@
 """
 
 import argparse
+import functools
 import json
 import re
 import shutil
 import sys
 from pathlib import Path
 
+import codespans
 import manualtools as mt
 import generate_component_registry
 
@@ -484,12 +486,21 @@ def _as_aside(para: list[str]) -> str | None:
     return f"<Aside {attrs}>\n{body}\n</Aside>"
 
 
+@functools.lru_cache(maxsize=1)
+def _code_vocabulary() -> codespans.Vocabulary:
+    """The command names codespans may wrap, read from the repo once."""
+    return codespans.vocabulary(DOCS.parent)
+
+
 def prettify(body: str, entry_name: str | None = None) -> str:
     """Rewrite a body's indented code blocks and labeled asides for the website.
 
     Site-only: the man page and `config-help` keep reading the untouched
     SSOT, where the indented form and the `LABEL:` text are exactly what
-    pandoc/`config-help` want.
+    pandoc/`config-help` want. The same applies to the inline code spans
+    added last: `-a/--all` and `__fish_config_op_aliases` are authored bare
+    so the `functions/*.fish` headers stay readable as plain text, and the
+    backticks the site wants are put on here rather than in the SSOT.
     """
     out: list[str] = []
     block: list[str] = []
@@ -528,7 +539,7 @@ def prettify(body: str, entry_name: str | None = None) -> str:
         while block and not block[-1].strip():
             block.pop()
         out.append(_prettify_block(block, entry_name))
-    return "\n".join(out)
+    return codespans.add_code_spans("\n".join(out), _code_vocabulary())
 
 
 ENTRY_HEADS = {
