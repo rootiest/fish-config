@@ -51,6 +51,16 @@ assumes you *do* have push access (maintainers, regular contributors).
 - **Don't merge until the `## Verification` checklist is fully checked.**
   Unchecked boxes are outstanding manual checks, not decoration. See
   [Pull request descriptions](#pull-request-descriptions) below.
+- **Prefix in-progress PRs with `WIP:`.** If the branch still has code
+  changes coming, open it as `WIP: type(scope): description`. Gitea
+  recognizes the prefix, flags the PR as a draft, and refuses to merge it
+  until the prefix is removed; drop it once the branch is complete.
+
+  `WIP:` signals **more changes are coming** — not "done but unverified".
+  A finished branch waiting on manual checks is an ordinary PR whose
+  `## Verification` boxes aren't all ticked yet; that's already the merge
+  gate above and doesn't need the prefix. The two are independent: a PR
+  can be WIP with everything ticked, or complete with checks outstanding.
 - **Keep feature branches focused.** If you stumble onto something unrelated
   to your current task while working (a pre-existing bug, a stray cleanup),
   don't fold it into the same commit or PR. Handle it with one of these,

@@ -6,6 +6,17 @@
     Types in use: feat, fix, docs, test, chore, perf, refactor, style.
     See CONTRIBUTING.md § Commit Conventions.
 
+  Still writing code? Prefix the title with `WIP:` —
+    WIP: feat(media): add play-media fzf picker
+  Gitea recognizes the prefix, marks the PR a draft, and blocks merging
+  until you remove it. The prefix goes before the whole conventional
+  subject, and comes off when the branch is complete.
+
+  `WIP:` means MORE CHANGES ARE COMING. It is not for a finished branch
+  waiting on verification — that is what an unchecked box in Verification
+  already signals. A complete branch with open checkboxes is a normal PR,
+  not a WIP.
+
   Keep the two headings below, in this order, and delete these comments.
   Optional sections may be added between them (see the note above
   "Verification").
