@@ -1,0 +1,71 @@
+name: Sync labels to mirror
+
+# Labels do not travel with a mirror push -- mirroring copies files, not
+# repository settings -- but they matter on the GitHub side anyway, because
+# GitHub reads the same .github/ISSUE_TEMPLATE/ files and silently drops a
+# labels: entry naming a label it does not have. Gitea is the source of
+# truth; this makes the mirror match.
+
+on:
+  schedule:
+    # 06:00 UTC daily. Label churn is rare, so a slower cadence than this
+    # would leave the mirror wrong for most of a working day after an edit.
+    - cron: "0 6 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      # Exercise the sync as soon as its own logic changes, rather than
+      # waiting for the next scheduled run to find out it is broken.
+      - "scripts/sync-labels.py"
+      - ".github/workflows/sync-labels.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report the plan without changing anything"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  sync-labels:
+    # This file is mirrored to GitHub as-is. The runner label below only
+    # exists on the Gitea instance, so on GitHub the job would sit queued
+    # forever against a runner that will never pick it up -- the same
+    # problem the github-mirror stand-in in ci.yml exists to solve. A
+    # skipped job costs nothing and produces no stuck status.
+    if: github.server_url != 'https://github.com'
+    runs-on: racknerd-mini
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITEA_TOKEN }}
+
+      - name: Install Python
+        run: |
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install \
+            --no-install-recommends -y python3
+
+      # Cheap, offline, and no token needed. Catches a broken diff before
+      # anything is allowed to mutate labels on the mirror.
+      - name: Check the diff logic
+        run: python3 scripts/sync-labels.py --self-test
+
+      - name: Sync labels
+        env:
+          GH_MIRROR_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+        run: |
+          if [ -z "$GH_MIRROR_TOKEN" ]; then
+            echo "::error::GH_MIRROR_TOKEN is not set in this repository's Actions secrets."
+            echo "Create a fine-grained GitHub token scoped to rootiest/fish-config with"
+            echo "Issues: read and write, plus Pull requests: read, and add it as"
+            echo "GH_MIRROR_TOKEN under Settings -> Actions -> Secrets."
+            exit 1
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python3 scripts/sync-labels.py --dry-run
+          else
+            python3 scripts/sync-labels.py
+          fi
