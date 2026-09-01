@@ -3130,9 +3130,9 @@ category variable.
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────
-    C1         Command Shadows — Wraps destructive commands (`rm`, `cp`) to be safe by default
+    C1         Command Shadows — Wraps destructive commands (rm, cp) to be safe by default
     C2         Startup Side-Effects — Bootstraps Fisher, generates wrappers, auto-activates venvs
-    C3         Overrides — Overrides `cd`, sets Vi mode, binds `<CR>` to `smart_enter`
+    C3         Overrides — Overrides cd, sets Vi mode, binds <CR> to smart_enter
     C4         Integrations — Kitty/Wezterm integrations, starship hooks, fzf theme
     C5         Logging and Capture — Session logs, command duration
     C6         Greeting & First-Run UI — Custom startup banner
@@ -3401,16 +3401,16 @@ CAUTION: This configuration is capable of silently recording terminal output and
     Component               What it captures
     ───────────────────────────────────────────────────────────────────────────
     Scrollback capture      Terminal session output saved to:
-                            `~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
     tmux pane capture       Continuous pane stream via pipe-pane, saved to:
-                            `~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
     zellij pane capture     Pane scrollback snapshot on shell exit, saved to:
-                            `~/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
     paru wrapper            All paru/AUR output captured to:
-                            `~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
     yay wrapper             All yay/AUR output captured to:
-                            `~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log`
-    Kitty watcher           `watcher.py` captures scrollback when Kitty closes
+                            ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
+    Kitty watcher           watcher.py captures scrollback when Kitty closes
 
 NOTE: **Turning off logging does not delete any existing logs.**  
 They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)
@@ -3441,7 +3441,7 @@ LIMITATION — `zellij` capture only fires on a clean shell exit (typing `exit`,
 NOT capture when you close a pane or quit `zellij` through `zellij` itself:
 
   - Closing a pane signals the shell and tears the pane down concurrently, so
-    even if the handler runs, `dump-screen` may find the pane buffer already
+    even if the handler runs, dump-screen may find the pane buffer already
     gone.
   - Quitting `zellij` kills the `zellij` server, and `dump-screen` needs a live
     server to read from — there is nothing left to snapshot.
@@ -3476,7 +3476,7 @@ start, so it appears without any action on your part.
 Disabling `__fish_config_op_logging` (or leaving it unset):
   1. Creates the sentinel immediately in every open shell.
   2. Removes `~/.local/bin/paru` and `~/.local/bin/yay` logging wrappers;
-     bare `/usr/bin/paru` and `/usr/bin/yay` are used instead.
+     bare /usr/bin/paru and /usr/bin/yay are used instead.
   3. Kitty's `watcher.py` reads the sentinel on each save attempt and
      skips capture — no Kitty restart required.
   4. `smart_exit` stops saving scrollback logs.
@@ -3654,8 +3654,8 @@ The `fish_plugins` file at the config root:
 - [`jorgebucaran/fisher`](https://github.com/jorgebucaran/fisher) — Plugin manager itself
 - [`meaningful-ooo/sponge`](https://github.com/meaningful-ooo/sponge) — Remove failed commands from history
 
-To update all Fisher-managed plugins, run `fisher update` or `fish-deps
-update` which calls it as its first step.
+To update all Fisher-managed plugins, run `fisher update` or
+`fish-deps update` which calls it as its first step.
 
 ---
 
@@ -3953,9 +3953,9 @@ This configuration groups its opinionated behaviors into six categories (C1–C6
 
     Category   Description
     ──────────────────────────────────────────────────────────────────────────
-    C1         Command Shadows — Wraps destructive commands (`rm`, `cp`) to be safe by default
+    C1         Command Shadows — Wraps destructive commands (rm, cp) to be safe by default
     C2         Startup Side-Effects — Bootstraps Fisher, generates wrappers, auto-activates venvs
-    C3         Overrides — Overrides `cd`, sets Vi mode, binds `<CR>` to `smart_enter`
+    C3         Overrides — Overrides cd, sets Vi mode, binds <CR> to smart_enter
     C4         Integrations — Kitty/Wezterm integrations, starship hooks, fzf theme
     C5         Logging and Capture — Session logs, command duration
     C6         Greeting & First-Run UI — Custom startup banner
