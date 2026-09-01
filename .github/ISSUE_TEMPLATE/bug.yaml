@@ -1,0 +1,143 @@
+name: Bug report
+about: Something in the config is broken or behaves unexpectedly
+labels:
+  - Kind/Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug.
+
+        **Title it as a plain description of the problem**, not as a
+        conventional-commit subject — `mv clobbers a symlink when the target
+        exists`, not `fix(mv): ...`. The commit format belongs on the PR that
+        fixes this; the `Kind/` and `Area/` labels carry type and scope here.
+
+        Before filing, please confirm the problem survives a fresh shell
+        (`exec fish`) — a stale function definition in a long-lived session is
+        the single most common false alarm.
+
+  - type: input
+    id: fish-version
+    attributes:
+      label: fish version
+      description: Output of `fish --version`. This config targets fish 4.x.
+      placeholder: fish, version 4.0.2
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: Distribution and version, or macOS release.
+      placeholder: Arch Linux (CachyOS), kernel 6.12.4
+    validations:
+      required: true
+
+  - type: input
+    id: terminal
+    attributes:
+      label: Terminal emulator
+      description: >-
+        Only matters for rendering, key bindings, and color problems. Leave it
+        blank if the bug has nothing to do with those.
+      placeholder: kitty 0.42.1
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: >-
+        Which part of the config is affected? Pick the closest match — a
+        maintainer translates this into the matching `Area/` label at triage,
+        since contributors without push access can't set labels themselves.
+        Choose "Not sure" rather than guessing.
+      options:
+        - Not sure
+        - Functions (functions/)
+        - Completions (completions/)
+        - Config and startup (config.fish, conf.d/)
+        - Docs (docs/manual/, man page, docs site)
+        - Tests (tests/)
+        - CI (.github/workflows/)
+        - Integrations (integrations/)
+        - Prompt and theme (themes/)
+        - Opinionated components (C1-C6 toggles)
+        - Scripts (scripts/)
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What's broken
+      description: One or two sentences. Name the function or file if you know it.
+      placeholder: >-
+        `mv` replaces an existing symlink instead of prompting, so the link
+        target is lost with no confirmation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        Exact commands, starting from a fresh shell, that someone else can
+        paste and run. Include any setup needed to reach the broken state.
+      render: fish
+      placeholder: |
+        exec fish
+        mkdir -p /tmp/repro; cd /tmp/repro
+        touch real; ln -s real link
+        mv real link
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you thought those commands would do.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: >-
+        What happened instead. Paste the complete output, including any error
+        text and stack traces — truncated errors are the usual reason a bug
+        report stalls in Status/Need More Info.
+      render: text
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched the existing issues and this isn't already reported.
+          required: true
+        - label: I reproduced this in a fresh shell (`exec fish`), not a long-lived session.
+          required: true
+        - label: I ran `fish tests/run-tests.fish` and noted the result below (or in the output above).
+          required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: >-
+        Anything else worth knowing: a private overlay in
+        `~/.config/.user-dots/fish/` that may be involved, opinionated
+        components you've disabled, the last commit where it worked. Never
+        paste credentials, tokens, or machine-specific paths you'd rather not
+        publish.
+    validations:
+      required: false

@@ -9,6 +9,7 @@ treat it as a living document, not a final word.
 ## Table of Contents
 
 - [Getting Started](#getting-started)
+- [Issues](#issues)
 - [Branching & Pull Requests](#branching--pull-requests)
 - [Commit Conventions](#commit-conventions)
 - [Fish Coding Standards](#fish-coding-standards)
@@ -33,6 +34,72 @@ If you're touching anything under `docs/manual/`, you'll also want `pandoc`,
 `python3-yaml`, and Node 24+ to exercise the full doc-build pipeline locally
 (see [Documentation Pipeline](#documentation-pipeline)) — otherwise CI will
 catch problems on push.
+
+## Issues
+
+Issues live on the Gitea repo. Three templates cover the common cases, each
+pre-applying its `Kind/` label; blank issues stay enabled for everything else
+— a chore, a refactor, a question, a tracking issue.
+
+| Template | Format | Use it for | Applies |
+|---|---|---|---|
+| **Bug report** | web form | Something is broken or behaves unexpectedly | `Kind/Bug` |
+| **Feature or enhancement request** | markdown | New functionality, or an improvement to what exists | `Kind/Feature` |
+| **Documentation issue** | markdown | The manual, man page, `config-help`, or docs site is wrong, missing, or unclear | `Kind/Documentation` |
+
+They live in `.github/ISSUE_TEMPLATE/`, next to the PR template, so the
+GitHub mirror offers the same set. The bug report is a Gitea *issue form* —
+a real web form with required fields — because a bug report missing its
+version, reproduction, or full error text can't be acted on, and a form
+refuses to submit without them. The other two are markdown templates in the
+same comment-guided style as `.github/PULL_REQUEST_TEMPLATE.md`, since what
+they ask for is open-ended prose that structure would only get in the way of.
+
+### Issue titles
+
+**Issue titles are plain descriptions of the problem, not Conventional
+Commits subjects.**
+
+```text
+mv clobbers a symlink when the target exists            ← yes
+fix(mv): prompt before replacing an existing symlink    ← no
+```
+
+An issue states a problem; a commit states a change. The type and scope that
+`fix(mv):` would carry are already on the issue as its `Kind/` and `Area/`
+labels, and the conventional subject belongs on the PR that closes it, where
+it becomes the commit message. Writing the fix into the title also presumes
+one, which is the wrong end to start from for anything still being diagnosed.
+
+### What an issue owes
+
+- **A bug** needs a reproduction someone else can paste and run, starting
+  from a fresh shell, plus the complete error output. A stale function
+  definition in a long-lived session is the most common false alarm, so
+  confirm it survives `exec fish` first. `Status/Need More Info` is where
+  reports without a reproduction end up.
+- **A feature** needs `## Acceptance criteria` — the checkbox list of what
+  must be true for the issue to close. It is the issue-side counterpart to a
+  PR's `## Verification`: a definition of done agreed before the work starts
+  rather than argued about after, and the PR's checks usually grow out of it.
+- **A docs issue** needs to name the `docs/manual/**` source, not just the
+  page where the problem showed up. `docs/fish-config.md` and
+  `docs/fish-config.1` are generated, and a fix applied there is overwritten
+  by the next CI run — see [Documentation
+  Pipeline](#documentation-pipeline).
+
+### Triage
+
+Reporters aren't expected to label anything. Contributors without push access
+can't, and the templates apply the `Kind/` label by themselves; the rest is
+the maintainer's job when the issue is triaged — add the `Area/` label (the
+bug form's **Area** dropdown is how a reporter tells you, since no forge can
+map a form field to a label), set a `Priority/` if it isn't ordinary, and
+apply `Reviewed/Confirmed` once a bug actually reproduces. See
+[Labels](#labels).
+
+When a PR resolves an issue it closes it with a trailing `Closes #N` line —
+see [Pull request descriptions](#pull-request-descriptions).
 
 ## Branching & Pull Requests
 

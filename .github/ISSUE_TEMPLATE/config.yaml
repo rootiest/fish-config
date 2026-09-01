@@ -1,0 +1,13 @@
+# Gitea reads this alongside the templates in this directory.
+# Blank issues stay enabled deliberately: the three templates cover bugs,
+# features, and docs, and anything else (a chore, a refactor, a question)
+# is better served by an empty box than by a template that doesn't fit.
+blank_issues_enabled: true
+
+contact_links:
+  - name: Contributing guide
+    url: https://git.rootiest.dev/rootiest/fish-config/src/branch/main/CONTRIBUTING.md
+    about: Branch naming, commit conventions, coding standards, and the label taxonomy.
+  - name: Customization and personal overrides
+    url: https://git.rootiest.dev/rootiest/fish-config/src/branch/main/docs/manual/07-customization.md
+    about: Want to change behavior on just your machine? Use your private overlay — no issue needed.
