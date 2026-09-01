@@ -243,8 +243,21 @@ Write doc-headers as plain text — no backticks. `-a/--all`,
 `__fish_config_op_aliases` and `~/.config/fish/config.fish` are typed
 bare, because the header is also read as-is by `config-help` and by
 anyone opening the file. `docs/codespans.py` adds the inline code spans
-the docs site wants when it renders, so the SSOT never carries them; see
-`docs/site/README.md` for which shapes it recognises.
+when it renders, so the SSOT never carries them; see
+`docs/site/README.md` for which shapes it recognises. That pass runs for
+every output — the site, the man page and `config-help` — so a token is
+typeset the same way wherever it is read.
+
+Two rules apply to backticks you write under `docs/manual/` as well:
+
+- **Never inside an indented block.** A four-space block is verbatim in
+  every renderer, so a backtick there is a literal character on the page
+  rather than markup.
+- **Never wrapped across a line break.** Markdown accepts a span split
+  over two lines, but `config-help` pairs backticks one line at a time
+  and would show the halves literally. Reflow the sentence instead.
+
+`docs/verify-manual.py` enforces both.
 
 ## Testing
 
