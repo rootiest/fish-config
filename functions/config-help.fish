@@ -77,6 +77,27 @@ function config-help --description 'Open the offline fish shell configuration ma
     if test -n "$section_kw"
         set -l norm_kw (string lower -- $section_kw | string replace -ra '[^a-z0-9]' '')
 
+        # Singular/plural variants of the keyword. The heading scan below
+        # matches a keyword that is *contained in* a heading, so a plural
+        # never reaches a singular heading on its own: `customization`
+        # finds "7. CUSTOMIZATION", `customizations` finds nothing. The
+        # keyword as typed is always tried first and alone; these only run
+        # when it matched nothing at all.
+        set -l kw_variants $norm_kw
+        if test -n "$norm_kw"
+            if string match -qr 's$' -- $norm_kw
+                if string match -qr 'ies$' -- $norm_kw
+                    set -a kw_variants (string replace -r 'ies$' y -- $norm_kw)
+                end
+                if string match -qr 'es$' -- $norm_kw
+                    set -a kw_variants (string replace -r 'es$' '' -- $norm_kw)
+                end
+                set -a kw_variants (string replace -r 's$' '' -- $norm_kw)
+            else
+                set -a kw_variants "$norm_kw"s "$norm_kw"es
+            end
+        end
+
         # 1. Index lookup (keyword aliases)
         if test -f "$idx_file"
             while read -l idxline
@@ -84,7 +105,7 @@ function config-help --description 'Open the offline fish shell configuration ma
                 set -l kv (string split -m 1 '=' -- $idxline)
                 test (count $kv) -lt 2; and continue
                 set -l k (string lower -- $kv[1] | string replace -ra '[^a-z0-9]' '')
-                if test "$k" = "$norm_kw"
+                if contains -- $k $kw_variants
                     set found_text $kv[2]
                     break
                 end
@@ -92,13 +113,22 @@ function config-help --description 'Open the offline fish shell configuration ma
         end
 
         # 2. Normalized heading scan fallback
+        # Each variant is tried against every heading before the next one
+        # is considered, so a loose plural never beats an exact hit that
+        # appears further down the document.
         if test -z "$found_text"; and test -f "$doc_file"
-            for entry in (grep -n "^#" "$doc_file")
-                set -l parts (string split -m 1 ':' -- $entry)
-                set -l text $parts[2]
-                set -l norm_text (string lower -- $text | string replace -ra '[^a-z0-9]' '')
-                if string match -q "*$norm_kw*" $norm_text
-                    set found_text $text
+            set -l heading_lines (grep -n "^#" "$doc_file")
+            for kw in $kw_variants
+                for entry in $heading_lines
+                    set -l parts (string split -m 1 ':' -- $entry)
+                    set -l text $parts[2]
+                    set -l norm_text (string lower -- $text | string replace -ra '[^a-z0-9]' '')
+                    if string match -q "*$kw*" $norm_text
+                        set found_text $text
+                        break
+                    end
+                end
+                if test -n "$found_text"
                     break
                 end
             end
