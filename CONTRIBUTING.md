@@ -9,7 +9,9 @@ treat it as a living document, not a final word.
 ## Table of Contents
 
 - [Getting Started](#getting-started)
+- [Issues](#issues)
 - [Branching & Pull Requests](#branching--pull-requests)
+- [Labels](#labels)
 - [Commit Conventions](#commit-conventions)
 - [Fish Coding Standards](#fish-coding-standards)
 - [Opinionated Components](#opinionated-components)
@@ -34,6 +36,79 @@ If you're touching anything under `docs/manual/`, you'll also want `pandoc`,
 (see [Documentation Pipeline](#documentation-pipeline)) — otherwise CI will
 catch problems on push.
 
+## Issues
+
+Issues live on the Gitea repo. Three templates cover the common cases, each
+pre-applying its `Kind/` label; blank issues stay enabled for everything else
+— a chore, a refactor, a question, a tracking issue.
+
+| Template | Format | Use it for | Applies |
+|---|---|---|---|
+| **Bug report** | web form | Something is broken or behaves unexpectedly | `Kind/Bug` |
+| **Feature or enhancement request** | markdown | New functionality, or an improvement to what exists | `Kind/Feature` |
+| **Documentation issue** | markdown | The manual, man page, `config-help`, or docs site is wrong, missing, or unclear | `Kind/Documentation` |
+
+They live in `.github/ISSUE_TEMPLATE/`, next to the PR template, so the
+GitHub mirror offers the same set. The bug report is a Gitea *issue form* —
+a real web form with required fields — because a bug report missing its
+version, reproduction, or full error text can't be acted on, and a form
+refuses to submit without them. The other two are markdown templates in the
+same comment-guided style as `.github/PULL_REQUEST_TEMPLATE.md`, since what
+they ask for is open-ended prose that structure would only get in the way of.
+
+GitHub reads these same files on the mirror, and its schema differs from
+Gitea's in two places, so both are pinned to the spelling that works on both
+and each file says so in a comment: the chooser config must be `config.yml`
+(GitHub ignores `config.yaml`), and `bug.yml` declares `description:` rather
+than `about:` (GitHub requires it; Gitea accepts it as an alias). The two
+markdown templates keep `about:`, which is correct for their format on both.
+
+### Issue titles
+
+**Issue titles are plain descriptions of the problem, not Conventional
+Commits subjects.**
+
+```text
+mv clobbers a symlink when the target exists            ← yes
+fix(mv): prompt before replacing an existing symlink    ← no
+```
+
+An issue states a problem; a commit states a change. The type and scope that
+`fix(mv):` would carry are already on the issue as its `Kind/` and `Area/`
+labels, and the conventional subject belongs on the PR that closes it, where
+it becomes the commit message. Writing the fix into the title also presumes
+one, which is the wrong end to start from for anything still being diagnosed.
+
+### What an issue owes
+
+- **A bug** needs a reproduction someone else can paste and run, starting
+  from a fresh shell, plus the complete error output. A stale function
+  definition in a long-lived session is the most common false alarm, so
+  confirm it survives `exec fish` first. `Status/Need More Info` is where
+  reports without a reproduction end up.
+- **A feature** needs `## Acceptance criteria` — the checkbox list of what
+  must be true for the issue to close. It is the issue-side counterpart to a
+  PR's `## Verification`: a definition of done agreed before the work starts
+  rather than argued about after, and the PR's checks usually grow out of it.
+- **A docs issue** needs to name the `docs/manual/**` source, not just the
+  page where the problem showed up. `docs/fish-config.md` and
+  `docs/fish-config.1` are generated, and a fix applied there is overwritten
+  by the next CI run — see [Documentation
+  Pipeline](#documentation-pipeline).
+
+### Triage
+
+Reporters aren't expected to label anything. Contributors without push access
+can't, and the templates apply the `Kind/` label by themselves; the rest is
+the maintainer's job when the issue is triaged — add the `Area/` label (the
+bug form's **Area** dropdown is how a reporter tells you, since no forge can
+map a form field to a label), set a `Priority/` if it isn't ordinary, and
+apply `Reviewed/Confirmed` once a bug actually reproduces. See
+[Labels](#labels).
+
+When a PR resolves an issue it closes it with a trailing `Closes #N` line —
+see [Pull request descriptions](#pull-request-descriptions).
+
 ## Branching & Pull Requests
 
 **If you don't have push access to this repo**, fork it and open your PR
@@ -48,6 +123,9 @@ assumes you *do* have push access (maintainers, regular contributors).
   branching doesn't touch the working tree.)
 - **Merge target is `main`, via PR.** Contributors open the PR; the repo
   owner merges it. Don't merge your own PR.
+- **Label every PR.** At minimum one `Kind/` and one `Area/`, same as an
+  issue — see [Labels](#labels). If you can't set labels, say what the
+  change is in the description and a maintainer applies them.
 - **Don't merge until the `## Verification` checklist is fully checked.**
   Unchecked boxes are outstanding manual checks, not decoration. See
   [Pull request descriptions](#pull-request-descriptions) below.
@@ -111,6 +189,128 @@ identically. Repeat the keyword for each issue (`Closes #42, closes #43`); a
 bare `#43` is only a link and won't close anything. To point at a related
 issue that should stay open, drop the keyword and use `Refs #42`. Leave the
 line out entirely when no issue is involved.
+
+## Labels
+
+**Every issue and every pull request carries exactly one `Kind/` label and at
+least one `Area/` label.** Everything else is optional, and most of it is
+applied by a maintainer at triage rather than by whoever opened the thing.
+
+Labels are scoped: the `Group/Name` form renders as a two-tone chip in Gitea,
+and for the three *exclusive* groups below Gitea enforces one-at-a-time by
+swapping the old label out when you apply a new one.
+
+### `Kind/` — what this is
+
+Required, and by convention exactly one. Gitea doesn't enforce one-of here,
+so pick the dominant character of the change instead of stacking two.
+
+| Label | For |
+|---|---|
+| `Kind/Bug` | Something is not working |
+| `Kind/Feature` | New functionality |
+| `Kind/Enhancement` | Improves functionality that already exists |
+| `Kind/Documentation` | Documentation changes |
+| `Kind/Testing` | The test suite itself |
+| `Kind/Refactor` | Restructures code without changing behavior |
+| `Kind/Chore` | Tooling, dependencies, housekeeping |
+| `Kind/Performance` | Makes existing behavior faster or lighter |
+| `Kind/Security` | A security issue |
+
+These deliberately mirror the Conventional Commits types in [Commit
+Conventions](#commit-conventions), so a PR's label and its title agree:
+`fix` → `Kind/Bug`, `feat` → `Kind/Feature` or `Kind/Enhancement`, `docs` →
+`Kind/Documentation`, `test` → `Kind/Testing`, `refactor` →
+`Kind/Refactor`, `chore` → `Kind/Chore`, `perf` → `Kind/Performance`.
+
+### `Area/` — what it touches
+
+Required, and non-exclusive on purpose: a change that adds a function, its
+completions, and a manual entry gets all three.
+
+| Label | Covers |
+|---|---|
+| `Area/Functions` | `functions/` |
+| `Area/Completions` | `completions/` |
+| `Area/Config` | `config.fish`, `conf.d/` — startup and environment |
+| `Area/Docs` | `docs/manual/` and the generated manual, man page, and site |
+| `Area/Tests` | `tests/` |
+| `Area/CI` | `.github/workflows/` and repository automation |
+| `Area/Integrations` | `integrations/` |
+| `Area/Prompt & Theme` | `themes/` and prompt appearance |
+| `Area/Components` | The opinionated-component system (C1-C6) |
+| `Area/Scripts` | `scripts/` |
+
+`Area/` is what makes the tracker searchable: it answers "what's still
+outstanding in the docs pipeline?" in a way `Kind/` never can. Two edges
+worth naming — `Area/Docs` covers the documentation *and its pipeline*, so
+`README.md` and this file count even though they sit outside `docs/`; and
+`Area/Components` is for the C1-C6 machinery itself, not for every function
+that happens to carry a `# COMPONENT` header.
+
+### `Compat/Breaking`
+
+Applied to **any PR whose title carries `!` before the colon**, and to any
+issue proposing a change that would. It travels with the `## ⚠️ Breaking
+Change` section that such a PR must already include — see [Pull request
+descriptions](#pull-request-descriptions).
+
+### `Priority/` — exclusive, maintainer-applied
+
+`Priority/Critical`, `Priority/High`, `Priority/Medium`, `Priority/Low`.
+
+**No priority label means ordinary priority.** Labeling everything defeats
+the point, so leave it off unless the item is genuinely more or less urgent
+than the rest of the queue.
+
+### `Reviewed/` — exclusive, maintainer-applied
+
+`Reviewed/Confirmed` goes on a bug that has actually been reproduced —
+that's the signal separating a report from a known defect.
+`Reviewed/Duplicate`, `Reviewed/Invalid`, and `Reviewed/Won't Fix` accompany
+closing an issue, always with a comment saying why; a close with only a
+label on it is not an explanation.
+
+### `Status/` — exclusive, maintainer-applied
+
+`Status/Blocked`, `Status/Need More Info`, `Status/Abandoned`. These describe
+the item's current state, so remove one as soon as it stops being true — a
+stale `Status/Need More Info` on an issue that got its answer is worse than
+no label, because it reads as still waiting.
+
+### `good first issue` and `help wanted`
+
+Invitations to contributors, applied by a maintainer. Both are deliberately
+**unscoped**: they'd be a natural fit under `Status/`, but that group is
+exclusive, and an issue is quite often both blocked on something *and* open
+for someone to pick up. Keeping them outside the group lets them coexist
+with a real status.
+
+Use `good first issue` for work that is genuinely self-contained — a clear
+acceptance criterion, one or two files, no need to understand the
+opinionated-component system first.
+
+### The GitHub mirror
+
+The repo is mirrored to
+[github.com/rootiest/fish-config](https://github.com/rootiest/fish-config),
+and **the mirror carries the same labels, by the same names**. That isn't
+cosmetic: GitHub reads the same `.github/ISSUE_TEMPLATE/` files, and a
+`labels:` entry naming a label that doesn't exist on that side is silently
+dropped rather than reported. Mirroring copies files, not repository
+settings, so **a label added here must be created on the mirror too** — no
+automation does it for you.
+
+One behavioral difference to keep in mind: **GitHub has no exclusive
+labels.** Gitea enforces one-at-a-time on `Priority/`, `Reviewed/`, and
+`Status/` by swapping the old label out; on the mirror those are ordinary
+labels and nothing stops two of a group coexisting, so there the one-of rule
+holds by convention alone.
+
+Issues and pull requests belong on the canonical Gitea repo — the template
+chooser links there first, on both sides. The mirror's tracker stays open so
+that a report which lands there anyway isn't lost, not because it's a second
+supported front door.
 
 ## Commit Conventions
 
