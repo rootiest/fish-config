@@ -48,6 +48,9 @@ assumes you *do* have push access (maintainers, regular contributors).
   branching doesn't touch the working tree.)
 - **Merge target is `main`, via PR.** Contributors open the PR; the repo
   owner merges it. Don't merge your own PR.
+- **Don't merge until the `## Verification` checklist is fully checked.**
+  Unchecked boxes are outstanding manual checks, not decoration. See
+  [Pull request descriptions](#pull-request-descriptions) below.
 - **Keep feature branches focused.** If you stumble onto something unrelated
   to your current task while working (a pre-existing bug, a stray cleanup),
   don't fold it into the same commit or PR. Handle it with one of these,
@@ -77,15 +80,23 @@ description box when you open a PR. Every PR carries, in this order:
   `Scope note`, `Opinionated guard (C1-C6)`), and skip them entirely for a
   straightforward change. A breaking change (title ending in `!` before
   the colon) must include `## ⚠️ Breaking Change` with the migration path.
-- **`## Manual Verification`** — always last. Reproducible steps as a
-  checkbox list, each with the exact command and its expected result. Run
-  them before opening the PR and check the boxes; a box left unchecked
-  means that step was *not* verified, so say so explicitly rather than
-  leaving it silently blank.
+- **`## Verification`** — always last. Every check this change needs, as a
+  checkbox list, each with the exact command and its expected result.
+  A **checked** box means verified, whether programmatically (test suite,
+  linter, docs verifier, CI) or by hand; check those off before opening the
+  PR. An **unchecked** box is an outstanding manual check the reviewer
+  still has to perform — leave anything you couldn't verify yourself
+  unchecked rather than dropping it.
+
+  **This list is the merge gate: a PR isn't merged until every box is
+  checked.** Only list checks that can actually be resolved — one nobody
+  can run blocks the PR indefinitely. Put genuinely unverifiable caveats,
+  assumptions, and known limitations in `## Notes` instead, where they
+  inform the review without gating it.
 
 When a PR resolves a tracked issue, close it with a trailing `Closes #42`
 line at the end of `## Summary` — not at the very bottom of the body, since
-`## Manual Verification` is always last. `Fixes #N` and `Resolves #N` behave
+`## Verification` is always last. `Fixes #N` and `Resolves #N` behave
 identically. Repeat the keyword for each issue (`Closes #42, closes #43`); a
 bare `#43` is only a link and won't close anything. To point at a related
 issue that should stay open, drop the keyword and use `Refs #42`. Leave the

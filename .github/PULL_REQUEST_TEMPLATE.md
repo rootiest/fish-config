@@ -8,7 +8,7 @@
 
   Keep the two headings below, in this order, and delete these comments.
   Optional sections may be added between them (see the note above
-  "Manual Verification").
+  "Verification").
 -->
 
 ## Summary
@@ -28,8 +28,8 @@
     site build only.
 
   If this PR resolves a tracked issue, close it with a trailing line at the
-  end of this section — not at the very bottom, since Manual Verification
-  is always last:
+  end of this section — not at the very bottom, since Verification is
+  always last:
 
       Closes #42
 
@@ -64,13 +64,25 @@
   reasonably ask why the obvious approach was rejected.
 -->
 
-## Manual Verification
+## Verification
 
 <!--
-  Reproducible steps a reviewer can run themselves, as a checkbox list.
-  Run them first, then check each box — an unchecked box means it was NOT
-  verified, and should be called out as such rather than left silently
-  blank. This section is always last.
+  Every check this change needs, as a checkbox list. Always the last
+  section.
+
+  A CHECKED box means verified — either it ran programmatically (test
+  suite, linter, docs verifier, CI) or the author performed it by hand and
+  confirmed the result. Check these off before opening the PR.
+
+  An UNCHECKED box is an outstanding manual check the reviewer still has to
+  perform. Leave anything you could not verify yourself unchecked rather
+  than dropping it, so it stays visible.
+
+  **This list is the merge gate: the PR does not merge until every box is
+  checked.** So only put things here that can actually be resolved — a
+  check nobody is able to run blocks the PR forever. Genuinely unverifiable
+  caveats, assumptions, and known limitations belong in a `## Notes`
+  section instead, where they inform the review without gating it.
 
   - One check per line, imperative, with the exact command in backticks
     and the expected result stated.
