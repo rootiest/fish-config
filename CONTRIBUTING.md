@@ -56,6 +56,13 @@ refuses to submit without them. The other two are markdown templates in the
 same comment-guided style as `.github/PULL_REQUEST_TEMPLATE.md`, since what
 they ask for is open-ended prose that structure would only get in the way of.
 
+GitHub reads these same files on the mirror, and its schema differs from
+Gitea's in two places, so both are pinned to the spelling that works on both
+and each file says so in a comment: the chooser config must be `config.yml`
+(GitHub ignores `config.yaml`), and `bug.yml` declares `description:` rather
+than `about:` (GitHub requires it; Gitea accepts it as an alias). The two
+markdown templates keep `about:`, which is correct for their format on both.
+
 ### Issue titles
 
 **Issue titles are plain descriptions of the problem, not Conventional
@@ -282,6 +289,28 @@ with a real status.
 Use `good first issue` for work that is genuinely self-contained — a clear
 acceptance criterion, one or two files, no need to understand the
 opinionated-component system first.
+
+### The GitHub mirror
+
+The repo is mirrored to
+[github.com/rootiest/fish-config](https://github.com/rootiest/fish-config),
+and **the mirror carries the same labels, by the same names**. That isn't
+cosmetic: GitHub reads the same `.github/ISSUE_TEMPLATE/` files, and a
+`labels:` entry naming a label that doesn't exist on that side is silently
+dropped rather than reported. Mirroring copies files, not repository
+settings, so **a label added here must be created on the mirror too** — no
+automation does it for you.
+
+One behavioral difference to keep in mind: **GitHub has no exclusive
+labels.** Gitea enforces one-at-a-time on `Priority/`, `Reviewed/`, and
+`Status/` by swapping the old label out; on the mirror those are ordinary
+labels and nothing stops two of a group coexisting, so there the one-of rule
+holds by convention alone.
+
+Issues and pull requests belong on the canonical Gitea repo — the template
+chooser links there first, on both sides. The mirror's tracker stays open so
+that a report which lands there anyway isn't lost, not because it's a second
+supported front door.
 
 ## Commit Conventions
 

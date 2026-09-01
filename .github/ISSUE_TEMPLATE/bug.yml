@@ -1,5 +1,13 @@
+# The key below is `description`, NOT `about`.
+#
+# GitHub requires `description` on a YAML issue form and rejects the
+# template without it; Gitea wants `about` but explicitly accepts
+# `description` as a compatible alias. `description` is therefore the
+# only spelling that works on both the canonical repo and the mirror.
+# The markdown templates beside this one still use `about`, which is
+# correct for their format on both forges.
 name: Bug report
-about: Something in the config is broken or behaves unexpectedly
+description: Something in the config is broken or behaves unexpectedly
 labels:
   - Kind/Bug
 body:

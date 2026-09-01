@@ -1,10 +1,18 @@
-# Gitea reads this alongside the templates in this directory.
+# Read by both Gitea (the canonical repo) and GitHub (the mirror).
+#
+# The .yml extension is required: Gitea accepts config.yaml or config.yml,
+# but GitHub only recognizes config.yml and silently ignores config.yaml.
+# Don't "tidy" this back to .yaml — the chooser on the mirror stops working.
+#
 # Blank issues stay enabled deliberately: the three templates cover bugs,
 # features, and docs, and anything else (a chore, a refactor, a question)
 # is better served by an empty box than by a template that doesn't fit.
 blank_issues_enabled: true
 
 contact_links:
+  - name: Canonical repository and issue tracker
+    url: https://git.rootiest.dev/rootiest/fish-config/issues
+    about: fish-config is developed on Gitea. If you came from the GitHub mirror, please file here instead — the mirror is read-only and issues opened there are easy to miss.
   - name: Contributing guide
     url: https://git.rootiest.dev/rootiest/fish-config/src/branch/main/CONTRIBUTING.md
     about: Branch naming, commit conventions, coding standards, and the label taxonomy.
