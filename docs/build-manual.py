@@ -95,6 +95,16 @@ def build_concat(root: Path) -> str:
     with no frontmatter fences and no Astro-visible frontmatter key. When
     present, its contents are re-emitted byte-for-byte as the leading
     `---`-fenced block, ahead of every heading.
+
+    Bodies go through `codespans` here so a token is typeset the same way
+    in every output: `tmux` and `local.fish` are wrapped on the site by
+    that pass, and without it the man page marked only what the SSOT
+    happened to backtick by hand. Section 5 is unaffected -- its entries
+    arrive as indented verbatim blocks, which `codespans` leaves alone and
+    pandoc already sets in a monospace font.
+
+    Only bodies are passed: the pandoc metadata block above is not prose
+    and must survive byte-for-byte.
     """
     entries = build_entries(mt.parse_functions(FUNCTIONS))
     chunks: list[str] = []
@@ -117,6 +127,7 @@ def build_concat(root: Path) -> str:
             body = re.sub(r"<LinkButton.*?</LinkButton>\n*", "", body, flags=re.DOTALL)
             body = re.sub(r"<CardGrid.*?</CardGrid>\n*", "", body, flags=re.DOTALL)
             body = re.sub(r"\[([^\]]+)\]\(/[^)]+\)", r"\1", body)
+            body = codespans.add_code_spans(body, _code_vocabulary())
             chunks.append(mt.shift_headings(body, depth))
     return "\n\n".join(chunks) + "\n"
 
@@ -495,12 +506,15 @@ def _code_vocabulary() -> codespans.Vocabulary:
 def prettify(body: str, entry_name: str | None = None) -> str:
     """Rewrite a body's indented code blocks and labeled asides for the website.
 
-    Site-only: the man page and `config-help` keep reading the untouched
-    SSOT, where the indented form and the `LABEL:` text are exactly what
-    pandoc/`config-help` want. The same applies to the inline code spans
-    added last: `-a/--all` and `__fish_config_op_aliases` are authored bare
-    so the `functions/*.fish` headers stay readable as plain text, and the
-    backticks the site wants are put on here rather than in the SSOT.
+    The block and aside rewrites are site-only: the man page and
+    `config-help` keep reading the untouched SSOT, where the indented form
+    and the `LABEL:` text are exactly what pandoc/`config-help` want.
+
+    The inline code spans added last are not site-only. `-a/--all` and
+    `__fish_config_op_aliases` are authored bare so the `functions/*.fish`
+    headers stay readable as plain text, and the backticks every output
+    wants are put on here rather than in the SSOT -- `build_concat()` runs
+    the same pass for the man page and `config-help`.
     """
     out: list[str] = []
     block: list[str] = []
