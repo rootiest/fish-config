@@ -1440,6 +1440,25 @@ def test_codespans_reach_the_man_page_pipeline():
     assert "`tmux`" in text, "a vocabulary command was not wrapped in the concat"
 
 
+def test_concat_code_spans_never_straddle_a_line():
+    """`config-help` pairs backticks one line at a time.
+
+    Its `string replace` filters run per line, so a span split across a
+    line break -- ``run `fish-deps\\nupdate` `` -- leaves an unpaired
+    backtick the pager then shows literally. Markdown is happy to wrap
+    one, so nothing else catches this.
+    """
+    import build_manual
+
+    text = build_manual.build_concat(Path(__file__).parent / "manual")
+    odd = [
+        (n, line)
+        for n, line in enumerate(text.split("\n"), 1)
+        if line.count("`") % 2
+    ]
+    assert not odd, f"unpaired backtick, span wraps a line: {odd[:3]}"
+
+
 def test_concat_section_five_stays_verbatim():
     """Section 5's entries are indented blocks, not prose.
 

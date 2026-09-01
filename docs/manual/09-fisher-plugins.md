@@ -120,7 +120,7 @@ The `fish_plugins` file at the config root:
 - [`jorgebucaran/fisher`](https://github.com/jorgebucaran/fisher) — Plugin manager itself
 - [`meaningful-ooo/sponge`](https://github.com/meaningful-ooo/sponge) — Remove failed commands from history
 
-To update all Fisher-managed plugins, run `fisher update` or `fish-deps
-update` which calls it as its first step.
+To update all Fisher-managed plugins, run `fisher update` or
+`fish-deps update` which calls it as its first step.
 
 ---
