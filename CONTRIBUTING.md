@@ -239,6 +239,13 @@ python3 docs/verify-manual.py
 CI runs the same verification and regenerates the site/man page — a broken
 manual won't get published, but running it locally saves a round trip.
 
+Write doc-headers as plain text — no backticks. `-a/--all`,
+`__fish_config_op_aliases` and `~/.config/fish/config.fish` are typed
+bare, because the header is also read as-is by `config-help` and by
+anyone opening the file. `docs/codespans.py` adds the inline code spans
+the docs site wants when it renders, so the SSOT never carries them; see
+`docs/site/README.md` for which shapes it recognises.
+
 ## Testing
 
 ```fish

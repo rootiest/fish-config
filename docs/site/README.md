@@ -20,6 +20,32 @@ python3 docs/build-manual.py --site
 `docs/verify-manual.py` validates both sources before you build; run it
 first if you've touched a header or a manual page.
 
+## Inline code spans
+
+Function headers are read as plain text (by `config-help`, by `funcsave`,
+by anyone opening the `.fish` file), so they're authored without backticks
+— `-a/--all`, not `` `-a`/`--all` ``. `docs/codespans.py` puts the
+backticks on at render time, as the last step of `prettify()`, so only the
+site sees them.
+
+It recognises flags, `$vars`, `SCREAMING_SNAKE` env vars, snake_case
+identifiers (`__fish_config_op_aliases`, `fish_greeting`), paths and
+filenames, key chords (`Ctrl-R`), shadow chains (`ls->eza`), runs of tool
+names (`btop, dust, duf, …`), whole command lines in a table column of
+command lines, and command names it knows — the `_fdc_*` catalog in
+`functions/_fish_deps_catalog.fish`, the `functions/` directory listing,
+and a standard-command list in the module.
+
+Names that also read as English (`find`, `top`, `screen`) are listed in
+`AMBIGUOUS_COMMANDS` and are never wrapped on sight; they still count
+where position already proves they're a command. Add to that list rather
+than removing a rule if a wrap ever reads wrong.
+
+Fenced blocks, existing code spans, headings, link targets, URLs,
+component markup, and `<FileTree>` bodies are never touched. Leaving a
+token alone is always the safe outcome, so every rule bails out when it
+isn't sure.
+
 ## llms.txt
 
 The [`starlight-llms-txt`](https://www.npmjs.com/package/starlight-llms-txt)
