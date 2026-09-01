@@ -25,8 +25,13 @@ first if you've touched a header or a manual page.
 Function headers are read as plain text (by `config-help`, by `funcsave`,
 by anyone opening the `.fish` file), so they're authored without backticks
 — `-a/--all`, not `` `-a`/`--all` ``. `docs/codespans.py` puts the
-backticks on at render time, as the last step of `prettify()`, so only the
-site sees them.
+backticks on at render time, as the last step of `prettify()`.
+
+`build_concat()` runs the same pass, so the man page and `config-help`
+mark code the way the site does rather than only where the SSOT happened
+to backtick something by hand. `config-help` then renders those spans
+bold and drops the delimiters, since a terminal pager would otherwise
+show them as literal punctuation.
 
 It recognises flags, `$vars`, `SCREAMING_SNAKE` env vars, snake_case
 identifiers (`__fish_config_op_aliases`, `fish_greeting`), paths and
@@ -41,10 +46,14 @@ Names that also read as English (`find`, `top`, `screen`) are listed in
 where position already proves they're a command. Add to that list rather
 than removing a rule if a wrap ever reads wrong.
 
-Fenced blocks, existing code spans, headings, link targets, URLs,
-component markup, and `<FileTree>` bodies are never touched. Leaving a
-token alone is always the safe outcome, so every rule bails out when it
-isn't sure.
+Fenced blocks, indented blocks, existing code spans, headings, link
+targets, URLs, component markup, and `<FileTree>` bodies are never
+touched. Leaving a token alone is always the safe outcome, so every rule
+bails out when it isn't sure.
+
+Indented blocks matter only to the concat — `prettify()` has already
+fenced them by the time the site is rendered — but there they are the
+table of contents and every section 5 entry, which must stay verbatim.
 
 ## llms.txt
 

@@ -11,9 +11,9 @@
 #   modification time, so the most recently written logs are kept — actively
 #   appended logs (e.g. a tmux pipe-pane stream) survive.
 #
-#   Uses `command ls`/`command rm` to bypass the C1 shadows: the bare `ls` is
+#   Uses command ls/command rm to bypass the C1 shadows: the bare ls is
 #   the eza wrapper, which injects OSC-8 hyperlink escapes into paths, and the
-#   bare `rm` is the trash wrapper. The glob is expanded via `set` first so a
+#   bare rm is the trash wrapper. The glob is expanded via set first so a
 #   no-match (empty dir / first run) yields an empty list instead of a hard
 #   "No matches for wildcard" error.
 #

@@ -6,7 +6,7 @@
 #
 # DESCRIPTION
 #   Succeeds (returns 0) when the top-level kitty.conf contains an active
-#   (non-commented) `watcher` directive — whether the fish-config managed one or
+#   (non-commented) watcher directive — whether the fish-config managed one or
 #   a user's own. Used to suppress the setup reminder and to inform status.
 #
 # EXIT STATUS

@@ -15,13 +15,13 @@
 #   Runs, lists, inspects, re-attaches to, and terminates named background
 #   jobs using tmux or GNU screen as the process engine. Unlike bkg and
 #   detach, which discard output, a jobrunner job keeps a live terminal you
-#   can return to later — it survives closing the shell, and `attach`
+#   can return to later — it survives closing the shell, and attach
 #   restores it in any subsequent session.
 #   Run and manage named background jobs. Jobs are detached from the shell
 #   and backed by tmux (preferred) or GNU screen.
 #
-#   If the job name is omitted when starting a new job (e.g. `jobrunner sleep 1`),
-#   a memorable, random name (like `sleepy-badger`) will be generated.
+#   If the job name is omitted when starting a new job (e.g. jobrunner sleep 1),
+#   a memorable, random name (like sleepy-badger) will be generated.
 #
 # SUBCOMMANDS
 #   run, -r, --run [-n <name>] <cmd> Start a new background job
@@ -49,7 +49,7 @@
 #   Detach from an attached job with Ctrl-A then D; the job keeps running.
 #   Commands are executed directly rather than through a shell, so pipes and
 #   redirections must be wrapped explicitly, e.g.
-#   `jobrunner run sync fish -c 'a | b'`.
+#   jobrunner run sync fish -c 'a | b'.
 function jobrunner --description 'Manage detached background jobs with tmux or GNU screen'
     set -l c_head (set_color --bold cyan)
     set -l c_cmd (set_color --bold)

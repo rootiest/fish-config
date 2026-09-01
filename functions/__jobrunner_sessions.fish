@@ -5,7 +5,7 @@
 #   __jobrunner_sessions [<tool>]
 #
 # DESCRIPTION
-#   Parses `tmux list-sessions` or `screen -ls` into machine-readable rows,
+#   Parses tmux list-sessions or screen -ls into machine-readable rows,
 #   one per active session: name, PID, state, and start time separated by tabs.
 #   Shared by jobrunner and its completions so both agree on what a session is
 #   named. Prints nothing when no sessions exist.

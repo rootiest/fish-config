@@ -15,7 +15,7 @@
 #   scripts/cli-agent.md to $XDG_CONFIG_HOME/aichat/roles/cli.md. Inherits
 #   every aichat flag and tab completion (--wraps aichat); passing --role/-r
 #   overrides the default role, so qc forwards to aichat unchanged. The
-#   function is only defined when aichat is installed. Run `qc --help` for
+#   function is only defined when aichat is installed. Run qc --help for
 #   aichat's full flag reference with the command name rewritten to qc.
 #
 # ARGUMENTS

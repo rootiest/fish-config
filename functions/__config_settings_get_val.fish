@@ -6,7 +6,7 @@
 #
 # DESCRIPTION
 #   Returns the current value of a named variable in the specified scope by
-#   parsing `set --show` output. Outputs "on", "off", or "DEFAULT" (when
+#   parsing set --show output. Outputs "on", "off", or "DEFAULT" (when
 #   the variable is not set in that scope). Scope "session" maps to "global"
 #   in fish's internal terminology.
 #

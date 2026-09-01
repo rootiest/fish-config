@@ -7,7 +7,7 @@
 # DESCRIPTION
 #   Copies the canonical version-bump script and git hook shims from
 #   fish-config's scripts/agents-tools/ into <agents_dir>/.agents-tools/,
-#   refreshing them when the shipped `agents-tools-version:` marker is newer
+#   refreshing them when the shipped agents-tools-version: marker is newer
 #   than the installed copy. Files are made executable. Idempotent: prints
 #   nothing when the installed tooling is already current, or a short summary
 #   line when it installed or updated the tooling.

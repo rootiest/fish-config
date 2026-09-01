@@ -18,8 +18,9 @@ touched, so the man page and `config-help` keep the plain-text form.
 Everything here is conservative by construction: leaving a token alone is
 always safe and wrapping the wrong one is not, so every rule bails out the
 moment it is unsure. The regions that must never be rewritten -- fenced
-blocks, existing code spans, link targets, URLs, JSX attributes,
-`<FileTree>` bodies, headings -- are recognised first and passed through.
+blocks, indented code blocks, existing code spans, link targets, URLs, JSX
+attributes, `<FileTree>` bodies, headings -- are recognised first and
+passed through.
 """
 
 import functools
@@ -359,6 +360,14 @@ FILE_TREE_OPEN = "<FileTree"
 FILE_TREE_CLOSE = "</FileTree>"
 CELL_SPLIT_RE = re.compile(r"(?<!\\)\|")
 
+# A four-space indent is this manual's code block. The site never sees one
+# -- prettify() has already turned it into a fence by the time this module
+# runs -- but build_concat() keeps the indented form, because that is what
+# pandoc and `config-help` want, and its contents are code that must not be
+# rewritten: the table of contents alone would otherwise have `ov`, `bat`,
+# `less` and `cat` wrapped inside a code block.
+INDENTED_CODE = "    "
+
 
 def _skip_line(line: str) -> bool:
     """True for a line that must be passed through untouched.
@@ -488,8 +497,9 @@ def add_code_spans(text: str, vocab: Vocabulary = EMPTY_VOCABULARY) -> str:
     """Wrap code-shaped tokens in `text` in inline code spans.
 
     `text` is a rendered page body (no frontmatter). Fenced blocks,
-    `<FileTree>` bodies, headings, component markup, existing code spans,
-    link targets and URLs are left exactly as they are.
+    indented code blocks, `<FileTree>` bodies, headings, component markup,
+    existing code spans, link targets and URLs are left exactly as they
+    are.
     """
     scanner = _scanner(vocab)
     atom_re = _atom_re(vocab)
@@ -509,6 +519,8 @@ def add_code_spans(text: str, vocab: Vocabulary = EMPTY_VOCABULARY) -> str:
         if in_tree:
             if FILE_TREE_CLOSE in line:
                 in_tree = False
+            continue
+        if line.startswith(INDENTED_CODE):
             continue
         eligible[i] = not _skip_line(line)
 

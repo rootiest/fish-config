@@ -1401,13 +1401,79 @@ def test_codespans_vocabulary_comes_from_the_deps_catalog():
     assert "find" in vocab.full, "…but it still counts as a command-line opener"
 
 
-def test_codespans_is_site_only():
-    """The concat (man page, config-help) keeps the plain-text form."""
+def test_codespans_leaves_indented_code_blocks_alone():
+    """A four-space block is code, whatever it happens to contain.
+
+    The concat keeps the indented form pandoc wants, so unlike the site
+    this pass meets real indented blocks -- the table of contents among
+    them, which is nothing but a list of command names.
+    """
+    body = "\n".join(
+        [
+            "Pick a viewer:",
+            "",
+            "    1. ov + bat   section navigation",
+            "    2. less       plain text with --jump",
+            "",
+            "Then run config-help.",
+        ]
+    )
+    got = _spans(body).split("\n")
+    assert got[2] == "    1. ov + bat   section navigation", got[2]
+    assert got[3] == "    2. less       plain text with --jump", got[3]
+    assert got[5] == "Then run `config-help`.", "prose after the block was skipped"
+
+
+def test_codespans_reach_the_man_page_pipeline():
+    """Prose is marked identically wherever it is rendered.
+
+    `build_concat` runs the same pass `build_site` does, so a token the
+    site typesets as code is typeset as code in the man page and
+    `config-help` too, instead of only where the SSOT hand-wrote a
+    backtick.
+    """
+    import build_manual
+
+    manual = Path(__file__).parent / "manual"
+    text = build_manual.build_concat(manual)
+    assert "`local.fish`" in text, "prose code spans never reached the concat"
+    assert "`tmux`" in text, "a vocabulary command was not wrapped in the concat"
+
+
+def test_concat_code_spans_never_straddle_a_line():
+    """`config-help` pairs backticks one line at a time.
+
+    Its `string replace` filters run per line, so a span split across a
+    line break -- ``run `fish-deps\\nupdate` `` -- leaves an unpaired
+    backtick the pager then shows literally. Markdown is happy to wrap
+    one, so nothing else catches this.
+    """
     import build_manual
 
     text = build_manual.build_concat(Path(__file__).parent / "manual")
-    assert "-r/--resume" in text, "sanity: the bare flag-pair form is what's authored"
-    assert "`-r`/`--resume`" not in text, "code spans leaked into the man-page pipeline"
+    odd = [
+        (n, line)
+        for n, line in enumerate(text.split("\n"), 1)
+        if line.count("`") % 2
+    ]
+    assert not odd, f"unpaired backtick, span wraps a line: {odd[:3]}"
+
+
+def test_concat_section_five_stays_verbatim():
+    """Section 5's entries are indented blocks, not prose.
+
+    They are generated from the `functions/*.fish` headers and pandoc sets
+    them verbatim, so a backtick there would be a literal character on the
+    page rather than markup.
+    """
+    import build_manual
+
+    text = build_manual.build_concat(Path(__file__).parent / "manual")
+    body = text.split("\n# 5. ", 1)[1].split("\n# 6. ", 1)[0]
+    offenders = [
+        line for line in body.split("\n") if line.startswith("    ") and "`" in line
+    ]
+    assert not offenders, f"backticks inside verbatim entries: {offenders[:3]}"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

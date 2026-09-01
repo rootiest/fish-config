@@ -18,16 +18,16 @@ CAUTION: This configuration is capable of silently recording terminal output and
     Component               What it captures
     ───────────────────────────────────────────────────────────────────────────
     Scrollback capture      Terminal session output saved to:
-                            `~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
     tmux pane capture       Continuous pane stream via pipe-pane, saved to:
-                            `~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
     zellij pane capture     Pane scrollback snapshot on shell exit, saved to:
-                            `~/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
     paru wrapper            All paru/AUR output captured to:
-                            `~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log`
+                            ~/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
     yay wrapper             All yay/AUR output captured to:
-                            `~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log`
-    Kitty watcher           `watcher.py` captures scrollback when Kitty closes
+                            ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
+    Kitty watcher           watcher.py captures scrollback when Kitty closes
 
 NOTE: **Turning off logging does not delete any existing logs.**  
 They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)
@@ -58,7 +58,7 @@ Ctrl-D, or a logout), because that is when the fish_exit handler runs. It does
 NOT capture when you close a pane or quit zellij through zellij itself:
 
   - Closing a pane signals the shell and tears the pane down concurrently, so
-    even if the handler runs, `dump-screen` may find the pane buffer already
+    even if the handler runs, dump-screen may find the pane buffer already
     gone.
   - Quitting zellij kills the zellij server, and `dump-screen` needs a live
     server to read from — there is nothing left to snapshot.
@@ -93,7 +93,7 @@ start, so it appears without any action on your part.
 Disabling `__fish_config_op_logging` (or leaving it unset):
   1. Creates the sentinel immediately in every open shell.
   2. Removes `~/.local/bin/paru` and `~/.local/bin/yay` logging wrappers;
-     bare `/usr/bin/paru` and `/usr/bin/yay` are used instead.
+     bare /usr/bin/paru and /usr/bin/yay are used instead.
   3. Kitty's `watcher.py` reads the sentinel on each save attempt and
      skips capture — no Kitty restart required.
   4. smart_exit stops saving scrollback logs.

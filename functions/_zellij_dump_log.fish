@@ -11,7 +11,7 @@
 #   Captures the current Zellij pane's scrollback to a timestamped log in
 #   SCROLLBACK_HISTORY_DIR (default ~/.terminal_history). Zellij has no live
 #   output-streaming facility like tmux's pipe-pane, so this performs a one-shot
-#   `zellij action dump-screen --full` — intended to run on shell exit. Old
+#   zellij action dump-screen --full — intended to run on shell exit. Old
 #   zellij_*.log files are pruned via _prune_terminal_logs to stay within
 #   SCROLLBACK_HISTORY_MAX_FILES.
 #

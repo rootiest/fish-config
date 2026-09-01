@@ -9,7 +9,7 @@
 #   by a desktop file manager (Dolphin, Nautilus, GNOME Videos, ...) in the
 #   freedesktop thumbnail cache and renders it via _fzf_preview_image if
 #   found. Otherwise falls back to ffprobe-formatted metadata (duration,
-#   codec, resolution, tags) when ffprobe is installed, or plain `file`
+#   codec, resolution, tags) when ffprobe is installed, or plain file
 #   output as a last resort. Neither the thumbnail cache lookup nor ffprobe
 #   are tracked in fish-deps: both are best-effort, matching how the
 #   image-preview tool chain (kitten/chafa/viu/timg) is already handled.
