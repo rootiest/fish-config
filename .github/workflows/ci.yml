@@ -29,8 +29,15 @@ on:
           - build-docs
 
 jobs:
+  # This workflow file is mirrored to GitHub as-is, but the runner label
+  # below (racknerd-mini) only exists on the Gitea instance -- on GitHub
+  # the job just sits queued forever with no matching runner, so the
+  # mirror never gets a completed status. Gate the real jobs to Gitea and
+  # let the github-mirror job below stand in on GitHub instead.
   test:
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'test'
+    if: |
+      github.server_url != 'https://github.com' &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'test')
     runs-on: racknerd-mini
     steps:
       - name: Checkout
@@ -52,6 +59,7 @@ jobs:
   build-docs:
     needs: test
     if: |
+      github.server_url != 'https://github.com' &&
       always() &&
       (github.event.inputs.job == 'build-docs' ||
         ((github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all') &&
@@ -126,3 +134,15 @@ jobs:
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "chore(docs): regenerate manual, man page, and component registry"
           git push
+
+  # Stand-in for the GitHub mirror so the commit gets a completed status
+  # instead of the real jobs above sitting queued forever for a
+  # self-hosted runner that only exists on the Gitea instance.
+  github-mirror:
+    if: github.server_url == 'https://github.com'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Note that CI runs on Gitea
+        run: |
+          echo "This repository mirrors from Gitea (git.rootiest.dev), where CI actually runs."
+          echo "See the commit's status on the Gitea instance for the real test/build-docs results."
