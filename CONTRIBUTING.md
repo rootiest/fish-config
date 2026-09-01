@@ -297,9 +297,29 @@ The repo is mirrored to
 and **the mirror carries the same labels, by the same names**. That isn't
 cosmetic: GitHub reads the same `.github/ISSUE_TEMPLATE/` files, and a
 `labels:` entry naming a label that doesn't exist on that side is silently
-dropped rather than reported. Mirroring copies files, not repository
-settings, so **a label added here must be created on the mirror too** — no
-automation does it for you.
+dropped rather than reported.
+
+Mirroring copies files, not repository settings, so labels don't travel with
+a push. **`.github/workflows/sync-labels.yml` closes that gap**: it runs
+`scripts/sync-labels.py` on a daily schedule, and again whenever the script
+itself changes, to make GitHub match Gitea. Manage labels here, in the Gitea
+UI, and the mirror catches up within a day — or dispatch the workflow by
+hand for it to happen now. Nothing needs doing on the GitHub side.
+
+The sync creates what's missing and corrects color or description drift,
+and it deletes an extra label on the mirror **only when no issue or PR there
+carries it**; one that's in use is reported with its count and left for a
+human to decide about. Run the script with `--dry-run` to see the plan
+without changing anything, or `--self-test` to check its diff logic offline
+— both are useful before editing it. Because labels are matched by name,
+renaming one on Gitea reads as a delete plus a create: the new name appears
+on the mirror, and the old one is pruned only if it's unused.
+
+The workflow needs a GitHub token in this repo's Actions secrets as
+`GH_MIRROR_TOKEN`, scoped to the mirror with **Issues: read and write**
+(GitHub files labels under Issues) and **Pull requests: read** (so the
+in-use check sees labels on PRs). The job fails with an explicit message if
+it's missing rather than quietly doing nothing.
 
 One behavioral difference to keep in mind: **GitHub has no exclusive
 labels.** Gitea enforces one-at-a-time on `Priority/`, `Reviewed/`, and
