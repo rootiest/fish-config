@@ -66,9 +66,8 @@ assumes you *do* have push access (maintainers, regular contributors).
 
 ### Pull request descriptions
 
-Fill in `.github/PULL_REQUEST_TEMPLATE.md` — Gitea and the GitHub mirror
-both pre-load it into the description box for you. Every PR carries, in
-this order:
+Fill in `.github/PULL_REQUEST_TEMPLATE.md` — Gitea pre-loads it into the
+description box when you open a PR. Every PR carries, in this order:
 
 - **`## Summary`** — what changed and why, as a short paragraph, 2-5
   bullets, or both. Name concrete paths and identifiers in backticks, and
@@ -83,6 +82,14 @@ this order:
   them before opening the PR and check the boxes; a box left unchecked
   means that step was *not* verified, so say so explicitly rather than
   leaving it silently blank.
+
+When a PR resolves a tracked issue, close it with a trailing `Closes #42`
+line at the end of `## Summary` — not at the very bottom of the body, since
+`## Manual Verification` is always last. `Fixes #N` and `Resolves #N` behave
+identically. Repeat the keyword for each issue (`Closes #42, closes #43`); a
+bare `#43` is only a link and won't close anything. To point at a related
+issue that should stay open, drop the keyword and use `Refs #42`. Leave the
+line out entirely when no issue is involved.
 
 ## Commit Conventions
 
