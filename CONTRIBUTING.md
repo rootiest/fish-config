@@ -11,6 +11,7 @@ treat it as a living document, not a final word.
 - [Getting Started](#getting-started)
 - [Issues](#issues)
 - [Branching & Pull Requests](#branching--pull-requests)
+- [Labels](#labels)
 - [Commit Conventions](#commit-conventions)
 - [Fish Coding Standards](#fish-coding-standards)
 - [Opinionated Components](#opinionated-components)
@@ -115,6 +116,9 @@ assumes you *do* have push access (maintainers, regular contributors).
   branching doesn't touch the working tree.)
 - **Merge target is `main`, via PR.** Contributors open the PR; the repo
   owner merges it. Don't merge your own PR.
+- **Label every PR.** At minimum one `Kind/` and one `Area/`, same as an
+  issue — see [Labels](#labels). If you can't set labels, say what the
+  change is in the description and a maintainer applies them.
 - **Don't merge until the `## Verification` checklist is fully checked.**
   Unchecked boxes are outstanding manual checks, not decoration. See
   [Pull request descriptions](#pull-request-descriptions) below.
@@ -178,6 +182,106 @@ identically. Repeat the keyword for each issue (`Closes #42, closes #43`); a
 bare `#43` is only a link and won't close anything. To point at a related
 issue that should stay open, drop the keyword and use `Refs #42`. Leave the
 line out entirely when no issue is involved.
+
+## Labels
+
+**Every issue and every pull request carries exactly one `Kind/` label and at
+least one `Area/` label.** Everything else is optional, and most of it is
+applied by a maintainer at triage rather than by whoever opened the thing.
+
+Labels are scoped: the `Group/Name` form renders as a two-tone chip in Gitea,
+and for the three *exclusive* groups below Gitea enforces one-at-a-time by
+swapping the old label out when you apply a new one.
+
+### `Kind/` — what this is
+
+Required, and by convention exactly one. Gitea doesn't enforce one-of here,
+so pick the dominant character of the change instead of stacking two.
+
+| Label | For |
+|---|---|
+| `Kind/Bug` | Something is not working |
+| `Kind/Feature` | New functionality |
+| `Kind/Enhancement` | Improves functionality that already exists |
+| `Kind/Documentation` | Documentation changes |
+| `Kind/Testing` | The test suite itself |
+| `Kind/Refactor` | Restructures code without changing behavior |
+| `Kind/Chore` | Tooling, dependencies, housekeeping |
+| `Kind/Performance` | Makes existing behavior faster or lighter |
+| `Kind/Security` | A security issue |
+
+These deliberately mirror the Conventional Commits types in [Commit
+Conventions](#commit-conventions), so a PR's label and its title agree:
+`fix` → `Kind/Bug`, `feat` → `Kind/Feature` or `Kind/Enhancement`, `docs` →
+`Kind/Documentation`, `test` → `Kind/Testing`, `refactor` →
+`Kind/Refactor`, `chore` → `Kind/Chore`, `perf` → `Kind/Performance`.
+
+### `Area/` — what it touches
+
+Required, and non-exclusive on purpose: a change that adds a function, its
+completions, and a manual entry gets all three.
+
+| Label | Covers |
+|---|---|
+| `Area/Functions` | `functions/` |
+| `Area/Completions` | `completions/` |
+| `Area/Config` | `config.fish`, `conf.d/` — startup and environment |
+| `Area/Docs` | `docs/manual/` and the generated manual, man page, and site |
+| `Area/Tests` | `tests/` |
+| `Area/CI` | `.github/workflows/` and repository automation |
+| `Area/Integrations` | `integrations/` |
+| `Area/Prompt & Theme` | `themes/` and prompt appearance |
+| `Area/Components` | The opinionated-component system (C1-C6) |
+| `Area/Scripts` | `scripts/` |
+
+`Area/` is what makes the tracker searchable: it answers "what's still
+outstanding in the docs pipeline?" in a way `Kind/` never can. Two edges
+worth naming — `Area/Docs` covers the documentation *and its pipeline*, so
+`README.md` and this file count even though they sit outside `docs/`; and
+`Area/Components` is for the C1-C6 machinery itself, not for every function
+that happens to carry a `# COMPONENT` header.
+
+### `Compat/Breaking`
+
+Applied to **any PR whose title carries `!` before the colon**, and to any
+issue proposing a change that would. It travels with the `## ⚠️ Breaking
+Change` section that such a PR must already include — see [Pull request
+descriptions](#pull-request-descriptions).
+
+### `Priority/` — exclusive, maintainer-applied
+
+`Priority/Critical`, `Priority/High`, `Priority/Medium`, `Priority/Low`.
+
+**No priority label means ordinary priority.** Labeling everything defeats
+the point, so leave it off unless the item is genuinely more or less urgent
+than the rest of the queue.
+
+### `Reviewed/` — exclusive, maintainer-applied
+
+`Reviewed/Confirmed` goes on a bug that has actually been reproduced —
+that's the signal separating a report from a known defect.
+`Reviewed/Duplicate`, `Reviewed/Invalid`, and `Reviewed/Won't Fix` accompany
+closing an issue, always with a comment saying why; a close with only a
+label on it is not an explanation.
+
+### `Status/` — exclusive, maintainer-applied
+
+`Status/Blocked`, `Status/Need More Info`, `Status/Abandoned`. These describe
+the item's current state, so remove one as soon as it stops being true — a
+stale `Status/Need More Info` on an issue that got its answer is worse than
+no label, because it reads as still waiting.
+
+### `good first issue` and `help wanted`
+
+Invitations to contributors, applied by a maintainer. Both are deliberately
+**unscoped**: they'd be a natural fit under `Status/`, but that group is
+exclusive, and an issue is quite often both blocked on something *and* open
+for someone to pick up. Keeping them outside the group lets them coexist
+with a real status.
+
+Use `good first issue` for work that is genuinely self-contained — a clear
+acceptance criterion, one or two files, no need to understand the
+opinionated-component system first.
 
 ## Commit Conventions
 
