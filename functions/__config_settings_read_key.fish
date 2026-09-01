@@ -7,11 +7,11 @@
 # DESCRIPTION
 #   Reads a single keypress directly from the controlling terminal in raw
 #   mode and echoes a normalized token naming the key. Bypasses fish's
-#   `read` builtin, whose interactive line editor swallows Tab and arrow
-#   keys (and prints a `read> ` prompt) — none of which is usable for a TUI.
+#   read builtin, whose interactive line editor swallows Tab and arrow
+#   keys (and prints a "read> " prompt) — none of which is usable for a TUI.
 #
 #   The terminal is put into raw, no-echo mode with a 0.1s inter-byte timer
-#   (`stty raw -echo min 1 time 1`) so a multi-byte escape sequence (e.g.
+#   (stty raw -echo min 1 time 1) so a multi-byte escape sequence (e.g.
 #   an arrow key, ESC [ A) is captured in one read while a lone key returns
 #   promptly. Original terminal settings are always restored before return.
 #

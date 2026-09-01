@@ -8,7 +8,7 @@
 #   __fish_user_dots_link
 #
 # DESCRIPTION
-#   Manages the git-ignored `user-dots` convenience symlink in the fish config
+#   Manages the git-ignored user-dots convenience symlink in the fish config
 #   directory ($__fish_config_dir/user-dots), pointing it at the resolved
 #   $__fish_user_dots_path so the private overlay can be browsed from
 #   ~/.config/fish/.

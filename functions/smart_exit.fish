@@ -31,7 +31,7 @@
 #
 # NOTES
 #   The exit builtin is wired to smart_exit for interactive sessions. Typing
-#   `exit` or Ctrl+D behaves identically to calling smart_exit directly.
+#   exit or Ctrl+D behaves identically to calling smart_exit directly.
 function smart_exit --description 'Capture colorized scrollback before exiting, with pruning and safe overrides'
     # Opinionated guard (C3): exit plainly when overrides are disabled.
     # This composes with Task #4's __fish_config_enable_logging, which will

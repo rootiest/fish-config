@@ -22,7 +22,7 @@
 #   in the default browser via xdg-open — deep links to a section aren't
 #   supported there, so if a keyword is given a note points you to the site's
 #   search box instead. Pass --man / -m to open the compiled man page
-#   (docs/fish-config.1) via `man -l`; if a section keyword is given, the
+#   (docs/fish-config.1) via man -l; if a section keyword is given, the
 #   pager opens at the nearest match. Pass --help or -h for usage and the
 #   navigation key reference.
 #
@@ -52,9 +52,9 @@
 #   config-help pkg --man
 #
 # NOTES
-#   The preferred invocation is `help config [...]` — this function is
+#   The preferred invocation is help config [...] — this function is
 #   registered as a handler in the help wrapper so that syntax works
-#   transparently. Direct `config-help` calls are also valid.
+#   transparently. Direct config-help calls are also valid.
 function config-help --description 'Open the offline fish shell configuration manual'
     set -l doc_file "$__fish_config_dir/docs/fish-config.md"
     set -l idx_file "$__fish_config_dir/docs/fish-config.index"

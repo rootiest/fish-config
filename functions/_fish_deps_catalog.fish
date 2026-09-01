@@ -18,13 +18,13 @@
 #                                  conveniences (e.g. backs one wrapper
 #                                  function) that only matter if you already
 #                                  use that specific tool. Skipped by
-#                                  `fish-deps install`/`sync` unless
-#                                  `--optional` (or `--all`) is passed.
+#                                  fish-deps install/sync unless
+#                                  --optional (or --all) is passed.
 #     term  Terminal Emulators   — GPU-accelerated terminal emulators
 #                                  (kitty, wezterm) that only matter if one
 #                                  of them is your actual terminal. Skipped
-#                                  by `fish-deps install`/`sync` unless
-#                                  `--terminals` (or `--all`) is passed.
+#                                  by fish-deps install/sync unless
+#                                  --terminals (or --all) is passed.
 #     int   Integrations         — opt-in third-party services requiring
 #                                  their own account/setup (wakatime,
 #                                  tailscale).

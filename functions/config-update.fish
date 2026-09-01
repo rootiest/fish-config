@@ -11,7 +11,7 @@
 #   Pulls the latest fish shell configuration from the upstream repository
 #   into ~/.config/fish. Git output is suppressed; status is reported
 #   through colored messages. After a successful pull the function prints a
-#   short summary of changed files; run `exec fish` to reload the shell.
+#   short summary of changed files; run exec fish to reload the shell.
 #
 # ARGUMENTS
 #   -h, --help      Show this help message and exit

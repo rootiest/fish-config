@@ -12,11 +12,11 @@
 #
 # DESCRIPTION
 #   Manages the fish-config Kitty scrollback watcher that powers C5 logging.
-#   `install` symlinks the canonical watcher into the Kitty config dir (so it
+#   install symlinks the canonical watcher into the Kitty config dir (so it
 #   always tracks the source) and wires it into kitty.conf via a
 #   sentinel-marked managed block, commenting out any conflicting active
-#   watcher line to avoid double-capture. `uninstall` reverses it. `status`
-#   reports wiring, installed watcher version, and C5 logging state. `dismiss`
+#   watcher line to avoid double-capture. uninstall reverses it. status
+#   reports wiring, installed watcher version, and C5 logging state. dismiss
 #   silences the per-session setup reminder.
 #
 #   Runtime capture stays governed by the C5 .logging_disabled sentinel, so

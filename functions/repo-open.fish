@@ -12,7 +12,7 @@
 #   repo-open --help
 #
 # DESCRIPTION
-#   Opens the web page for the current repository's `origin` remote in a
+#   Opens the web page for the current repository's origin remote in a
 #   browser (via open-url). Deep-links to the current branch when it exists
 #   on the remote, falling back to the remote's default branch (main/master)
 #   otherwise, and to the current sub-directory when invoked below the repo

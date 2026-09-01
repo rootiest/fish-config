@@ -6,9 +6,9 @@
 #
 # DESCRIPTION
 #   Appends any patterns not already covered by the project's .gitignore.
-#   Uses `git check-ignore` for accurate rule matching (catches wildcards
+#   Uses git check-ignore for accurate rule matching (catches wildcards
 #   and parent-dir globs). Falls back to a plain string search when the
-#   root is not a git repository. Leading `/` is stripped from each pattern
+#   root is not a git repository. Leading / is stripped from each pattern
 #   before the path-based check so root-anchored patterns (e.g. /AGENTS.md)
 #   are matched correctly.
 #

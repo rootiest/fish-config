@@ -29,10 +29,10 @@
 #     Optional            btop, dust, duf, prettyping, go, lazygit,
 #                         lazydocker, docker, yt-dlp, screen — single-purpose
 #                         wrapper conveniences that only matter if you
-#                         already use that tool; skipped by `install`/`sync`
+#                         already use that tool; skipped by install/sync
 #                         unless --optional (or --all) is passed
 #     Terminal Emulators  kitty, wezterm — only matter if one of them is
-#                         your actual terminal; skipped by `install`/`sync`
+#                         your actual terminal; skipped by install/sync
 #                         unless --terminals (or --all) is passed
 #     Integrations        wakatime, tailscale
 #

@@ -13,7 +13,7 @@
 # DESCRIPTION
 #   Wraps mv to automatically collapse nested directories of the same name.
 #   When extracting archives results in redundant structures (e.g.,
-#   themes/themes/), calling `mv themes/themes themes` will gracefully
+#   themes/themes/), calling mv themes/themes themes will gracefully
 #   move the inner contents up one level and remove the empty outer shell.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases,

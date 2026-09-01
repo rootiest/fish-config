@@ -17,11 +17,11 @@
 #   Looks up "<identity>:<site>" (site defaults to the empty/unnamed site)
 #   in the generated component registry. No registry entry (unclassified,
 #   or a doc header with no # COMPONENT section) resolves to enabled --
-#   the same fail-open default as an explicit `always/on` tag, so
+#   the same fail-open default as an explicit always/on tag, so
 #   user-authored and third-party functions that never call this guard in
 #   the first place are unaffected, and one that somehow does is never
-#   silently broken by a missing header. A found `always/off` tag
-#   disables unconditionally; a found `always/on` tag enables
+#   silently broken by a missing header. A found always/off tag
+#   disables unconditionally; a found always/on tag enables
 #   unconditionally, short-circuiting before any other tagged
 #   sub-category is evaluated. Otherwise every tagged sub-category must
 #   pass the cascade (AND semantics).

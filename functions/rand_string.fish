@@ -10,9 +10,9 @@
 # DESCRIPTION
 #   Generates a random, memorable string using a sequence of specified word
 #   categories and formatting modifiers. Words are pulled from curated
-#   plain-text databases bundled in `data/words/`.
+#   plain-text databases bundled in data/words/.
 #
-#   Modifiers like `--separator` and `--case` are evaluated sequentially and
+#   Modifiers like --separator and --case are evaluated sequentially and
 #   apply only to the components that follow them.
 #
 #   Supported Components:
@@ -35,7 +35,7 @@
 #   rand_string literal=TEST --separator=underscore verb noun
 #
 # NOTES
-#   Falls back to `random choice` if GNU `shuf` is missing, but `shuf` is
+#   Falls back to random choice if GNU shuf is missing, but shuf is
 #   much faster for files with >1000 lines.
 function rand_string --description 'Generate random, memorable strings from curated word databases'
     set -l c_head (set_color --bold cyan)
