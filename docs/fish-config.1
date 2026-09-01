@@ -56,13 +56,14 @@ Drop-in replacements for common Unix tools (\f[V]ls\f[R], \f[V]cat\f[R],
 Deep Kitty and WezTerm terminal integration: tab/window/pane management
 from the command line
 .IP \[bu] 2
-Optional session logging: terminal scrollback, tmux/zellij panes, and
-paru/yay output captured to \f[V]\[ti]/.terminal_history\f[R] (off by
-default; see C5 Logging)
+Optional session logging: terminal scrollback,
+\f[V]tmux\f[R]/\f[V]zellij\f[R] panes, and \f[V]paru\f[R]/\f[V]yay\f[R]
+output captured to \f[V]\[ti]/.terminal_history\f[R] (off by default;
+see C5 Logging)
 .IP \[bu] 2
 Automatic Python virtualenv activation on directory change
 .IP \[bu] 2
-Cross-platform package management via pkg and fish-deps
+Cross-platform package management via pkg and \f[V]fish-deps\f[R]
 .IP \[bu] 2
 AI scaffolding helpers for Claude Code and Antigravity
 .IP \[bu] 2
@@ -168,9 +169,9 @@ The configuration uses a structured file tree:
    *   *   *   *   *
 .SH 1. CONFIGURATION VARIABLES
 .PP
-These variables are exported from config.fish on every interactive
-session.
-Override them in local.fish (see Section 10, Personalization).
+These variables are exported from \f[V]config.fish\f[R] on every
+interactive session.
+Override them in \f[V]local.fish\f[R] (see Section 10, Personalization).
 .SS Environment Directories (XDG)
 .PP
 .TS
@@ -534,7 +535,7 @@ T}
 T{
 \f[V]$NPM_CONFIG_PREFIX/bin\f[R]
 T}@T{
-Global npm packages
+Global \f[V]npm\f[R] packages
 T}
 T{
 \f[V]\[ti]/.lmstudio/bin\f[R]
@@ -569,7 +570,7 @@ toggle it off in the \f[V]config-settings\f[R] menu).
    *   *   *   *   *
 .SH 3. KEY BINDINGS
 .PP
-The shell uses Vi key bindings (fish_vi_key_bindings).
+The shell uses Vi key bindings (\f[V]fish_vi_key_bindings\f[R]).
 All custom bindings are active in Insert, Normal, and Visual modes
 unless noted.
 .IP
@@ -860,8 +861,8 @@ url-open        open-url
 .fi
 .SS 4.11 Shell Aliases
 .PP
-These aliases are defined in conf.d/tricks.fish via alias (which creates
-Fish functions).
+These aliases are defined in \f[V]conf.d/tricks.fish\f[R] via alias
+(which creates Fish functions).
 They are active in all interactive sessions.
 .IP
 .nf
@@ -1145,7 +1146,7 @@ Synopsis:  mv [args...]
 
 Wraps mv to automatically collapse nested directories of the same name.
 When extracting archives results in redundant structures (e.g.,
-themes/themes/), calling \[ga]mv themes/themes themes\[ga] will gracefully
+themes/themes/), calling mv themes/themes themes will gracefully
 move the inner contents up one level and remove the empty outer shell.
 
 Opinionated component (C1): when disabled via __fish_config_op_aliases,
@@ -1745,10 +1746,10 @@ Dependencies are grouped into five tiers:
   Optional            btop, dust, duf, prettyping, go, lazygit,
                       lazydocker, docker, yt-dlp, screen \[em] single-purpose
                       wrapper conveniences that only matter if you
-                      already use that tool; skipped by \[ga]install\[ga]/\[ga]sync\[ga]
+                      already use that tool; skipped by install/sync
                       unless --optional (or --all) is passed
   Terminal Emulators  kitty, wezterm \[em] only matter if one of them is
-                      your actual terminal; skipped by \[ga]install\[ga]/\[ga]sync\[ga]
+                      your actual terminal; skipped by install/sync
                       unless --terminals (or --all) is passed
   Integrations        wakatime, tailscale
 
@@ -2026,13 +2027,13 @@ Synopsis:  jobrunner [-t <tool>] [<subcommand>] [<name>] [<command>...]
 Runs, lists, inspects, re-attaches to, and terminates named background
 jobs using tmux or GNU screen as the process engine. Unlike bkg and
 detach, which discard output, a jobrunner job keeps a live terminal you
-can return to later \[em] it survives closing the shell, and \[ga]attach\[ga]
+can return to later \[em] it survives closing the shell, and attach
 restores it in any subsequent session.
 Run and manage named background jobs. Jobs are detached from the shell
 and backed by tmux (preferred) or GNU screen.
 
-If the job name is omitted when starting a new job (e.g. \[ga]jobrunner sleep 1\[ga]),
-a memorable, random name (like \[ga]sleepy-badger\[ga]) will be generated.
+If the job name is omitted when starting a new job (e.g. jobrunner sleep 1),
+a memorable, random name (like sleepy-badger) will be generated.
 
 Exit Status:
   0    Command succeeded, or no jobs are running
@@ -2043,7 +2044,7 @@ Notes:
   Detach from an attached job with Ctrl-A then D; the job keeps running.
   Commands are executed directly rather than through a shell, so pipes and
   redirections must be wrapped explicitly, e.g.
-  \[ga]jobrunner run sync fish -c \[aq]a | b\[aq]\[ga].
+  jobrunner run sync fish -c \[aq]a | b\[aq].
 
 Example:
 jobrunner run -n build make -j8
@@ -2403,7 +2404,7 @@ Exit Status:
 
 Notes:
   The exit builtin is wired to smart_exit for interactive sessions. Typing
-  \[ga]exit\[ga] or Ctrl+D behaves identically to calling smart_exit directly.
+  exit or Ctrl+D behaves identically to calling smart_exit directly.
 
 Example:
 smart_exit
@@ -2658,7 +2659,7 @@ it if missing, and on first use installs the bundled role by symlinking
 scripts/cli-agent.md to $XDG_CONFIG_HOME/aichat/roles/cli.md. Inherits
 every aichat flag and tab completion (--wraps aichat); passing --role/-r
 overrides the default role, so qc forwards to aichat unchanged. The
-function is only defined when aichat is installed. Run \[ga]qc --help\[ga] for
+function is only defined when aichat is installed. Run qc --help for
 aichat\[aq]s full flag reference with the command name rewritten to qc.
 
 Arguments:
@@ -2917,7 +2918,7 @@ the published documentation website (https://fish.rootiest.fyi/)
 in the default browser via xdg-open \[em] deep links to a section aren\[aq]t
 supported there, so if a keyword is given a note points you to the site\[aq]s
 search box instead. Pass --man / -m to open the compiled man page
-(docs/fish-config.1) via \[ga]man -l\[ga]; if a section keyword is given, the
+(docs/fish-config.1) via man -l; if a section keyword is given, the
 pager opens at the nearest match. Pass --help or -h for usage and the
 navigation key reference.
 
@@ -2936,9 +2937,9 @@ Returns:
   Otherwise, the manual is shown via the resolved pager (not captured stdout).
 
 Notes:
-  The preferred invocation is \[ga]help config [...]\[ga] \[em] this function is
+  The preferred invocation is help config [...] \[em] this function is
   registered as a handler in the help wrapper so that syntax works
-  transparently. Direct \[ga]config-help\[ga] calls are also valid.
+  transparently. Direct config-help calls are also valid.
 
 Example:
 config-help
@@ -3052,7 +3053,7 @@ Synopsis:  config-update [-h | --help] [-f | --force] [-n | --dry-run]
 Pulls the latest fish shell configuration from the upstream repository
 into \[ti]/.config/fish. Git output is suppressed; status is reported
 through colored messages. After a successful pull the function prints a
-short summary of changed files; run \[ga]exec fish\[ga] to reload the shell.
+short summary of changed files; run exec fish to reload the shell.
 
 Arguments:
   -h, --help      Show this help message and exit
@@ -3161,11 +3162,11 @@ joplin ls
 Synopsis:  kitty-logging [install | uninstall | status | dismiss] [-h]
 
 Manages the fish-config Kitty scrollback watcher that powers C5 logging.
-\[ga]install\[ga] symlinks the canonical watcher into the Kitty config dir (so it
+install symlinks the canonical watcher into the Kitty config dir (so it
 always tracks the source) and wires it into kitty.conf via a
 sentinel-marked managed block, commenting out any conflicting active
-watcher line to avoid double-capture. \[ga]uninstall\[ga] reverses it. \[ga]status\[ga]
-reports wiring, installed watcher version, and C5 logging state. \[ga]dismiss\[ga]
+watcher line to avoid double-capture. uninstall reverses it. status
+reports wiring, installed watcher version, and C5 logging state. dismiss
 silences the per-session setup reminder.
 
 Runtime capture stays governed by the C5 .logging_disabled sentinel, so
@@ -3254,9 +3255,9 @@ Synopsis:  rand_string [COMPONENTS/MODIFIERS]...
 
 Generates a random, memorable string using a sequence of specified word
 categories and formatting modifiers. Words are pulled from curated
-plain-text databases bundled in \[ga]data/words/\[ga].
+plain-text databases bundled in data/words/.
 
-Modifiers like \[ga]--separator\[ga] and \[ga]--case\[ga] are evaluated sequentially and
+Modifiers like --separator and --case are evaluated sequentially and
 apply only to the components that follow them.
 
 Supported Components:
@@ -3274,7 +3275,7 @@ Exit Status:
   1  Unknown category or missing word list file
 
 Notes:
-  Falls back to \[ga]random choice\[ga] if GNU \[ga]shuf\[ga] is missing, but \[ga]shuf\[ga] is
+  Falls back to random choice if GNU shuf is missing, but shuf is
   much faster for files with >1000 lines.
 
 Example:
@@ -3312,7 +3313,7 @@ replay \[dq]export FOO=bar\[dq]
 Synopsis:  repo-open [-p|--print] [-r|--root]
            repo-open --help
 
-Opens the web page for the current repository\[aq]s \[ga]origin\[ga] remote in a
+Opens the web page for the current repository\[aq]s origin remote in a
 browser (via open-url). Deep-links to the current branch when it exists
 on the remote, falling back to the remote\[aq]s default branch (main/master)
 otherwise, and to the current sub-directory when invoked below the repo
@@ -3391,7 +3392,7 @@ wake-lock rsync -avz src/ dest/
 .fi
 .SH 6. DEPENDENCY CATALOG
 .PP
-fish-deps manages these tools.
+\f[V]fish-deps\f[R] manages these tools.
 Run \f[V]fish-deps\f[R] to check status, \f[V]fish-deps install\f[R] to
 install missing Required/Recommended ones, or add \f[V]--optional\f[R],
 \f[V]--terminals\f[R], or \f[V]--all\f[R] to also include the Optional
@@ -3454,8 +3455,8 @@ T{
 T}@T{
 Per-directory environment loading; integration is fully guarded with
 \f[V]type -q direnv\f[R].
-Without it the direnv hook is simply not loaded and auto-venv activates
-normally.
+Without it the \f[V]direnv\f[R] hook is simply not loaded and auto-venv
+activates normally.
 T}
 T{
 \f[V]paru\f[R]
@@ -3466,7 +3467,7 @@ T}
 T{
 \f[V]yay\f[R]
 T}@T{
-AUR helper (Arch only; fallback to paru); same guards apply.
+AUR helper (Arch only; fallback to \f[V]paru\f[R]); same guards apply.
 T}
 T{
 \f[V]eza\f[R]
@@ -3558,8 +3559,8 @@ T}
 T{
 \f[V]prettyping\f[R]
 T}@T{
-Colorized ping wrapper; backs the \f[V]ping\f[R] wrapper (falls back to
-system \f[V]ping\f[R]).
+Colorized \f[V]ping\f[R] wrapper; backs the \f[V]ping\f[R] wrapper
+(falls back to system \f[V]ping\f[R]).
 T}
 T{
 \f[V]go\f[R]
@@ -3739,8 +3740,8 @@ config directory tracks \f[V]$__fish_user_dots_path\f[R] so the overlay
 can be browsed from \f[V]\[ti]/.config/fish/\f[R].
 It is created if missing and repointed if the path changes.
 Opt out by setting \f[V]__fish_user_dots_symlink\f[R] to a falsy value,
-or toggling \[lq]Dots link\[rq] off on the config-settings Paths page
-\[em] this stops generation and removes any existing link.
+or toggling \[lq]Dots link\[rq] off on the \f[V]config-settings\f[R]
+Paths page \[em] this stops generation and removes any existing link.
 It only ever manages a symlink and never clobbers a real file or
 directory at that path.
 .SS Secrets and API Keys
@@ -3753,14 +3754,16 @@ $__fish_user_dots_path/secrets.fish
 .PP
 Store API tokens, GPG keys, private credentials here.
 This file is never committed.
-It is sourced by local.fish directly, not by config.fish.
+It is sourced by \f[V]local.fish\f[R] directly, not by
+\f[V]config.fish\f[R].
 .PP
-\f[V]local.fish\f[R] is sourced at the end of config.fish on every
-interactive session, so it and its companion secrets.fish can override
-anything set earlier.
+\f[V]local.fish\f[R] is sourced at the end of \f[V]config.fish\f[R] on
+every interactive session, so it and its companion
+\f[V]secrets.fish\f[R] can override anything set earlier.
 .SS Overriding Configuration Variables
 .PP
-Any variable set in local.fish after the main config loads takes effect.
+Any variable set in \f[V]local.fish\f[R] after the main config loads
+takes effect.
 Example: to increase the scrollback history limit:
 .IP
 .nf
@@ -3771,10 +3774,10 @@ set -gx SCROLLBACK_HISTORY_MAX_FILES 200
 .fi
 .SS Fish Universal Variables
 .PP
-Some settings (fzf colors, theme) are stored in fish_variables via
-\f[V]set -U\f[R].
+Some settings (\f[V]fzf\f[R] colors, theme) are stored in
+\f[V]fish_variables\f[R] via \f[V]set -U\f[R].
 These are machine-local and git-ignored.
-Do not commit fish_variables.
+Do not commit \f[V]fish_variables\f[R].
 .SS Opinionated Components (Minimal Mode)
 .PP
 Every opinionated piece of this config is active by default but can be
@@ -3861,8 +3864,8 @@ set -U __fish_config_op_greeting 1
 .fi
 .PP
 For an interactive alternative to setting these variables by hand, run
-config-settings \[em] a full-screen TUI that flips any category
-(including C5 logging) on or off, per session or universally.
+\f[V]config-settings\f[R] \[em] a full-screen TUI that flips any
+category (including C5 logging) on or off, per session or universally.
 See its entry in Section 5.
 .PP
 NOTE: - Command shadows (rm, cat, ls, \&...)
@@ -3870,7 +3873,8 @@ react immediately; conf.d-level components (bindings, prompt,
 abbreviations, hooks) take effect in new shells.
 - With aliases disabled, rm falls back to bare \f[V]command rm\f[R]
 \[em] files are deleted permanently, not trashed.
-- Disabled integration commands (spwin, tab, split, hist, logs, upgrade)
+- Disabled integration commands (\f[V]spwin\f[R], \f[V]tab\f[R],
+\f[V]split\f[R], \f[V]hist\f[R], \f[V]logs\f[R], \f[V]upgrade\f[R])
 print an error naming the variable that disabled them.
 - On CachyOS, the distro fish config\[cq]s own aliases, history
 override, and bang-bang bindings are stripped per category as well.
@@ -3885,19 +3889,20 @@ an explicit sub-category value overrides the master switch and the
 parent category\[cq]s setting, and an unset sub-category inherits from
 its parent category (which in turn inherits from
 \f[V]__fish_config_opinionated\f[R]).
-Run config-settings and press Enter on a category row to browse and
-toggle its sub-categories interactively.
+Run \f[V]config-settings\f[R] and press Enter on a category row to
+browse and toggle its sub-categories interactively.
 See Components Reference for the full sub-category breakdown of every
 category.
 .SS Prompt and Theme
 .SS Starship
 .PP
-The primary prompt is Starship, initialized by conf.d/starship.fish.
-Configure it via \[ti]/.config/starship.toml.
+The primary prompt is Starship, initialized by
+\f[V]conf.d/starship.fish\f[R].
+Configure it via \f[V]\[ti]/.config/starship.toml\f[R].
 .PP
-conf.d/starship.fish defines a fish_prompt wrapper that only activates
-when starship is in PATH and C3 overrides are enabled (see Opinionated
-Components above).
+\f[V]conf.d/starship.fish\f[R] defines a \f[V]fish_prompt\f[R] wrapper
+that only activates when \f[V]starship\f[R] is in PATH and C3 overrides
+are enabled (see Opinionated Components above).
 It emits OSC 133;A (prompt start) immediately before Starship renders
 and OSC 133;B (input start) immediately after, placing both markers on
 the prompt line itself.
@@ -3910,7 +3915,8 @@ automatically.
 .SS Catppuccin Fallback Prompt
 .PP
 When Starship is absent or C3 overrides are disabled, a built-in
-nim-style two-line prompt activates from functions/fish_prompt.fish.
+nim-style two-line prompt activates from
+\f[V]functions/fish_prompt.fish\f[R].
 No external dependencies \[em] fish builtins only.
 .PP
 Layout (a dim job line appears between the two rows for each running
@@ -3944,8 +3950,8 @@ user              Yellow (Catppuccin Yellow); red if root
 \f[R]
 .fi
 .PP
-The right prompt (fish_right_prompt.fish) always renders, independently
-of which left prompt is active:
+The right prompt (\f[V]fish_right_prompt.fish\f[R]) always renders,
+independently of which left prompt is active:
 .IP
 .nf
 \f[C]
@@ -3986,8 +3992,8 @@ only the exit-status prefix and timestamp ever appear:
 .fi
 .SS FZF
 .PP
-FZF is themed to Catppuccin Mocha via FZF_DEFAULT_OPTS, set in
-conf.d/theme.fish (opinionated; disabled by
+FZF is themed to Catppuccin Mocha via \f[V]FZF_DEFAULT_OPTS\f[R], set in
+\f[V]conf.d/theme.fish\f[R] (opinionated; disabled by
 \f[V]__fish_config_op_overrides\f[R], see Opinionated Components above).
 The colors applied:
 .IP
@@ -4007,8 +4013,9 @@ Hex        Role                     Catppuccin name
 \f[R]
 .fi
 .PP
-To customize, override FZF_DEFAULT_OPTS in local.fish \[em] it is
-sourced after conf.d/theme.fish on every session, so a
+To customize, override \f[V]FZF_DEFAULT_OPTS\f[R] in
+\f[V]local.fish\f[R] \[em] it is sourced after
+\f[V]conf.d/theme.fish\f[R] on every session, so a
 \f[V]set -Ux FZF_DEFAULT_OPTS ...\f[R] there always wins.
 .SS Catppuccin Mocha Syntax Highlighting
 .PP
@@ -4016,7 +4023,7 @@ The Catppuccin Mocha theme ships with this config in themes/ and is
 applied automatically on first run via \f[V]conf.d/first_run.fish\f[R]
 (gated by \f[V]__fish_config_op_autoexec\f[R]; see Opinionated
 Components above).
-Colors are stored in fish_variables (universal).
+Colors are stored in \f[V]fish_variables\f[R] (universal).
 Three other bundled variants are available in themes/ \[em] Latte,
 Frappé, and Macchiato.
 To switch:
@@ -4038,9 +4045,9 @@ toggle a category variable.
 \f[C]
 Category   Description
 ──────────────────────────────────────────────────────────────────────────
-C1         Command Shadows \[em] Wraps destructive commands (\[ga]rm\[ga], \[ga]cp\[ga]) to be safe by default
+C1         Command Shadows \[em] Wraps destructive commands (rm, cp) to be safe by default
 C2         Startup Side-Effects \[em] Bootstraps Fisher, generates wrappers, auto-activates venvs
-C3         Overrides \[em] Overrides \[ga]cd\[ga], sets Vi mode, binds \[ga]<CR>\[ga] to \[ga]smart_enter\[ga]
+C3         Overrides \[em] Overrides cd, sets Vi mode, binds <CR> to smart_enter
 C4         Integrations \[em] Kitty/Wezterm integrations, starship hooks, fzf theme
 C5         Logging and Capture \[em] Session logs, command duration
 C6         Greeting & First-Run UI \[em] Custom startup banner
@@ -4125,8 +4132,8 @@ talk to the network.
 interception.
 .SS dev-tools
 .PP
-\f[V]claude\f[R] (AGENTS.md/CLAUDE.md auto-linking) and \f[V]edit\f[R]
-(multi-editor launcher), plus \f[V]agy\f[R].
+\f[V]claude\f[R] (\f[V]AGENTS.md/CLAUDE.md\f[R] auto-linking) and
+\f[V]edit\f[R] (multi-editor launcher), plus \f[V]agy\f[R].
 .SS C2 \[em] Startup Side-Effects
 .PP
 These run automatically without any user action.
@@ -4150,23 +4157,26 @@ user-dots symlink          Every startup        Links $__fish_config_dir/user-do
 .fi
 .PP
 When C2 is disabled: no Fisher install, no theme application, no
-paru/yay wrapper generation, no automatic venv activation, no WakaTime
-reporting, no auto-pull (the PWD handler is never registered), and the
-user-dots convenience symlink is not created.
+\f[V]paru\f[R]/\f[V]yay\f[R] wrapper generation, no automatic venv
+activation, no WakaTime reporting, no \f[V]auto-pull\f[R] (the PWD
+handler is never registered), and the user-dots convenience symlink is
+not created.
 The symlink is git-ignored and only ever managed as a symlink \[em] a
 real file or directory at that path is left untouched.
 The symlink has its own opt-out independent of C2: set
 \f[V]__fish_user_dots_symlink\f[R] to a falsy value (or toggle \[lq]Dots
-link\[rq] off on the config-settings Paths page) to stop generating it
-and remove any existing link \[em] honoured even when C2 is enabled.
+link\[rq] off on the \f[V]config-settings\f[R] Paths page) to stop
+generating it and remove any existing link \[em] honoured even when C2
+is enabled.
 Managed by the \f[V]__fish_user_dots_link\f[R] helper.
 The first-run completion marker
 (\f[V]__fish_config_first_run_complete\f[R]) is still set so the init
 does not re-run on subsequent shells.
 .PP
 Python venv activation fires on every directory change.
-If a directory uses direnv (\f[V].envrc\f[R] present), direnv takes
-priority and auto-venv is skipped for that directory.
+If a directory uses \f[V]direnv\f[R] (\f[V].envrc\f[R] present),
+\f[V]direnv\f[R] takes priority and auto-venv is skipped for that
+directory.
 .PP
 Auto-pull fast-forwards opted-in repositories in the background when you
 cd into them.
@@ -4331,16 +4341,16 @@ set -U __fish_config_op_logging off     # or: set -Ue __fish_config_op_logging
 Component               What it captures
 ───────────────────────────────────────────────────────────────────────────
 Scrollback capture      Terminal session output saved to:
-                        \[ga]\[ti]/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log\[ga]
+                        \[ti]/.terminal_history/scrollback_YYYY-MM-DD_HH-MM-SS.log
 tmux pane capture       Continuous pane stream via pipe-pane, saved to:
-                        \[ga]\[ti]/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log\[ga]
+                        \[ti]/.terminal_history/tmux_<session>-w<win>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
 zellij pane capture     Pane scrollback snapshot on shell exit, saved to:
-                        \[ga]\[ti]/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log\[ga]
+                        \[ti]/.terminal_history/zellij_<session>-p<pane>_YYYY-MM-DD_HH-MM-SS.log
 paru wrapper            All paru/AUR output captured to:
-                        \[ga]\[ti]/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log\[ga]
+                        \[ti]/.terminal_history/paru_YYYY-MM-DD_HH-MM-SS.log
 yay wrapper             All yay/AUR output captured to:
-                        \[ga]\[ti]/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log\[ga]
-Kitty watcher           \[ga]watcher.py\[ga] captures scrollback when Kitty closes
+                        \[ti]/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
+Kitty watcher           watcher.py captures scrollback when Kitty closes
 \f[R]
 .fi
 .PP
@@ -4351,58 +4361,60 @@ NOTE: \f[B]Turning off logging does not delete any existing logs.\f[R]
 They remain in \f[V]$SCROLLBACK_HISTORY_DIR\f[R] (defaults to:
 \f[V]\[ti]/.terminal_history/\f[R]) until you remove them manually.
 .PP
-The tmux capture starts automatically when fish launches inside any tmux
-pane (\f[V]$TMUX\f[R] is set).
-It uses tmux\[cq]s native pipe-pane to stream all pane output directly
-to disk without an intermediate process.
+The \f[V]tmux\f[R] capture starts automatically when fish launches
+inside any \f[V]tmux\f[R] pane (\f[V]$TMUX\f[R] is set).
+It uses \f[V]tmux\f[R]\[cq]s native pipe-pane to stream all pane output
+directly to disk without an intermediate process.
 Each fish shell session gets its own log file; a new log is created on
 each shell start (including exec fish and new splits).
 Before each new log, the oldest \f[V]tmux_*.log\f[R] files are pruned
 (by modification time) to keep the total within
-\f[V]SCROLLBACK_HISTORY_MAX_FILES\f[R], matching the paru/yay wrapper
-behaviour.
+\f[V]SCROLLBACK_HISTORY_MAX_FILES\f[R], matching the
+\f[V]paru\f[R]/\f[V]yay\f[R] wrapper behaviour.
 .PP
-The zellij capture works differently: Zellij has no live
+The \f[V]zellij\f[R] capture works differently: Zellij has no live
 output-streaming facility like pipe-pane, so the log is taken as a
 one-shot snapshot when the shell exits, via
 \f[V]zellij action dump-screen --full --ansi\f[R] (the \f[V]--ansi\f[R]
 flag preserves color).
 The dump is captured on the fish process\[cq]s stdout and written to the
 log file by fish itself (not via \f[V]--path\f[R], which would make the
-zellij server write the file).
-A fish_exit handler (registered whenever \f[V]$ZELLIJ\f[R] is set)
-writes the pane\[cq]s full scrollback and then prunes old
+\f[V]zellij\f[R] server write the file).
+A \f[V]fish_exit\f[R] handler (registered whenever \f[V]$ZELLIJ\f[R] is
+set) writes the pane\[cq]s full scrollback and then prunes old
 \f[V]zellij_*.log\f[R] files the same way.
 Because the capture happens at exit, toggling
 \f[V]__fish_config_op_logging\f[R] takes effect on the next exit with no
 restart or sentinel coordination needed \[em] the C5 guard is re-checked
 when the handler fires.
 .PP
-LIMITATION \[em] zellij capture only fires on a clean shell exit (typing
-\f[V]exit\f[R], Ctrl-D, or a logout), because that is when the fish_exit
-handler runs.
-It does NOT capture when you close a pane or quit zellij through zellij
-itself:
+LIMITATION \[em] \f[V]zellij\f[R] capture only fires on a clean shell
+exit (typing \f[V]exit\f[R], \f[V]Ctrl-D\f[R], or a logout), because
+that is when the \f[V]fish_exit\f[R] handler runs.
+It does NOT capture when you close a pane or quit \f[V]zellij\f[R]
+through \f[V]zellij\f[R] itself:
 .IP \[bu] 2
 Closing a pane signals the shell and tears the pane down concurrently,
-so even if the handler runs, \f[V]dump-screen\f[R] may find the pane
-buffer already gone.
+so even if the handler runs, dump-screen may find the pane buffer
+already gone.
 .IP \[bu] 2
-Quitting zellij kills the zellij server, and \f[V]dump-screen\f[R] needs
-a live server to read from \[em] there is nothing left to snapshot.
+Quitting \f[V]zellij\f[R] kills the \f[V]zellij\f[R] server, and
+\f[V]dump-screen\f[R] needs a live server to read from \[em] there is
+nothing left to snapshot.
 .PP
-This is a structural difference from tmux, NOT a bug.
-tmux streams pane output to disk continuously via pipe-pane, so whatever
-was printed is already saved no matter how the pane dies.
+This is a structural difference from \f[V]tmux\f[R], NOT a bug.
+\f[V]tmux\f[R] streams pane output to disk continuously via pipe-pane,
+so whatever was printed is already saved no matter how the pane dies.
 Zellij can only snapshot, and the only reliable snapshot point from the
 shell is a clean exit.
-To guarantee a zellij pane is logged, end the session with
-\f[V]exit\f[R] or Ctrl-D rather than zellij\[cq]s close-pane or quit
-actions.
+To guarantee a \f[V]zellij\f[R] pane is logged, end the session with
+\f[V]exit\f[R] or \f[V]Ctrl-D\f[R] rather than \f[V]zellij\f[R]\[cq]s
+close-pane or quit actions.
 .PP
-The Kitty watcher is managed by the kitty-logging command: it symlinks
-the watcher (\f[V]fish-config-watcher.py\f[R]) into the Kitty config
-directory and wires it into \f[V]kitty.conf\f[R] via a managed block.
+The Kitty watcher is managed by the \f[V]kitty-logging\f[R] command: it
+symlinks the watcher (\f[V]fish-config-watcher.py\f[R]) into the Kitty
+config directory and wires it into \f[V]kitty.conf\f[R] via a managed
+block.
 Inside Kitty, a non-blocking per-session reminder points first-time
 users at \f[V]kitty-logging install\f[R] until they install or run
 \f[V]kitty-logging dismiss\f[R]; the reminder is itself gated on C5, so
@@ -4430,33 +4442,35 @@ Disabling \f[V]__fish_config_op_logging\f[R] (or leaving it unset): 1.
 Creates the sentinel immediately in every open shell.
 2.
 Removes \f[V]\[ti]/.local/bin/paru\f[R] and
-\f[V]\[ti]/.local/bin/yay\f[R] logging wrappers; bare
-\f[V]/usr/bin/paru\f[R] and \f[V]/usr/bin/yay\f[R] are used instead.
+\f[V]\[ti]/.local/bin/yay\f[R] logging wrappers; bare /usr/bin/paru and
+/usr/bin/yay are used instead.
 3.
 Kitty\[cq]s \f[V]watcher.py\f[R] reads the sentinel on each save attempt
 and skips capture \[em] no Kitty restart required.
 4.
-smart_exit stops saving scrollback logs.
+\f[V]smart_exit\f[R] stops saving scrollback logs.
 5.
 Stops \f[V]tmux pipe-pane\f[R] capture in every open fish shell inside
-tmux.
+\f[V]tmux\f[R].
 .PP
 Enabling \f[V]__fish_config_op_logging\f[R]: 1.
 Removes the sentinel in every open shell.
 2.
-Regenerates paru/yay logging wrappers in \f[V]\[ti]/.local/bin/\f[R].
+Regenerates \f[V]paru\f[R]/\f[V]yay\f[R] logging wrappers in
+\f[V]\[ti]/.local/bin/\f[R].
 3.
 Kitty watcher resumes capture on the next session exit.
 4.
-Restarts tmux pipe-pane capture in every open fish shell inside tmux.
+Restarts \f[V]tmux\f[R] pipe-pane capture in every open fish shell
+inside \f[V]tmux\f[R].
 .PP
 Changes propagate to all running shells through an event handler that
 fires whenever \f[V]__fish_config_op_logging\f[R] changes \[em] no shell
 restart needed.
 .PP
 Note: C3 and C5 compose independently.
-C3 controls whether the smart_exit wrapper is active at all; C5 controls
-only the scrollback-capture block inside it.
+C3 controls whether the \f[V]smart_exit\f[R] wrapper is active at all;
+C5 controls only the scrollback-capture block inside it.
 With C3 disabled, exit is plain builtin exit regardless of C5.
 .SS Sub-categories
 .PP
@@ -4471,7 +4485,8 @@ Kitty watcher scrollback capture, and \f[V]smart_exit\f[R]\[cq]s
 logging-guard path.
 .SS multiplexer-capture
 .PP
-tmux \f[V]pipe-pane\f[R] and zellij \f[V]dump-screen\f[R] capture.
+\f[V]tmux\f[R] \f[V]pipe-pane\f[R] and \f[V]zellij\f[R]
+\f[V]dump-screen\f[R] capture.
 .SS pkg-logs
 .PP
 \f[V]paru\f[R]/\f[V]yay\f[R] AUR log wrappers.
@@ -4535,8 +4550,8 @@ Fisher installs and updates them automatically.
 .SS Sponge History Filtering
 .PP
 Sponge removes failed commands from history and, via
-conf.d/sponge_privacy.fish, also filters privacy-sensitive commands
-through three layers.
+\f[V]conf.d/sponge_privacy.fish\f[R], also filters privacy-sensitive
+commands through three layers.
 Detection is heuristic \[em] pattern- and variable-name-based \[em] so
 this reduces the risk of a credential landing in persistent history; it
 is not a guarantee that no secret can ever reach it, and it is not a
@@ -4565,17 +4580,17 @@ Basic auth flags: \f[V]curl -u user:pass\f[R]
 \f[V]openssl -passin/-passout\f[R]
 .PP
 Layer 2 \[em] Dynamic secret values (session globals, refreshed each
-login): On the first prompt, after secrets.fish has loaded, the literal
-values of all exported variables whose names suggest credentials (TOKEN,
-PASSWORD, SECRET, API_KEY, etc.)
+login): On the first prompt, after \f[V]secrets.fish\f[R] has loaded,
+the literal values of all exported variables whose names suggest
+credentials (TOKEN, PASSWORD, SECRET, \f[V]API_KEY\f[R], etc.)
 are collected, regex-escaped, and added as a session-scoped overlay.
 Because globals shadow universals in Fish, the combined list is what
 sponge sees.
 Rotating a token takes effect on the next login automatically.
 .PP
-Layer 3 \[em] Per-command filter (sponge_filter_secrets): Catches
-credentials in variables exported after login, such as tokens sourced
-from a project .env file mid-session.
+Layer 3 \[em] Per-command filter (\f[V]sponge_filter_secrets\f[R]):
+Catches credentials in variables exported after login, such as tokens
+sourced from a project .env file mid-session.
 .PP
 A match is actively deleted from history, not stored and redacted.
 Sponge queues a matched command on \f[V]fish_postexec\f[R] and purges
@@ -4613,14 +4628,16 @@ set -U -a __fish_sponge_extra_sensitive ACME_API VAULT_PW
 .fi
 .PP
 Tokens are folded into the Layer 2 name match case-insensitively as
-substrings, so ACME_API also covers ACME_API_KEY.
+substrings, so \f[V]ACME_API\f[R] also covers \f[V]ACME_API_KEY\f[R].
 (The match uses \f[V]--entire\f[R] to return the full variable name, so
 partial-name tokens dereference the right value.)
 .PP
 The \f[V]config-settings\f[R] Sponge page also surfaces sponge\[cq]s own
-tuning variables \[em] sponge_delay, sponge_successful_exit_codes,
-sponge_purge_only_on_exit, and sponge_allow_previously_successful \[em]
-so they can be changed without typing variable names.
+tuning variables \[em] \f[V]sponge_delay\f[R],
+\f[V]sponge_successful_exit_codes\f[R],
+\f[V]sponge_purge_only_on_exit\f[R], and
+\f[V]sponge_allow_previously_successful\f[R] \[em] so they can be
+changed without typing variable names.
 .SS Bundled Plugin Functionality
 .PP
 The remaining plugin functionality is bundled directly with this config
@@ -4727,9 +4744,10 @@ Or use the interactive TUI \[em] run \f[V]config-settings\f[R] and
 navigate to the \[lq]Dots Path\[rq] row (last row).
 Press Enter to type a new path, or ← / h to reset to the default.
 .PP
-config.fish sources local.fish from that directory on every interactive
-session.
-local.fish is responsible for sourcing its own secrets.fish:
+\f[V]config.fish\f[R] sources \f[V]local.fish\f[R] from that directory
+on every interactive session.
+\f[V]local.fish\f[R] is responsible for sourcing its own
+\f[V]secrets.fish\f[R]:
 .IP
 .nf
 \f[C]
@@ -4739,8 +4757,8 @@ $__fish_user_dots_path/
 \f[R]
 .fi
 .PP
-fish_variables (auto-managed by fish) is excluded from this repo via
-\&.gitignore.
+\f[V]fish_variables\f[R] (auto-managed by fish) is excluded from this
+repo via .gitignore.
 Do not commit it.
 .SS secrets.fish
 .PP
@@ -4783,10 +4801,11 @@ abbr -a dcw \[aq]docker context use work-server\[aq]
 \f[R]
 .fi
 .PP
-local.fish is sourced at the end of config.fish with an existence check
-so the public config works cleanly on any machine without the private
-repo.
-local.fish in turn sources secrets.fish when it exists.
+\f[V]local.fish\f[R] is sourced at the end of \f[V]config.fish\f[R] with
+an existence check so the public config works cleanly on any machine
+without the private repo.
+\f[V]local.fish\f[R] in turn sources \f[V]secrets.fish\f[R] when it
+exists.
 .PP
    *   *   *   *   *
 .SH 12. TROUBLESHOOTING
@@ -4882,8 +4901,9 @@ For other systems or building from source, see https://fishshell.com.
 .SS Enable or Disable Session Logging
 .PP
 Session logging is opt-in: it is off until you turn it on.
-To enable all logging and capture (scrollback, tmux/zellij pane logs,
-AUR helper wrappers, Kitty watcher):
+To enable all logging and capture (scrollback,
+\f[V]tmux\f[R]/\f[V]zellij\f[R] pane logs, AUR helper wrappers, Kitty
+watcher):
 .IP
 .nf
 \f[C]
@@ -4912,8 +4932,8 @@ automatically.
 See C5 \[em] Logging and Capture for the full component breakdown.
 .SS Change or Disable the Greeting
 .PP
-This config suppresses the distro greeting (e.g.\ CachyOS fastfetch) by
-default.
+This config suppresses the distro greeting (e.g.\ CachyOS
+\f[V]fastfetch\f[R]) by default.
 To let the distro greeting through:
 .IP
 .nf
@@ -4922,7 +4942,8 @@ set -U __fish_config_op_greeting off
 \f[R]
 .fi
 .PP
-To set a custom greeting, define fish_greeting in your local.fish:
+To set a custom greeting, define \f[V]fish_greeting\f[R] in your
+\f[V]local.fish\f[R]:
 .IP
 .nf
 \f[C]
@@ -4950,7 +4971,7 @@ Machine-specific config goes in
 \f[V]\[ti]/.config/.user-dots/fish/local.fish\f[R]).
 Secrets go in \f[V]secrets.fish\f[R] in the same directory.
 .PP
-If local.fish is not loading, verify the path:
+If \f[V]local.fish\f[R] is not loading, verify the path:
 .IP
 .nf
 \f[C]
@@ -5001,8 +5022,8 @@ mytool init fish | source
 \f[R]
 .fi
 .PP
-All existing integrations (starship, zoxide, direnv) already have
-\f[V]conf.d/\f[R] files.
+All existing integrations (\f[V]starship\f[R], \f[V]zoxide\f[R],
+\f[V]direnv\f[R]) already have \f[V]conf.d/\f[R] files.
 See Return Sentinel for background.
 .SS Missing Dependencies
 .PP
@@ -5055,7 +5076,7 @@ fish_default_key_bindings
 .fi
 .PP
 This restores Emacs-style bindings without disabling the rest of C3
-(bang-bang, autopair, starship prompt, pager settings, etc.).
+(bang-bang, autopair, \f[V]starship\f[R] prompt, pager settings, etc.).
 .PP
 To disable the entire C3 category (Vi mode and all other key/environment
 overrides):
@@ -5083,9 +5104,9 @@ that only manages basic features like \f[V]XDG\f[R] variables, and your
 \f[C]
 Category   Description
 ──────────────────────────────────────────────────────────────────────────
-C1         Command Shadows \[em] Wraps destructive commands (\[ga]rm\[ga], \[ga]cp\[ga]) to be safe by default
+C1         Command Shadows \[em] Wraps destructive commands (rm, cp) to be safe by default
 C2         Startup Side-Effects \[em] Bootstraps Fisher, generates wrappers, auto-activates venvs
-C3         Overrides \[em] Overrides \[ga]cd\[ga], sets Vi mode, binds \[ga]<CR>\[ga] to \[ga]smart_enter\[ga]
+C3         Overrides \[em] Overrides cd, sets Vi mode, binds <CR> to smart_enter
 C4         Integrations \[em] Kitty/Wezterm integrations, starship hooks, fzf theme
 C5         Logging and Capture \[em] Session logs, command duration
 C6         Greeting & First-Run UI \[em] Custom startup banner
@@ -5170,8 +5191,8 @@ help config pkg --man
 \f[R]
 .fi
 .PP
-Opens the compiled docs/fish-config.1 directly via man -l, bypassing the
-pager fallback chain.
+Opens the compiled \f[V]docs/fish-config.1\f[R] directly via man
+\f[V]-l\f[R], bypassing the pager fallback chain.
 If a section keyword is given, the pager opens at the nearest matching
 heading.
 The symlink is created once on first run (like an install step) and
@@ -5184,7 +5205,7 @@ man fish-config
 .fi
 .PP
 NOTE: fish-config (hyphen) is this config\[cq]s man page.
-fish_config (underscore) is fish\[cq]s built-in browser-based
+\f[V]fish_config\f[R] (underscore) is fish\[cq]s built-in browser-based
 configuration tool \[em] a completely separate command.
 Do not mix them up.
 .SS In the terminal
