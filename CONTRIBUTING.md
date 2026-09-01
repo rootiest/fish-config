@@ -64,6 +64,26 @@ assumes you *do* have push access (maintainers, regular contributors).
      approval before doing this** — there's no standing exception, no matter
      how trivial the change looks.
 
+### Pull request descriptions
+
+Fill in `.github/PULL_REQUEST_TEMPLATE.md` — Gitea and the GitHub mirror
+both pre-load it into the description box for you. Every PR carries, in
+this order:
+
+- **`## Summary`** — what changed and why, as a short paragraph, 2-5
+  bullets, or both. Name concrete paths and identifiers in backticks, and
+  explain the reasoning rather than restating the diff.
+- **Optional `##` sections** — add what the change actually needs
+  (`Root cause`, `Why`, `How it works`, `Behavior`, `Docs`, `Notes`,
+  `Scope note`, `Opinionated guard (C1-C6)`), and skip them entirely for a
+  straightforward change. A breaking change (title ending in `!` before
+  the colon) must include `## ⚠️ Breaking Change` with the migration path.
+- **`## Manual Verification`** — always last. Reproducible steps as a
+  checkbox list, each with the exact command and its expected result. Run
+  them before opening the PR and check the boxes; a box left unchecked
+  means that step was *not* verified, so say so explicitly rather than
+  leaving it silently blank.
+
 ## Commit Conventions
 
 Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/):
