@@ -4,6 +4,9 @@
 # CATEGORY
 #   12-ai-and-developer-tools
 #
+# DEPENDENCIES
+#   _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
+#
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
 #               [-q | --quiet] [-s | --silent] [-h | --help]
@@ -50,11 +53,16 @@
 #
 #   With no flags, runs both --agents and --plugins setup; --agents re-runs
 #   only the AGENTS.md / symlink step and --plugins only the plans/specs/
-#   devlogs wiring step. Managed paths are added to .gitignore. The sub-repo
-#   is pulled first when it has an upstream, and at the end of every
-#   invocation any uncommitted changes inside it are auto-committed so
-#   agent-made edits are captured automatically. Fully idempotent: a second
-#   run produces no output and no new commits.
+#   devlogs wiring step. Managed paths are added to .gitignore. At the end
+#   of every invocation any uncommitted changes inside the sub-repo are
+#   auto-committed so agent-made edits are captured automatically. Fully
+#   idempotent: a second run produces no output and no new commits.
+#
+#   The commit is local only. Nothing here fetches or pushes: the wrappers
+#   call this synchronously before starting an agent, and a network round
+#   trip there blocks the launch until an unreachable remote times out and
+#   can prompt for credentials with nobody watching. A sub-repo that has an
+#   upstream is pulled by hand, on the user's own schedule.
 #
 #   Called automatically by the claude and agy wrappers on every invocation.
 #
@@ -68,7 +76,8 @@
 #
 # EXIT STATUS
 #   0  Setup completed successfully
-#   1  Fatal error (git init failed, move failed, etc.)
+#   1  Fatal error (git init failed, move failed, the AGENTS/ commit was
+#      rejected, or an unresolved rebase blocked it)
 #
 # EXAMPLE
 #   agents-init
@@ -165,7 +174,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/.version (1.0.0)$c_reset"
     end
 
-    set -l _tools (_agents_init_install_tools "$agents_dir")
+    set -l _tools (_agents_repo_install_tools "$agents_dir")
     if test -n "$_tools"
         set changed 1
         test $verbose -eq 1; and echo "$c_ok$_tools$c_reset"
@@ -259,38 +268,26 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             test $verbose -eq 1; and echo "$c_ok→ Linked AGENTS/CLAUDE.md → AGENTS/AGENTS.md$c_reset"
         end
 
-        # ── Root symlink: AGENTS.md → AGENTS/AGENTS.md ───────────────────────
-        set -l _need_link 0
-        if not test -L "$root/AGENTS.md"
-            set _need_link 1
-        else if test (readlink "$root/AGENTS.md") != AGENTS/AGENTS.md
-            rm -f "$root/AGENTS.md"
-            set _need_link 1
-        end
-        if test $_need_link -eq 1
-            if not ln -s AGENTS/AGENTS.md "$root/AGENTS.md"
-                echo "$c_err""Error: could not create AGENTS.md symlink$c_reset" >&2
-                return 1
+        # Root symlinks point at files, not directories, so they cannot use
+        # _agents_repo_ensure_symlink (which is directory-only by design).
+        for pair in "AGENTS.md:AGENTS/AGENTS.md" "CLAUDE.md:AGENTS/CLAUDE.md"
+            set -l name (string split -f1 ':' -- $pair)
+            set -l want (string split -f2 ':' -- $pair)
+            set -l need 0
+            if not test -L "$root/$name"
+                set need 1
+            else if test (readlink "$root/$name") != "$want"
+                rm -f "$root/$name"
+                set need 1
             end
-            set changed 1
-            test $verbose -eq 1; and echo "$c_ok→ Linked AGENTS.md → AGENTS/AGENTS.md$c_reset"
-        end
-
-        # ── Root symlink: CLAUDE.md → AGENTS/CLAUDE.md ───────────────────────
-        set -l _need_link 0
-        if not test -L "$root/CLAUDE.md"
-            set _need_link 1
-        else if test (readlink "$root/CLAUDE.md") != AGENTS/CLAUDE.md
-            rm -f "$root/CLAUDE.md"
-            set _need_link 1
-        end
-        if test $_need_link -eq 1
-            if not ln -s AGENTS/CLAUDE.md "$root/CLAUDE.md"
-                echo "$c_err""Error: could not create CLAUDE.md symlink$c_reset" >&2
-                return 1
+            if test $need -eq 1
+                if not ln -s "$want" "$root/$name"
+                    echo "$c_err""Error: could not create $name symlink$c_reset" >&2
+                    return 1
+                end
+                set changed 1
+                test $verbose -eq 1; and echo "$c_ok→ Linked $name → $want$c_reset"
             end
-            set changed 1
-            test $verbose -eq 1; and echo "$c_ok→ Linked CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
         end
 
         # ── .gitignore ────────────────────────────────────────────────────────
@@ -461,24 +458,30 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     end
 
     #   ──────────────────────── Auto-commit AGENTS/ ────────────────────────────
-    # Pull first when an upstream is configured so the local .version reflects
-    # any remote bumps before we add to it (no-op for local-only repos).
-    if git -C "$agents_dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
-        git -C "$agents_dir" pull --rebase --autostash -q 2>/dev/null
-    end
-    git -C "$agents_dir" add -A 2>/dev/null
-    set -l status_out (git -C "$agents_dir" status --porcelain 2>/dev/null)
-    if test -n "$status_out"
-        set -l msg "chore: sync AGENTS repository"
-        test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
-        if git -C "$agents_dir" -c commit.gpgsign=false commit -q -m "$msg" 2>/dev/null
-            set changed 1
-            if test $verbose -eq 1
-                set -l sha (git -C "$agents_dir" rev-parse --short HEAD 2>/dev/null)
-                set -l realmsg (git -C "$agents_dir" log -1 --pretty=%s 2>/dev/null)
-                echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$realmsg$c_reset"
-            end
-        end
+    # Purely local: no fetch, no push. This function runs synchronously on
+    # every agent launch, and a network round trip there blocks the launch
+    # for as long as an unreachable remote takes to time out. Committing
+    # never needed one -- see _agents_repo_sync.
+    #
+    # Every way the commit can fail is an arm of its own. A sync that did
+    # not commit means agent-made edits were not captured, so it is a
+    # failure rather than a line to walk past -- and the missing `-ne 0`
+    # arm was not a cosmetic gap: fish resolves a branchless `if` to 0, so
+    # a hook-rejected commit fell straight through to a reported success.
+    set -l msg "chore: sync AGENTS repository"
+    test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
+    set -l sync_out (_agents_repo_sync "$agents_dir" "$msg")
+    set -l sync_rc $status
+    set -l failed 0
+    if test $sync_rc -eq 2
+        echo "$c_warn→ AGENTS/ has an unresolved rebase; nothing committed$c_reset" >&2
+        set failed 1
+    else if test $sync_rc -ne 0
+        echo "$c_err""Error: the AGENTS/ commit failed; nothing recorded$c_reset" >&2
+        set failed 1
+    else if test -n "$sync_out"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
     end
 
     # Quiet summary: one line at the end, only if something actually changed
@@ -489,4 +492,8 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             echo "$c_ok→ Synced AGENTS scaffolding$c_reset"
         end
     end
+
+    # Explicit, because the branchless `if` above resolves to 0 and would
+    # otherwise be this function's exit status.
+    test $failed -eq 0
 end

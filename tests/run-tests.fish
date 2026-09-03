@@ -11,6 +11,8 @@
 #      and loads it as an isolated interactive session.
 #   3. Runs the functional checks in tests/functional.fish inside that
 #      loaded session.
+#   4. Runs tests/test-agents-vault.fish as its own process; that suite
+#      builds its own throwaway repos and needs no loaded config.
 #
 # Usage: fish tests/run-tests.fish
 
@@ -83,6 +85,18 @@ if test -n "$stderr_out"
 end
 
 if test $functional_status -ne 0
+    set overall_failed 1
+end
+
+# ---- Phase 3: hermetic vault helper tests --------------------------------
+# Run as its own fish process rather than inside the sandboxed session:
+# the suite builds its own throwaway git repos and binds the vault, claude
+# and agy roots to them, so it needs no loaded config and must never see
+# the real ~/.claude.
+echo ""
+echo "== Vault helper tests =="
+fish $repo_root/tests/test-agents-vault.fish
+if test $status -ne 0
     set overall_failed 1
 end
 

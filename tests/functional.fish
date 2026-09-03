@@ -58,6 +58,34 @@ function test_greeting_function_defined
     functions -q fish_greeting
 end
 
+function test_agents_vault_defined
+    for f in agents-vault _agents_vault_dir _agents_repo_slug \
+        _agents_repo_ensure_symlink _agents_repo_sync \
+        _agents_repo_install_tools
+        if not functions -q $f
+            echo "    missing function: $f"
+            return 1
+        end
+    end
+end
+
+function test_wrappers_call_agents_vault
+    functions -q claude; or return 1
+    functions claude | string match -q '*agents-vault*'; or return 1
+    functions -q agy; or return 1
+    functions agy | string match -q '*agents-vault*'
+end
+
+function test_vault_dir_honors_override
+    set -l saved
+    set -q __fish_agent_vault_dir; and set saved $__fish_agent_vault_dir
+    set -g __fish_agent_vault_dir /tmp/vault-override-check
+    set -l got (_agents_vault_dir)
+    set -e __fish_agent_vault_dir
+    test (count $saved) -gt 0; and set -g __fish_agent_vault_dir $saved
+    test "$got" = /tmp/vault-override-check
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0

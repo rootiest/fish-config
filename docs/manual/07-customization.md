@@ -159,6 +159,27 @@ interactively. See [Components Reference](/08-components-reference/) for the
 full sub-category breakdown of every category.
 
 
+## Agent Memory Vault
+
+    __fish_agent_vault_dir
+
+    Overrides the agent memory vault location. Defaults to
+    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault).
+
+    __fish_agent_vault_autopush
+
+    When set to 1, agents-vault also pushes on wrapper launch. Defaults to
+    off: the vault commits locally on every launch and pushes from the
+    Claude Code SessionEnd hook or an explicit agents-vault --push. That
+    push is synchronous, so with autopush on the pull and the push are
+    each capped at 20 seconds; an explicit --push is left uncapped.
+
+NOTE:
+With autopush off and no SessionEnd hook installed, backups accumulate
+locally and never reach the remote. Run agents-vault --status to check
+how far ahead the vault is.
+
+
 ## Prompt and Theme
 
 ### Starship

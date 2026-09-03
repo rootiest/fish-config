@@ -1,0 +1,1143 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# CATEGORY
+#   12-ai-and-developer-tools
+#
+# DEPENDENCIES
+#   _agents_vault_dir, _agents_repo_slug, _agents_repo_local_slug,
+#   _agents_repo_ensure_symlink, _agents_repo_sync,
+#   _agents_repo_install_tools, git, hostname
+#
+# SYNOPSIS
+#   agents-vault [--link] [--push] [--restore] [--status]
+#                [--adopt=SLUG] [--remote=URL]
+#                [-v | --verbose] [-q | --quiet] [-s | --silent]
+#                [-h | --help]
+#
+# DESCRIPTION
+#   Tracks curated agent memory in a host-scoped git repository so it
+#   survives losing a machine. Complements agents-init, which scaffolds the
+#   per-project AGENTS/ repo: that holds the shareable agent specification,
+#   while this holds the personal memory an agent accumulates.
+#
+#   Memory does not live in any project tree. Claude keeps it under
+#   ~/.claude/projects/<mangled-path>/memory/ and agy keeps its knowledge
+#   store under ~/.gemini/antigravity-cli/, both outside every repository.
+#
+#   Entries are keyed by normalized git remote URL rather than by path, so
+#   the key survives a machine change or a directory rename. The live
+#   memory directory becomes a symlink into the vault, which makes backup
+#   and restore the same operation: on a new machine, clone the vault once
+#   and the first agents-vault run in any project relinks its memory
+#   automatically. No manifest and no batch restore step are involved.
+#
+#   Only curated memory is tracked. Session transcripts are excluded (tens
+#   of megabytes per project, growing per session). Paths are allowlisted,
+#   never denylisted, so nothing new upstream adds can leak in. The
+#   allowlist runs all the way down, not just at the top: inside agy's
+#   knowledge store only *.md and *.json files are copied, so a credential
+#   file or a conversation database appearing there is left behind by the
+#   same rule rather than by being known about in advance. Symlinks found
+#   inside the store are neither followed nor copied, so the allowlist
+#   bounds whose files it collects and not merely what kind.
+#
+#   Global state that belongs to no project is tracked as well. Claude's
+#   global memory directory (~/.claude/memory) is symlinked into the vault
+#   exactly like per-project memory, and is only linked when one side or
+#   the other already holds something, since that path does not exist by
+#   default. agy's knowledge store and settings.json are copied rather
+#   than symlinked: agy partitions by conversation UUID rather than by
+#   workspace, so it has no per-project slice, and its store sits beside
+#   SQLite databases whose WAL sidecars must never be live-tracked inside
+#   a git worktree. A failed copy is reported but is not fatal, because an
+#   incomplete backup still leaves the agent working.
+#
+#   Because the slug is derived from the remote, gaining, losing, or
+#   rewriting a project's origin changes it. Each run detects this by
+#   reading the previous slug straight off the live memory symlink's
+#   target (no guessing) and migrates that entry to the new slug before
+#   relinking, so memory accumulated under the old key is never orphaned.
+#   If both the old and new entries already hold content the migration is
+#   ambiguous and is refused; resolve it with --adopt=SLUG. An entry that
+#   is already at the new key but holds no memory -- the shape a fresh
+#   clone always produces, since git cannot track an empty directory -- is
+#   moved aside, not deleted, and its origin log is folded into the
+#   migrated entry, so a clone's provenance survives the rename. The
+#   rename is atomic: a failure at any point leaves the vault exactly as
+#   it was and reports it.
+#
+#   Run with no flags, the command scaffolds the vault, syncs global state,
+#   links the current project, and commits. The other modes are exclusive
+#   and each returns as soon as it is done:
+#
+#   --status is a report and mutates nothing at all. It is answered before
+#   the vault is even scaffolded, so asking what the vault looks like never
+#   creates it, never copies agy state into it, and never claims
+#   ~/.claude/memory. A missing vault is reported rather than built.
+#
+#   --restore walks every vault entry and relinks the live memory directory
+#   of each one whose recorded origin path still exists, naming the rest so
+#   they can be rebound by hand. It is a convenience: the ordinary per-
+#   project run restores a cloned vault's memory on its own.
+#
+#   --adopt=SLUG rebinds the current project's entry to SLUG, which is how
+#   a machine-specific local-* key or an ambiguous migration is resolved.
+#   SLUG must match [a-z0-9._-]+ and be neither "." nor ".." -- the charset
+#   the slug formula itself emits -- since it is interpolated into a vault
+#   path and handed to git mv. The rename and the relink are atomic: if the
+#   live memory directory cannot be repinned onto the new entry the rename
+#   is rolled back, so an ordinary run still finds the original entry.
+#
+#   --remote=URL points the vault at a remote; --push commits, pulls, and
+#   then pushes there. The pull happens only on this path. Committing needs
+#   no remote at all, and both wrappers run this command synchronously
+#   before starting an agent, so a fetch on the ordinary run would block
+#   every launch for as long as an unreachable remote takes to time out --
+#   and would take the local commit down with it, leaving an offline
+#   machine with no backup at all.
+#
+# ARGUMENTS
+#   --link         Scaffold the vault and link this project's memory; skip
+#                  the final commit
+#   --push         Commit, pull, then push to the vault remote
+#   --restore      Walk the vault, relink what is possible, report the rest
+#   --status       Show entries, link health, remote state, and orphans
+#   --adopt=SLUG   Bind the current project to an existing vault entry
+#   --remote=URL   Set the vault remote
+#   -v, --verbose  Print all per-step output (default)
+#   -q, --quiet    Print one summary line only if changes were made
+#   -s, --silent   Suppress all output; errors only
+#   -h, --help     Show this help message and exit
+#
+# EXIT STATUS
+#   0  Completed successfully
+#   1  Fatal error (vault unavailable, git failure, ambiguous migration,
+#      invalid --adopt slug, nothing committed, or a push that did not
+#      reach the remote)
+#
+# RETURNS
+#   --status prints its report on stdout: the vault path, the remote and
+#   how far ahead of it the vault is, a warning for an unresolved rebase,
+#   then one line per entry reading "linked" or "orphan", the slug, and the
+#   file count. Every other mode prints only verbosity-gated progress
+#   lines, and nothing at all when there was nothing to do.
+#
+# EXAMPLE
+#   agents-vault
+#   agents-vault --status
+#   agents-vault --remote=https://git.rootiest.dev/rootiest/agent-vault.git
+#   agents-vault --push
+#   agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
+#   agents-vault --restore
+#
+# NOTES
+#   Set __fish_agent_vault_dir to relocate the vault. Set
+#   __fish_agent_vault_autopush to 1 to also push on wrapper launch; it
+#   defaults to off because that push is synchronous and so delays every
+#   launch. With it on, the pull and the push are each capped at 20
+#   seconds, since git has no connect timeout of its own and an
+#   unreachable remote otherwise blocks for minutes. An explicit --push
+#   is left uncapped: it is watched, and it must report what a real
+#   transfer really did. The cap is timeout(1); on a system that somehow
+#   lacks it, autopush says so on stderr and does not push at all, since
+#   an unbounded network call in front of a launch is the one outcome the
+#   cap exists to prevent. --push still works there.
+#
+#   Over ssh the cap is delivered by setting GIT_SSH_COMMAND, which would
+#   silently outrank the user's own configuration -- so it is not set at
+#   all when GIT_SSH_COMMAND is already exported or git's core.sshCommand
+#   is configured. A vault remote reachable only through a particular
+#   identity file or ssh wrapper therefore keeps it, uncapped, rather than
+#   failing to authenticate for the sake of a timeout.
+#
+#   --adopt rebinds an entry; it does not pin its name. The slug is
+#   re-derived from the project on every run, so the next ordinary run
+#   migrates the adopted entry straight back to the canonical key, carrying
+#   the memory and the live link with it. That is the point rather than a
+#   wart: adopting is how a mismatched or ambiguous binding is repaired, not
+#   how an entry is given a permanent name of its own.
+#
+#   An entry's origin file records the project path once, when the entry is
+#   created, and is never refreshed. A project that later moves on disk
+#   therefore keeps a stale path there and --restore degrades to reporting
+#   it as unplaceable rather than relinking the wrong directory. Rebind
+#   such an entry from the project itself with --adopt=SLUG.
+#
+#   The agy knowledge copy is merge-only. Files are copied into the vault
+#   but are never removed from it, so a fact deleted upstream from agy's
+#   knowledge store persists in the vault indefinitely, and a restore or a
+#   fresh clone brings it back. Prune such an entry from the vault by hand
+#   if it must really be gone.
+#
+#   Three further variables exist only so the test suite can run against
+#   throwaway directories instead of the real home, and are not meant for
+#   everyday use. __fish_agent_vault_claude_root overrides Claude's
+#   per-project directory (~/.claude/projects), which is where the
+#   per-project memory directories live. __fish_agent_vault_claude_home
+#   overrides Claude's home directory (~/.claude), whose memory
+#   subdirectory holds the global memory. Those two name different paths
+#   and setting one has no effect on the other.
+#   __fish_agent_vault_agy_root overrides agy's state directory
+#   (~/.gemini/antigravity-cli), which is only ever read from.
+#
+#   The last two are not optional niceties. Without them, a test run on a
+#   machine that has a real global memory directory would move it into a
+#   throwaway directory and leave a dangling symlink behind, which is
+#   strictly worse than having had no backup at all.
+function agents-vault --description 'track curated agent memory in a host-scoped vault repo'
+    set -l c_head (set_color --bold cyan)
+    set -l c_cmd (set_color --bold)
+    set -l c_flag (set_color yellow)
+    set -l c_ok (set_color green)
+    set -l c_warn (set_color yellow)
+    set -l c_err (set_color red)
+    set -l c_dim (set_color brblack)
+    set -l c_reset (set_color normal)
+
+    argparse h/help link push restore status 'adopt=' 'remote=' \
+        v/verbose q/quiet s/silent -- $argv
+    or return 1
+
+    if set -q _flag_help
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-vault$c_reset $c_flag""[--link] [--push] [--restore] [--status] [--adopt=SLUG] [--remote=URL] [-v] [-q] [-s] [-h]$c_reset"
+        echo
+        echo "  Track curated agent memory in a host-scoped vault repository."
+        echo
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       Show this help message"
+        echo "  $c_flag--link$c_reset           Scaffold + link this project; skip the commit"
+        echo "  $c_flag--push$c_reset           Commit, pull, then push to the remote"
+        echo "  $c_flag--restore$c_reset        Relink everything possible, report the rest"
+        echo "  $c_flag--status$c_reset         Show entries, link health, remote, orphans"
+        echo "  $c_flag--adopt$c_reset=SLUG     Bind this project to an existing vault entry"
+        echo "  $c_flag--remote$c_reset=URL     Set the vault remote"
+        echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset    Print all per-step output (default)"
+        echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset      Print one summary line only if changed"
+        echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset     Suppress all output; errors only"
+        return 0
+    end
+
+    set -l verbose 1
+    set -l quiet 0
+    if set -q _flag_silent
+        set verbose 0
+    else if set -q _flag_quiet
+        set verbose 0
+        set quiet 1
+    end
+
+    if not type -q git
+        echo "$c_err""agents-vault: git is required$c_reset" >&2
+        return 1
+    end
+
+    set -l vault (_agents_vault_dir)
+    set -l changed 0
+    set -l did_init 0
+
+    #   ─────────────────────────── --status ──────────────────────────────
+    # A report, and nothing but a report. This is dispatched here -- ahead
+    # of the scaffold, the tool install, and the global-state sync -- on
+    # purpose: asking what the vault looks like must never be the thing
+    # that creates it, copies the agy knowledge store into it, or claims
+    # ~/.claude/memory. A status command that mutates cannot be trusted to
+    # diagnose the thing it just changed.
+    if set -q _flag_status
+        echo "$c_head""Vault:$c_reset $vault"
+        if not test -d "$vault"
+            echo "  $c_warn""no vault yet — run agents-vault inside a project to create one$c_reset"
+            return 0
+        end
+
+        set -l url (git -C "$vault" remote get-url origin 2>/dev/null)
+        if test -z "$url"
+            echo "$c_head""Remote:$c_reset $c_warn""no remote configured — nothing is backed up off this machine$c_reset"
+        else
+            echo "$c_head""Remote:$c_reset $url"
+            if git -C "$vault" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
+                set -l ahead (git -C "$vault" rev-list --count '@{u}..HEAD' 2>/dev/null)
+                if test -n "$ahead"; and test "$ahead" != 0
+                    echo "  $c_warn$ahead commit(s) not yet pushed$c_reset"
+                end
+            else
+                echo "  $c_warn""no upstream branch — never pushed$c_reset"
+            end
+        end
+
+        if test -d "$vault/.git/rebase-merge"; or test -d "$vault/.git/rebase-apply"
+            echo "  $c_err""unresolved rebase in progress — resolve it before syncing$c_reset"
+        end
+
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+
+        echo ""
+        echo "$c_head""Entries:$c_reset"
+        set -l seen 0
+        # Listed rather than globbed: fish's * skips dot-led names, and a
+        # dot-led slug is both reachable and sanctioned. A relative-path
+        # remote -- the sibling-bare-mirror idiom, `git remote add origin
+        # ../mirror.git` -- keys as ..-mirror, a dot-led host keys as
+        # .hidden.example.com-o-r, and --adopt accepts a leading dot on
+        # purpose. Such an entry is scaffolded, linked and committed like any
+        # other, so a glob here would under-report the vault without ever
+        # saying that it had. The 2>/dev/null is load-bearing: a vault with
+        # no projects/ is ordinary (running agents-vault outside any git
+        # repo makes exactly that one) and a bare ls would spew.
+        for name in (command ls -A "$vault/projects" 2>/dev/null)
+            set -l entry "$vault/projects/$name"
+            test -d "$entry"; or continue
+            set seen 1
+            set -l eslug $name
+            set -l count (command ls -A "$entry/claude/memory" 2>/dev/null | count)
+            set -l want (path resolve "$entry/claude/memory")
+            set -l linked 0
+            for cand in "$claude_root"/*/memory
+                test -L "$cand"; or continue
+                if test (path resolve "$cand") = "$want"
+                    set linked 1
+                    break
+                end
+            end
+            if test $linked -eq 1
+                echo "  $c_ok""linked$c_reset  $eslug $c_dim($count file(s))$c_reset"
+            else
+                echo "  $c_warn""orphan$c_reset  $eslug $c_dim($count file(s)) — no live project links here$c_reset"
+            end
+        end
+        test $seen -eq 0; and echo "  $c_dim(none)$c_reset"
+        return 0
+    end
+
+    #   ────────────────────── ensure the vault repo ──────────────────────
+    if not test -d "$vault"
+        if not mkdir -p "$vault"
+            echo "$c_err""agents-vault: could not create $vault$c_reset" >&2
+            return 1
+        end
+        set changed 1
+        set did_init 1
+    end
+    if not test -d "$vault/.git"
+        git -C "$vault" init -q
+        or begin
+            echo "$c_err""agents-vault: git init failed in $vault$c_reset" >&2
+            return 1
+        end
+        set changed 1
+        set did_init 1
+        test $verbose -eq 1; and echo "$c_ok→ Initialized vault repo at $vault$c_reset"
+    end
+
+    if not test -f "$vault/.version"
+        echo 1.0.0 >"$vault/.version"
+        set changed 1
+    end
+
+    if not test -f "$vault/.gitignore"
+        printf '%s\n' \
+            '# A SQLite database and its sidecars are never safe to commit' \
+            '# mid-write. Ignoring only the sidecars is worse than ignoring' \
+            '# none of them: a torn database then lands in the history with' \
+            '# the write-ahead log that would have completed it excluded.' \
+            '*.db' \
+            '*.db-wal' \
+            '*.db-shm' \
+            '' \
+            '# --adopt and the slug migration each stash the entry they are' \
+            '# about to overwrite inside .git/, out of reach of `git add -A`.' \
+            '# These cover the fallback locations they use when .git is not a' \
+            '# directory.' \
+            '/.adopt-stash' \
+            '/.migrate-stash' >"$vault/.gitignore"
+        set changed 1
+    end
+
+    if not test -f "$vault/README.md"
+        printf '%s\n' \
+            '# Agent Memory Vault' \
+            '' \
+            'Curated agent memory, tracked so it survives losing a machine.' \
+            'Managed by `agents-vault` from rootiest/fish-config.' \
+            '' \
+            '## Restore' \
+            '' \
+            'Clone this repository to the path `agents-vault` resolves to' \
+            '(`$XDG_DATA_HOME/agent-vault`, or `$__fish_agent_vault_dir`).' \
+            'Then simply run `claude` in any project: the wrapper derives that' \
+            "project's slug, finds its entry here, and relinks the live memory" \
+            'directory automatically. There is no separate restore step.' \
+            '' \
+            'Entries are keyed by normalized git remote URL. A `local-*` key' \
+            'belongs to a project with no remote and is machine-specific;' \
+            'rebind one with `agents-vault --adopt=SLUG`.' >"$vault/README.md"
+        set changed 1
+    end
+
+    set -l tools_msg (_agents_repo_install_tools "$vault")
+    or begin
+        echo "$c_err""agents-vault: could not install .agents-tools/ into $vault$c_reset" >&2
+        return 1
+    end
+    if test -n "$tools_msg"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok$tools_msg$c_reset"
+    end
+
+    set -l hp (git -C "$vault" config --local core.hooksPath 2>/dev/null)
+    if test "$hp" != .agents-tools/hooks
+        git -C "$vault" config --local core.hooksPath .agents-tools/hooks
+        or begin
+            echo "$c_err""agents-vault: could not set core.hooksPath in $vault$c_reset" >&2
+            return 1
+        end
+        set changed 1
+    end
+
+    #   ─────────────────────────── --remote ──────────────────────────────
+    # Mutating modes are dispatched here: after the vault repo exists (they
+    # all need one) but before the global-state sync below, which belongs
+    # to a default backup run and has no business running as a side effect
+    # of rebinding an entry or setting a URL.
+    if set -q _flag_remote
+        if test -z "$_flag_remote"
+            echo "$c_err""agents-vault: --remote needs a URL$c_reset" >&2
+            return 1
+        end
+        # The result is captured explicitly rather than chained off the
+        # block terminator with `or`. `end` does carry the taken branch's
+        # status in fish, but only when a branch was taken at all: the same
+        # construct one `else` away silently reports success, which is
+        # exactly how a hook-rejected commit once passed for a good one.
+        set -l rc 0
+        if git -C "$vault" remote get-url origin >/dev/null 2>&1
+            git -C "$vault" remote set-url origin "$_flag_remote"
+            set rc $status
+        else
+            git -C "$vault" remote add origin "$_flag_remote"
+            set rc $status
+        end
+        if test $rc -ne 0
+            echo "$c_err""agents-vault: could not set the vault remote to $_flag_remote$c_reset" >&2
+            return 1
+        end
+        test $verbose -eq 1; and echo "$c_ok→ Vault remote set to $_flag_remote$c_reset"
+        return 0
+    end
+
+    #   ─────────────────────────── --adopt ───────────────────────────────
+    if set -q _flag_adopt
+        # The requested slug is interpolated into a vault path and handed
+        # to `git mv`, so it is validated before it is used anywhere:
+        # --adopt=../../../etc would otherwise walk straight out of the
+        # vault. Only the charset the slug formula itself emits is
+        # accepted, which excludes the slash that any traversal needs, and
+        # the two names that traverse without one are refused by name.
+        #
+        # A leading dot is *not* refused: _agents_repo_slug legitimately
+        # emits one for a dot-led subdomain (https://.hidden.example.com/r
+        # keys as .hidden.example.com-r), and refusing it would make such
+        # an entry impossible to adopt. Inside projects/ a leading dot is
+        # a hidden directory, not an escape.
+        set -l bad_slug 0
+        string match -qr '^[a-z0-9._-]+$' -- "$_flag_adopt"; or set bad_slug 1
+        contains -- "$_flag_adopt" . ..; and set bad_slug 1
+        if test $bad_slug -eq 1
+            echo "$c_err""agents-vault: invalid slug '$_flag_adopt'$c_reset" >&2
+            echo "$c_err""  A slug is [a-z0-9._-]+, is not '.' or '..', and holds no slash.$c_reset" >&2
+            return 1
+        end
+
+        set -l root (git rev-parse --show-toplevel 2>/dev/null)
+        if test -z "$root"
+            echo "$c_err""agents-vault: --adopt must run inside a project$c_reset" >&2
+            return 1
+        end
+        set -l cur (_agents_repo_slug "$root")
+        set -l from "$vault/projects/$cur"
+        set -l to "$vault/projects/$_flag_adopt"
+        if test "$cur" = "$_flag_adopt"
+            test $verbose -eq 1; and echo "$c_ok→ Already bound to $_flag_adopt$c_reset"
+            return 0
+        end
+        if not test -d "$from"
+            echo "$c_err""agents-vault: no vault entry for this project ($cur)$c_reset" >&2
+            return 1
+        end
+
+        set -l to_content
+        test -d "$to/claude/memory"; and set to_content (command ls -A "$to/claude/memory" 2>/dev/null)
+        if test (count $to_content) -gt 0
+            echo "$c_err""agents-vault: $_flag_adopt already holds content; refusing to overwrite$c_reset" >&2
+            return 1
+        end
+        # Adopting is a rename plus a relink, and it must be all or
+        # nothing. A rename that lands while the relink fails leaves the
+        # memory intact at the new slug but unreferenced: the next ordinary
+        # run finds no live link, recomputes the old slug, finds nothing
+        # there, and fabricates a fresh empty entry, so the agent writes
+        # history-less memory from then on. No bytes are lost, but
+        # continuity is, and nothing recovers it automatically.
+        #
+        # So a contentless target entry is moved aside rather than deleted,
+        # and the origin note is appended only once the relink has
+        # succeeded. Both are undone below if it does not. The stash lives
+        # inside .git/: it is on the same filesystem, so the rename stays a
+        # rename; it is not under projects/, so a crash between the two moves
+        # cannot leave something that reads as an entry; and `git add -A`
+        # never descends there, so a crash cannot leave junk that the next
+        # ordinary run commits either. A vault whose .git is not a directory
+        # is not one this tool made, so that case falls back to the vault
+        # root, which the scaffolded .gitignore covers.
+        set -l stash ""
+        if test -d "$to"
+            if test -d "$vault/.git"
+                set stash "$vault/.git/agents-vault-adopt-stash"
+            else
+                set stash "$vault/.adopt-stash"
+            end
+            rm -rf "$stash"
+            command mv "$to" "$stash"; or return 1
+        end
+        if not git -C "$vault" mv "projects/$cur" "projects/$_flag_adopt" 2>/dev/null
+            if not command mv "$from" "$to"
+                test -n "$stash"; and command mv "$stash" "$to"
+                # Putting the worktree back is only half a rollback. Every
+                # move here is a plain rename as far as git is concerned, so
+                # the index still describes the half-applied state, and a
+                # hand `git commit` in that window would record it -- the
+                # next ordinary run's `git add -A` heals it, but only later.
+                # projects/ is re-read whole rather than the two entries
+                # named: git add refuses a pathspec that matches nothing --
+                # which one of the two always is, once it has been moved
+                # back -- and then stages none of them, not even the one
+                # that did match. Its stderr is deliberately not swallowed:
+                # projects/ provably exists here, so the only thing a
+                # redirect could hide is a real failure -- a held
+                # index.lock, say -- after which the index stays
+                # half-applied while nothing says so.
+                git -C "$vault" add -A -- projects
+                # Without this the user is left holding a raw coreutils
+                # `mv:` line and no statement of what it cost them. Every
+                # other error exit in this function is branded and says
+                # what state it left behind; this one reaching the terminal
+                # bare made a clean rollback look like a crash.
+                echo "$c_err""agents-vault: could not rename $cur → $_flag_adopt$c_reset" >&2
+                echo "$c_err""  The adopt was abandoned; $cur was left as it was.$c_reset" >&2
+                return 1
+            end
+        end
+
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+        set -l mangled (string replace -a '/' '-' -- "$root" | string replace -a '.' '-')
+        # The live link is deliberately left in place for ensure_symlink to
+        # repin, which it does on its own for a link pointing elsewhere.
+        # Removing it first would only widen the window in which a failure
+        # leaves the project with no link at all.
+        if not _agents_repo_ensure_symlink "$claude_root/$mangled/memory" "$to/claude/memory" >/dev/null
+            if not git -C "$vault" mv "projects/$_flag_adopt" "projects/$cur" 2>/dev/null
+                command mv "$to" "$from"
+            end
+            test -n "$stash"; and command mv "$stash" "$to"
+            # Only now, with the worktree whole again -- the stash restore
+            # included -- is the index worth re-reading. Unconditional
+            # because even the git-native rollback leaves it out of line:
+            # the forward `git mv` overwrote the stashed entry's index
+            # entries, and moving the files back does not bring them back.
+            # See the same call above for why projects/ is named whole,
+            # and why its stderr is left visible.
+            git -C "$vault" add -A -- projects
+            echo "$c_err""agents-vault: could not relink $claude_root/$mangled/memory; $cur was left as it was$c_reset" >&2
+            return 1
+        end
+        printf 'adopted: %s → %s (%s)\n' "$cur" "$_flag_adopt" (date -I) >>"$to/origin"
+        test -n "$stash"; and rm -rf "$stash"
+
+        _agents_repo_sync "$vault" "chore: adopt $cur as $_flag_adopt" >/dev/null
+        test $verbose -eq 1; and echo "$c_ok→ Adopted $cur as $_flag_adopt$c_reset"
+        return 0
+    end
+
+    #   ────────────────────────── --restore ──────────────────────────────
+    # The batch counterpart of the emergent per-project restore. Each entry
+    # records the path it was created at; where that path still exists the
+    # live memory directory is relinked, and where it does not the entry is
+    # named so it can be rebound with --adopt. The origin file is written
+    # once and never refreshed, so a project that has since moved on disk
+    # simply degrades to "cannot place" rather than relinking the wrong
+    # directory.
+    if set -q _flag_restore
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+        set -l restore_failed 0
+        # Listed rather than globbed, for the reason spelled out at --status:
+        # fish's * skips a dot-led slug, which is a legitimate key, and a
+        # batch restore that silently walks past an entry is worse here than
+        # in a report -- that project is simply left unlinked.
+        for name in (command ls -A "$vault/projects" 2>/dev/null)
+            set -l entry "$vault/projects/$name"
+            test -d "$entry/claude/memory"; or continue
+            set -l eslug $name
+            set -l opath ""
+            if test -f "$entry/origin"
+                set -l line (command grep -m1 '^path:' "$entry/origin" 2>/dev/null)
+                test -n "$line"; and set opath (string replace -r '^path:\s+' '' -- "$line")
+            end
+            if test -n "$opath"; and test -d "$opath"
+                set -l m (string replace -a '/' '-' -- "$opath" | string replace -a '.' '-')
+                set -l msg (_agents_repo_ensure_symlink "$claude_root/$m/memory" "$entry/claude/memory")
+                if test $status -ne 0
+                    echo "$c_err""agents-vault: could not relink $eslug$c_reset" >&2
+                    set restore_failed 1
+                else if test -n "$msg"
+                    test $verbose -eq 1; and echo "$c_ok→ Restored $eslug$c_reset"
+                end
+            else
+                test $verbose -eq 1
+                and echo "$c_warn→ Cannot place $eslug: no live project found; use --adopt from the project$c_reset"
+            end
+        end
+        # An entry that could not be relinked is a failure, not a note in
+        # passing: the same reasoning as the commit and push paths below.
+        # An entry with no live project is not -- there is nothing wrong
+        # with the vault, the project simply is not on this machine.
+        return $restore_failed
+    end
+
+    #   ────────────────────────── global state ───────────────────────────
+    # Allowlist, never a denylist. The agy root and ~/.claude also hold
+    # .credentials.json, history.jsonl, sessions/, session-env/,
+    # shell-snapshots/, and the conversation databases, so only the paths
+    # named here are ever copied or linked; a "back up all but known junk"
+    # rule would leak secrets the first time upstream adds a file.
+    set -l agy_root $__fish_agent_vault_agy_root
+    test -n "$agy_root"; or set agy_root "$HOME/.gemini/antigravity-cli"
+
+    # agy state is copied, never symlinked: agy partitions by conversation
+    # UUID rather than by workspace, so there is no per-project slice to
+    # link, and its store sits beside SQLite databases whose WAL sidecars
+    # must never be live-tracked inside a git worktree.
+    #
+    # A failed copy is reported but not fatal. An incomplete backup still
+    # leaves the agent fully working, unlike a broken memory symlink, and
+    # this runs on every agent launch.
+    set -l agy_copied 0
+    set -l knowledge "$agy_root/knowledge"
+    if test -d "$knowledge"
+        # The allowlist has to hold *inside* knowledge/ too, not just at the
+        # agy root. A recursive copy of the directory is a denylist wearing
+        # an allowlist's clothes: it promises that nothing new upstream adds
+        # can leak in while copying, verbatim, whatever upstream chooses to
+        # put one level down. A .credentials.json dropped in there went
+        # straight into a commit.
+        #
+        # Extensions, because that is what the store actually is: agy's
+        # knowledge is written as Markdown notes with JSON metadata beside
+        # them. Everything else there is machinery, not knowledge --
+        # knowledge.lock is a live lock file whose committed copy is at best
+        # meaningless and at worst confusing on restore, and the SQLite
+        # databases must never be captured mid-write. Both are excluded by
+        # having no business in a backup, not by being individually known
+        # about, which is the property that survives upstream adding a file.
+        #
+        # Fish wildcards skip dot-led names at every path component, so
+        # dotfiles and hidden subdirectories are already out; the extension
+        # allowlist is what keeps them out on purpose rather than by luck.
+        #
+        # The tree is walked a level at a time rather than globbed with **,
+        # because a symlink has to stop the walk and ** has no way to say
+        # so. A recursive ** descends through a symlinked directory and cp
+        # follows a symlinked file, which between them undo the whole point
+        # of the allowlist twice over. A `ln -s ~ knowledge/x` puts every
+        # qualifying .md and .json in the home directory -- settings.json,
+        # CLAUDE.md, cache and status files -- into the vault and into a
+        # commit: the extension rule still bounds what *kind* of file goes
+        # in, but the store boundary that decides *whose* files they are is
+        # gone. Worse, `ln -s / knowledge/x` makes the walk itself
+        # unbounded, and this runs synchronously in front of every agent
+        # launch. Fish does stop a true self-referential cycle; a symlink
+        # to a merely enormous tree is not a cycle.
+        #
+        # So nothing that is a symlink is ever followed or copied, whether
+        # it names a file or a directory. The knowledge store's own root
+        # may still be a link -- that one is the configured location of the
+        # store rather than something found inside it.
+        #
+        # The walk prints its finds and the list is built once from that
+        # output, rather than appending each path to a list as it goes.
+        # `set -a` rewrites the whole variable every time, so appending n
+        # paths one at a time costs O(n^2) copying -- 500 files took 21ms
+        # and 20,000 took 58s on this machine, on a path that runs in
+        # front of every agent launch. Printing is flat: the same 20,000
+        # files take 756ms, and 500 take 13ms. Batching per directory does
+        # not help, because a knowledge store is mostly one flat directory
+        # and that is exactly where the growing list lives.
+        #
+        # NUL separators and `string split0`, not newlines: a filename may
+        # legally contain a newline, and splitting on one would saw such a
+        # path into two entries and copy neither. NUL is the one byte a
+        # path cannot hold, so the round trip is lossless.
+        set -l kfiles (begin
+            set -l kdirs "$knowledge"
+            while set -q kdirs[1]
+                set -l dir $kdirs[1]
+                set -e kdirs[1]
+                for e in $dir/*
+                    test -L "$e"; and continue
+                    if test -d "$e"
+                        set -a kdirs "$e"
+                    else if string match -qr '\.(md|json)$' -- "$e"
+                        printf '%s\0' "$e"
+                    end
+                end
+            end
+        end | string split0)
+        set -l kfailed 0
+        for f in $kfiles
+            test -f "$f"; or continue
+            set -l rel (string replace -- "$knowledge/" "" "$f")
+            set -l dest "$vault/global/agy/knowledge/$rel"
+            if not mkdir -p (path dirname "$dest")
+                set kfailed 1
+                continue
+            end
+            if command cp "$f" "$dest"
+                set agy_copied 1
+            else
+                set kfailed 1
+            end
+        end
+        if test $kfailed -eq 1
+            echo "$c_warn""agents-vault: could not copy part of the agy knowledge store$c_reset" >&2
+        end
+    end
+    if test -f "$agy_root/settings.json"
+        if not mkdir -p "$vault/global/agy"
+            echo "$c_err""agents-vault: could not create $vault/global/agy$c_reset" >&2
+        else if not command cp "$agy_root/settings.json" "$vault/global/agy/settings.json"
+            echo "$c_warn""agents-vault: could not copy the agy settings file$c_reset" >&2
+        else
+            set agy_copied 1
+        end
+    end
+
+    # cp cannot report whether anything actually differed, so treating the
+    # copy itself as a change would set $changed on every single run --
+    # and agents-vault runs on every claude/agy launch, so --quiet would
+    # print a summary line every time and stop meaning anything. Ask git
+    # instead: the copy counts only when it left global/agy/ dirty.
+    if test $agy_copied -eq 1
+        set -l agy_dirty (git -C "$vault" status --porcelain -- global/agy 2>/dev/null)
+        if test -n "$agy_dirty"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Copied agy global state into the vault$c_reset"
+        end
+    end
+
+    # Claude's global memory directory is symlinked into the vault exactly
+    # like per-project memory, so backup and restore stay one operation.
+    set -l claude_home $__fish_agent_vault_claude_home
+    test -n "$claude_home"; or set claude_home "$HOME/.claude"
+    set -l glive "$claude_home/memory"
+    set -l gvault "$vault/global/claude/memory"
+
+    set -l gvault_content
+    test -d "$gvault"; and set gvault_content (command ls -A "$gvault" 2>/dev/null)
+
+    # Link when either side already has something: the live directory
+    # exists (back it up) or a cloned vault carries global memory (restore
+    # it). Never out of thin air -- ~/.claude/memory does not exist by
+    # default, and fabricating it would invent state Claude never asked
+    # for and permanently claim the path.
+    # -e rather than -d on the live side so a *broken* global path (a stray
+    # regular file where the directory belongs) is noticed and reported on
+    # every run, instead of being silently skipped and mistaken for the
+    # absent-by-default case.
+    if test -e "$glive"; or test -L "$glive"; or test (count $gvault_content) -gt 0
+        # Best-effort, exactly like the agy copy above. Global memory is
+        # optional and frequently absent, and this block runs before the
+        # per-project link, so a fault here must warn and continue rather
+        # than return: aborting would let a stray file or a permission
+        # problem at ~/.claude/memory kill the per-project memory backup
+        # and its commit for every project, on every agent launch. The
+        # secondary feature must not take the primary one down with it.
+        #
+        # Continuing is safe: _agents_repo_ensure_symlink validates and
+        # refuses before it mutates anything, so its failure window is the
+        # same whether the caller returns or carries on. $changed stays
+        # untouched unless the link actually succeeded, and nothing is
+        # recorded to make a later run believe the global memory is linked
+        # when it is not -- the next run re-enters this block and retries.
+        if not mkdir -p "$gvault"
+            echo "$c_warn""agents-vault: could not create $gvault; skipping global memory$c_reset" >&2
+        else
+            set -l gmsg (_agents_repo_ensure_symlink "$glive" "$gvault")
+            set -l grc $status
+            if test $grc -ne 0
+                echo "$c_warn""agents-vault: could not link $glive; global memory not backed up$c_reset" >&2
+            else if test -n "$gmsg"
+                set changed 1
+                test $verbose -eq 1; and echo "$c_ok$gmsg$c_reset"
+            end
+        end
+    end
+
+    #   ──────────────────── link the current project ─────────────────────
+    set -l root (git rev-parse --show-toplevel 2>/dev/null)
+    if test -n "$root"
+        set -l slug (_agents_repo_slug "$root")
+        set -l entry "$vault/projects/$slug"
+        set -l vmem "$entry/claude/memory"
+
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+        set -l mangled (string replace -a '/' '-' -- "$root" | string replace -a '.' '-')
+        set -l live "$claude_root/$mangled/memory"
+
+        # ── Slug migration (spec 4.5) ─────────────────────────────────────
+        # The previous slug never has to be guessed: the live symlink still
+        # points at the old entry. This covers a remote being added, a
+        # remote URL being rewritten, and a remote being removed.
+        set -l prev_slug ""
+        if test -L "$live"
+            set -l tgt (path resolve "$live")
+            set -l pdir (path resolve "$vault/projects")
+            if string match -q "$pdir/*" -- "$tgt"
+                set -l rest (string replace "$pdir/" "" -- "$tgt")
+                set prev_slug (string split -f1 '/' -- $rest)
+            end
+        end
+        if test -z "$prev_slug"
+            # No link yet (fresh machine): try the path-derived candidate.
+            set -l cand (_agents_repo_local_slug "$root")
+            if test "$cand" != "$slug"; and test -d "$vault/projects/$cand"
+                set prev_slug $cand
+            end
+        end
+
+        if test -n "$prev_slug"; and test "$prev_slug" != "$slug"
+            set -l cur_content
+            test -d "$vmem"; and set cur_content (command ls -A "$vmem" 2>/dev/null)
+            if test (count $cur_content) -gt 0
+                echo "$c_err""agents-vault: cannot migrate $prev_slug → $slug; both entries hold content.$c_reset" >&2
+                echo "$c_err""  Resolve with: agents-vault --adopt=SLUG$c_reset" >&2
+                return 1
+            end
+            # What matters here is whether the destination *entry* exists,
+            # not whether it has a memory subdirectory. Gating on the
+            # subdirectory looks equivalent and is not: an entry can exist
+            # with no claude/ subtree at all, and then `git mv A B` moves A
+            # *inside* B, the mkdir below fabricates a fresh empty memory
+            # directory, the live link is pinned to that, and the real
+            # memory is stranded one level deeper than --status and
+            # --restore ever look. The run reports success while the
+            # backup is gone.
+            #
+            # That shape is not exotic; it is what git hands back. Git
+            # cannot track an empty directory, so an entry committed while
+            # its memory was empty materialises after a clone as
+            # projects/<slug>/origin and nothing else -- and cloning the
+            # vault onto a new machine is this feature's own advertised
+            # recovery path.
+            #
+            # So the destination is moved aside rather than deleted, for
+            # the same reason --adopt does it: widening the old rm -rf
+            # would throw away the destination's origin log, which is real
+            # provenance and which the clone case always has. The stash
+            # lives inside .git/ -- same filesystem, so the move stays a
+            # rename; outside projects/, so a crash cannot leave something
+            # that reads as an entry; and never descended into by
+            # `git add -A`, so a crash cannot leave junk to be committed
+            # either. See --adopt above for the .git-is-not-a-directory
+            # fallback.
+            set -l stash ""
+            if test -d "$entry"
+                if test -d "$vault/.git"
+                    set stash "$vault/.git/agents-vault-migrate-stash"
+                else
+                    set stash "$vault/.migrate-stash"
+                end
+                rm -rf "$stash"
+                if not command mv "$entry" "$stash"
+                    echo "$c_err""agents-vault: could not set aside the existing $slug entry$c_reset" >&2
+                    echo "$c_err""  The migration was abandoned; $prev_slug was left as it was.$c_reset" >&2
+                    return 1
+                end
+            end
+            if not git -C "$vault" mv "projects/$prev_slug" "projects/$slug" 2>/dev/null
+                if not command mv "$vault/projects/$prev_slug" "$entry"
+                    test -n "$stash"; and command mv "$stash" "$entry"
+                    # Every move here is a plain rename as far as git is
+                    # concerned, so the index still describes the
+                    # half-applied state even once the worktree is whole
+                    # again. projects/ is re-read whole rather than the two
+                    # entries named, and its stderr is left visible, for
+                    # the reasons spelled out at --adopt.
+                    git -C "$vault" add -A -- projects
+                    echo "$c_err""agents-vault: could not migrate $prev_slug → $slug$c_reset" >&2
+                    echo "$c_err""  The vault was left exactly as it was.$c_reset" >&2
+                    return 1
+                end
+            end
+            # The set-aside entry is folded back in rather than dropped.
+            # -n keeps everything the migrated entry already has, so this
+            # only ever adds what the destination held and the migrated
+            # entry lacks; origin is the one file both sides always have,
+            # so its history is appended by hand instead. Neither failing
+            # is fatal -- the memory and the rename have already landed,
+            # and losing a provenance note is not worth undoing that.
+            #
+            # Appended, not prepended, and that order is load-bearing:
+            # --restore reads the *first* "path:" line out of origin, and
+            # that has to stay this project's own. The set-aside entry's
+            # path came from whichever machine created it and would send a
+            # restore at a directory that is not this one.
+            if test -n "$stash"
+                test -f "$stash/origin"
+                and command cat "$stash/origin" >>"$entry/origin" 2>/dev/null
+                command cp -rn "$stash/." "$entry/" 2>/dev/null
+                rm -rf "$stash"
+            end
+            printf 'renamed: %s → %s (%s)\n' "$prev_slug" "$slug" (date -I) \
+                >>"$entry/origin"
+            # Only a link is dropped here, and only so the relink below has
+            # somewhere to put the new one. Usually $live is exactly that: a
+            # symlink at the old entry, now dangling. But the migration is
+            # also reachable from the path-derived fallback candidate, and
+            # there $live can be a real, populated directory -- someone's
+            # actual memory. rm -f cannot delete it, which is the right
+            # outcome, but it says so on stderr in rm's own voice, so a
+            # --silent run that succeeded printed what reads as an error.
+            # The directory case needs no removal anyway:
+            # _agents_repo_ensure_symlink copies a populated live directory
+            # into the vault without clobbering before it replaces it.
+            #
+            # A stray *regular* file at $live is left alone too, and that is
+            # deliberate rather than an oversight in the test. Nothing this
+            # function created is a plain file there, so whatever it is came
+            # from the user or from something else writing to the same path,
+            # and deleting it unasked would destroy data to make room for a
+            # symlink. _agents_repo_ensure_symlink refuses the path and says
+            # why, and the launch stops until someone looks -- the same
+            # answer the global-memory block gives for the same shape of
+            # surprise.
+            test -L "$live"; and rm -f "$live"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Migrated vault entry $prev_slug → $slug$c_reset"
+        end
+
+        if not test -d "$vmem"
+            if not mkdir -p "$vmem"
+                echo "$c_err""agents-vault: could not create $vmem$c_reset" >&2
+                return 1
+            end
+            set changed 1
+        end
+
+        # Unconditional: this is the emergent-restore path. On a freshly
+        # cloned vault, $vmem already exists (populated from the clone) and
+        # $live does not exist yet -- skipping the link here would silently
+        # leave the clone's memory unlinked and let a starting agent write
+        # fresh, history-less memory instead. _agents_repo_ensure_symlink is
+        # idempotent and makes its own parent directories, so there is
+        # nothing this guard would protect that the helper does not already
+        # handle on its own.
+        set -l link_msg (_agents_repo_ensure_symlink "$live" "$vmem")
+        set -l link_rc $status
+        if test $link_rc -ne 0
+            echo "$c_err""agents-vault: could not link $live$c_reset" >&2
+            return 1
+        end
+        if test -n "$link_msg"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok$link_msg$c_reset"
+        end
+
+        if not test -f "$entry/origin"
+            set -l url (git -C "$root" remote get-url origin 2>/dev/null)
+            test -n "$url"; or set url "(none)"
+            set -l host ""
+            if type -q hostname
+                set host (hostname 2>/dev/null)
+            end
+            printf 'remote: %s\npath:   %s\nhost:   %s\n' \
+                "$url" "$root" "$host" >"$entry/origin"
+            set changed 1
+        end
+    end
+
+    #   ───────────────────────────── commit ──────────────────────────────
+    # A sync that did not commit is a backup that did not happen, so it is
+    # reported as a failure rather than warned about and walked past. The
+    # function otherwise ends on a branchless `if`, which resolves to 0,
+    # and a backup tool that reports success while nothing was recorded
+    # recreates the exact loss the vault exists to prevent.
+    set -l failed 0
+    if not set -q _flag_link
+        set -l msg "chore: sync agent memory vault"
+        test $did_init -eq 1; and set msg "chore: initialize agent memory vault"
+        set -l sync_out (_agents_repo_sync "$vault" "$msg")
+        set -l sync_rc $status
+        if test $sync_rc -eq 2
+            echo "$c_err""agents-vault: unresolved rebase in the vault; nothing committed$c_reset" >&2
+            set failed 1
+        else if test $sync_rc -ne 0
+            echo "$c_err""agents-vault: the vault commit failed; nothing recorded$c_reset" >&2
+            set failed 1
+        else if test -n "$sync_out"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
+        end
+    end
+
+    #   ────────────────────────────── push ───────────────────────────────
+    # Pushing is explicit. Autopush exists but is opt-in, because this runs
+    # on every agent launch and a network operation there can hang or
+    # prompt for credentials invisibly underneath a starting agent.
+    set -l do_push 0
+    set -q _flag_push; and set do_push 1
+    if set -q __fish_agent_vault_autopush; and test "$__fish_agent_vault_autopush" = 1
+        set do_push 1
+    end
+    # timeout(1) is the only thing bounding autopush, and an unbounded
+    # network call in front of an agent launch is the exact block this
+    # design exists to remove -- so without it, autopush does not happen
+    # at all rather than happening open-endedly. Nothing is lost that was
+    # not already local: the commit has landed, and `agents-vault --push`
+    # still sends it by hand, deliberately unbounded because the user is
+    # watching that one. It says so rather than skipping quietly, because
+    # a vault that stopped leaving the machine must never look like one
+    # that did not. timeout ships with coreutils, so this is a guard
+    # against the impossible-until-it-happens, not a real dependency.
+    if test $do_push -eq 1; and not set -q _flag_push; and not type -q timeout
+        echo "$c_warn""agents-vault: timeout is unavailable, so autopush cannot be bounded; the vault is committed locally but not pushed$c_reset" >&2
+        set do_push 0
+    end
+    if test $do_push -eq 1
+        if git -C "$vault" remote get-url origin >/dev/null 2>&1
+            # The pull belongs here and nowhere earlier. Fetching is only
+            # ever needed in order to push; committing needs no remote at
+            # all. Keeping it on the commit path put a network round trip
+            # in front of every agent launch, where an unreachable remote
+            # blocks the launch until it times out and a credential prompt
+            # has nobody to answer it -- and, worse, a failed fetch there
+            # took the local commit down with it, so an offline laptop
+            # silently stopped being backed up at all.
+            #
+            # GIT_TERMINAL_PROMPT=0 and GIT_ASKPASS make git fail fast
+            # rather than ask. Neither disturbs a configured credential
+            # helper, which git consults before it ever falls back to
+            # prompting; they only close off the interactive last resort,
+            # which under a starting agent is indistinguishable from a hang.
+            #
+            # They close the prompt, not the socket, and git has no knob
+            # that closes the socket either: there is no HTTP connect
+            # timeout in its configuration at all, and http.lowSpeedLimit /
+            # http.lowSpeedTime -- the usual suggestion -- only start
+            # counting once bytes are moving, so they expire never against
+            # an address that simply blackholes the SYN. Measured against
+            # 192.0.2.1 with both set: no return inside 30s; unset: 135s.
+            #
+            # ssh is the one transport that can time itself out, so it is
+            # told to, unless the user has already said how to run ssh.
+            # Everything else is bounded from outside with timeout(1).
+            #
+            # "Already said" has two spellings and both have to count.
+            # GIT_SSH_COMMAND is the obvious one; core.sshCommand is the
+            # documented place to name an identity file or an ssh wrapper,
+            # and it is the one a vault on a private host is most likely to
+            # need. An injected environment variable outranks the config,
+            # so consulting only the environment does not merely miss the
+            # user's setting -- it overrides it, and a remote reachable
+            # only as `ssh -i ~/.ssh/vault_key` then fails to authenticate
+            # on every push. A ten-second connect bound is not worth that.
+            #
+            # -qx rather than -q on the environment side: a fish variable
+            # that was never exported satisfies -q but is not in the
+            # environment git runs in, so treating it as the user's answer
+            # would leave the push with neither their ssh command nor a
+            # connect timeout. Only what git can actually see counts, and
+            # exporting it is the user's call to make, not this function's.
+            set -l gitenv GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true
+            set -l user_ssh (git -C "$vault" config --get core.sshCommand 2>/dev/null)
+            if not set -qx GIT_SSH_COMMAND; and test -z "$user_ssh"
+                set -a gitenv 'GIT_SSH_COMMAND=ssh -o ConnectTimeout=10'
+            end
+            set -l gitnet env $gitenv
+
+            # Only autopush is wrapped. An explicit --push is a thing the
+            # user asked for and is watching, and it must report the real
+            # exit status of a real transfer, so it is allowed to take as
+            # long as the transfer honestly takes. Autopush runs
+            # synchronously in front of every agent launch, which is the
+            # block this whole design exists to remove; there an
+            # unreachable remote costs a bounded 20s per operation instead
+            # of an open-ended wait. timeout's own 124 is a non-zero exit
+            # like any other, so a bounded push still reports as failed and
+            # the commit it could not send has already landed locally. A
+            # push too slow for the bound can always be run by hand. An
+            # autopush with no timeout(1) to wrap it never reaches here;
+            # it was turned off above.
+            if not set -q _flag_push
+                set gitnet timeout 20 $gitnet
+            end
+            set -l reached 1
+            if git -C "$vault" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
+                if not $gitnet git -C "$vault" pull --rebase --autostash -q \
+                        >/dev/null 2>/dev/null
+                    # Two unrelated failures land here and reporting them as
+                    # one sends the user hunting for a conflict that never
+                    # existed. A rebase that genuinely started and stopped
+                    # on a conflict leaves rebase-merge/ or rebase-apply/
+                    # behind; that rebase is ours, so it is aborted and the
+                    # vault is left at local HEAD. Everything else -- an
+                    # unreachable remote being far and away the common case
+                    # -- never began a rebase at all.
+                    if test -d "$vault/.git/rebase-merge"; or test -d "$vault/.git/rebase-apply"
+                        git -C "$vault" rebase --abort >/dev/null 2>/dev/null
+                        echo "$c_err""agents-vault: rebase conflict in the vault; aborted at local HEAD, nothing pushed$c_reset" >&2
+                    else
+                        echo "$c_err""agents-vault: could not reach the vault remote; the vault is committed locally but not backed up off this machine$c_reset" >&2
+                    end
+                    set reached 0
+                    set failed 1
+                end
+            end
+            # A remote we could not read from is not worth pushing to: the
+            # push would only fail a second time, more confusingly, and the
+            # pull has already said exactly what went wrong.
+            if test $reached -eq 1
+                if $gitnet git -C "$vault" push -q origin HEAD
+                    test $verbose -eq 1; and echo "$c_ok→ Pushed the vault to origin$c_reset"
+                else
+                    # The commit above did happen, so the memory is safe
+                    # locally and the next push will carry it -- but nothing
+                    # left this machine, which is the whole point of pushing,
+                    # so this is a failure and not a warning to walk past.
+                    echo "$c_err""agents-vault: push failed; the vault is committed locally but not backed up off this machine$c_reset" >&2
+                    set failed 1
+                end
+            end
+        else if set -q _flag_push
+            # An explicit --push that pushed nowhere must not read as a
+            # successful backup. Autopush stays quiet: it is a background
+            # convenience on a vault that may deliberately have no remote.
+            echo "$c_err""agents-vault: no remote configured; set one with --remote=URL$c_reset" >&2
+            return 1
+        end
+    end
+
+    if test $quiet -eq 1; and test $changed -eq 1
+        if test $did_init -eq 1
+            echo "$c_ok→ Initialized agent memory vault$c_reset"
+        else
+            echo "$c_ok→ Synced agent memory vault$c_reset"
+        end
+    end
+
+    # Explicit, because the branchless `if` above resolves to 0 and would
+    # otherwise be this function's exit status.
+    test $failed -eq 0
+end
