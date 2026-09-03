@@ -365,6 +365,108 @@ check "ambiguous migration fails" 1 "$arc"
 check "ambiguous leaves old entry" old (cat $vroot2/agent-vault/projects/$aslug/claude/memory/x.md)
 check "ambiguous leaves new entry" new (cat $vroot2/agent-vault/projects/git.rootiest.dev-rootiest-clash/claude/memory/y.md)
 
+# Case 2 of the three required cases: the *current* (new-slug) entry is
+# present but empty -- neither absent (handled above) nor holding content
+# (the ambiguous case above). Migration must still proceed.
+set -l emp (new_repo)
+set -l emangled (string replace -a '/' '-' -- $emp | string replace -a '.' '-')
+mkdir -p $croot2/$emangled/memory
+echo precious2 >$croot2/$emangled/memory/keep.md
+pushd $emp >/dev/null
+agents-vault --silent
+set -l eslug (_agents_repo_slug $emp)
+popd >/dev/null
+
+git -C $emp remote add origin https://git.rootiest.dev/rootiest/emptycase.git
+set -l enew_slug git.rootiest.dev-rootiest-emptycase
+# Pre-create the destination entry as an empty directory -- present, not
+# absent -- before migration runs.
+mkdir -p $vroot2/agent-vault/projects/$enew_slug/claude/memory
+
+pushd $emp >/dev/null
+set -l erc (agents-vault --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "empty-current migration succeeds" 0 "$erc"
+check "empty-current migrated content" precious2 (cat $vroot2/agent-vault/projects/$enew_slug/claude/memory/keep.md)
+check "empty-current old entry removed" false (test -d $vroot2/agent-vault/projects/$eslug; and echo true; or echo false)
+
+# Remote-URL-rewrite transition: origin changes from one forge URL to
+# another (distinct from adding a remote where none existed).
+set -l rw (new_repo https://git.rootiest.dev/rootiest/rewrite-old.git)
+set -l rwmangled (string replace -a '/' '-' -- $rw | string replace -a '.' '-')
+mkdir -p $croot2/$rwmangled/memory
+echo rewrite-precious >$croot2/$rwmangled/memory/keep.md
+pushd $rw >/dev/null
+agents-vault --silent
+popd >/dev/null
+set -l rw_old_slug git.rootiest.dev-rootiest-rewrite-old
+check "rewrite: old entry populated" rewrite-precious (cat $vroot2/agent-vault/projects/$rw_old_slug/claude/memory/keep.md)
+
+git -C $rw remote set-url origin https://git.rootiest.dev/rootiest/rewrite-new.git
+pushd $rw >/dev/null
+agents-vault --silent
+popd >/dev/null
+set -l rw_new_slug git.rootiest.dev-rootiest-rewrite-new
+check "rewrite: migrated to new remote slug" rewrite-precious (cat $vroot2/agent-vault/projects/$rw_new_slug/claude/memory/keep.md)
+check "rewrite: old entry removed" false (test -d $vroot2/agent-vault/projects/$rw_old_slug; and echo true; or echo false)
+
+# Remote-removal transition: origin removed, slug reverts to local-*.
+set -l rmv (new_repo https://git.rootiest.dev/rootiest/removeme.git)
+set -l rmvmangled (string replace -a '/' '-' -- $rmv | string replace -a '.' '-')
+mkdir -p $croot2/$rmvmangled/memory
+echo removal-precious >$croot2/$rmvmangled/memory/keep.md
+pushd $rmv >/dev/null
+agents-vault --silent
+popd >/dev/null
+set -l rmv_remote_slug git.rootiest.dev-rootiest-removeme
+check "removal: remote entry populated" removal-precious (cat $vroot2/agent-vault/projects/$rmv_remote_slug/claude/memory/keep.md)
+
+git -C $rmv remote remove origin
+pushd $rmv >/dev/null
+agents-vault --silent
+set -l rmv_local_slug (_agents_repo_slug $rmv)
+popd >/dev/null
+check "removal: migrated to local slug" removal-precious (cat $vroot2/agent-vault/projects/$rmv_local_slug/claude/memory/keep.md)
+check "removal: old remote entry removed" false (test -d $vroot2/agent-vault/projects/$rmv_remote_slug; and echo true; or echo false)
+
+# Fallback-candidate sanitization: a dirty basename (space, !) must produce
+# the same local-* slug that _agents_repo_slug would derive, so that a
+# lost-symlink recovery (no live link, but the vault entry survives) can
+# still find and adopt it. Before the fix, the fallback only lowercased
+# the basename instead of sanitizing it like _agents_repo_slug does, so it
+# could never match the real entry directory for a name like this.
+set -l dirty_root (mktemp -d); set -ga TMPDIRS $dirty_root
+set -l dp "$dirty_root/My Project!"
+mkdir -p "$dp"
+git -C "$dp" init -q
+git -C "$dp" config user.email t@t
+git -C "$dp" config user.name t
+git -C "$dp" config commit.gpgsign false
+git -C "$dp" config core.hooksPath /dev/null
+
+set -l dmangled (string replace -a '/' '-' -- $dp | string replace -a '.' '-')
+mkdir -p $croot2/$dmangled/memory
+echo "dirty-precious" >$croot2/$dmangled/memory/keep.md
+
+pushd $dp >/dev/null
+agents-vault --silent
+set -l dirty_local_slug (_agents_repo_slug $dp)
+popd >/dev/null
+check "dirty local entry populated" dirty-precious (cat $vroot2/agent-vault/projects/$dirty_local_slug/claude/memory/keep.md)
+
+# Lose the live symlink, as a fresh-machine restore would, so migration
+# must fall back to recomputing the candidate from the path instead of
+# reading it off the (now-absent) live symlink.
+rm -f $croot2/$dmangled/memory
+
+git -C $dp remote add origin https://git.rootiest.dev/rootiest/dirty.git
+pushd $dp >/dev/null
+agents-vault --silent
+popd >/dev/null
+set -l dirty_new_slug git.rootiest.dev-rootiest-dirty
+check "fallback finds sanitized local entry" dirty-precious (cat $vroot2/agent-vault/projects/$dirty_new_slug/claude/memory/keep.md)
+check "fallback old entry removed" false (test -d $vroot2/agent-vault/projects/$dirty_local_slug; and echo true; or echo false)
+
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 

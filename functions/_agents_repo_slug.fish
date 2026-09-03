@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# DEPENDENCIES
+#   _agents_repo_local_slug
+#
 # SYNOPSIS
 #   _agents_repo_slug <dir>
 #
@@ -63,8 +66,5 @@ function _agents_repo_slug --argument-names dir
         return 0
     end
 
-    set -l rp (path resolve "$dir")
-    set -l base (string lower -- (path basename "$rp") | string replace -ra '[^a-z0-9._-]' '-')
-    set -l digest (printf '%s' "$rp" | sha256sum | string split -f1 ' ')
-    printf 'local-%s-%s\n' "$base" (string sub -l 8 -- "$digest")
+    _agents_repo_local_slug "$dir"
 end

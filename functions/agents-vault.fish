@@ -5,8 +5,9 @@
 #   12-ai-and-developer-tools
 #
 # DEPENDENCIES
-#   _agents_vault_dir, _agents_repo_slug, _agents_repo_ensure_symlink,
-#   _agents_repo_sync, _agents_repo_install_tools, git, hostname
+#   _agents_vault_dir, _agents_repo_slug, _agents_repo_local_slug,
+#   _agents_repo_ensure_symlink, _agents_repo_sync,
+#   _agents_repo_install_tools, git, hostname
 #
 # SYNOPSIS
 #   agents-vault [--link] [--push] [--restore] [--status]
@@ -230,17 +231,13 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         end
         if test -z "$prev_slug"
             # No link yet (fresh machine): try the path-derived candidate.
-            set -l cand_rp (path resolve "$root")
-            set -l cand_base (string lower -- (path basename "$cand_rp"))
-            set -l cand_digest (printf '%s' "$cand_rp" | sha256sum | string split -f1 ' ')
-            set -l cand "local-$cand_base-"(string sub -l 8 -- "$cand_digest")
+            set -l cand (_agents_repo_local_slug "$root")
             if test "$cand" != "$slug"; and test -d "$vault/projects/$cand"
                 set prev_slug $cand
             end
         end
 
         if test -n "$prev_slug"; and test "$prev_slug" != "$slug"
-            set -l prev_mem "$vault/projects/$prev_slug/claude/memory"
             set -l cur_content
             test -d "$vmem"; and set cur_content (command ls -A "$vmem" 2>/dev/null)
             if test (count $cur_content) -gt 0
@@ -249,7 +246,6 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 return 1
             end
             test -d "$vmem"; and rm -rf "$vault/projects/$slug"
-            mkdir -p (path dirname "$vault/projects/$slug")
             if not git -C "$vault" mv "projects/$prev_slug" "projects/$slug" 2>/dev/null
                 command mv "$vault/projects/$prev_slug" "$vault/projects/$slug"; or return 1
             end
