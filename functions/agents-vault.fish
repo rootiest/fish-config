@@ -71,9 +71,11 @@
 #
 #   --adopt=SLUG rebinds the current project's entry to SLUG, which is how
 #   a machine-specific local-* key or an ambiguous migration is resolved.
-#   SLUG must match [a-z0-9._-]+ with no slash and no leading dot -- the
-#   charset the slug formula itself emits -- since it is interpolated into
-#   a vault path and handed to git mv.
+#   SLUG must match [a-z0-9._-]+ and be neither "." nor ".." -- the charset
+#   the slug formula itself emits -- since it is interpolated into a vault
+#   path and handed to git mv. The rename and the relink are atomic: if the
+#   live memory directory cannot be repinned onto the new entry the rename
+#   is rolled back, so an ordinary run still finds the original entry.
 #
 #   --remote=URL points the vault at a remote; --push commits and then
 #   pushes there.
@@ -94,7 +96,15 @@
 # EXIT STATUS
 #   0  Completed successfully
 #   1  Fatal error (vault unavailable, git failure, ambiguous migration,
-#      invalid --adopt slug, or --push with no remote configured)
+#      invalid --adopt slug, nothing committed, or a push that did not
+#      reach the remote)
+#
+# RETURNS
+#   --status prints its report on stdout: the vault path, the remote and
+#   how far ahead of it the vault is, a warning for an unresolved rebase,
+#   then one line per entry reading "linked" or "orphan", the slug, and the
+#   file count. Every other mode prints only verbosity-gated progress
+#   lines, and nothing at all when there was nothing to do.
 #
 # EXAMPLE
 #   agents-vault
@@ -362,11 +372,20 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         # to `git mv`, so it is validated before it is used anywhere:
         # --adopt=../../../etc would otherwise walk straight out of the
         # vault. Only the charset the slug formula itself emits is
-        # accepted, and a leading dot is refused as well, which also rules
-        # out the bare "." and ".." entries.
-        if not string match -qr '^[a-z0-9_-][a-z0-9._-]*$' -- "$_flag_adopt"
+        # accepted, which excludes the slash that any traversal needs, and
+        # the two names that traverse without one are refused by name.
+        #
+        # A leading dot is *not* refused: _agents_repo_slug legitimately
+        # emits one for a dot-led subdomain (https://.hidden.example.com/r
+        # keys as .hidden.example.com-r), and refusing it would make such
+        # an entry impossible to adopt. Inside projects/ a leading dot is
+        # a hidden directory, not an escape.
+        set -l bad_slug 0
+        string match -qr '^[a-z0-9._-]+$' -- "$_flag_adopt"; or set bad_slug 1
+        contains -- "$_flag_adopt" . ..; and set bad_slug 1
+        if test $bad_slug -eq 1
             echo "$c_err""agents-vault: invalid slug '$_flag_adopt'$c_reset" >&2
-            echo "$c_err""  A slug is [a-z0-9._-]+ with no slash and no leading dot.$c_reset" >&2
+            echo "$c_err""  A slug is [a-z0-9._-]+, is not '.' or '..', and holds no slash.$c_reset" >&2
             return 1
         end
 
@@ -393,23 +412,49 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             echo "$c_err""agents-vault: $_flag_adopt already holds content; refusing to overwrite$c_reset" >&2
             return 1
         end
-        test -d "$to"; and rm -rf "$to"
-        if not git -C "$vault" mv "projects/$cur" "projects/$_flag_adopt" 2>/dev/null
-            command mv "$from" "$to"; or return 1
+        # Adopting is a rename plus a relink, and it must be all or
+        # nothing. A rename that lands while the relink fails leaves the
+        # memory intact at the new slug but unreferenced: the next ordinary
+        # run finds no live link, recomputes the old slug, finds nothing
+        # there, and fabricates a fresh empty entry, so the agent writes
+        # history-less memory from then on. No bytes are lost, but
+        # continuity is, and nothing recovers it automatically.
+        #
+        # So a contentless target entry is moved aside rather than deleted,
+        # and the origin note is appended only once the relink has
+        # succeeded. Both are undone below if it does not. The stash lives
+        # at the vault root, not under projects/, so a crash between the
+        # two renames cannot leave something that reads as an entry.
+        set -l stash ""
+        if test -d "$to"
+            set stash "$vault/.adopt-stash"
+            rm -rf "$stash"
+            command mv "$to" "$stash"; or return 1
         end
-        printf 'adopted: %s → %s (%s)\n' "$cur" "$_flag_adopt" (date -I) >>"$to/origin"
+        if not git -C "$vault" mv "projects/$cur" "projects/$_flag_adopt" 2>/dev/null
+            if not command mv "$from" "$to"
+                test -n "$stash"; and command mv "$stash" "$to"
+                return 1
+            end
+        end
 
         set -l claude_root $__fish_agent_vault_claude_root
         test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
         set -l mangled (string replace -a '/' '-' -- "$root" | string replace -a '.' '-')
-        # The live path still points at the old entry, which no longer
-        # exists; drop it so ensure_symlink is not asked to resolve a
-        # broken link before repinning it.
-        test -L "$claude_root/$mangled/memory"; and rm -f "$claude_root/$mangled/memory"
+        # The live link is deliberately left in place for ensure_symlink to
+        # repin, which it does on its own for a link pointing elsewhere.
+        # Removing it first would only widen the window in which a failure
+        # leaves the project with no link at all.
         if not _agents_repo_ensure_symlink "$claude_root/$mangled/memory" "$to/claude/memory" >/dev/null
-            echo "$c_err""agents-vault: adopted $_flag_adopt but could not relink $claude_root/$mangled/memory$c_reset" >&2
+            if not git -C "$vault" mv "projects/$_flag_adopt" "projects/$cur" 2>/dev/null
+                command mv "$to" "$from"
+            end
+            test -n "$stash"; and command mv "$stash" "$to"
+            echo "$c_err""agents-vault: could not relink $claude_root/$mangled/memory; $cur was left as it was$c_reset" >&2
             return 1
         end
+        printf 'adopted: %s → %s (%s)\n' "$cur" "$_flag_adopt" (date -I) >>"$to/origin"
+        test -n "$stash"; and rm -rf "$stash"
 
         _agents_repo_sync "$vault" "chore: adopt $cur as $_flag_adopt" >/dev/null
         test $verbose -eq 1; and echo "$c_ok→ Adopted $cur as $_flag_adopt$c_reset"
@@ -427,6 +472,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     if set -q _flag_restore
         set -l claude_root $__fish_agent_vault_claude_root
         test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+        set -l restore_failed 0
         for entry in "$vault"/projects/*
             test -d "$entry/claude/memory"; or continue
             set -l eslug (path basename "$entry")
@@ -440,6 +486,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 set -l msg (_agents_repo_ensure_symlink "$claude_root/$m/memory" "$entry/claude/memory")
                 if test $status -ne 0
                     echo "$c_err""agents-vault: could not relink $eslug$c_reset" >&2
+                    set restore_failed 1
                 else if test -n "$msg"
                     test $verbose -eq 1; and echo "$c_ok→ Restored $eslug$c_reset"
                 end
@@ -448,7 +495,11 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 and echo "$c_warn→ Cannot place $eslug: no live project found; use --adopt from the project$c_reset"
             end
         end
-        return 0
+        # An entry that could not be relinked is a failure, not a note in
+        # passing: the same reasoning as the commit and push paths below.
+        # An entry with no live project is not -- there is nothing wrong
+        # with the vault, the project simply is not on this machine.
+        return $restore_failed
     end
 
     #   ────────────────────────── global state ───────────────────────────
@@ -642,6 +693,12 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     end
 
     #   ───────────────────────────── commit ──────────────────────────────
+    # A sync that did not commit is a backup that did not happen, so it is
+    # reported as a failure rather than warned about and walked past. The
+    # function otherwise ends on a branchless `if`, which resolves to 0,
+    # and a backup tool that reports success while nothing was recorded
+    # recreates the exact loss the vault exists to prevent.
+    set -l failed 0
     if not set -q _flag_link
         set -l msg "chore: sync agent memory vault"
         test $did_init -eq 1; and set msg "chore: initialize agent memory vault"
@@ -649,6 +706,10 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         set -l sync_rc $status
         if test $sync_rc -eq 2
             echo "$c_warn""agents-vault: unresolved rebase conflict in the vault; nothing committed$c_reset" >&2
+            set failed 1
+        else if test $sync_rc -ne 0
+            echo "$c_err""agents-vault: the vault commit failed; nothing recorded$c_reset" >&2
+            set failed 1
         else if test -n "$sync_out"
             set changed 1
             test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
@@ -669,9 +730,12 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             if git -C "$vault" push -q origin HEAD
                 test $verbose -eq 1; and echo "$c_ok→ Pushed the vault to origin$c_reset"
             else
-                # Not fatal: the commit above already happened, so the
-                # memory is safe locally and the next push will carry it.
-                echo "$c_warn""agents-vault: push failed; the vault is committed locally$c_reset" >&2
+                # The commit above did happen, so the memory is safe
+                # locally and the next push will carry it -- but nothing
+                # left this machine, which is the whole point of pushing,
+                # so this is a failure and not a warning to walk past.
+                echo "$c_warn""agents-vault: push failed; the vault is committed locally but not backed up off this machine$c_reset" >&2
+                set failed 1
             end
         else if set -q _flag_push
             # An explicit --push that pushed nowhere must not read as a
@@ -689,4 +753,8 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             echo "$c_ok→ Synced agent memory vault$c_reset"
         end
     end
+
+    # Explicit, because the branchless `if` above resolves to 0 and would
+    # otherwise be this function's exit status.
+    test $failed -eq 0
 end

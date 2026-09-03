@@ -771,7 +771,8 @@ check "adopt recorded the rebind" true (string match -q "*$aslug*my-chosen-slug*
 
 # An unvalidated --adopt slug is a path-traversal primitive: it lands in
 # "$vault/projects/$slug" and in `git mv`. Only the charset the slug
-# formula itself emits is accepted, and a leading dot is refused too.
+# formula itself emits is accepted, plus a by-name refusal of the two
+# traversal names that need no slash.
 set -l bp (new_repo)
 set -l bmang (string replace -a '/' '-' -- $bp | string replace -a '.' '-')
 mkdir -p $croot9/$bmang/memory
@@ -781,7 +782,7 @@ agents-vault --silent
 popd >/dev/null
 set -l projects_before (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
 
-set -l bad_slugs ../escape .hidden has/slash . .. 'UPPER' 'sp ace' ''
+set -l bad_slugs ../escape has/slash . .. 'UPPER' 'sp ace' ''
 pushd $bp >/dev/null
 for bad in $bad_slugs
     set -l berr (mktemp); set -ga TMPDIRS $berr
@@ -793,7 +794,71 @@ popd >/dev/null
 
 check "refused adopts moved nothing" "$projects_before" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
 check "refused adopts escaped nothing above projects/" false (test -e $vroot9/agent-vault/escape; and echo true; or echo false)
-check "refused adopts created no dotted entry" false (test -e $vroot9/agent-vault/projects/.hidden; and echo true; or echo false)
+
+# ... but a *leading* dot is legitimate, not traversal. _agents_repo_slug
+# emits one for a dot-led subdomain, so refusing it would make such an
+# entry impossible to adopt. Inside projects/ it is a hidden directory.
+pushd $bp >/dev/null
+set -l drc (agents-vault --adopt=.hidden.example.com-repo --silent; echo $status)
+popd >/dev/null
+check "adopt accepts a leading-dot slug" 0 "$drc"
+check "leading-dot slug landed inside projects/" bad (cat $vroot9/agent-vault/projects/.hidden.example.com-repo/claude/memory/b.md 2>/dev/null)
+check "leading-dot slug escaped nothing" false (test -e $vroot9/agent-vault/.hidden.example.com-repo; and echo true; or echo false)
+check "leading-dot slug repinned the link" (path resolve $vroot9/agent-vault/projects/.hidden.example.com-repo/claude/memory) (path resolve $croot9/$bmang/memory)
+
+# --adopt must be atomic. A rename that lands while the relink fails
+# leaves the memory intact but unreferenced: the next ordinary run finds
+# no live link, recomputes the old slug, finds nothing there, and
+# fabricates a fresh empty entry, so the agent writes history-less memory
+# from then on. The relink is forced to fail by making the project's live
+# parent directory read-only, which stops ensure_symlink repinning it.
+set -l tp (new_repo https://git.rootiest.dev/rootiest/atomic.git)
+set -l tslug git.rootiest.dev-rootiest-atomic
+set -l tmang (string replace -a '/' '-' -- $tp | string replace -a '.' '-')
+mkdir -p $croot9/$tmang/memory
+echo atomic-precious >$croot9/$tmang/memory/keep.md
+pushd $tp >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+set -l pre_entries (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+set -l pre_head (git -C $vroot9/agent-vault rev-list --count HEAD)
+set -l pre_porcelain (git -C $vroot9/agent-vault status --porcelain | string join ',')
+set -l pre_link (path resolve $croot9/$tmang/memory)
+
+set -l terr (mktemp); set -ga TMPDIRS $terr
+chmod 500 $croot9/$tmang
+pushd $tp >/dev/null
+set -l trc (agents-vault --adopt=atomic-target --silent 2>$terr; echo $status)
+popd >/dev/null
+chmod 700 $croot9/$tmang
+
+check "atomic adopt: failed relink returns 1" 1 "$trc"
+check "atomic adopt: says the entry was left alone" true (string match -q "*$tslug*left as it was*" -- (cat $terr); and echo true; or echo false)
+check "atomic adopt: rename rolled back" "$pre_entries" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+check "atomic adopt: target entry not created" false (test -e $vroot9/agent-vault/projects/atomic-target; and echo true; or echo false)
+check "atomic adopt: original entry intact" atomic-precious (cat $vroot9/agent-vault/projects/$tslug/claude/memory/keep.md 2>/dev/null)
+check "atomic adopt: no origin note appended" false (string match -q '*adopted:*' -- (cat $vroot9/agent-vault/projects/$tslug/origin); and echo true; or echo false)
+check "atomic adopt: nothing committed" "$pre_head" (git -C $vroot9/agent-vault rev-list --count HEAD)
+check "atomic adopt: index and worktree unchanged" "$pre_porcelain" (git -C $vroot9/agent-vault status --porcelain | string join ',')
+check "atomic adopt: live link never removed" "$pre_link" (path resolve $croot9/$tmang/memory)
+check "atomic adopt: no stash left behind" false (test -e $vroot9/agent-vault/.adopt-stash; and echo true; or echo false)
+
+# The point of rolling back: an ordinary run afterwards must find the
+# original entry and must NOT fabricate a second one.
+pushd $tp >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "atomic adopt: ordinary run fabricated no entry" "$pre_entries" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+check "atomic adopt: ordinary run kept the original link" (path resolve $vroot9/agent-vault/projects/$tslug/claude/memory) (path resolve $croot9/$tmang/memory)
+check "atomic adopt: memory still reachable through the link" atomic-precious (cat $croot9/$tmang/memory/keep.md 2>/dev/null)
+
+# ... and once the underlying problem is fixed, --adopt simply works.
+pushd $tp >/dev/null
+set -l t2rc (agents-vault --adopt=atomic-target --silent; echo $status)
+popd >/dev/null
+check "atomic adopt: retry succeeds" 0 "$t2rc"
+check "atomic adopt: retry moved the memory" atomic-precious (cat $vroot9/agent-vault/projects/atomic-target/claude/memory/keep.md 2>/dev/null)
 
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
@@ -842,6 +907,17 @@ set -l r2out (mktemp); set -ga TMPDIRS $r2out
 set -l r2rc (agents-vault --restore >$r2out; echo $status)
 check "restore: exits 0 with an unplaceable entry" 0 "$r2rc"
 check "restore: reports the unplaceable entry" true (string match -q '*ghost-entry*' -- (cat $r2out); and echo true; or echo false)
+
+# An entry that *could* be placed but could not be relinked is a failure,
+# not a note in passing -- the same branchless-`if` false zero as the
+# commit and push paths. An entry with no live project is not a failure.
+rm -f $croot10/$rmang/memory
+chmod 500 $croot10/$rmang
+set -l r3err (mktemp); set -ga TMPDIRS $r3err
+set -l r3rc (agents-vault --restore >/dev/null 2>$r3err; echo $status)
+chmod 700 $croot10/$rmang
+check "restore: a failed relink returns non-zero" 1 "$r3rc"
+check "restore: a failed relink is reported" true (string match -q '*restoreme*' -- (cat $r3err); and echo true; or echo false)
 
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
@@ -901,6 +977,33 @@ agents-vault --silent
 popd >/dev/null
 set -e __fish_agent_vault_autopush
 check "autopush pushes when enabled" pushed-auto (git -C $bare show $vbranch:projects/$pslug/claude/memory/p3.md 2>/dev/null)
+
+# A push that *fails* against a configured remote must return non-zero.
+# The function otherwise ends on a branchless `if`, which resolves to 0,
+# so warning on stderr and falling through reports a successful backup
+# while nothing left the machine -- the exact loss the vault prevents.
+# The remote is a real path that is not a repository, not a mock.
+set -l deadremote $vroot11/not-a-repo.git
+agents-vault --remote=$deadremote --silent
+echo pushed-never >$croot11/$pmang/memory/p4.md
+set -l fperr (mktemp); set -ga TMPDIRS $fperr
+pushd $pp >/dev/null
+set -l fprc (agents-vault --push --silent 2>$fperr; echo $status)
+popd >/dev/null
+check "failing push returns non-zero" 1 "$fprc"
+check "failing push warns on stderr" true (string match -q '*push failed*' -- (cat $fperr); and echo true; or echo false)
+check "failing push still committed locally" true (git -C $vroot11/agent-vault ls-files --error-unmatch projects/$pslug/claude/memory/p4.md >/dev/null 2>&1; and echo true; or echo false)
+
+# Autopush is the same failure through the quiet path: a summary line
+# saying "Synced" must not come with a zero exit when the push failed.
+echo pushed-never-2 >$croot11/$pmang/memory/p5.md
+set -g __fish_agent_vault_autopush 1
+set -l fp2err (mktemp); set -ga TMPDIRS $fp2err
+pushd $pp >/dev/null
+set -l fp2rc (agents-vault --quiet 2>$fp2err >/dev/null; echo $status)
+popd >/dev/null
+set -e __fish_agent_vault_autopush
+check "failing autopush returns non-zero" 1 "$fp2rc"
 
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
