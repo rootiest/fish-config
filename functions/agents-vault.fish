@@ -36,6 +36,17 @@
 #   of megabytes per project, growing per session). Paths are allowlisted,
 #   never denylisted, so nothing new upstream adds can leak in.
 #
+#   Global state that belongs to no project is tracked as well. Claude's
+#   global memory directory (~/.claude/memory) is symlinked into the vault
+#   exactly like per-project memory, and is only linked when one side or
+#   the other already holds something, since that path does not exist by
+#   default. agy's knowledge store and settings.json are copied rather
+#   than symlinked: agy partitions by conversation UUID rather than by
+#   workspace, so it has no per-project slice, and its store sits beside
+#   SQLite databases whose WAL sidecars must never be live-tracked inside
+#   a git worktree. A failed copy is reported but is not fatal, because an
+#   incomplete backup still leaves the agent working.
+#
 #   Because the slug is derived from the remote, gaining, losing, or
 #   rewriting a project's origin changes it. Each run detects this by
 #   reading the previous slug straight off the live memory symlink's
@@ -72,6 +83,22 @@
 #   __fish_agent_vault_autopush to 1 to also push on wrapper launch;
 #   it defaults to off so a backgrounded push can never hang or prompt
 #   invisibly underneath a starting agent.
+#
+#   Three further variables exist only so the test suite can run against
+#   throwaway directories instead of the real home, and are not meant for
+#   everyday use. __fish_agent_vault_claude_root overrides Claude's
+#   per-project directory (~/.claude/projects), which is where the
+#   per-project memory directories live. __fish_agent_vault_claude_home
+#   overrides Claude's home directory (~/.claude), whose memory
+#   subdirectory holds the global memory. Those two name different paths
+#   and setting one has no effect on the other.
+#   __fish_agent_vault_agy_root overrides agy's state directory
+#   (~/.gemini/antigravity-cli), which is only ever read from.
+#
+#   The last two are not optional niceties. Without them, a test run on a
+#   machine that has a real global memory directory would move it into a
+#   throwaway directory and leave a dangling symlink behind, which is
+#   strictly worse than having had no backup at all.
 function agents-vault --description 'track curated agent memory in a host-scoped vault repo'
     set -l c_head (set_color --bold cyan)
     set -l c_cmd (set_color --bold)
@@ -194,6 +221,88 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             return 1
         end
         set changed 1
+    end
+
+    #   ────────────────────────── global state ───────────────────────────
+    # Allowlist, never a denylist. The agy root and ~/.claude also hold
+    # .credentials.json, history.jsonl, sessions/, session-env/,
+    # shell-snapshots/, and the conversation databases, so only the paths
+    # named here are ever copied or linked; a "back up all but known junk"
+    # rule would leak secrets the first time upstream adds a file.
+    set -l agy_root $__fish_agent_vault_agy_root
+    test -n "$agy_root"; or set agy_root "$HOME/.gemini/antigravity-cli"
+
+    # agy state is copied, never symlinked: agy partitions by conversation
+    # UUID rather than by workspace, so there is no per-project slice to
+    # link, and its store sits beside SQLite databases whose WAL sidecars
+    # must never be live-tracked inside a git worktree.
+    #
+    # A failed copy is reported but not fatal. An incomplete backup still
+    # leaves the agent fully working, unlike a broken memory symlink, and
+    # this runs on every agent launch.
+    set -l agy_copied 0
+    if test -d "$agy_root/knowledge"
+        if not mkdir -p "$vault/global/agy/knowledge"
+            echo "$c_err""agents-vault: could not create $vault/global/agy/knowledge$c_reset" >&2
+        else if not command cp -r "$agy_root/knowledge/." "$vault/global/agy/knowledge/"
+            echo "$c_warn""agents-vault: could not copy the agy knowledge store$c_reset" >&2
+        else
+            set agy_copied 1
+        end
+    end
+    if test -f "$agy_root/settings.json"
+        if not mkdir -p "$vault/global/agy"
+            echo "$c_err""agents-vault: could not create $vault/global/agy$c_reset" >&2
+        else if not command cp "$agy_root/settings.json" "$vault/global/agy/settings.json"
+            echo "$c_warn""agents-vault: could not copy the agy settings file$c_reset" >&2
+        else
+            set agy_copied 1
+        end
+    end
+
+    # cp cannot report whether anything actually differed, so treating the
+    # copy itself as a change would set $changed on every single run --
+    # and agents-vault runs on every claude/agy launch, so --quiet would
+    # print a summary line every time and stop meaning anything. Ask git
+    # instead: the copy counts only when it left global/agy/ dirty.
+    if test $agy_copied -eq 1
+        set -l agy_dirty (git -C "$vault" status --porcelain -- global/agy 2>/dev/null)
+        if test -n "$agy_dirty"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Copied agy global state into the vault$c_reset"
+        end
+    end
+
+    # Claude's global memory directory is symlinked into the vault exactly
+    # like per-project memory, so backup and restore stay one operation.
+    set -l claude_home $__fish_agent_vault_claude_home
+    test -n "$claude_home"; or set claude_home "$HOME/.claude"
+    set -l glive "$claude_home/memory"
+    set -l gvault "$vault/global/claude/memory"
+
+    set -l gvault_content
+    test -d "$gvault"; and set gvault_content (command ls -A "$gvault" 2>/dev/null)
+
+    # Link when either side already has something: the live directory
+    # exists (back it up) or a cloned vault carries global memory (restore
+    # it). Never out of thin air -- ~/.claude/memory does not exist by
+    # default, and fabricating it would invent state Claude never asked
+    # for and permanently claim the path.
+    if test -d "$glive"; or test -L "$glive"; or test (count $gvault_content) -gt 0
+        if not mkdir -p "$gvault"
+            echo "$c_err""agents-vault: could not create $gvault$c_reset" >&2
+            return 1
+        end
+        set -l gmsg (_agents_repo_ensure_symlink "$glive" "$gvault")
+        set -l grc $status
+        if test $grc -ne 0
+            echo "$c_err""agents-vault: could not link $glive$c_reset" >&2
+            return 1
+        end
+        if test -n "$gmsg"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok$gmsg$c_reset"
+        end
     end
 
     #   ─────────────────────── unimplemented modes ───────────────────────

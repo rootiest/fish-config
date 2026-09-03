@@ -47,6 +47,41 @@ function cleanup
     end
 end
 
+# Describe a path well enough to prove it was not disturbed: a symlink is
+# recorded by its literal target (path resolve would hide a link that was
+# repointed into a since-deleted temp directory), everything else by kind.
+function snapshot_path --argument-names p
+    if test -L "$p"
+        printf 'link:%s\n' (readlink "$p")
+    else if test -d "$p"
+        printf 'dir\n'
+    else if test -e "$p"
+        printf 'file\n'
+    else
+        printf 'absent\n'
+    end
+end
+
+#   ────────────────────────── hermeticity floor ──────────────────────────
+# agents-vault reads and *writes* global agent state under ~/.claude and
+# ~/.gemini when it is not told otherwise, so every run in this file is
+# pointed at a throwaway home first. Without this, a test run would copy
+# the real agy knowledge store into a temp vault and -- far worse -- move a
+# real ~/.claude/memory into a temp directory that cleanup then deletes,
+# leaving a dangling symlink behind. Individual sections override these
+# with their own fixtures and must restore them here, not erase them.
+set -g HERMETIC_HOME (mktemp -d)
+set -ga TMPDIRS $HERMETIC_HOME
+mkdir -p $HERMETIC_HOME/claude $HERMETIC_HOME/agy
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+# Recorded before anything runs, asserted at the very end.
+set -g REAL_CLAUDE_MEMORY "$HOME/.claude/memory"
+set -g REAL_AGY_ROOT "$HOME/.gemini/antigravity-cli"
+set -g REAL_CLAUDE_MEMORY_BEFORE (snapshot_path "$REAL_CLAUDE_MEMORY")
+set -g REAL_AGY_ROOT_BEFORE (snapshot_path "$REAL_AGY_ROOT")
+
 #   ─────────────────────────── slug derivation ───────────────────────────
 echo "== _agents_repo_slug =="
 
@@ -469,6 +504,135 @@ check "fallback old entry removed" false (test -d $vroot2/agent-vault/projects/$
 
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
+
+#   ──────────────────────────── global state ─────────────────────────────
+# State that belongs to no project: agy's knowledge store and settings.json
+# (copied, because agy keys by conversation UUID and its store sits beside
+# SQLite databases with WAL sidecars) and Claude's *global* memory
+# directory (symlinked, exactly like per-project memory).
+echo ""
+echo "== agents-vault (global state) =="
+
+set -l vroot5 (mktemp -d); set -ga TMPDIRS $vroot5
+set -l croot5 (mktemp -d); set -ga TMPDIRS $croot5
+set -l chome5 (mktemp -d); set -ga TMPDIRS $chome5
+set -l agy5 (mktemp -d); set -ga TMPDIRS $agy5
+set -g __fish_agent_vault_dir $vroot5/agent-vault
+set -g __fish_agent_vault_claude_root $croot5
+set -g __fish_agent_vault_claude_home $chome5
+set -g __fish_agent_vault_agy_root $agy5
+
+mkdir -p $agy5/knowledge $agy5/conversations
+echo learned >$agy5/knowledge/fact.md
+echo '{"model":"x"}' >$agy5/settings.json
+# Decoys that must never be copied: the allowlist names knowledge/ and
+# settings.json and nothing else.
+echo secret >$agy5/history.jsonl
+: >$agy5/conversations/c.db-wal
+
+# A global (non-per-project) Claude memory directory with a sentinel file.
+# __fish_agent_vault_claude_home is what keeps this off the real ~/.claude:
+# if agents-vault ignored the override, these checks would fail here *and*
+# the real global memory would be moved into $chome5.
+mkdir -p $chome5/memory
+echo global-memory >$chome5/memory/g.md
+
+set -l gp (new_repo https://git.rootiest.dev/rootiest/globals.git)
+pushd $gp >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+check "agy knowledge copied" learned (cat $vroot5/agent-vault/global/agy/knowledge/fact.md)
+check "agy settings copied" '{"model":"x"}' (cat $vroot5/agent-vault/global/agy/settings.json)
+check "agy knowledge is a copy not a link" false (test -L $vroot5/agent-vault/global/agy/knowledge; and echo true; or echo false)
+check "history.jsonl not copied" false (test -e $vroot5/agent-vault/global/agy/history.jsonl; and echo true; or echo false)
+check "conversations not copied" false (test -e $vroot5/agent-vault/global/agy/conversations; and echo true; or echo false)
+
+check "global claude memory in the vault" global-memory (cat $vroot5/agent-vault/global/claude/memory/g.md)
+check "global claude memory is now a link" true (test -L $chome5/memory; and echo true; or echo false)
+check "global link points into the vault" (path resolve $vroot5/agent-vault/global/claude/memory) (path resolve $chome5/memory)
+check "global memory readable through the link" global-memory (cat $chome5/memory/g.md)
+
+# --quiet must stay silent when nothing upstream changed. agents-vault runs
+# on every claude/agy launch, so a copy step that reported "changed" on
+# every run (cp cannot tell whether anything differed) would print a
+# summary line at every launch and defeat the flag entirely.
+pushd $gp >/dev/null
+set -l q1 (agents-vault --quiet)
+set -l q2 (agents-vault --quiet)
+popd >/dev/null
+check "first --quiet rerun prints nothing" "" "$q1"
+check "second --quiet rerun prints nothing" "" "$q2"
+
+# ... but a genuine upstream change must still re-sync and still report.
+echo "learned more" >$agy5/knowledge/fact.md
+pushd $gp >/dev/null
+set -l q3 (agents-vault --quiet)
+popd >/dev/null
+check "agy knowledge re-synced" "learned more" (cat $vroot5/agent-vault/global/agy/knowledge/fact.md)
+check "changed agy content reports in --quiet" true (string match -q '*Synced*' -- "$q3"; and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+
+#   ────────────────── emergent restore of global memory ──────────────────
+# The global counterpart of the per-project restore case: a cloned vault
+# already carries global/claude/memory but the live ~/.claude/memory does
+# not exist yet. The link must still be created, or a starting agent writes
+# fresh, history-less global memory beside the restored copy.
+echo ""
+echo "== agents-vault (global emergent restore) =="
+
+set -l vroot6 (mktemp -d); set -ga TMPDIRS $vroot6
+set -l croot6 (mktemp -d); set -ga TMPDIRS $croot6
+set -l chome6 (mktemp -d); set -ga TMPDIRS $chome6
+set -l agy6 (mktemp -d); set -ga TMPDIRS $agy6
+set -g __fish_agent_vault_dir $vroot6/agent-vault
+set -g __fish_agent_vault_claude_root $croot6
+set -g __fish_agent_vault_claude_home $chome6
+set -g __fish_agent_vault_agy_root $agy6
+
+mkdir -p $vroot6/agent-vault/global/claude/memory
+echo restored-global >$vroot6/agent-vault/global/claude/memory/old.md
+
+set -l gp6 (new_repo https://git.rootiest.dev/rootiest/globals-restore.git)
+pushd $gp6 >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+check "global restore: link created with no prior live dir" true (test -L $chome6/memory; and echo true; or echo false)
+check "global restore: vault content readable through the link" restored-global (cat $chome6/memory/old.md 2>/dev/null)
+
+# A home with neither side populated must not have a memory/ invented for
+# it: ~/.claude/memory does not exist by default.
+set -l chome7 (mktemp -d); set -ga TMPDIRS $chome7
+set -l vroot7 (mktemp -d); set -ga TMPDIRS $vroot7
+set -g __fish_agent_vault_dir $vroot7/agent-vault
+set -g __fish_agent_vault_claude_home $chome7
+set -l gp7 (new_repo https://git.rootiest.dev/rootiest/globals-absent.git)
+pushd $gp7 >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "absent global memory is not fabricated" false (test -e $chome7/memory; and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ──────────────────────── hermeticity assertion ────────────────────────
+# The whole suite must never have touched the real global agent state. The
+# failure this guards is specific: a global-memory sync with no test
+# override would move ~/.claude/memory into a mktemp vault that cleanup
+# then deletes, leaving the live path a dangling symlink.
+echo ""
+echo "== hermeticity =="
+
+check "real ~/.claude/memory untouched" "$REAL_CLAUDE_MEMORY_BEFORE" (snapshot_path "$REAL_CLAUDE_MEMORY")
+check "real agy root untouched" "$REAL_AGY_ROOT_BEFORE" (snapshot_path "$REAL_AGY_ROOT")
+
+set -e __fish_agent_vault_claude_home
+set -e __fish_agent_vault_agy_root
 
 cleanup
 echo ""
