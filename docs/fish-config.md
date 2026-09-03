@@ -1975,11 +1975,16 @@ functions). They are active in all interactive sessions.
 
     With no flags, runs both --agents and --plugins setup; --agents re-runs
     only the AGENTS.md / symlink step and --plugins only the plans/specs/
-    devlogs wiring step. Managed paths are added to .gitignore. The sub-repo
-    is pulled first when it has an upstream, and at the end of every
-    invocation any uncommitted changes inside it are auto-committed so
-    agent-made edits are captured automatically. Fully idempotent: a second
-    run produces no output and no new commits.
+    devlogs wiring step. Managed paths are added to .gitignore. At the end
+    of every invocation any uncommitted changes inside the sub-repo are
+    auto-committed so agent-made edits are captured automatically. Fully
+    idempotent: a second run produces no output and no new commits.
+
+    The commit is local only. Nothing here fetches or pushes: the wrappers
+    call this synchronously before starting an agent, and a network round
+    trip there blocks the launch until an unreachable remote times out and
+    can prompt for credentials with nobody watching. A sub-repo that has an
+    upstream is pulled by hand, on the user's own schedule.
 
     Called automatically by the claude and agy wrappers on every invocation.
 
@@ -1993,13 +1998,197 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Setup completed successfully
-      1  Fatal error (git init failed, move failed, etc.)
+      1  Fatal error (git init failed, move failed, the AGENTS/ commit was
+         rejected, or an unresolved rebase blocked it)
 
     Example:
     agents-init
     agents-init --agents
     agents-init --plugins
     agents-init --quiet
+
+**Dependencies:** `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
+
+**Used by:** `agy`, `claude`
+
+### agents-vault
+
+    Synopsis:  agents-vault [--link] [--push] [--restore] [--status]
+                            [--adopt=SLUG] [--remote=URL]
+                            [-v | --verbose] [-q | --quiet] [-s | --silent]
+                            [-h | --help]
+
+    Tracks curated agent memory in a host-scoped git repository so it
+    survives losing a machine. Complements agents-init, which scaffolds the
+    per-project AGENTS/ repo: that holds the shareable agent specification,
+    while this holds the personal memory an agent accumulates.
+
+    Memory does not live in any project tree. Claude keeps it under
+    ~/.claude/projects/<mangled-path>/memory/ and agy keeps its knowledge
+    store under ~/.gemini/antigravity-cli/, both outside every repository.
+
+    Entries are keyed by normalized git remote URL rather than by path, so
+    the key survives a machine change or a directory rename. The live
+    memory directory becomes a symlink into the vault, which makes backup
+    and restore the same operation: on a new machine, clone the vault once
+    and the first agents-vault run in any project relinks its memory
+    automatically. No manifest and no batch restore step are involved.
+
+    Only curated memory is tracked. Session transcripts are excluded (tens
+    of megabytes per project, growing per session). Paths are allowlisted,
+    never denylisted, so nothing new upstream adds can leak in. The
+    allowlist runs all the way down, not just at the top: inside agy's
+    knowledge store only *.md and *.json files are copied, so a credential
+    file or a conversation database appearing there is left behind by the
+    same rule rather than by being known about in advance. Symlinks found
+    inside the store are neither followed nor copied, so the allowlist
+    bounds whose files it collects and not merely what kind.
+
+    Global state that belongs to no project is tracked as well. Claude's
+    global memory directory (~/.claude/memory) is symlinked into the vault
+    exactly like per-project memory, and is only linked when one side or
+    the other already holds something, since that path does not exist by
+    default. agy's knowledge store and settings.json are copied rather
+    than symlinked: agy partitions by conversation UUID rather than by
+    workspace, so it has no per-project slice, and its store sits beside
+    SQLite databases whose WAL sidecars must never be live-tracked inside
+    a git worktree. A failed copy is reported but is not fatal, because an
+    incomplete backup still leaves the agent working.
+
+    Because the slug is derived from the remote, gaining, losing, or
+    rewriting a project's origin changes it. Each run detects this by
+    reading the previous slug straight off the live memory symlink's
+    target (no guessing) and migrates that entry to the new slug before
+    relinking, so memory accumulated under the old key is never orphaned.
+    If both the old and new entries already hold content the migration is
+    ambiguous and is refused; resolve it with --adopt=SLUG. An entry that
+    is already at the new key but holds no memory -- the shape a fresh
+    clone always produces, since git cannot track an empty directory -- is
+    moved aside, not deleted, and its origin log is folded into the
+    migrated entry, so a clone's provenance survives the rename. The
+    rename is atomic: a failure at any point leaves the vault exactly as
+    it was and reports it.
+
+    Run with no flags, the command scaffolds the vault, syncs global state,
+    links the current project, and commits. The other modes are exclusive
+    and each returns as soon as it is done:
+
+    --status is a report and mutates nothing at all. It is answered before
+    the vault is even scaffolded, so asking what the vault looks like never
+    creates it, never copies agy state into it, and never claims
+    ~/.claude/memory. A missing vault is reported rather than built.
+
+    --restore walks every vault entry and relinks the live memory directory
+    of each one whose recorded origin path still exists, naming the rest so
+    they can be rebound by hand. It is a convenience: the ordinary per-
+    project run restores a cloned vault's memory on its own.
+
+    --adopt=SLUG rebinds the current project's entry to SLUG, which is how
+    a machine-specific local-* key or an ambiguous migration is resolved.
+    SLUG must match [a-z0-9._-]+ and be neither "." nor ".." -- the charset
+    the slug formula itself emits -- since it is interpolated into a vault
+    path and handed to git mv. The rename and the relink are atomic: if the
+    live memory directory cannot be repinned onto the new entry the rename
+    is rolled back, so an ordinary run still finds the original entry.
+
+    --remote=URL points the vault at a remote; --push commits, pulls, and
+    then pushes there. The pull happens only on this path. Committing needs
+    no remote at all, and both wrappers run this command synchronously
+    before starting an agent, so a fetch on the ordinary run would block
+    every launch for as long as an unreachable remote takes to time out --
+    and would take the local commit down with it, leaving an offline
+    machine with no backup at all.
+
+    Arguments:
+      --link         Scaffold the vault and link this project's memory; skip
+                     the final commit
+      --push         Commit, pull, then push to the vault remote
+      --restore      Walk the vault, relink what is possible, report the rest
+      --status       Show entries, link health, remote state, and orphans
+      --adopt=SLUG   Bind the current project to an existing vault entry
+      --remote=URL   Set the vault remote
+      -v, --verbose  Print all per-step output (default)
+      -q, --quiet    Print one summary line only if changes were made
+      -s, --silent   Suppress all output; errors only
+      -h, --help     Show this help message and exit
+
+    Exit Status:
+      0  Completed successfully
+      1  Fatal error (vault unavailable, git failure, ambiguous migration,
+         invalid --adopt slug, nothing committed, or a push that did not
+         reach the remote)
+
+    Returns:
+      --status prints its report on stdout: the vault path, the remote and
+      how far ahead of it the vault is, a warning for an unresolved rebase,
+      then one line per entry reading "linked" or "orphan", the slug, and the
+      file count. Every other mode prints only verbosity-gated progress
+      lines, and nothing at all when there was nothing to do.
+
+    Notes:
+      Set __fish_agent_vault_dir to relocate the vault. Set
+      __fish_agent_vault_autopush to 1 to also push on wrapper launch; it
+      defaults to off because that push is synchronous and so delays every
+      launch. With it on, the pull and the push are each capped at 20
+      seconds, since git has no connect timeout of its own and an
+      unreachable remote otherwise blocks for minutes. An explicit --push
+      is left uncapped: it is watched, and it must report what a real
+      transfer really did. The cap is timeout(1); on a system that somehow
+      lacks it, autopush says so on stderr and does not push at all, since
+      an unbounded network call in front of a launch is the one outcome the
+      cap exists to prevent. --push still works there.
+
+      Over ssh the cap is delivered by setting GIT_SSH_COMMAND, which would
+      silently outrank the user's own configuration -- so it is not set at
+      all when GIT_SSH_COMMAND is already exported or git's core.sshCommand
+      is configured. A vault remote reachable only through a particular
+      identity file or ssh wrapper therefore keeps it, uncapped, rather than
+      failing to authenticate for the sake of a timeout.
+
+      --adopt rebinds an entry; it does not pin its name. The slug is
+      re-derived from the project on every run, so the next ordinary run
+      migrates the adopted entry straight back to the canonical key, carrying
+      the memory and the live link with it. That is the point rather than a
+      wart: adopting is how a mismatched or ambiguous binding is repaired, not
+      how an entry is given a permanent name of its own.
+
+      An entry's origin file records the project path once, when the entry is
+      created, and is never refreshed. A project that later moves on disk
+      therefore keeps a stale path there and --restore degrades to reporting
+      it as unplaceable rather than relinking the wrong directory. Rebind
+      such an entry from the project itself with --adopt=SLUG.
+
+      The agy knowledge copy is merge-only. Files are copied into the vault
+      but are never removed from it, so a fact deleted upstream from agy's
+      knowledge store persists in the vault indefinitely, and a restore or a
+      fresh clone brings it back. Prune such an entry from the vault by hand
+      if it must really be gone.
+
+      Three further variables exist only so the test suite can run against
+      throwaway directories instead of the real home, and are not meant for
+      everyday use. __fish_agent_vault_claude_root overrides Claude's
+      per-project directory (~/.claude/projects), which is where the
+      per-project memory directories live. __fish_agent_vault_claude_home
+      overrides Claude's home directory (~/.claude), whose memory
+      subdirectory holds the global memory. Those two name different paths
+      and setting one has no effect on the other.
+      __fish_agent_vault_agy_root overrides agy's state directory
+      (~/.gemini/antigravity-cli), which is only ever read from.
+
+      The last two are not optional niceties. Without them, a test run on a
+      machine that has a real global memory directory would move it into a
+      throwaway directory and leave a dangling symlink behind, which is
+      strictly worse than having had no backup at all.
+
+    Example:
+    agents-vault
+    agents-vault --status
+    agents-vault --remote=https://git.rootiest.dev/rootiest/agent-vault.git
+    agents-vault --push
+    agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
+    agents-vault --restore
+
+**Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `git`, `hostname`
 
 **Used by:** `agy`, `claude`
 
@@ -2011,9 +2200,14 @@ functions). They are active in all interactive sessions.
     sub-repository is initialized and any agent-made changes are committed
     before launch. Delegates all scaffold and commit logic to agents-init
     --quiet (full setup), which ensures AGENTS/ is scaffolded and CLAUDE.md
-    is symlinked to AGENTS/AGENTS.md in the current project. Arguments are
-    forwarded verbatim to the real agy binary, except for -r/--resume which
-    are translated to -c/--continue.
+    is symlinked to AGENTS/AGENTS.md in the current project.
+
+    Also syncs the host-scoped agent memory vault (agents-vault). agy has
+    no session-end hook, so its memory is captured on the next launch
+    rather than at session end.
+
+    Arguments are forwarded verbatim to the real agy binary, except for
+    -r/--resume which are translated to -c/--continue.
 
     Opinionated component (C1): when disabled via __fish_config_op_aliases
     (or the __fish_config_opinionated master), the command is passed through
@@ -2031,7 +2225,7 @@ functions). They are active in all interactive sessions.
     agy -i "initial prompt"
     agy models
 
-**Dependencies:** `agents-init`
+**Dependencies:** `agents-init`, `agents-vault`
 
 ### antigravity-ide
 
@@ -2055,6 +2249,12 @@ functions). They are active in all interactive sessions.
     Delegates all scaffold and commit logic to agents-init --quiet (full
     setup), which ensures AGENTS/ is scaffolded and CLAUDE.md is symlinked
     to AGENTS/AGENTS.md in the current project.
+
+    Also syncs the host-scoped agent memory vault (agents-vault), which
+    tracks curated memory living outside the project tree. The vault
+    commits on launch but does not push; pushing happens from the Claude
+    Code SessionEnd hook or an explicit agents-vault --push.
+
     All arguments are forwarded verbatim to the real claude binary.
 
     Opinionated component (C1): when disabled via __fish_config_op_aliases
@@ -2072,7 +2272,7 @@ functions). They are active in all interactive sessions.
     claude --resume
     claude "Explain the recent changes"
 
-**Dependencies:** `agents-init`
+**Dependencies:** `agents-init`, `agents-vault`
 
 ### claude-docs
 
@@ -3015,6 +3215,27 @@ in turn inherits from `__fish_config_opinionated`). Run `config-settings` and
 press Enter on a category row to browse and toggle its sub-categories
 interactively. See Components Reference for the
 full sub-category breakdown of every category.
+
+
+## Agent Memory Vault
+
+    __fish_agent_vault_dir
+
+    Overrides the agent memory vault location. Defaults to
+    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault).
+
+    __fish_agent_vault_autopush
+
+    When set to 1, agents-vault also pushes on wrapper launch. Defaults to
+    off: the vault commits locally on every launch and pushes from the
+    Claude Code SessionEnd hook or an explicit agents-vault --push. That
+    push is synchronous, so with autopush on the pull and the push are
+    each capped at 20 seconds; an explicit --push is left uncapped.
+
+NOTE:
+With autopush off and no SessionEnd hook installed, backups accumulate
+locally and never reach the remote. Run `agents-vault --status` to check
+how far ahead the vault is.
 
 
 ## Prompt and Theme
