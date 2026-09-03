@@ -62,6 +62,35 @@ function check --argument-names label want got
     end
 end
 
+# Failure injection that survives uid 0.
+#
+# These fixtures used to force a failure with `chmod 500` on a parent
+# directory. That is silently useless for root: uid 0 bypasses the mode
+# bits, the operation succeeds, and a test asserting a failure path then
+# reports the tool as broken rather than the injection as ineffective. CI
+# runs the suite as root inside a container, so 21 checks failed there
+# while passing for every developer and every reviewer.
+#
+# Shim the single command the failure actually hinges on instead, matched
+# by a path fragment so nothing else in the run is disturbed. A command
+# that exits 1 on purpose does so for every uid.
+#
+# Reproduce the root case locally without a container:
+#   unshare -r fish tests/test-agents-vault.fish
+function failing_shim --argument-names name match
+    set -l d (mktemp -d)
+    set -ga TMPDIRS $d
+    set -l real (command -s $name)
+    printf '%s\n' \
+        '#!/bin/sh' \
+        'for a in "$@"; do' \
+        "  case \"\$a\" in *$match*) exit 1 ;; esac" \
+        'done' \
+        "exec $real \"\$@\"" >$d/$name
+    chmod +x $d/$name
+    printf '%s\n' $d
+end
+
 # Create a throwaway git repo, optionally with an origin remote.
 function new_repo --argument-names url
     set -l d (mktemp -d)
@@ -1055,9 +1084,11 @@ check "status reports the remote" true (string match -q '*rootiest/agent-vault.g
 # git command that did not run is the same silent-false-success shape that
 # a hook-rejected commit produced earlier in this project.
 set -l rerr (mktemp); set -ga TMPDIRS $rerr
-chmod 500 $vroot9/agent-vault/.git
+set -l rshim (failing_shim git set-url)
+set -l rpath $PATH
+set PATH $rshim $PATH
 set -l rrc (agents-vault --remote=https://git.rootiest.dev/rootiest/other.git --silent 2>$rerr; echo $status)
-chmod 700 $vroot9/agent-vault/.git
+set PATH $rpath
 check "failing --remote returns 1" 1 "$rrc"
 check "failing --remote reports on stderr" true (string match -q '*could not set*remote*' -- (cat $rerr); and echo true; or echo false)
 check "failing --remote left the old remote in place" https://git.rootiest.dev/rootiest/agent-vault.git (git -C $vroot9/agent-vault remote get-url origin)
@@ -1135,11 +1166,13 @@ set -l pre_porcelain (git -C $vroot9/agent-vault status --porcelain | string joi
 set -l pre_link (path resolve $croot9/$tmang/memory)
 
 set -l terr (mktemp); set -ga TMPDIRS $terr
-chmod 500 $croot9/$tmang
+set -l tshim (failing_shim rm $tmang)
+set -l tpath $PATH
+set PATH $tshim $PATH
 pushd $tp >/dev/null
 set -l trc (agents-vault --adopt=atomic-target --silent 2>$terr; echo $status)
 popd >/dev/null
-chmod 700 $croot9/$tmang
+set PATH $tpath
 
 check "atomic adopt: failed relink returns 1" 1 "$trc"
 check "atomic adopt: says the entry was left alone" true (string match -q "*$tslug*left as it was*" -- (cat $terr); and echo true; or echo false)
@@ -1240,11 +1273,13 @@ set -l sf_link (path resolve $croot9/$sfmang/memory)
 check "stash adopt rollback: vault clean before the adopt" "" "$sf_porcelain"
 
 set -l sferr (mktemp); set -ga TMPDIRS $sferr
-chmod 500 $croot9/$sfmang
+set -l sfshim (failing_shim rm $sfmang)
+set -l sfpath $PATH
+set PATH $sfshim $PATH
 pushd $sf >/dev/null
 set -l sfrc (agents-vault --adopt=stashfail-target --silent 2>$sferr; echo $status)
 popd >/dev/null
-chmod 700 $croot9/$sfmang
+set PATH $sfpath
 
 check "stash adopt rollback: failed relink returns 1" 1 "$sfrc"
 check "stash adopt rollback: says the entry was left alone" true (string match -q "*$sfslug*left as it was*" -- (cat $sferr); and echo true; or echo false)
@@ -1402,10 +1437,12 @@ check "restore: names the dot-led entry it restored" true (string match -q '*.do
 # not a note in passing -- the same branchless-`if` false zero as the
 # commit and push paths. An entry with no live project is not a failure.
 rm -f $croot10/$rmang/memory
-chmod 500 $croot10/$rmang
+set -l r3shim (failing_shim ln $rmang)
+set -l r3path $PATH
+set PATH $r3shim $PATH
 set -l r3err (mktemp); set -ga TMPDIRS $r3err
 set -l r3rc (agents-vault --restore >/dev/null 2>$r3err; echo $status)
-chmod 700 $croot10/$rmang
+set PATH $r3path
 check "restore: a failed relink returns non-zero" 1 "$r3rc"
 check "restore: a failed relink is reported" true (string match -q '*restoreme*' -- (cat $r3err); and echo true; or echo false)
 
