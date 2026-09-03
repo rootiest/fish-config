@@ -139,7 +139,17 @@
 #   seconds, since git has no connect timeout of its own and an
 #   unreachable remote otherwise blocks for minutes. An explicit --push
 #   is left uncapped: it is watched, and it must report what a real
-#   transfer really did.
+#   transfer really did. The cap is timeout(1); on a system that somehow
+#   lacks it, autopush says so on stderr and does not push at all, since
+#   an unbounded network call in front of a launch is the one outcome the
+#   cap exists to prevent. --push still works there.
+#
+#   Over ssh the cap is delivered by setting GIT_SSH_COMMAND, which would
+#   silently outrank the user's own configuration -- so it is not set at
+#   all when GIT_SSH_COMMAND is already exported or git's core.sshCommand
+#   is configured. A vault remote reachable only through a particular
+#   identity file or ssh wrapper therefore keeps it, uncapped, rather than
+#   failing to authenticate for the sake of a timeout.
 #
 #   --adopt rebinds an entry; it does not pin its name. The slug is
 #   re-derived from the project on every run, so the next ordinary run
@@ -654,20 +664,36 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         # it names a file or a directory. The knowledge store's own root
         # may still be a link -- that one is the configured location of the
         # store rather than something found inside it.
-        set -l kfiles
-        set -l kdirs "$knowledge"
-        while set -q kdirs[1]
-            set -l dir $kdirs[1]
-            set -e kdirs[1]
-            for e in $dir/*
-                test -L "$e"; and continue
-                if test -d "$e"
-                    set -a kdirs "$e"
-                else if string match -qr '\.(md|json)$' -- "$e"
-                    set -a kfiles "$e"
+        #
+        # The walk prints its finds and the list is built once from that
+        # output, rather than appending each path to a list as it goes.
+        # `set -a` rewrites the whole variable every time, so appending n
+        # paths one at a time costs O(n^2) copying -- 500 files took 21ms
+        # and 20,000 took 58s on this machine, on a path that runs in
+        # front of every agent launch. Printing is flat: the same 20,000
+        # files take 756ms, and 500 take 13ms. Batching per directory does
+        # not help, because a knowledge store is mostly one flat directory
+        # and that is exactly where the growing list lives.
+        #
+        # NUL separators and `string split0`, not newlines: a filename may
+        # legally contain a newline, and splitting on one would saw such a
+        # path into two entries and copy neither. NUL is the one byte a
+        # path cannot hold, so the round trip is lossless.
+        set -l kfiles (begin
+            set -l kdirs "$knowledge"
+            while set -q kdirs[1]
+                set -l dir $kdirs[1]
+                set -e kdirs[1]
+                for e in $dir/*
+                    test -L "$e"; and continue
+                    if test -d "$e"
+                        set -a kdirs "$e"
+                    else if string match -qr '\.(md|json)$' -- "$e"
+                        printf '%s\0' "$e"
+                    end
                 end
             end
-        end
+        end | string split0)
         set -l kfailed 0
         for f in $kfiles
             test -f "$f"; or continue
@@ -887,6 +913,16 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             # The directory case needs no removal anyway:
             # _agents_repo_ensure_symlink copies a populated live directory
             # into the vault without clobbering before it replaces it.
+            #
+            # A stray *regular* file at $live is left alone too, and that is
+            # deliberate rather than an oversight in the test. Nothing this
+            # function created is a plain file there, so whatever it is came
+            # from the user or from something else writing to the same path,
+            # and deleting it unasked would destroy data to make room for a
+            # symlink. _agents_repo_ensure_symlink refuses the path and says
+            # why, and the launch stops until someone looks -- the same
+            # answer the global-memory block gives for the same shape of
+            # surprise.
             test -L "$live"; and rm -f "$live"
             set changed 1
             test $verbose -eq 1; and echo "$c_ok→ Migrated vault entry $prev_slug → $slug$c_reset"
@@ -965,6 +1001,20 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     if set -q __fish_agent_vault_autopush; and test "$__fish_agent_vault_autopush" = 1
         set do_push 1
     end
+    # timeout(1) is the only thing bounding autopush, and an unbounded
+    # network call in front of an agent launch is the exact block this
+    # design exists to remove -- so without it, autopush does not happen
+    # at all rather than happening open-endedly. Nothing is lost that was
+    # not already local: the commit has landed, and `agents-vault --push`
+    # still sends it by hand, deliberately unbounded because the user is
+    # watching that one. It says so rather than skipping quietly, because
+    # a vault that stopped leaving the machine must never look like one
+    # that did not. timeout ships with coreutils, so this is a guard
+    # against the impossible-until-it-happens, not a real dependency.
+    if test $do_push -eq 1; and not set -q _flag_push; and not type -q timeout
+        echo "$c_warn""agents-vault: timeout is unavailable, so autopush cannot be bounded; the vault is committed locally but not pushed$c_reset" >&2
+        set do_push 0
+    end
     if test $do_push -eq 1
         if git -C "$vault" remote get-url origin >/dev/null 2>&1
             # The pull belongs here and nowhere earlier. Fetching is only
@@ -993,9 +1043,28 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             # ssh is the one transport that can time itself out, so it is
             # told to, unless the user has already said how to run ssh.
             # Everything else is bounded from outside with timeout(1).
+            #
+            # "Already said" has two spellings and both have to count.
+            # GIT_SSH_COMMAND is the obvious one; core.sshCommand is the
+            # documented place to name an identity file or an ssh wrapper,
+            # and it is the one a vault on a private host is most likely to
+            # need. An injected environment variable outranks the config,
+            # so consulting only the environment does not merely miss the
+            # user's setting -- it overrides it, and a remote reachable
+            # only as `ssh -i ~/.ssh/vault_key` then fails to authenticate
+            # on every push. A ten-second connect bound is not worth that.
+            #
+            # -qx rather than -q on the environment side: a fish variable
+            # that was never exported satisfies -q but is not in the
+            # environment git runs in, so treating it as the user's answer
+            # would leave the push with neither their ssh command nor a
+            # connect timeout. Only what git can actually see counts, and
+            # exporting it is the user's call to make, not this function's.
             set -l gitenv GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true
-            set -q GIT_SSH_COMMAND
-            or set -a gitenv 'GIT_SSH_COMMAND=ssh -o ConnectTimeout=10'
+            set -l user_ssh (git -C "$vault" config --get core.sshCommand 2>/dev/null)
+            if not set -qx GIT_SSH_COMMAND; and test -z "$user_ssh"
+                set -a gitenv 'GIT_SSH_COMMAND=ssh -o ConnectTimeout=10'
+            end
             set -l gitnet env $gitenv
 
             # Only autopush is wrapped. An explicit --push is a thing the
@@ -1008,8 +1077,10 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             # of an open-ended wait. timeout's own 124 is a non-zero exit
             # like any other, so a bounded push still reports as failed and
             # the commit it could not send has already landed locally. A
-            # push too slow for the bound can always be run by hand.
-            if not set -q _flag_push; and type -q timeout
+            # push too slow for the bound can always be run by hand. An
+            # autopush with no timeout(1) to wrap it never reaches here;
+            # it was turned off above.
+            if not set -q _flag_push
                 set gitnet timeout 20 $gitnet
             end
             set -l reached 1

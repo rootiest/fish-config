@@ -1493,6 +1493,184 @@ set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
 set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 
+#   ──────────────── the bound never overrides the user's ssh ─────────────
+# The connect bound is delivered by injecting GIT_SSH_COMMAND, and an
+# environment variable outranks core.sshCommand -- so a guard that reads
+# only the environment does not merely fail to notice the config, it
+# overrules it. A vault reachable only as `ssh -i ~/.ssh/vault_key` then
+# fails to authenticate on every push, autopush and --push alike, for the
+# sake of a ten-second timeout. Counting ssh invocations is the honest
+# measurement here: it asks what git actually ran, not what this function
+# meant to arrange.
+echo ""
+echo "== agents-vault (the user's ssh command wins) =="
+
+set -l vroot14 (mktemp -d); set -ga TMPDIRS $vroot14
+set -l croot14 (mktemp -d); set -ga TMPDIRS $croot14
+set -l chome14 (mktemp -d); set -ga TMPDIRS $chome14
+set -l agy14 (mktemp -d); set -ga TMPDIRS $agy14
+set -g __fish_agent_vault_dir $vroot14/agent-vault
+set -g __fish_agent_vault_claude_root $croot14
+set -g __fish_agent_vault_claude_home $chome14
+set -g __fish_agent_vault_agy_root $agy14
+
+# Two fake ssh binaries that record their arguments: one found on PATH as
+# plain `ssh` (what the injected default resolves to) and one named
+# explicitly by the user. Both refuse the connection, so nothing leaves
+# the machine and no test waits on a network.
+set -l sbin (mktemp -d); set -ga TMPDIRS $sbin
+set -l pathssh_log $sbin/path-ssh.log
+set -l usessh $sbin/user-ssh
+set -l usessh_log $sbin/user-ssh.log
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" >>%s\nexit 255\n' $pathssh_log >$sbin/ssh
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" >>%s\nexit 255\n' $usessh_log >$usessh
+chmod +x $sbin/ssh $usessh
+
+set -l sp14 (new_repo https://git.rootiest.dev/rootiest/sshcmd.git)
+set -l smang14 (string replace -a '/' '-' -- $sp14 | string replace -a '.' '-')
+mkdir -p $croot14/$smang14/memory
+echo s1 >$croot14/$smang14/memory/s1.md
+pushd $sp14 >/dev/null
+agents-vault --remote='ssh://git@example.invalid/vault.git' --silent >/dev/null 2>&1
+popd >/dev/null
+
+set -l realpath14 $PATH
+set -g PATH $sbin $PATH
+
+# Runs one autopush (or an explicit --push) with a fresh memory file, so
+# there is always a commit worth pushing, and reports nothing itself.
+function ssh_run --argument-names memroot proj name mode
+    rm -f $argv[5..]
+    echo $name >$memroot/memory/$name.md
+    test "$mode" = auto; and set -g __fish_agent_vault_autopush 1
+    pushd $proj >/dev/null
+    if test "$mode" = auto
+        agents-vault --silent >/dev/null 2>&1
+    else
+        agents-vault --push --silent >/dev/null 2>&1
+    end
+    popd >/dev/null
+    set -e __fish_agent_vault_autopush
+end
+
+git -C $vroot14/agent-vault config core.sshCommand $usessh
+ssh_run $croot14/$smang14 $sp14 s2 auto $usessh_log $pathssh_log
+check "autopush runs the user's core.sshCommand" true (test -s $usessh_log; and echo true; or echo false)
+ssh_run $croot14/$smang14 $sp14 s3 push $usessh_log $pathssh_log
+check "--push runs the user's core.sshCommand" true (test -s $usessh_log; and echo true; or echo false)
+
+# With nothing configured either way the bound is still applied -- the
+# fix must not have simply removed it.
+git -C $vroot14/agent-vault config --unset core.sshCommand
+ssh_run $croot14/$smang14 $sp14 s4 auto $usessh_log $pathssh_log
+check "an unconfigured ssh still gets a connect bound" true (string match -q '*ConnectTimeout=10*' -- (cat $pathssh_log 2>/dev/null); and echo true; or echo false)
+
+# A fish variable that was never exported satisfies `set -q` but is not in
+# git's environment, so treating it as the user's answer would leave the
+# push with neither their ssh command nor a bound.
+set -g GIT_SSH_COMMAND $usessh
+ssh_run $croot14/$smang14 $sp14 s5 auto $usessh_log $pathssh_log
+set -e GIT_SSH_COMMAND
+check "an unexported GIT_SSH_COMMAND does not suppress the bound" true (string match -q '*ConnectTimeout=10*' -- (cat $pathssh_log 2>/dev/null); and echo true; or echo false)
+
+# An exported one is git's already and is passed through untouched.
+set -gx GIT_SSH_COMMAND "$usessh -o Marker=yes"
+ssh_run $croot14/$smang14 $sp14 s6 auto $usessh_log $pathssh_log
+set -e GIT_SSH_COMMAND
+check "an exported GIT_SSH_COMMAND is used verbatim" true (string match -q '*Marker=yes*' -- (cat $usessh_log 2>/dev/null); and echo true; or echo false)
+check "an exported GIT_SSH_COMMAND is not overridden" false (string match -q '*ConnectTimeout*' -- (cat $usessh_log 2>/dev/null); and echo true; or echo false)
+
+set -g PATH $realpath14
+functions -e ssh_run
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ─────────────── autopush without timeout(1) does not run ──────────────
+# timeout(1) is the only thing bounding autopush, so without it the launch
+# path would be back to an open-ended network call -- the exact block this
+# design exists to remove. The push is skipped and says so instead. An
+# explicit --push is deliberately unaffected: it was never wrapped.
+#
+# The PATH here is the real one with every directory that provides a
+# timeout replaced by a symlink farm of itself missing that one entry, so
+# everything else agents-vault shells out to still resolves normally.
+echo ""
+echo "== agents-vault (autopush without timeout) =="
+
+set -l vroot15 (mktemp -d); set -ga TMPDIRS $vroot15
+set -l croot15 (mktemp -d); set -ga TMPDIRS $croot15
+set -l chome15 (mktemp -d); set -ga TMPDIRS $chome15
+set -l agy15 (mktemp -d); set -ga TMPDIRS $agy15
+set -l bare15 (mktemp -d); set -ga TMPDIRS $bare15
+git init -q --bare $bare15
+set -g __fish_agent_vault_dir $vroot15/agent-vault
+set -g __fish_agent_vault_claude_root $croot15
+set -g __fish_agent_vault_claude_home $chome15
+set -g __fish_agent_vault_agy_root $agy15
+
+set -l tp15 (new_repo https://git.rootiest.dev/rootiest/notimeout.git)
+set -l tslug15 git.rootiest.dev-rootiest-notimeout
+set -l tmang15 (string replace -a '/' '-' -- $tp15 | string replace -a '.' '-')
+mkdir -p $croot15/$tmang15/memory
+echo t1 >$croot15/$tmang15/memory/t1.md
+pushd $tp15 >/dev/null
+agents-vault --remote=$bare15 --silent >/dev/null 2>&1
+popd >/dev/null
+# symbolic-ref, not rev-parse: the vault branch is still unborn here and
+# rev-parse would report the literal string HEAD with a fatal on stderr.
+set -l vb15 (git -C $vroot15/agent-vault symbolic-ref --short HEAD)
+
+set -l shimroot (mktemp -d); set -ga TMPDIRS $shimroot
+set -l nopath
+set -l shimn 0
+for d in $PATH
+    test -d "$d"; or continue
+    if test -x "$d/timeout"
+        set shimn (math $shimn + 1)
+        mkdir -p $shimroot/$shimn
+        command cp -rs "$d/." $shimroot/$shimn/ 2>/dev/null
+        rm -f $shimroot/$shimn/timeout
+        set -a nopath $shimroot/$shimn
+    else
+        set -a nopath $d
+    end
+end
+set -l realpath15 $PATH
+
+echo t2 >$croot15/$tmang15/memory/t2.md
+set -l terr (mktemp); set -ga TMPDIRS $terr
+set -g __fish_agent_vault_autopush 1
+set -g PATH $nopath
+check "the shimmed PATH really has no timeout" false (type -q timeout; and echo true; or echo false)
+pushd $tp15 >/dev/null
+set -l trc (agents-vault --silent 2>$terr; echo $status)
+popd >/dev/null
+set -g PATH $realpath15
+set -e __fish_agent_vault_autopush
+check "an unboundable autopush is skipped, not run" false (git -C $bare15 cat-file -e $vb15:projects/$tslug15/claude/memory/t2.md 2>/dev/null; and echo true; or echo false)
+check "a skipped autopush says why" true (string match -q '*timeout is unavailable*' -- (cat $terr); and echo true; or echo false)
+check "a skipped autopush still committed locally" true (git -C $vroot15/agent-vault ls-files --error-unmatch projects/$tslug15/claude/memory/t2.md >/dev/null 2>&1; and echo true; or echo false)
+# Not a failure: nothing was attempted and failed, and the one thing the
+# user did not ask for -- a hang in front of an agent launch -- did not
+# happen. --push is where a caller demands a real transfer answer.
+check "a skipped autopush is not a failure" 0 "$trc"
+
+echo t3 >$croot15/$tmang15/memory/t3.md
+set -g PATH $nopath
+pushd $tp15 >/dev/null
+set -l t3rc (agents-vault --push --silent 2>/dev/null; echo $status)
+popd >/dev/null
+set -g PATH $realpath15
+check "--push still pushes without timeout" 0 "$t3rc"
+check "--push landed in the remote without timeout" t3 (git -C $bare15 show $vb15:projects/$tslug15/claude/memory/t3.md 2>/dev/null)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
 #   ────────────── a failed vault commit is fatal, not a note ─────────────
 # _agents_repo_sync's own rejection path is covered further up, but
 # agents-vault has to *propagate* it. The function otherwise ends on a
