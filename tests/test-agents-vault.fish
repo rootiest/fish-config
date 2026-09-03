@@ -202,6 +202,47 @@ set -l hrc (_agents_repo_sync $h "chore: blocked" 2>/dev/null; echo $status)
 check "commit hook rejection returns 1" 1 "$hrc"
 check "commit hook rejection commits nothing" $before_hook_count (git -C $h rev-list --count HEAD)
 
+#   ──────────────────────── vault scaffold + link ────────────────────────
+echo ""
+echo "== agents-vault (scaffold + link) =="
+
+set -l vroot (mktemp -d); set -ga TMPDIRS $vroot
+set -l croot (mktemp -d); set -ga TMPDIRS $croot
+set -g __fish_agent_vault_dir $vroot/agent-vault
+set -g __fish_agent_vault_claude_root $croot
+
+set -l proj (new_repo https://git.rootiest.dev/rootiest/fish-config.git)
+set -l pslug git.rootiest.dev-rootiest-fish-config
+
+# Seed a live memory directory the way Claude would.
+set -l mangled (string replace -a '/' '-' -- $proj | string replace -a '.' '-')
+mkdir -p $croot/$mangled/memory
+echo "a memory" >$croot/$mangled/memory/thing.md
+
+pushd $proj >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+check "vault repo created" true (test -d $vroot/agent-vault/.git; and echo true; or echo false)
+check "vault version seeded" 1.0.0 (cat $vroot/agent-vault/.version 2>/dev/null)
+check "entry created for slug" true (test -d $vroot/agent-vault/projects/$pslug/claude/memory; and echo true; or echo false)
+check "live memory is now a link" true (test -L $croot/$mangled/memory; and echo true; or echo false)
+check "memory content preserved" "a memory" (cat $croot/$mangled/memory/thing.md)
+check "content lives in the vault" "a memory" (cat $vroot/agent-vault/projects/$pslug/claude/memory/thing.md)
+check "origin file written" true (test -f $vroot/agent-vault/projects/$pslug/origin; and echo true; or echo false)
+check "vault committed" true (test (git -C $vroot/agent-vault rev-list --count HEAD) -ge 1; and echo true; or echo false)
+
+# Idempotence: a second run prints nothing and adds no commit.
+set -l before (git -C $vroot/agent-vault rev-list --count HEAD)
+pushd $proj >/dev/null
+set -l again (agents-vault --verbose)
+popd >/dev/null
+check "second run is silent" "" "$again"
+check "second run adds no commit" $before (git -C $vroot/agent-vault rev-list --count HEAD)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+
 cleanup
 echo ""
 echo (math $TESTS_RUN - $TESTS_FAILED)"/$TESTS_RUN passed"

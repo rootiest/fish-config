@@ -10,8 +10,10 @@
 #   refreshing them when the shipped agents-tools-version: marker is newer
 #   than the installed copy. Files are made executable. Idempotent: prints
 #   nothing when the installed tooling is already current, or a short summary
-#   line when it installed or updated the tooling. Shared by agents-init and
-#   agents-vault.
+#   line when it installed or updated the tooling, naming <repo_dir>'s own
+#   basename rather than a hardcoded caller (e.g. "AGENTS/.agents-tools/" for
+#   agents-init, "agent-vault/.agents-tools/" for agents-vault). Shared by
+#   agents-init and agents-vault.
 #
 # ARGUMENTS
 #   repo_dir  Absolute path to the git repo root to install tooling into
@@ -41,9 +43,10 @@ function _agents_repo_install_tools --argument-names repo_dir
     command cp "$src/hooks/prepare-commit-msg" "$dest/hooks/prepare-commit-msg"; or return 1
     chmod +x "$dest/version-bump" "$dest/hooks/pre-commit" "$dest/hooks/prepare-commit-msg"; or return 1
 
+    set -l label (path basename -- "$repo_dir")
     if test -z "$have"
-        echo "→ Installed AGENTS/.agents-tools/ (version-bump v$want)"
+        echo "→ Installed $label/.agents-tools/ (version-bump v$want)"
     else
-        echo "→ Updated AGENTS/.agents-tools/ (v$have → v$want)"
+        echo "→ Updated $label/.agents-tools/ (v$have → v$want)"
     end
 end
