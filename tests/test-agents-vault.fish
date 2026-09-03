@@ -860,6 +860,104 @@ popd >/dev/null
 check "atomic adopt: retry succeeds" 0 "$t2rc"
 check "atomic adopt: retry moved the memory" atomic-precious (cat $vroot9/agent-vault/projects/atomic-target/claude/memory/keep.md 2>/dev/null)
 
+# The cases above all adopt onto a slug with no entry at all. The other
+# half of --adopt is a target that already exists but holds no memory -- a
+# scaffolded entry, or one a departed project left behind. That one is
+# stashed rather than deleted, so a failed relink can put it back exactly
+# as it was.
+set -l sa (new_repo https://git.rootiest.dev/rootiest/stash-src.git)
+set -l saslug git.rootiest.dev-rootiest-stash-src
+set -l samang (string replace -a '/' '-' -- $sa | string replace -a '.' '-')
+mkdir -p $croot9/$samang/memory
+echo stash-precious >$croot9/$samang/memory/keep.md
+pushd $sa >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+# The target must be *tracked* for this to bite: stashing it takes files
+# git knows about out from under the index, which is the whole hazard.
+mkdir -p $vroot9/agent-vault/projects/stash-target/claude/memory
+printf 'remote: (none)\npath:   %s\nhost:   t\n' /nowhere \
+    >$vroot9/agent-vault/projects/stash-target/origin
+pushd $sa >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "stash adopt: target entry is tracked" true (git -C $vroot9/agent-vault ls-files --error-unmatch projects/stash-target/origin >/dev/null 2>&1; and echo true; or echo false)
+check "stash adopt: vault clean before the adopt" "" (git -C $vroot9/agent-vault status --porcelain | string join ',')
+
+# Where the stash lives is load-bearing rather than cosmetic: at the vault
+# root, a crash between the two moves leaves it for the next ordinary run's
+# `git add -A` to commit as permanent junk. Inside .git/ it is out of reach
+# of both the entry walk and `git add -A`. Pinned by making the vault root
+# itself unwritable for the duration -- adopt writes nothing there, so only
+# a stash at the root would need it.
+chmod 500 $vroot9/agent-vault
+pushd $sa >/dev/null
+set -l sarc (agents-vault --adopt=stash-target --silent; echo $status)
+popd >/dev/null
+chmod 700 $vroot9/agent-vault
+check "stash adopt: succeeds over a contentless target" 0 "$sarc"
+check "stash adopt: memory moved to the target slug" stash-precious (cat $vroot9/agent-vault/projects/stash-target/claude/memory/keep.md 2>/dev/null)
+check "stash adopt: source entry removed" false (test -d $vroot9/agent-vault/projects/$saslug; and echo true; or echo false)
+check "stash adopt: link repinned onto the target" (path resolve $vroot9/agent-vault/projects/stash-target/claude/memory) (path resolve $croot9/$samang/memory)
+check "stash adopt: stash cleaned up" false (test -e $vroot9/agent-vault/.git/agents-vault-adopt-stash; and echo true; or echo false)
+check "stash adopt: nothing stashed at the vault root" false (test -e $vroot9/agent-vault/.adopt-stash; and echo true; or echo false)
+check "stash adopt: the root fallback location is gitignored" true (git -C $vroot9/agent-vault check-ignore -q .adopt-stash; and echo true; or echo false)
+check "stash adopt: vault clean afterwards" "" (git -C $vroot9/agent-vault status --porcelain | string join ',')
+
+# ... and when the relink fails, the stash must come back and the *index*
+# must come back with it. Restoring the worktree alone leaves git
+# describing a half-applied rename -- the files are right, git status is
+# not -- and a hand commit in that window records it.
+set -l sf (new_repo https://git.rootiest.dev/rootiest/stash-fail.git)
+set -l sfslug git.rootiest.dev-rootiest-stash-fail
+set -l sfmang (string replace -a '/' '-' -- $sf | string replace -a '.' '-')
+mkdir -p $croot9/$sfmang/memory
+echo stashfail-precious >$croot9/$sfmang/memory/keep.md
+pushd $sf >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+mkdir -p $vroot9/agent-vault/projects/stashfail-target/claude/memory
+printf 'remote: (none)\npath:   %s\nhost:   t\n' /nowhere-else \
+    >$vroot9/agent-vault/projects/stashfail-target/origin
+pushd $sf >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+set -l sf_entries (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+set -l sf_head (git -C $vroot9/agent-vault rev-list --count HEAD)
+set -l sf_porcelain (git -C $vroot9/agent-vault status --porcelain | string join ',')
+set -l sf_link (path resolve $croot9/$sfmang/memory)
+check "stash adopt rollback: vault clean before the adopt" "" "$sf_porcelain"
+
+set -l sferr (mktemp); set -ga TMPDIRS $sferr
+chmod 500 $croot9/$sfmang
+pushd $sf >/dev/null
+set -l sfrc (agents-vault --adopt=stashfail-target --silent 2>$sferr; echo $status)
+popd >/dev/null
+chmod 700 $croot9/$sfmang
+
+check "stash adopt rollback: failed relink returns 1" 1 "$sfrc"
+check "stash adopt rollback: says the entry was left alone" true (string match -q "*$sfslug*left as it was*" -- (cat $sferr); and echo true; or echo false)
+check "stash adopt rollback: entries unchanged" "$sf_entries" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+check "stash adopt rollback: source entry intact" stashfail-precious (cat $vroot9/agent-vault/projects/$sfslug/claude/memory/keep.md 2>/dev/null)
+check "stash adopt rollback: stashed target came back" true (string match -q '*nowhere-else*' -- (cat $vroot9/agent-vault/projects/stashfail-target/origin 2>/dev/null); and echo true; or echo false)
+check "stash adopt rollback: target memory still contentless" 0 (command ls -A $vroot9/agent-vault/projects/stashfail-target/claude/memory 2>/dev/null | count)
+check "stash adopt rollback: nothing committed" "$sf_head" (git -C $vroot9/agent-vault rev-list --count HEAD)
+check "stash adopt rollback: index and worktree unchanged" "$sf_porcelain" (git -C $vroot9/agent-vault status --porcelain | string join ',')
+check "stash adopt rollback: no stash left behind" false (test -e $vroot9/agent-vault/.git/agents-vault-adopt-stash -o -e $vroot9/agent-vault/.adopt-stash; and echo true; or echo false)
+check "stash adopt rollback: live link never removed" "$sf_link" (path resolve $croot9/$sfmang/memory)
+check "stash adopt rollback: memory still reachable live" stashfail-precious (cat $croot9/$sfmang/memory/keep.md 2>/dev/null)
+
+# The point of rolling back: the ordinary run afterwards finds the original
+# entry instead of fabricating a fresh, history-less one.
+pushd $sf >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "stash adopt rollback: ordinary run fabricated no entry" "$sf_entries" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+check "stash adopt rollback: ordinary run kept the memory reachable" stashfail-precious (cat $croot9/$sfmang/memory/keep.md 2>/dev/null)
+
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
@@ -907,6 +1005,28 @@ set -l r2out (mktemp); set -ga TMPDIRS $r2out
 set -l r2rc (agents-vault --restore >$r2out; echo $status)
 check "restore: exits 0 with an unplaceable entry" 0 "$r2rc"
 check "restore: reports the unplaceable entry" true (string match -q '*ghost-entry*' -- (cat $r2out); and echo true; or echo false)
+
+# A dot-led slug is a real key, not a curiosity: the sibling-bare-mirror
+# idiom (`git remote add origin ../mirror.git`) keys as ..-mirror, a
+# dot-led host keys as .hidden.example.com-o-r, and --adopt accepts a
+# leading dot on purpose. Fish's * skips such a name, so both walks list
+# instead of globbing -- otherwise --status under-reports the entry and
+# --restore leaves that project unlinked, both without saying a word.
+set -l dotp (new_repo https://git.rootiest.dev/rootiest/dotted.git)
+set -l dotmang (string replace -a '/' '-' -- $dotp | string replace -a '.' '-')
+mkdir -p $vroot10/agent-vault/projects/.dot-entry/claude/memory
+echo dot-precious >$vroot10/agent-vault/projects/.dot-entry/claude/memory/keep.md
+printf 'remote: (none)\npath:   %s\nhost:   t\n' $dotp \
+    >$vroot10/agent-vault/projects/.dot-entry/origin
+check "dot-led entry: a glob really does skip it" false (string match -q '*.dot-entry*' -- (echo $vroot10/agent-vault/projects/*); and echo true; or echo false)
+
+set -l dotreport (agents-vault --status)
+check "status lists a dot-led entry" true (string match -q '*.dot-entry*' -- "$dotreport"; and echo true; or echo false)
+
+set -l dotout (agents-vault --restore)
+check "restore: relinks a dot-led entry" dot-precious (cat $croot10/$dotmang/memory/keep.md 2>/dev/null)
+check "restore: the dot-led live path is a link" true (test -L $croot10/$dotmang/memory; and echo true; or echo false)
+check "restore: names the dot-led entry it restored" true (string match -q '*.dot-entry*' -- "$dotout"; and echo true; or echo false)
 
 # An entry that *could* be placed but could not be relinked is a failure,
 # not a note in passing -- the same branchless-`if` false zero as the
@@ -1004,6 +1124,114 @@ set -l fp2rc (agents-vault --quiet 2>$fp2err >/dev/null; echo $status)
 popd >/dev/null
 set -e __fish_agent_vault_autopush
 check "failing autopush returns non-zero" 1 "$fp2rc"
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ────────────── a failed vault commit is fatal, not a note ─────────────
+# _agents_repo_sync's own rejection path is covered further up, but
+# agents-vault has to *propagate* it. The function otherwise ends on a
+# branchless `if`, which fish resolves to 0, and a backup tool that reports
+# success while nothing was recorded recreates the exact loss the vault
+# exists to prevent. That false zero has already bitten this project three
+# times, so both ways a sync can fail are pinned here rather than one.
+echo ""
+echo "== agents-vault (a failed vault commit is fatal) =="
+
+set -l vroot13 (mktemp -d); set -ga TMPDIRS $vroot13
+set -l croot13 (mktemp -d); set -ga TMPDIRS $croot13
+set -l chome13 (mktemp -d); set -ga TMPDIRS $chome13
+set -l agy13 (mktemp -d); set -ga TMPDIRS $agy13
+set -g __fish_agent_vault_dir $vroot13/agent-vault
+set -g __fish_agent_vault_claude_root $croot13
+set -g __fish_agent_vault_claude_home $chome13
+set -g __fish_agent_vault_agy_root $agy13
+
+set -l hp13 (new_repo https://git.rootiest.dev/rootiest/hookfail.git)
+set -l hmang13 (string replace -a '/' '-' -- $hp13 | string replace -a '.' '-')
+mkdir -p $croot13/$hmang13/memory
+echo hook-precious >$croot13/$hmang13/memory/keep.md
+pushd $hp13 >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+# The vault runs its own hooks out of .agents-tools/hooks -- agents-vault
+# points core.hooksPath there itself -- so a rejecting pre-commit in that
+# directory is exactly the shape of a real secret scanner blocking the
+# vault commit. _agents_repo_install_tools only refreshes the shims when
+# the version marker moves, so the replacement survives the run under test.
+printf '#!/bin/sh\nexit 1\n' >$vroot13/agent-vault/.agents-tools/hooks/pre-commit
+chmod +x $vroot13/agent-vault/.agents-tools/hooks/pre-commit
+echo hook-more >$croot13/$hmang13/memory/keep2.md
+set -l hhead13 (git -C $vroot13/agent-vault rev-list --count HEAD)
+set -l herr13 (mktemp); set -ga TMPDIRS $herr13
+pushd $hp13 >/dev/null
+set -l hrc13 (agents-vault --silent 2>$herr13; echo $status)
+popd >/dev/null
+check "rejected vault commit returns non-zero" 1 "$hrc13"
+check "rejected vault commit says nothing was recorded" true (string match -q '*nothing recorded*' -- (cat $herr13); and echo true; or echo false)
+check "rejected vault commit really recorded nothing" "$hhead13" (git -C $vroot13/agent-vault rev-list --count HEAD)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+# The other way a sync fails: a rebase conflict in the vault, which
+# _agents_repo_sync aborts (exit 2) rather than committing conflict markers
+# under a routine-looking message. That is a backup that did not happen
+# too, and must not exit 0 either.
+set -l vroot14 (mktemp -d); set -ga TMPDIRS $vroot14
+set -l croot14 (mktemp -d); set -ga TMPDIRS $croot14
+set -l chome14 (mktemp -d); set -ga TMPDIRS $chome14
+set -l agy14 (mktemp -d); set -ga TMPDIRS $agy14
+set -g __fish_agent_vault_dir $vroot14/agent-vault
+set -g __fish_agent_vault_claude_root $croot14
+set -g __fish_agent_vault_claude_home $chome14
+set -g __fish_agent_vault_agy_root $agy14
+
+set -l bare14 (mktemp -d); set -ga TMPDIRS $bare14
+git init -q --bare $bare14
+
+set -l cp14 (new_repo https://git.rootiest.dev/rootiest/conflict.git)
+set -l cslug14 git.rootiest.dev-rootiest-conflict
+set -l cmang14 (string replace -a '/' '-' -- $cp14 | string replace -a '.' '-')
+mkdir -p $croot14/$cmang14/memory
+echo base >$croot14/$cmang14/memory/keep.md
+pushd $cp14 >/dev/null
+agents-vault --silent
+popd >/dev/null
+agents-vault --remote=$bare14 --silent
+git -C $vroot14/agent-vault push -q -u origin HEAD:refs/heads/main
+
+# Another machine records a conflicting change to the same line...
+set -l cclone14 (mktemp -d); set -ga TMPDIRS $cclone14
+git clone -q $bare14 $cclone14
+git -C $cclone14 config user.email t@t
+git -C $cclone14 config user.name t
+git -C $cclone14 config commit.gpgsign false
+git -C $cclone14 config core.hooksPath /dev/null
+echo theirs >$cclone14/projects/$cslug14/claude/memory/keep.md
+git -C $cclone14 commit -qam theirs
+git -C $cclone14 push -q origin HEAD:main
+
+# ... while this one has a conflicting commit of its own waiting to be
+# replayed on top. It has to be committed: an uncommitted change is merely
+# autostashed, and the rebase then fast-forwards instead of conflicting.
+echo ours >$croot14/$cmang14/memory/keep.md
+git -C $vroot14/agent-vault -c user.email=t@t -c user.name=t \
+    -c commit.gpgsign=false -c core.hooksPath=/dev/null commit -qam ours
+
+set -l cerr14 (mktemp); set -ga TMPDIRS $cerr14
+pushd $cp14 >/dev/null
+set -l crc14 (agents-vault --silent 2>$cerr14; echo $status)
+popd >/dev/null
+check "vault rebase conflict returns non-zero" 1 "$crc14"
+check "vault rebase conflict says nothing was committed" true (string match -q '*nothing committed*' -- (cat $cerr14); and echo true; or echo false)
+check "vault rebase conflict left no rebase in progress" false (test -d $vroot14/agent-vault/.git/rebase-merge -o -d $vroot14/agent-vault/.git/rebase-apply; and echo true; or echo false)
+check "vault rebase conflict kept the local memory" ours (cat $croot14/$cmang14/memory/keep.md)
 
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root

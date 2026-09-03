@@ -120,6 +120,13 @@
 #   it defaults to off so a backgrounded push can never hang or prompt
 #   invisibly underneath a starting agent.
 #
+#   --adopt rebinds an entry; it does not pin its name. The slug is
+#   re-derived from the project on every run, so the next ordinary run
+#   migrates the adopted entry straight back to the canonical key, carrying
+#   the memory and the live link with it. That is the point rather than a
+#   wart: adopting is how a mismatched or ambiguous binding is repaired, not
+#   how an entry is given a permanent name of its own.
+#
 #   An entry's origin file records the project path once, when the entry is
 #   created, and is never refreshed. A project that later moves on disk
 #   therefore keeps a stale path there and --restore degrades to reporting
@@ -237,10 +244,21 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         echo ""
         echo "$c_head""Entries:$c_reset"
         set -l seen 0
-        for entry in "$vault"/projects/*
+        # Listed rather than globbed: fish's * skips dot-led names, and a
+        # dot-led slug is both reachable and sanctioned. A relative-path
+        # remote -- the sibling-bare-mirror idiom, `git remote add origin
+        # ../mirror.git` -- keys as ..-mirror, a dot-led host keys as
+        # .hidden.example.com-o-r, and --adopt accepts a leading dot on
+        # purpose. Such an entry is scaffolded, linked and committed like any
+        # other, so a glob here would under-report the vault without ever
+        # saying that it had. The 2>/dev/null is load-bearing: a vault with
+        # no projects/ is ordinary (running agents-vault outside any git
+        # repo makes exactly that one) and a bare ls would spew.
+        for name in (command ls -A "$vault/projects" 2>/dev/null)
+            set -l entry "$vault/projects/$name"
             test -d "$entry"; or continue
             set seen 1
-            set -l eslug (path basename "$entry")
+            set -l eslug $name
             set -l count (command ls -A "$entry/claude/memory" 2>/dev/null | count)
             set -l want (path resolve "$entry/claude/memory")
             set -l linked 0
@@ -290,7 +308,12 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         printf '%s\n' \
             '# SQLite sidecars are never safe to commit mid-write.' \
             '*.db-wal' \
-            '*.db-shm' >"$vault/.gitignore"
+            '*.db-shm' \
+            '' \
+            '# --adopt stashes the entry it is about to overwrite inside .git/,' \
+            '# out of reach of `git add -A`. This covers the fallback location' \
+            '# it uses when .git is not a directory.' \
+            '/.adopt-stash' >"$vault/.gitignore"
         set changed 1
     end
 
@@ -423,17 +446,37 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         # So a contentless target entry is moved aside rather than deleted,
         # and the origin note is appended only once the relink has
         # succeeded. Both are undone below if it does not. The stash lives
-        # at the vault root, not under projects/, so a crash between the
-        # two renames cannot leave something that reads as an entry.
+        # inside .git/: it is on the same filesystem, so the rename stays a
+        # rename; it is not under projects/, so a crash between the two moves
+        # cannot leave something that reads as an entry; and `git add -A`
+        # never descends there, so a crash cannot leave junk that the next
+        # ordinary run commits either. A vault whose .git is not a directory
+        # is not one this tool made, so that case falls back to the vault
+        # root, which the scaffolded .gitignore covers.
         set -l stash ""
         if test -d "$to"
-            set stash "$vault/.adopt-stash"
+            if test -d "$vault/.git"
+                set stash "$vault/.git/agents-vault-adopt-stash"
+            else
+                set stash "$vault/.adopt-stash"
+            end
             rm -rf "$stash"
             command mv "$to" "$stash"; or return 1
         end
         if not git -C "$vault" mv "projects/$cur" "projects/$_flag_adopt" 2>/dev/null
             if not command mv "$from" "$to"
                 test -n "$stash"; and command mv "$stash" "$to"
+                # Putting the worktree back is only half a rollback. Every
+                # move here is a plain rename as far as git is concerned, so
+                # the index still describes the half-applied state, and a
+                # hand `git commit` in that window would record it -- the
+                # next ordinary run's `git add -A` heals it, but only later.
+                # projects/ is re-read whole rather than the two entries
+                # named: git add refuses a pathspec that matches nothing --
+                # which one of the two always is, once it has been moved
+                # back -- and then stages none of them, not even the one
+                # that did match.
+                git -C "$vault" add -A -- projects 2>/dev/null
                 return 1
             end
         end
@@ -450,6 +493,13 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 command mv "$to" "$from"
             end
             test -n "$stash"; and command mv "$stash" "$to"
+            # Only now, with the worktree whole again -- the stash restore
+            # included -- is the index worth re-reading. Unconditional
+            # because even the git-native rollback leaves it out of line:
+            # the forward `git mv` overwrote the stashed entry's index
+            # entries, and moving the files back does not bring them back.
+            # See the same call above for why projects/ is named whole.
+            git -C "$vault" add -A -- projects 2>/dev/null
             echo "$c_err""agents-vault: could not relink $claude_root/$mangled/memory; $cur was left as it was$c_reset" >&2
             return 1
         end
@@ -473,9 +523,14 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         set -l claude_root $__fish_agent_vault_claude_root
         test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
         set -l restore_failed 0
-        for entry in "$vault"/projects/*
+        # Listed rather than globbed, for the reason spelled out at --status:
+        # fish's * skips a dot-led slug, which is a legitimate key, and a
+        # batch restore that silently walks past an entry is worse here than
+        # in a report -- that project is simply left unlinked.
+        for name in (command ls -A "$vault/projects" 2>/dev/null)
+            set -l entry "$vault/projects/$name"
             test -d "$entry/claude/memory"; or continue
-            set -l eslug (path basename "$entry")
+            set -l eslug $name
             set -l opath ""
             if test -f "$entry/origin"
                 set -l line (command grep -m1 '^path:' "$entry/origin" 2>/dev/null)
@@ -734,7 +789,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 # locally and the next push will carry it -- but nothing
                 # left this machine, which is the whole point of pushing,
                 # so this is a failure and not a warning to walk past.
-                echo "$c_warn""agents-vault: push failed; the vault is committed locally but not backed up off this machine$c_reset" >&2
+                echo "$c_err""agents-vault: push failed; the vault is committed locally but not backed up off this machine$c_reset" >&2
                 set failed 1
             end
         else if set -q _flag_push

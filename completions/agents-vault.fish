@@ -11,7 +11,10 @@ complete -c agents-vault -l restore -d 'Relink everything possible, report the r
 complete -c agents-vault -l status -d 'Show entries, link health, remote, orphans'
 # --adopt takes an existing vault slug, so offer the entries that are
 # actually there; the vault may not exist yet, in which case this is empty.
-complete -c agents-vault -l adopt -r -a '(command ls -1 (_agents_vault_dir)/projects 2>/dev/null)' -d 'Bind this project to an existing vault entry'
+# -A because a dot-led slug is legitimate (a relative-path remote keys as
+# ..-mirror), and an entry that cannot be completed reads as one that is
+# not there.
+complete -c agents-vault -l adopt -r -a '(command ls -1A (_agents_vault_dir)/projects 2>/dev/null)' -d 'Bind this project to an existing vault entry'
 complete -c agents-vault -l remote -r -d 'Set the vault remote URL'
 complete -c agents-vault -s v -l verbose -d 'Print all per-step output (default)'
 complete -c agents-vault -s q -l quiet -d 'Print one summary line only if changed'
