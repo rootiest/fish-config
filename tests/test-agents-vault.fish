@@ -82,6 +82,60 @@ set -l r3 (new_repo)
 git -C $r3 remote add upstream https://git.rootiest.dev/rootiest/fish-config.git
 check "falls back to first remote" $want (_agents_repo_slug $r3)
 
+# Slug sanitization test: special chars in fallback (local-) branch.
+set -l dirt (mktemp -d); set -ga TMPDIRS $dirt
+mkdir -p "$dirt/projects/My Project!"
+git -C "$dirt/projects/My Project!" init -q
+git -C "$dirt/projects/My Project!" config user.email t@t
+git -C "$dirt/projects/My Project!" config user.name t
+set -l slug_dirty (_agents_repo_slug "$dirt/projects/My Project!")
+set -l has_bad_chars (string match -q '*[ !]*' -- "$slug_dirty"; and echo true; or echo false)
+check "sanitizes special chars in local slug" false "$has_bad_chars"
+
+#   ──────────────────────── ensure_symlink rails ─────────────────────────
+echo ""
+echo "== _agents_repo_ensure_symlink =="
+
+set -l w (mktemp -d); set -ga TMPDIRS $w
+mkdir -p $w/target $w/live
+
+# Fresh link onto an empty live parent.
+_agents_repo_ensure_symlink $w/live/memory $w/target >/dev/null
+check "creates the link" true (test -L $w/live/memory; and echo true; or echo false)
+check "link resolves to target" (path resolve $w/target) (path resolve $w/live/memory)
+
+# Idempotent: a second run prints nothing.
+set -l second (_agents_repo_ensure_symlink $w/live/memory $w/target)
+check "idempotent, silent" "" "$second"
+
+# Refuses a non-directory target (a symlinked FILE breaks agent edits).
+touch $w/afile
+check "refuses file target" 1 (_agents_repo_ensure_symlink $w/live/f2 $w/afile 2>/dev/null; echo $status)
+
+# Refuses to create a dangling link when the target is missing.
+check "refuses missing target" 1 (_agents_repo_ensure_symlink $w/live/f3 $w/nope 2>/dev/null; echo $status)
+check "no dangling link left" false (test -L $w/live/f3; and echo true; or echo false)
+
+# Non-destructive adoption: content on both sides, nothing overwritten.
+set -l a (mktemp -d); set -ga TMPDIRS $a
+mkdir -p $a/vault $a/live/memory
+echo vault-version >$a/vault/shared.md
+echo vault-only >$a/vault/vaultonly.md
+echo live-version >$a/live/memory/shared.md
+echo live-only >$a/live/memory/liveonly.md
+_agents_repo_ensure_symlink $a/live/memory $a/vault >/dev/null
+check "adoption keeps vault copy" vault-version (cat $a/vault/shared.md)
+check "adoption imports live-only file" live-only (cat $a/vault/liveonly.md)
+check "adoption keeps vault-only file" vault-only (cat $a/vault/vaultonly.md)
+check "adoption replaced dir with link" true (test -L $a/live/memory; and echo true; or echo false)
+
+# Repins a link that points somewhere else.
+set -l p (mktemp -d); set -ga TMPDIRS $p
+mkdir -p $p/one $p/two
+ln -s $p/one $p/link
+_agents_repo_ensure_symlink $p/link $p/two >/dev/null
+check "repins a wrong link" (path resolve $p/two) (path resolve $p/link)
+
 cleanup
 echo ""
 echo (math $TESTS_RUN - $TESTS_FAILED)"/$TESTS_RUN passed"

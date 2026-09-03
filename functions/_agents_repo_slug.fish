@@ -18,7 +18,8 @@
 #     git@git.rootiest.dev:rootiest/fish-config.git
 #     ssh://git@git.rootiest.dev:22/rootiest/fish-config.git
 #
-#   With no remote the slug is local-<basename>-<8 hex of sha256(realpath)>.
+#   With no remote the slug is local-<sanitized-basename>-<8 hex of sha256(realpath)>,
+#   where the basename is lowercased and mapped the same way as the remote form.
 #   That key is machine-dependent by construction and is best-effort only;
 #   agents-vault --adopt rebinds such an entry by hand.
 #
@@ -63,7 +64,7 @@ function _agents_repo_slug --argument-names dir
     end
 
     set -l rp (path resolve "$dir")
-    set -l base (string lower -- (path basename "$rp"))
+    set -l base (string lower -- (path basename "$rp") | string replace -ra '[^a-z0-9._-]' '-')
     set -l digest (printf '%s' "$rp" | sha256sum | string split -f1 ' ')
     printf 'local-%s-%s\n' "$base" (string sub -l 8 -- "$digest")
 end
