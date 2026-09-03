@@ -243,6 +243,73 @@ check "second run adds no commit" $before (git -C $vroot/agent-vault rev-list --
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 
+#   ─────────────────── emergent restore (vault -> live) ──────────────────
+# The reverse of the adoption case above: a vault entry already has curated
+# memory (as if cloned from a remote onto a fresh machine) but the live
+# Claude project directory does not exist at all yet. agents-vault must
+# still create the link so the pre-existing memory is what a starting
+# agent sees, rather than silently skipping the link because there was
+# nothing local to notice yet.
+echo ""
+echo "== agents-vault (emergent restore) =="
+
+set -l vroot2 (mktemp -d); set -ga TMPDIRS $vroot2
+set -l croot2 (mktemp -d); set -ga TMPDIRS $croot2
+set -g __fish_agent_vault_dir $vroot2/agent-vault
+set -g __fish_agent_vault_claude_root $croot2
+
+set -l proj2 (new_repo https://git.rootiest.dev/rootiest/agent-vault.git)
+set -l pslug2 git.rootiest.dev-rootiest-agent-vault
+set -l mangled2 (string replace -a '/' '-' -- $proj2 | string replace -a '.' '-')
+
+# Pre-seed the vault entry the way a cloned vault would already have it.
+# Deliberately no $croot2/$mangled2 directory at all -- not even the
+# project's own entry, let alone a memory/ subdirectory -- so the fix under
+# test is exercised: linking must not depend on the live side existing.
+mkdir -p $vroot2/agent-vault/projects/$pslug2/claude/memory
+echo "restored memory" >$vroot2/agent-vault/projects/$pslug2/claude/memory/old.md
+
+pushd $proj2 >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+check "restore: live memory link created with no prior live dir" true (test -L $croot2/$mangled2/memory; and echo true; or echo false)
+check "restore: pre-existing vault content readable through the link" "restored memory" (cat $croot2/$mangled2/memory/old.md 2>/dev/null)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+
+#   ─────────────────── a refused link is reported as failure ─────────────
+# _agents_repo_ensure_symlink refuses (exit 1, no stdout) when it cannot
+# make the link -- e.g. its mkdir -p of the link's parent directory fails.
+# agents-vault must surface that as its own exit 1, not swallow it and
+# report success because stdout happened to be empty either way.
+echo ""
+echo "== agents-vault (link failure surfaces as exit 1) =="
+
+set -l vroot3 (mktemp -d); set -ga TMPDIRS $vroot3
+set -l croot3 (mktemp -d); set -ga TMPDIRS $croot3
+set -g __fish_agent_vault_dir $vroot3/agent-vault
+set -g __fish_agent_vault_claude_root $croot3
+
+set -l proj3 (new_repo https://git.rootiest.dev/rootiest/link-fail-test.git)
+set -l mangled3 (string replace -a '/' '-' -- $proj3 | string replace -a '.' '-')
+
+# Make the mangled project path a plain FILE. _agents_repo_ensure_symlink's
+# own `mkdir -p (path dirname $link)` then fails outright (ENOTDIR), which
+# is exactly the class of failure (permissions, ENOSPC, ...) this guards.
+touch $croot3/$mangled3
+
+pushd $proj3 >/dev/null
+set -l rc (agents-vault --silent 2>/dev/null; echo $status)
+popd >/dev/null
+
+check "link failure: agents-vault exits 1" 1 "$rc"
+check "link failure: no link was left behind" false (test -L $croot3/$mangled3/memory; and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+
 cleanup
 echo ""
 echo (math $TESTS_RUN - $TESTS_FAILED)"/$TESTS_RUN passed"

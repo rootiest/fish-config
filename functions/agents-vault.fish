@@ -6,7 +6,7 @@
 #
 # DEPENDENCIES
 #   _agents_vault_dir, _agents_repo_slug, _agents_repo_ensure_symlink,
-#   _agents_repo_sync, _agents_repo_install_tools, git
+#   _agents_repo_sync, _agents_repo_install_tools, git, hostname
 #
 # SYNOPSIS
 #   agents-vault [--link] [--push] [--restore] [--status]
@@ -36,7 +36,8 @@
 #   never denylisted, so nothing new upstream adds can leak in.
 #
 # ARGUMENTS
-#   --link         Ensure this project's memory link only; do not commit
+#   --link         Scaffold the vault and link this project's memory; skip
+#                  the final commit
 #   --push         Commit and push to the vault remote
 #   --restore      Walk the vault, relink what is possible, report the rest
 #   --status       Show entries, link health, remote state, and orphans
@@ -68,7 +69,6 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     set -l c_flag (set_color yellow)
     set -l c_ok (set_color green)
     set -l c_warn (set_color yellow)
-    set -l c_dim (set_color brblack)
     set -l c_err (set_color red)
     set -l c_reset (set_color normal)
 
@@ -83,7 +83,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         echo
         echo "$c_head""Options:$c_reset"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       Show this help message"
-        echo "  $c_flag--link$c_reset           Ensure this project's memory link only"
+        echo "  $c_flag--link$c_reset           Scaffold + link this project; skip the commit"
         echo "  $c_flag--push$c_reset           Commit and push to the vault remote"
         echo "  $c_flag--restore$c_reset        Relink everything possible, report the rest"
         echo "  $c_flag--status$c_reset         Show entries, link health, remote, orphans"
@@ -133,7 +133,10 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         test $verbose -eq 1; and echo "$c_ok→ Initialized vault repo at $vault$c_reset"
     end
 
-    test -f "$vault/.version"; or echo 1.0.0 >"$vault/.version"
+    if not test -f "$vault/.version"
+        echo 1.0.0 >"$vault/.version"
+        set changed 1
+    end
 
     if not test -f "$vault/.gitignore"
         printf '%s\n' \
@@ -165,6 +168,10 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     end
 
     set -l tools_msg (_agents_repo_install_tools "$vault")
+    or begin
+        echo "$c_err""agents-vault: could not install .agents-tools/ into $vault$c_reset" >&2
+        return 1
+    end
     if test -n "$tools_msg"
         set changed 1
         test $verbose -eq 1; and echo "$c_ok$tools_msg$c_reset"
@@ -173,6 +180,10 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     set -l hp (git -C "$vault" config --local core.hooksPath 2>/dev/null)
     if test "$hp" != .agents-tools/hooks
         git -C "$vault" config --local core.hooksPath .agents-tools/hooks
+        or begin
+            echo "$c_err""agents-vault: could not set core.hooksPath in $vault$c_reset" >&2
+            return 1
+        end
         set changed 1
     end
 
@@ -192,7 +203,10 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         set -l vmem "$entry/claude/memory"
 
         if not test -d "$vmem"
-            mkdir -p "$vmem"; or return 1
+            if not mkdir -p "$vmem"
+                echo "$c_err""agents-vault: could not create $vmem$c_reset" >&2
+                return 1
+            end
             set changed 1
         end
 
@@ -201,19 +215,34 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         set -l mangled (string replace -a '/' '-' -- "$root" | string replace -a '.' '-')
         set -l live "$claude_root/$mangled/memory"
 
-        if test -d "$claude_root/$mangled"; or test -d "$live"
-            set -l link_msg (_agents_repo_ensure_symlink "$live" "$vmem")
-            if test -n "$link_msg"
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok$link_msg$c_reset"
-            end
+        # Unconditional: this is the emergent-restore path. On a freshly
+        # cloned vault, $vmem already exists (populated from the clone) and
+        # $live does not exist yet -- skipping the link here would silently
+        # leave the clone's memory unlinked and let a starting agent write
+        # fresh, history-less memory instead. _agents_repo_ensure_symlink is
+        # idempotent and makes its own parent directories, so there is
+        # nothing this guard would protect that the helper does not already
+        # handle on its own.
+        set -l link_msg (_agents_repo_ensure_symlink "$live" "$vmem")
+        set -l link_rc $status
+        if test $link_rc -ne 0
+            echo "$c_err""agents-vault: could not link $live$c_reset" >&2
+            return 1
+        end
+        if test -n "$link_msg"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok$link_msg$c_reset"
         end
 
         if not test -f "$entry/origin"
             set -l url (git -C "$root" remote get-url origin 2>/dev/null)
             test -n "$url"; or set url "(none)"
+            set -l host ""
+            if type -q hostname
+                set host (hostname 2>/dev/null)
+            end
             printf 'remote: %s\npath:   %s\nhost:   %s\n' \
-                "$url" "$root" (hostname 2>/dev/null) >"$entry/origin"
+                "$url" "$root" "$host" >"$entry/origin"
             set changed 1
         end
     end
