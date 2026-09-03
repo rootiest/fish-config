@@ -620,6 +620,65 @@ set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
 set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 
+#   ────────────── a failed global link must not abort the run ────────────
+# The global block runs before the per-project link and before the commit,
+# and global memory is optional and frequently absent. A fault there must
+# never take the primary per-project backup down with it: otherwise a
+# stray file or a permission problem at ~/.claude/memory would break
+# memory backup for every project, on every agent launch.
+echo ""
+echo "== agents-vault (global link failure is non-fatal) =="
+
+set -l vroot8 (mktemp -d); set -ga TMPDIRS $vroot8
+set -l croot8 (mktemp -d); set -ga TMPDIRS $croot8
+set -l chome8 (mktemp -d); set -ga TMPDIRS $chome8
+set -l agy8 (mktemp -d); set -ga TMPDIRS $agy8
+set -g __fish_agent_vault_dir $vroot8/agent-vault
+set -g __fish_agent_vault_claude_root $croot8
+set -g __fish_agent_vault_claude_home $chome8
+set -g __fish_agent_vault_agy_root $agy8
+
+# A regular FILE where the global memory directory belongs.
+# _agents_repo_ensure_symlink refuses to replace a non-directory, so the
+# global link cannot succeed here.
+echo not-a-directory >$chome8/memory
+
+# ... while this project has perfectly good memory waiting to be backed up.
+set -l fp (new_repo https://git.rootiest.dev/rootiest/globalfail.git)
+set -l fslug git.rootiest.dev-rootiest-globalfail
+set -l fmangled (string replace -a '/' '-' -- $fp | string replace -a '.' '-')
+mkdir -p $croot8/$fmangled/memory
+echo project-memory >$croot8/$fmangled/memory/p.md
+
+set -l ferr (mktemp); set -ga TMPDIRS $ferr
+pushd $fp >/dev/null
+set -l frc (agents-vault --silent 2>$ferr; echo $status)
+popd >/dev/null
+set -l fwarn (cat $ferr)
+
+check "global link failure: exits 0" 0 "$frc"
+check "global link failure: warns on stderr" true (string match -q "*$chome8/memory*" -- "$fwarn"; and echo true; or echo false)
+check "global link failure: live file left alone" not-a-directory (cat $chome8/memory)
+
+# The finding itself: the primary, per-project backup must still happen.
+check "global link failure: per-project link still created" true (test -L $croot8/$fmangled/memory; and echo true; or echo false)
+check "global link failure: per-project memory reached the vault" project-memory (cat $vroot8/agent-vault/projects/$fslug/claude/memory/p.md)
+check "global link failure: vault still committed" true (test (git -C $vroot8/agent-vault rev-list --count HEAD) -ge 1; and echo true; or echo false)
+check "global link failure: per-project memory is committed" true (git -C $vroot8/agent-vault ls-files --error-unmatch projects/$fslug/claude/memory/p.md >/dev/null 2>&1; and echo true; or echo false)
+
+# A failed global link must not be recorded as done: the next run has to
+# re-enter the block and warn again, not treat the vault as correct.
+pushd $fp >/dev/null
+set -l ferr2 (mktemp); set -ga TMPDIRS $ferr2
+agents-vault --silent 2>$ferr2
+popd >/dev/null
+check "global link failure: retried on the next run" true (string match -q "*$chome8/memory*" -- (cat $ferr2); and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The
 # failure this guards is specific: a global-memory sync with no test

@@ -84,6 +84,12 @@
 #   it defaults to off so a backgrounded push can never hang or prompt
 #   invisibly underneath a starting agent.
 #
+#   The agy knowledge copy is merge-only. Files are copied into the vault
+#   but are never removed from it, so a fact deleted upstream from agy's
+#   knowledge store persists in the vault indefinitely, and a restore or a
+#   fresh clone brings it back. Prune such an entry from the vault by hand
+#   if it must really be gone.
+#
 #   Three further variables exist only so the test suite can run against
 #   throwaway directories instead of the real home, and are not meant for
 #   everyday use. __fish_agent_vault_claude_root overrides Claude's
@@ -288,20 +294,36 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     # it). Never out of thin air -- ~/.claude/memory does not exist by
     # default, and fabricating it would invent state Claude never asked
     # for and permanently claim the path.
-    if test -d "$glive"; or test -L "$glive"; or test (count $gvault_content) -gt 0
+    # -e rather than -d on the live side so a *broken* global path (a stray
+    # regular file where the directory belongs) is noticed and reported on
+    # every run, instead of being silently skipped and mistaken for the
+    # absent-by-default case.
+    if test -e "$glive"; or test -L "$glive"; or test (count $gvault_content) -gt 0
+        # Best-effort, exactly like the agy copy above. Global memory is
+        # optional and frequently absent, and this block runs before the
+        # per-project link, so a fault here must warn and continue rather
+        # than return: aborting would let a stray file or a permission
+        # problem at ~/.claude/memory kill the per-project memory backup
+        # and its commit for every project, on every agent launch. The
+        # secondary feature must not take the primary one down with it.
+        #
+        # Continuing is safe: _agents_repo_ensure_symlink validates and
+        # refuses before it mutates anything, so its failure window is the
+        # same whether the caller returns or carries on. $changed stays
+        # untouched unless the link actually succeeded, and nothing is
+        # recorded to make a later run believe the global memory is linked
+        # when it is not -- the next run re-enters this block and retries.
         if not mkdir -p "$gvault"
-            echo "$c_err""agents-vault: could not create $gvault$c_reset" >&2
-            return 1
-        end
-        set -l gmsg (_agents_repo_ensure_symlink "$glive" "$gvault")
-        set -l grc $status
-        if test $grc -ne 0
-            echo "$c_err""agents-vault: could not link $glive$c_reset" >&2
-            return 1
-        end
-        if test -n "$gmsg"
-            set changed 1
-            test $verbose -eq 1; and echo "$c_ok$gmsg$c_reset"
+            echo "$c_warn""agents-vault: could not create $gvault; skipping global memory$c_reset" >&2
+        else
+            set -l gmsg (_agents_repo_ensure_symlink "$glive" "$gvault")
+            set -l grc $status
+            if test $grc -ne 0
+                echo "$c_warn""agents-vault: could not link $glive; global memory not backed up$c_reset" >&2
+            else if test -n "$gmsg"
+                set changed 1
+                test $verbose -eq 1; and echo "$c_ok$gmsg$c_reset"
+            end
         end
     end
 
