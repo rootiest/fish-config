@@ -136,6 +136,53 @@ ln -s $p/one $p/link
 _agents_repo_ensure_symlink $p/link $p/two >/dev/null
 check "repins a wrong link" (path resolve $p/two) (path resolve $p/link)
 
+#   ─────────────────────────── sync policy ───────────────────────────────
+echo ""
+echo "== _agents_repo_sync =="
+
+set -l s (new_repo)
+echo hello >$s/a.md
+_agents_repo_sync $s "chore: test" >/dev/null
+check "commits new content" 1 (git -C $s rev-list --count HEAD)
+
+# Nothing to do: no second commit, no output.
+set -l out (_agents_repo_sync $s "chore: test")
+check "idempotent, no new commit" 1 (git -C $s rev-list --count HEAD)
+check "idempotent, silent" "" "$out"
+
+# Conflict: two clones diverge with conflicting commits on the same line.
+# (Merely leaving "ours" uncommitted in the worktree isn't enough to force
+# a rebase conflict -- with nothing local to replay, --autostash's rebase
+# step fast-forwards cleanly and only the stash *pop* would conflict,
+# leaving "theirs" committed on HEAD with "ours" stranded in the stash.
+# Committing "ours" locally first means the rebase itself must replay a
+# real commit over "theirs" on the same line, which is where the intended
+# conflict-and-abort path actually lives.)
+set -l origin (mktemp -d); set -ga TMPDIRS $origin
+git -C $origin init -q --bare
+git -C $s remote add origin $origin
+git -C $s push -q -u origin HEAD:refs/heads/main 2>/dev/null
+
+set -l clone (mktemp -d); set -ga TMPDIRS $clone
+git clone -q $origin $clone
+git -C $clone config user.email t@t
+git -C $clone config user.name t
+git -C $clone config commit.gpgsign false
+git -C $clone config core.hooksPath /dev/null
+echo theirs >$clone/a.md
+git -C $clone commit -qam theirs
+git -C $clone push -q origin HEAD:main
+
+echo ours >$s/a.md
+git -C $s commit -qam ours
+set -l before_count (git -C $s rev-list --count HEAD)
+set -l rc (_agents_repo_sync $s "chore: test" 2>/dev/null; echo $status)
+check "conflict returns 2" 2 "$rc"
+check "conflict leaves no rebase in progress" false (test -d $s/.git/rebase-merge -o -d $s/.git/rebase-apply; and echo true; or echo false)
+check "conflict commits nothing" $before_count (git -C $s rev-list --count HEAD)
+check "conflict content survives" ours (cat $s/a.md)
+check "conflict left no markers" false (grep -q '<<<<<<<' $s/a.md; and echo true; or echo false)
+
 cleanup
 echo ""
 echo (math $TESTS_RUN - $TESTS_FAILED)"/$TESTS_RUN passed"
