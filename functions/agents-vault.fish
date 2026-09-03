@@ -35,6 +35,14 @@
 #   of megabytes per project, growing per session). Paths are allowlisted,
 #   never denylisted, so nothing new upstream adds can leak in.
 #
+#   Because the slug is derived from the remote, gaining, losing, or
+#   rewriting a project's origin changes it. Each run detects this by
+#   reading the previous slug straight off the live memory symlink's
+#   target (no guessing) and migrates that entry to the new slug before
+#   relinking, so memory accumulated under the old key is never orphaned.
+#   If both the old and new entries already hold content the migration is
+#   ambiguous and is refused; resolve it with --adopt=SLUG.
+#
 # ARGUMENTS
 #   --link         Scaffold the vault and link this project's memory; skip
 #                  the final commit
@@ -202,6 +210,56 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         set -l entry "$vault/projects/$slug"
         set -l vmem "$entry/claude/memory"
 
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+        set -l mangled (string replace -a '/' '-' -- "$root" | string replace -a '.' '-')
+        set -l live "$claude_root/$mangled/memory"
+
+        # ── Slug migration (spec 4.5) ─────────────────────────────────────
+        # The previous slug never has to be guessed: the live symlink still
+        # points at the old entry. This covers a remote being added, a
+        # remote URL being rewritten, and a remote being removed.
+        set -l prev_slug ""
+        if test -L "$live"
+            set -l tgt (path resolve "$live")
+            set -l pdir (path resolve "$vault/projects")
+            if string match -q "$pdir/*" -- "$tgt"
+                set -l rest (string replace "$pdir/" "" -- "$tgt")
+                set prev_slug (string split -f1 '/' -- $rest)
+            end
+        end
+        if test -z "$prev_slug"
+            # No link yet (fresh machine): try the path-derived candidate.
+            set -l cand_rp (path resolve "$root")
+            set -l cand_base (string lower -- (path basename "$cand_rp"))
+            set -l cand_digest (printf '%s' "$cand_rp" | sha256sum | string split -f1 ' ')
+            set -l cand "local-$cand_base-"(string sub -l 8 -- "$cand_digest")
+            if test "$cand" != "$slug"; and test -d "$vault/projects/$cand"
+                set prev_slug $cand
+            end
+        end
+
+        if test -n "$prev_slug"; and test "$prev_slug" != "$slug"
+            set -l prev_mem "$vault/projects/$prev_slug/claude/memory"
+            set -l cur_content
+            test -d "$vmem"; and set cur_content (command ls -A "$vmem" 2>/dev/null)
+            if test (count $cur_content) -gt 0
+                echo "$c_err""agents-vault: cannot migrate $prev_slug → $slug; both entries hold content.$c_reset" >&2
+                echo "$c_err""  Resolve with: agents-vault --adopt=SLUG$c_reset" >&2
+                return 1
+            end
+            test -d "$vmem"; and rm -rf "$vault/projects/$slug"
+            mkdir -p (path dirname "$vault/projects/$slug")
+            if not git -C "$vault" mv "projects/$prev_slug" "projects/$slug" 2>/dev/null
+                command mv "$vault/projects/$prev_slug" "$vault/projects/$slug"; or return 1
+            end
+            printf 'renamed: %s → %s (%s)\n' "$prev_slug" "$slug" (date -I) \
+                >>"$vault/projects/$slug/origin"
+            rm -f "$live"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Migrated vault entry $prev_slug → $slug$c_reset"
+        end
+
         if not test -d "$vmem"
             if not mkdir -p "$vmem"
                 echo "$c_err""agents-vault: could not create $vmem$c_reset" >&2
@@ -209,11 +267,6 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             end
             set changed 1
         end
-
-        set -l claude_root $__fish_agent_vault_claude_root
-        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
-        set -l mangled (string replace -a '/' '-' -- "$root" | string replace -a '.' '-')
-        set -l live "$claude_root/$mangled/memory"
 
         # Unconditional: this is the emergent-restore path. On a freshly
         # cloned vault, $vmem already exists (populated from the clone) and

@@ -310,6 +310,64 @@ check "link failure: no link was left behind" false (test -L $croot3/$mangled3/m
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 
+#   ────────────────────────── slug migration ─────────────────────────────
+echo ""
+echo "== agents-vault (slug migration) =="
+
+set -l vroot2 (mktemp -d); set -ga TMPDIRS $vroot2
+set -l croot2 (mktemp -d); set -ga TMPDIRS $croot2
+set -g __fish_agent_vault_dir $vroot2/agent-vault
+set -g __fish_agent_vault_claude_root $croot2
+
+# Start with no remote, so the project is keyed local-*.
+set -l mp (new_repo)
+set -l mmangled (string replace -a '/' '-' -- $mp | string replace -a '.' '-')
+mkdir -p $croot2/$mmangled/memory
+echo "precious" >$croot2/$mmangled/memory/keep.md
+
+pushd $mp >/dev/null
+agents-vault --silent
+set -l local_slug (_agents_repo_slug $mp)
+popd >/dev/null
+check "local entry populated" precious (cat $vroot2/agent-vault/projects/$local_slug/claude/memory/keep.md)
+
+# Now add a remote: the slug changes and the entry must migrate.
+git -C $mp remote add origin https://git.rootiest.dev/rootiest/later.git
+pushd $mp >/dev/null
+agents-vault --silent
+popd >/dev/null
+set -l new_slug git.rootiest.dev-rootiest-later
+
+check "migrated to remote slug" precious (cat $vroot2/agent-vault/projects/$new_slug/claude/memory/keep.md)
+check "old entry removed" false (test -d $vroot2/agent-vault/projects/$local_slug; and echo true; or echo false)
+check "memory still reachable live" precious (cat $croot2/$mmangled/memory/keep.md)
+check "link repinned to new entry" (path resolve $vroot2/agent-vault/projects/$new_slug/claude/memory) (path resolve $croot2/$mmangled/memory)
+check "rename recorded in origin" true (grep -q "$local_slug" $vroot2/agent-vault/projects/$new_slug/origin; and echo true; or echo false)
+
+# Ambiguous migration: both entries hold content. Nothing may move.
+set -l amb (new_repo)
+set -l amangled (string replace -a '/' '-' -- $amb | string replace -a '.' '-')
+mkdir -p $croot2/$amangled/memory
+echo old >$croot2/$amangled/memory/x.md
+pushd $amb >/dev/null
+agents-vault --silent
+set -l aslug (_agents_repo_slug $amb)
+popd >/dev/null
+
+git -C $amb remote add origin https://git.rootiest.dev/rootiest/clash.git
+mkdir -p $vroot2/agent-vault/projects/git.rootiest.dev-rootiest-clash/claude/memory
+echo new >$vroot2/agent-vault/projects/git.rootiest.dev-rootiest-clash/claude/memory/y.md
+
+pushd $amb >/dev/null
+set -l arc (agents-vault --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "ambiguous migration fails" 1 "$arc"
+check "ambiguous leaves old entry" old (cat $vroot2/agent-vault/projects/$aslug/claude/memory/x.md)
+check "ambiguous leaves new entry" new (cat $vroot2/agent-vault/projects/git.rootiest.dev-rootiest-clash/claude/memory/y.md)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+
 cleanup
 echo ""
 echo (math $TESTS_RUN - $TESTS_FAILED)"/$TESTS_RUN passed"
