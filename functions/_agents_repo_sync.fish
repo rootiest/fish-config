@@ -14,7 +14,9 @@
 #   left clean at local HEAD for the user to resolve by hand.
 #
 #   Commits are made with commit.gpgsign=false so a pinentry prompt can
-#   never block a shell or an agent launch.
+#   never block a shell or an agent launch. If a pre-commit or commit-msg
+#   hook rejects the commit (e.g. a secret scanner), that failure is
+#   surfaced too: nothing is committed and a diagnostic goes to stderr.
 #
 # ARGUMENTS
 #   dir      Absolute path to the git repository
@@ -22,7 +24,8 @@
 #
 # EXIT STATUS
 #   0  Committed, or nothing needed committing
-#   1  <dir> is not a git repository
+#   1  <dir> is not a git repository, arguments were missing, or the commit
+#      itself failed (e.g. a pre-commit/commit-msg hook rejected it)
 #   2  Rebase conflict; aborted, nothing committed
 #
 # RETURNS
@@ -51,5 +54,9 @@ function _agents_repo_sync --argument-names dir msg
         set -l sha (git -C "$dir" rev-parse --short HEAD 2>/dev/null)
         set -l subject (git -C "$dir" log -1 --pretty=%s 2>/dev/null)
         echo "→ Committed ($sha) $subject"
+        return 0
+    else
+        echo "_agents_repo_sync: commit failed in $dir (hook rejected it?); nothing committed" >&2
+        return 1
     end
 end

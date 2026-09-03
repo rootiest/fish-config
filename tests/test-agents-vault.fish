@@ -183,6 +183,25 @@ check "conflict commits nothing" $before_count (git -C $s rev-list --count HEAD)
 check "conflict content survives" ours (cat $s/a.md)
 check "conflict left no markers" false (grep -q '<<<<<<<' $s/a.md; and echo true; or echo false)
 
+# Commit-hook rejection: the commit call itself fails (e.g. a secret
+# scanner in a pre-commit hook), distinct from "not a git repository" --
+# both currently map to exit 1, so this must not fall through silently or
+# report success.
+set -l h (new_repo)
+echo first >$h/a.md
+_agents_repo_sync $h "chore: init" >/dev/null
+
+set -l hooks (mktemp -d); set -ga TMPDIRS $hooks
+printf '#!/bin/sh\nexit 1\n' >$hooks/pre-commit
+chmod +x $hooks/pre-commit
+git -C $h config core.hooksPath $hooks
+
+echo second >$h/a.md
+set -l before_hook_count (git -C $h rev-list --count HEAD)
+set -l hrc (_agents_repo_sync $h "chore: blocked" 2>/dev/null; echo $status)
+check "commit hook rejection returns 1" 1 "$hrc"
+check "commit hook rejection commits nothing" $before_hook_count (git -C $h rev-list --count HEAD)
+
 cleanup
 echo ""
 echo (math $TESTS_RUN - $TESTS_FAILED)"/$TESTS_RUN passed"
