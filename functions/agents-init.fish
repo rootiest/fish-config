@@ -4,6 +4,9 @@
 # CATEGORY
 #   12-ai-and-developer-tools
 #
+# DEPENDENCIES
+#   _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
+#
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
 #               [-q | --quiet] [-s | --silent] [-h | --help]
@@ -165,7 +168,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/.version (1.0.0)$c_reset"
     end
 
-    set -l _tools (_agents_init_install_tools "$agents_dir")
+    set -l _tools (_agents_repo_install_tools "$agents_dir")
     if test -n "$_tools"
         set changed 1
         test $verbose -eq 1; and echo "$c_ok$_tools$c_reset"
@@ -259,38 +262,26 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             test $verbose -eq 1; and echo "$c_ok→ Linked AGENTS/CLAUDE.md → AGENTS/AGENTS.md$c_reset"
         end
 
-        # ── Root symlink: AGENTS.md → AGENTS/AGENTS.md ───────────────────────
-        set -l _need_link 0
-        if not test -L "$root/AGENTS.md"
-            set _need_link 1
-        else if test (readlink "$root/AGENTS.md") != AGENTS/AGENTS.md
-            rm -f "$root/AGENTS.md"
-            set _need_link 1
-        end
-        if test $_need_link -eq 1
-            if not ln -s AGENTS/AGENTS.md "$root/AGENTS.md"
-                echo "$c_err""Error: could not create AGENTS.md symlink$c_reset" >&2
-                return 1
+        # Root symlinks point at files, not directories, so they cannot use
+        # _agents_repo_ensure_symlink (which is directory-only by design).
+        for pair in "AGENTS.md:AGENTS/AGENTS.md" "CLAUDE.md:AGENTS/CLAUDE.md"
+            set -l name (string split -f1 ':' -- $pair)
+            set -l want (string split -f2 ':' -- $pair)
+            set -l need 0
+            if not test -L "$root/$name"
+                set need 1
+            else if test (readlink "$root/$name") != "$want"
+                rm -f "$root/$name"
+                set need 1
             end
-            set changed 1
-            test $verbose -eq 1; and echo "$c_ok→ Linked AGENTS.md → AGENTS/AGENTS.md$c_reset"
-        end
-
-        # ── Root symlink: CLAUDE.md → AGENTS/CLAUDE.md ───────────────────────
-        set -l _need_link 0
-        if not test -L "$root/CLAUDE.md"
-            set _need_link 1
-        else if test (readlink "$root/CLAUDE.md") != AGENTS/CLAUDE.md
-            rm -f "$root/CLAUDE.md"
-            set _need_link 1
-        end
-        if test $_need_link -eq 1
-            if not ln -s AGENTS/CLAUDE.md "$root/CLAUDE.md"
-                echo "$c_err""Error: could not create CLAUDE.md symlink$c_reset" >&2
-                return 1
+            if test $need -eq 1
+                if not ln -s "$want" "$root/$name"
+                    echo "$c_err""Error: could not create $name symlink$c_reset" >&2
+                    return 1
+                end
+                set changed 1
+                test $verbose -eq 1; and echo "$c_ok→ Linked $name → $want$c_reset"
             end
-            set changed 1
-            test $verbose -eq 1; and echo "$c_ok→ Linked CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
         end
 
         # ── .gitignore ────────────────────────────────────────────────────────
@@ -461,24 +452,17 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     end
 
     #   ──────────────────────── Auto-commit AGENTS/ ────────────────────────────
-    # Pull first when an upstream is configured so the local .version reflects
-    # any remote bumps before we add to it (no-op for local-only repos).
-    if git -C "$agents_dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
-        git -C "$agents_dir" pull --rebase --autostash -q 2>/dev/null
-    end
-    git -C "$agents_dir" add -A 2>/dev/null
-    set -l status_out (git -C "$agents_dir" status --porcelain 2>/dev/null)
-    if test -n "$status_out"
-        set -l msg "chore: sync AGENTS repository"
-        test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
-        if git -C "$agents_dir" -c commit.gpgsign=false commit -q -m "$msg" 2>/dev/null
-            set changed 1
-            if test $verbose -eq 1
-                set -l sha (git -C "$agents_dir" rev-parse --short HEAD 2>/dev/null)
-                set -l realmsg (git -C "$agents_dir" log -1 --pretty=%s 2>/dev/null)
-                echo "$c_ok→ Committed AGENTS/ ($sha) $c_dim$realmsg$c_reset"
-            end
-        end
+    # Pulls first when an upstream is configured (no-op for local-only repos)
+    # and refuses to commit a failed rebase's conflict markers.
+    set -l msg "chore: sync AGENTS repository"
+    test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
+    set -l sync_out (_agents_repo_sync "$agents_dir" "$msg")
+    set -l sync_rc $status
+    if test $sync_rc -eq 2
+        echo "$c_warn→ AGENTS/ has an unresolved rebase conflict; nothing committed$c_reset" >&2
+    else if test -n "$sync_out"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
     end
 
     # Quiet summary: one line at the end, only if something actually changed
