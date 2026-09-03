@@ -16,6 +16,40 @@ set -g TESTS_RUN 0
 set -g TESTS_FAILED 0
 set -g TMPDIRS
 
+# The suite is hermetic against $HOME and ~/.claude, but it was not
+# hermetic against git's own configuration. new_repo sets an identity on
+# the repos the TESTS create, and nothing set one on the repos the TOOL
+# creates -- the scaffolded vault and the AGENTS/ sub-repo. On a developer
+# machine those inherited a global user.name/user.email and committed
+# fine; on a runner that has none, every such commit died with "Author
+# identity unknown" and the suite reported the tool's own correct
+# "nothing recorded" handling as 71 failures. Supply the identity through
+# the environment, which reaches every git invocation including the ones
+# inside agents-vault and agents-init, so the suite measures the tool's
+# logic rather than the runner's gitconfig.
+set -gx GIT_AUTHOR_NAME t
+set -gx GIT_AUTHOR_EMAIL t@t
+set -gx GIT_COMMITTER_NAME t
+set -gx GIT_COMMITTER_EMAIL t@t
+
+# Signing is pinned off for the same reason, in the other direction: a
+# developer with commit.gpgsign=true would otherwise have tool-created
+# repos reach for a key (and on a hardware token, a touch prompt) partway
+# through the run, while a runner with no key at all would fail the commit
+# outright. GIT_CONFIG_COUNT overrides reach the tool's git calls the same
+# way the identity does.
+# init.defaultBranch is pinned for a third reason: the rebase fixtures
+# build an upstream and a clone and expect the two to share a branch name.
+# A developer whose global config says "main" and a runner that has no
+# config and falls back to "master" disagree, and the fixture then fails to
+# set up the very rebase the test is about -- reporting a tool failure that
+# never happened.
+set -gx GIT_CONFIG_COUNT 2
+set -gx GIT_CONFIG_KEY_0 commit.gpgsign
+set -gx GIT_CONFIG_VALUE_0 false
+set -gx GIT_CONFIG_KEY_1 init.defaultBranch
+set -gx GIT_CONFIG_VALUE_1 main
+
 function check --argument-names label want got
     set -g TESTS_RUN (math $TESTS_RUN + 1)
     if test "$want" = "$got"
