@@ -53,11 +53,16 @@
 #
 #   With no flags, runs both --agents and --plugins setup; --agents re-runs
 #   only the AGENTS.md / symlink step and --plugins only the plans/specs/
-#   devlogs wiring step. Managed paths are added to .gitignore. The sub-repo
-#   is pulled first when it has an upstream, and at the end of every
-#   invocation any uncommitted changes inside it are auto-committed so
-#   agent-made edits are captured automatically. Fully idempotent: a second
-#   run produces no output and no new commits.
+#   devlogs wiring step. Managed paths are added to .gitignore. At the end
+#   of every invocation any uncommitted changes inside the sub-repo are
+#   auto-committed so agent-made edits are captured automatically. Fully
+#   idempotent: a second run produces no output and no new commits.
+#
+#   The commit is local only. Nothing here fetches or pushes: the wrappers
+#   call this synchronously before starting an agent, and a network round
+#   trip there blocks the launch until an unreachable remote times out and
+#   can prompt for credentials with nobody watching. A sub-repo that has an
+#   upstream is pulled by hand, on the user's own schedule.
 #
 #   Called automatically by the claude and agy wrappers on every invocation.
 #
@@ -71,7 +76,8 @@
 #
 # EXIT STATUS
 #   0  Setup completed successfully
-#   1  Fatal error (git init failed, move failed, etc.)
+#   1  Fatal error (git init failed, move failed, the AGENTS/ commit was
+#      rejected, or an unresolved rebase blocked it)
 #
 # EXAMPLE
 #   agents-init
@@ -452,14 +458,27 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     end
 
     #   ──────────────────────── Auto-commit AGENTS/ ────────────────────────────
-    # Pulls first when an upstream is configured (no-op for local-only repos)
-    # and refuses to commit a failed rebase's conflict markers.
+    # Purely local: no fetch, no push. This function runs synchronously on
+    # every agent launch, and a network round trip there blocks the launch
+    # for as long as an unreachable remote takes to time out. Committing
+    # never needed one -- see _agents_repo_sync.
+    #
+    # Every way the commit can fail is an arm of its own. A sync that did
+    # not commit means agent-made edits were not captured, so it is a
+    # failure rather than a line to walk past -- and the missing `-ne 0`
+    # arm was not a cosmetic gap: fish resolves a branchless `if` to 0, so
+    # a hook-rejected commit fell straight through to a reported success.
     set -l msg "chore: sync AGENTS repository"
     test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
     set -l sync_out (_agents_repo_sync "$agents_dir" "$msg")
     set -l sync_rc $status
+    set -l failed 0
     if test $sync_rc -eq 2
-        echo "$c_warn→ AGENTS/ has an unresolved rebase conflict; nothing committed$c_reset" >&2
+        echo "$c_warn→ AGENTS/ has an unresolved rebase; nothing committed$c_reset" >&2
+        set failed 1
+    else if test $sync_rc -ne 0
+        echo "$c_err""Error: the AGENTS/ commit failed; nothing recorded$c_reset" >&2
+        set failed 1
     else if test -n "$sync_out"
         set changed 1
         test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
@@ -473,4 +492,8 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             echo "$c_ok→ Synced AGENTS scaffolding$c_reset"
         end
     end
+
+    # Explicit, because the branchless `if` above resolves to 0 and would
+    # otherwise be this function's exit status.
+    test $failed -eq 0
 end

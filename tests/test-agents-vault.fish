@@ -185,14 +185,12 @@ set -l out (_agents_repo_sync $s "chore: test")
 check "idempotent, no new commit" 1 (git -C $s rev-list --count HEAD)
 check "idempotent, silent" "" "$out"
 
-# Conflict: two clones diverge with conflicting commits on the same line.
-# (Merely leaving "ours" uncommitted in the worktree isn't enough to force
-# a rebase conflict -- with nothing local to replay, --autostash's rebase
-# step fast-forwards cleanly and only the stash *pop* would conflict,
-# leaving "theirs" committed on HEAD with "ours" stranded in the stash.
-# Committing "ours" locally first means the rebase itself must replay a
-# real commit over "theirs" on the same line, which is where the intended
-# conflict-and-abort path actually lives.)
+# A diverged upstream is no longer this function's business. It commits
+# locally and never fetches, so neither divergence nor an unreachable
+# remote may stop the commit -- that is the entire offline-backup
+# guarantee, and the old pull-first shape broke it: a failed fetch took
+# the local commit down with it. The divergence is still built here so
+# that guarantee is tested against the case that used to fail.
 set -l origin (mktemp -d); set -ga TMPDIRS $origin
 git -C $origin init -q --bare
 git -C $s remote add origin $origin
@@ -209,14 +207,39 @@ git -C $clone commit -qam theirs
 git -C $clone push -q origin HEAD:main
 
 echo ours >$s/a.md
-git -C $s commit -qam ours
 set -l before_count (git -C $s rev-list --count HEAD)
-set -l rc (_agents_repo_sync $s "chore: test" 2>/dev/null; echo $status)
-check "conflict returns 2" 2 "$rc"
-check "conflict leaves no rebase in progress" false (test -d $s/.git/rebase-merge -o -d $s/.git/rebase-apply; and echo true; or echo false)
-check "conflict commits nothing" $before_count (git -C $s rev-list --count HEAD)
-check "conflict content survives" ours (cat $s/a.md)
-check "conflict left no markers" false (grep -q '<<<<<<<' $s/a.md; and echo true; or echo false)
+set -l rc (_agents_repo_sync $s "chore: test" >/dev/null 2>/dev/null; echo $status)
+check "diverged upstream still commits" 0 "$rc"
+check "diverged upstream recorded the commit" (math $before_count + 1) (git -C $s rev-list --count HEAD)
+check "diverged upstream kept our content" ours (cat $s/a.md)
+check "diverged upstream left no markers" false (grep -q '<<<<<<<' $s/a.md; and echo true; or echo false)
+check "diverged upstream started no rebase" false (test -d $s/.git/rebase-merge -o -d $s/.git/rebase-apply; and echo true; or echo false)
+
+# An unreachable remote is a non-event for the same reason. A bogus local
+# path is used rather than a real unroutable host: it fails instantly
+# instead of waiting out a DNS timeout, and the code path being asserted
+# is that there is no network code path at all.
+git -C $s remote set-url origin /nonexistent/unreachable.git
+echo offline >$s/b.md
+set -l ocount (git -C $s rev-list --count HEAD)
+set -l orc (_agents_repo_sync $s "chore: offline" >/dev/null 2>/dev/null; echo $status)
+check "unreachable upstream still commits" 0 "$orc"
+check "unreachable upstream recorded the commit" (math $ocount + 1) (git -C $s rev-list --count HEAD)
+check "unreachable upstream captured the new file" offline (git -C $s show HEAD:b.md 2>/dev/null)
+
+# The one case that must still refuse: a rebase genuinely in progress. The
+# worktree then holds conflict markers and committing them under a routine
+# message buries the conflict instead of reporting it. It is left standing
+# rather than aborted -- this function did not start it, so it is not its
+# to throw away.
+git -C $s remote set-url origin $origin
+git -C $s -c core.hooksPath=/dev/null pull --rebase -q >/dev/null 2>&1
+check "fixture really left a rebase in progress" true (test -d $s/.git/rebase-merge -o -d $s/.git/rebase-apply; and echo true; or echo false)
+set -l rrc (_agents_repo_sync $s "chore: blocked" 2>/dev/null; echo $status)
+check "in-progress rebase returns 2" 2 "$rrc"
+check "in-progress rebase recorded no commit" false (git -C $s log --all --pretty=%s 2>/dev/null | grep -qx 'chore: blocked'; and echo true; or echo false)
+check "in-progress rebase is left standing" true (test -d $s/.git/rebase-merge -o -d $s/.git/rebase-apply; and echo true; or echo false)
+git -C $s rebase --abort >/dev/null 2>&1
 
 # Commit-hook rejection: the commit call itself fails (e.g. a secret
 # scanner in a pre-commit hook), distinct from "not a git repository" --
@@ -414,9 +437,18 @@ popd >/dev/null
 
 git -C $emp remote add origin https://git.rootiest.dev/rootiest/emptycase.git
 set -l enew_slug git.rootiest.dev-rootiest-emptycase
-# Pre-create the destination entry as an empty directory -- present, not
-# absent -- before migration runs.
-mkdir -p $vroot2/agent-vault/projects/$enew_slug/claude/memory
+# Built the way git itself would leave it, which is the only shape that
+# matters here: git cannot track an empty directory, so an entry committed
+# while its memory was empty comes back from a clone as projects/<slug>/
+# origin and nothing else -- no claude/ subtree at all. Hand-building it
+# with claude/memory/ instead (as this fixture used to) tests a shape the
+# recovery path never produces, and hid a migration that moved the old
+# entry *inside* the new one while still returning 0. The equivalent
+# hand-built shape is covered separately just below.
+mkdir -p $vroot2/agent-vault/projects/$enew_slug
+printf 'remote: %s\npath:   %s\nhost:   %s\n' \
+    https://git.rootiest.dev/rootiest/emptycase.git /gone/elsewhere othermachine \
+    >$vroot2/agent-vault/projects/$enew_slug/origin
 
 pushd $emp >/dev/null
 set -l erc (agents-vault --silent 2>/dev/null; echo $status)
@@ -424,6 +456,35 @@ popd >/dev/null
 check "empty-current migration succeeds" 0 "$erc"
 check "empty-current migrated content" precious2 (cat $vroot2/agent-vault/projects/$enew_slug/claude/memory/keep.md)
 check "empty-current old entry removed" false (test -d $vroot2/agent-vault/projects/$eslug; and echo true; or echo false)
+check "empty-current did not nest the old entry" false (test -d $vroot2/agent-vault/projects/$enew_slug/$eslug; and echo true; or echo false)
+check "empty-current memory reachable live" precious2 (cat $croot2/$emangled/memory/keep.md)
+# The destination's origin log is real provenance -- a clone always has
+# one -- so it is folded in rather than deleted along with the directory.
+check "empty-current kept the destination provenance" true (grep -q othermachine $vroot2/agent-vault/projects/$enew_slug/origin; and echo true; or echo false)
+
+# The other "present but empty" shape, for completeness: claude/memory/
+# exists and is empty. Only a hand-built vault looks like this, but the
+# guard has to cover it too.
+set -l em2 (new_repo)
+set -l em2mangled (string replace -a '/' '-' -- $em2 | string replace -a '.' '-')
+mkdir -p $croot2/$em2mangled/memory
+echo precious3 >$croot2/$em2mangled/memory/keep.md
+pushd $em2 >/dev/null
+agents-vault --silent
+set -l em2slug (_agents_repo_slug $em2)
+popd >/dev/null
+
+git -C $em2 remote add origin https://git.rootiest.dev/rootiest/emptydir.git
+set -l em2new git.rootiest.dev-rootiest-emptydir
+mkdir -p $vroot2/agent-vault/projects/$em2new/claude/memory
+
+pushd $em2 >/dev/null
+set -l em2rc (agents-vault --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "empty-memory-dir migration succeeds" 0 "$em2rc"
+check "empty-memory-dir migrated content" precious3 (cat $vroot2/agent-vault/projects/$em2new/claude/memory/keep.md)
+check "empty-memory-dir did not nest the old entry" false (test -d $vroot2/agent-vault/projects/$em2new/$em2slug; and echo true; or echo false)
+check "empty-memory-dir memory reachable live" precious3 (cat $croot2/$em2mangled/memory/keep.md)
 
 # Remote-URL-rewrite transition: origin changes from one forge URL to
 # another (distinct from adding a remote where none existed).
@@ -505,6 +566,98 @@ check "fallback old entry removed" false (test -d $vroot2/agent-vault/projects/$
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 
+#   ───────────────────────── a real git clone ────────────────────────────
+# Every other fixture in this file is hand-built, and a hand-built
+# directory can have a shape git itself would never produce. That blind
+# spot has now shipped two bugs. So this section builds its vault the way
+# the feature's own advertised recovery path does -- run the tool, let it
+# commit, then clone the result with git -- and runs agents-vault against
+# the clone.
+echo ""
+echo "== agents-vault (a real git clone) =="
+
+#  Machine A: populate a vault and let agents-vault commit it.
+set -l cl_vroot (mktemp -d); set -ga TMPDIRS $cl_vroot
+set -l cl_croot (mktemp -d); set -ga TMPDIRS $cl_croot
+set -g __fish_agent_vault_dir $cl_vroot/agent-vault
+set -g __fish_agent_vault_claude_root $cl_croot
+
+# Two projects: one whose memory holds a file at commit time, one whose
+# memory is empty. The empty one is the interesting case -- git cannot
+# track an empty directory, so its entry survives the clone as origin and
+# nothing else.
+set -l cl_full (new_repo https://git.rootiest.dev/rootiest/clone-full.git)
+set -l cl_full_slug git.rootiest.dev-rootiest-clone-full
+set -l cl_full_mangled (string replace -a '/' '-' -- $cl_full | string replace -a '.' '-')
+mkdir -p $cl_croot/$cl_full_mangled/memory
+echo cloned-memory >$cl_croot/$cl_full_mangled/memory/keep.md
+pushd $cl_full >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+set -l cl_empty (new_repo https://git.rootiest.dev/rootiest/clone-empty.git)
+set -l cl_empty_slug git.rootiest.dev-rootiest-clone-empty
+pushd $cl_empty >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+#  The clone, exactly as the README tells a user to make it.
+set -l cl_new (mktemp -d); set -ga TMPDIRS $cl_new
+git clone -q $cl_vroot/agent-vault $cl_new/agent-vault
+git -C $cl_new/agent-vault config user.email t@t
+git -C $cl_new/agent-vault config user.name t
+git -C $cl_new/agent-vault config commit.gpgsign false
+
+check "clone: the populated entry came back whole" cloned-memory (cat $cl_new/agent-vault/projects/$cl_full_slug/claude/memory/keep.md 2>/dev/null)
+check "clone: the empty entry has no claude/ subtree" false (test -d $cl_new/agent-vault/projects/$cl_empty_slug/claude; and echo true; or echo false)
+check "clone: the empty entry is its origin file alone" true (test -f $cl_new/agent-vault/projects/$cl_empty_slug/origin; and echo true; or echo false)
+
+#  Machine B, case 1: an ordinary run against the clone restores memory.
+set -l cl_croot2 (mktemp -d); set -ga TMPDIRS $cl_croot2
+set -g __fish_agent_vault_dir $cl_new/agent-vault
+set -g __fish_agent_vault_claude_root $cl_croot2
+
+set -l cl_proj (new_repo https://git.rootiest.dev/rootiest/clone-full.git)
+set -l cl_proj_mangled (string replace -a '/' '-' -- $cl_proj | string replace -a '.' '-')
+pushd $cl_proj >/dev/null
+set -l cl_rc (agents-vault --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "clone: an ordinary run against the clone returns 0" 0 "$cl_rc"
+check "clone: the live memory became a link" true (test -L $cl_croot2/$cl_proj_mangled/memory; and echo true; or echo false)
+check "clone: memory is reachable through the live link" cloned-memory (cat $cl_croot2/$cl_proj_mangled/memory/keep.md 2>/dev/null)
+
+#  Machine B, case 2: migrating onto the clone-shaped entry. The project
+#  starts with no remote (keyed local-*); adding the remote the clone's
+#  empty entry belongs to points the migration straight at the origin-only
+#  directory git produced. This is the case that used to move the old entry
+#  *inside* the new one, fabricate a fresh empty memory directory over it,
+#  pin the live link to that, and return 0 -- stranding the real memory
+#  one level below where --status and --restore ever look.
+set -l cl_mig (new_repo)
+set -l cl_mig_mangled (string replace -a '/' '-' -- $cl_mig | string replace -a '.' '-')
+mkdir -p $cl_croot2/$cl_mig_mangled/memory
+echo clone-precious >$cl_croot2/$cl_mig_mangled/memory/keep.md
+pushd $cl_mig >/dev/null
+agents-vault --silent
+set -l cl_mig_slug (_agents_repo_slug $cl_mig)
+popd >/dev/null
+check "clone: the local entry was populated first" clone-precious (cat $cl_new/agent-vault/projects/$cl_mig_slug/claude/memory/keep.md 2>/dev/null)
+
+git -C $cl_mig remote add origin https://git.rootiest.dev/rootiest/clone-empty.git
+pushd $cl_mig >/dev/null
+set -l cl_mrc (agents-vault --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "clone: migration onto a cloned entry returns 0" 0 "$cl_mrc"
+check "clone: migrated memory is reachable through the live link" clone-precious (cat $cl_croot2/$cl_mig_mangled/memory/keep.md 2>/dev/null)
+check "clone: migrated memory landed in the new entry" clone-precious (cat $cl_new/agent-vault/projects/$cl_empty_slug/claude/memory/keep.md 2>/dev/null)
+check "clone: the old entry was not nested inside the new one" false (test -d $cl_new/agent-vault/projects/$cl_empty_slug/$cl_mig_slug; and echo true; or echo false)
+check "clone: the old entry is gone" false (test -d $cl_new/agent-vault/projects/$cl_mig_slug; and echo true; or echo false)
+check "clone: the cloned entry's provenance survived" true (grep -q clone-empty.git $cl_new/agent-vault/projects/$cl_empty_slug/origin; and echo true; or echo false)
+check "clone: the live link points at the migrated entry" (path resolve $cl_new/agent-vault/projects/$cl_empty_slug/claude/memory) (path resolve $cl_croot2/$cl_mig_mangled/memory)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+
 #   ──────────────────────────── global state ─────────────────────────────
 # State that belongs to no project: agy's knowledge store and settings.json
 # (copied, because agy keys by conversation UUID and its store sits beside
@@ -530,6 +683,22 @@ echo '{"model":"x"}' >$agy5/settings.json
 echo secret >$agy5/history.jsonl
 : >$agy5/conversations/c.db-wal
 
+# The allowlist has to hold *inside* knowledge/ too, not only at the agy
+# root. These are the same hostile shapes planted above, one level down --
+# where a recursive copy of the directory took them verbatim into a commit
+# while the documentation promised nothing new upstream added could leak.
+mkdir -p $agy5/knowledge/notes $agy5/knowledge/.hidden
+echo nested >$agy5/knowledge/notes/deep.md
+echo '{"k":"v"}' >$agy5/knowledge/meta.json
+echo SECRET-INSIDE-KNOWLEDGE >$agy5/knowledge/.credentials.json
+echo SECRET-INSIDE-KNOWLEDGE >$agy5/knowledge/.hidden/leak.json
+echo SECRET-INSIDE-KNOWLEDGE >$agy5/knowledge/history.jsonl
+printf 'transcript\n' >$agy5/knowledge/session.jsonl
+: >$agy5/knowledge/knowledge.lock
+: >$agy5/knowledge/conversations.db
+: >$agy5/knowledge/conversations.db-wal
+: >$agy5/knowledge/conversations.db-shm
+
 # A global (non-per-project) Claude memory directory with a sentinel file.
 # __fish_agent_vault_claude_home is what keeps this off the real ~/.claude:
 # if agents-vault ignored the override, these checks would fail here *and*
@@ -547,6 +716,19 @@ check "agy settings copied" '{"model":"x"}' (cat $vroot5/agent-vault/global/agy/
 check "agy knowledge is a copy not a link" false (test -L $vroot5/agent-vault/global/agy/knowledge; and echo true; or echo false)
 check "history.jsonl not copied" false (test -e $vroot5/agent-vault/global/agy/history.jsonl; and echo true; or echo false)
 check "conversations not copied" false (test -e $vroot5/agent-vault/global/agy/conversations; and echo true; or echo false)
+
+# Inside knowledge/: the notes come through, everything else stays out.
+check "knowledge: nested markdown copied" nested (cat $vroot5/agent-vault/global/agy/knowledge/notes/deep.md 2>/dev/null)
+check "knowledge: json metadata copied" '{"k":"v"}' (cat $vroot5/agent-vault/global/agy/knowledge/meta.json 2>/dev/null)
+for decoy in .credentials.json .hidden history.jsonl session.jsonl knowledge.lock conversations.db conversations.db-wal conversations.db-shm
+    check "knowledge: $decoy stayed out" false (test -e $vroot5/agent-vault/global/agy/knowledge/$decoy; and echo true; or echo false)
+end
+# Not merely absent from the worktree: absent from the history, which is
+# what actually leaves the machine on a push.
+check "knowledge: no secret reached a commit" false (git -C $vroot5/agent-vault grep -q SECRET-INSIDE-KNOWLEDGE HEAD -- global 2>/dev/null; and echo true; or echo false)
+# A torn database with its completing write-ahead log deliberately excluded
+# is worse than no database at all, so the scaffold ignores all three.
+check "scaffolded .gitignore excludes *.db" true (grep -qxF '*.db' $vroot5/agent-vault/.gitignore; and echo true; or echo false)
 
 check "global claude memory in the vault" global-memory (cat $vroot5/agent-vault/global/claude/memory/g.md)
 check "global claude memory is now a link" true (test -L $chome5/memory; and echo true; or echo false)
@@ -1241,10 +1423,12 @@ set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
 set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 
-# The other way a sync fails: a rebase conflict in the vault, which
-# _agents_repo_sync aborts (exit 2) rather than committing conflict markers
-# under a routine-looking message. That is a backup that did not happen
-# too, and must not exit 0 either.
+# The other way a backup fails is a diverged remote -- but that is a
+# push-time problem, not a launch-time one. The ordinary run must commit
+# regardless, because a backup that stops working the moment the remote
+# moves ahead (or goes out of reach) is not a backup; --push is where the
+# divergence has to be reckoned with, and where the two ways it can fail
+# have to be told apart.
 set -l vroot14 (mktemp -d); set -ga TMPDIRS $vroot14
 set -l croot14 (mktemp -d); set -ga TMPDIRS $croot14
 set -l chome14 (mktemp -d); set -ga TMPDIRS $chome14
@@ -1279,21 +1463,61 @@ echo theirs >$cclone14/projects/$cslug14/claude/memory/keep.md
 git -C $cclone14 commit -qam theirs
 git -C $cclone14 push -q origin HEAD:main
 
-# ... while this one has a conflicting commit of its own waiting to be
-# replayed on top. It has to be committed: an uncommitted change is merely
-# autostashed, and the rebase then fast-forwards instead of conflicting.
-echo ours >$croot14/$cmang14/memory/keep.md
-git -C $vroot14/agent-vault -c user.email=t@t -c user.name=t \
-    -c commit.gpgsign=false -c core.hooksPath=/dev/null commit -qam ours
-
+# ... while this one writes conflicting memory of its own on the same
+# line. The ordinary run has to commit it: it never fetches, so the
+# divergence is invisible to it and irrelevant.
 set -l cerr14 (mktemp); set -ga TMPDIRS $cerr14
+echo ours >$croot14/$cmang14/memory/keep.md
+set -l chead14 (git -C $vroot14/agent-vault rev-list --count HEAD)
 pushd $cp14 >/dev/null
 set -l crc14 (agents-vault --silent 2>$cerr14; echo $status)
 popd >/dev/null
-check "vault rebase conflict returns non-zero" 1 "$crc14"
-check "vault rebase conflict says nothing was committed" true (string match -q '*nothing committed*' -- (cat $cerr14); and echo true; or echo false)
-check "vault rebase conflict left no rebase in progress" false (test -d $vroot14/agent-vault/.git/rebase-merge -o -d $vroot14/agent-vault/.git/rebase-apply; and echo true; or echo false)
-check "vault rebase conflict kept the local memory" ours (cat $croot14/$cmang14/memory/keep.md)
+check "diverged vault: ordinary run returns 0" 0 "$crc14"
+check "diverged vault: ordinary run said nothing" "" (cat $cerr14)
+check "diverged vault: ordinary run committed" (math $chead14 + 1) (git -C $vroot14/agent-vault rev-list --count HEAD)
+
+# --push is where it is reckoned with: the pre-push pull replays that
+# commit onto theirs, conflicts, aborts back to local HEAD, and reports a
+# conflict. Nothing is pushed and the local memory survives untouched.
+pushd $cp14 >/dev/null
+set -l prc14 (agents-vault --push --silent 2>$cerr14; echo $status)
+popd >/dev/null
+check "vault push rebase conflict returns non-zero" 1 "$prc14"
+check "vault push rebase conflict is named as one" true (string match -q '*rebase conflict*' -- (cat $cerr14); and echo true; or echo false)
+check "vault push rebase conflict left no rebase in progress" false (test -d $vroot14/agent-vault/.git/rebase-merge -o -d $vroot14/agent-vault/.git/rebase-apply; and echo true; or echo false)
+check "vault push rebase conflict kept the local memory" ours (cat $croot14/$cmang14/memory/keep.md)
+
+# The other push-time failure is the remote being unreachable, and it must
+# not be reported as the one above: no rebase ever starts, so calling it a
+# rebase conflict sends the user hunting for a conflict that does not
+# exist. (The old code said exactly that.) A bogus local path stands in
+# for an unroutable host so the check costs nothing; the branch under test
+# is the same one.
+git -C $vroot14/agent-vault remote set-url origin /nonexistent/unreachable.git
+echo more >$croot14/$cmang14/memory/keep2.md
+set -l uhead14 (git -C $vroot14/agent-vault rev-list --count HEAD)
+pushd $cp14 >/dev/null
+set -l urc14 (agents-vault --push --silent 2>$cerr14; echo $status)
+popd >/dev/null
+check "unreachable remote: push returns non-zero" 1 "$urc14"
+check "unreachable remote: not called a rebase conflict" false (string match -q '*rebase conflict*' -- (cat $cerr14); and echo true; or echo false)
+check "unreachable remote: says it could not be reached" true (string match -q '*could not reach*' -- (cat $cerr14); and echo true; or echo false)
+check "unreachable remote: the memory was still committed" (math $uhead14 + 1) (git -C $vroot14/agent-vault rev-list --count HEAD)
+check "unreachable remote: left no rebase in progress" false (test -d $vroot14/agent-vault/.git/rebase-merge -o -d $vroot14/agent-vault/.git/rebase-apply; and echo true; or echo false)
+
+# And the launch path itself -- the ordinary run both wrappers make -- is
+# entirely unaffected by the unreachable remote. This is the regression
+# that mattered most: with the pull on the commit path, a laptop off the
+# network stopped being backed up at all while reporting nothing wrong.
+echo offline-precious >$croot14/$cmang14/memory/keep3.md
+set -l ohead14 (git -C $vroot14/agent-vault rev-list --count HEAD)
+pushd $cp14 >/dev/null
+set -l orc14 (agents-vault --silent 2>$cerr14; echo $status)
+popd >/dev/null
+check "offline launch run returns 0" 0 "$orc14"
+check "offline launch run stayed silent" "" (cat $cerr14)
+check "offline launch run committed the memory" (math $ohead14 + 1) (git -C $vroot14/agent-vault rev-list --count HEAD)
+check "offline launch run really recorded it" offline-precious (git -C $vroot14/agent-vault show HEAD:projects/$cslug14/claude/memory/keep3.md 2>/dev/null)
 
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
@@ -1337,6 +1561,56 @@ set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
 set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ──────────────── agents-init reports what really happened ─────────────
+# agents-init shares _agents_repo_sync with agents-vault and shared its
+# false zero too: it ended on a branchless `if` with no arm for a failed
+# commit, so fish resolved the function to 0 and a rejected commit was
+# reported as a successful sync. It also runs on every agent launch, so it
+# has to keep committing with the remote out of reach.
+echo ""
+echo "== agents-init (commit reporting) =="
+
+set -l ip (new_repo)
+pushd $ip >/dev/null
+set -l irc (agents-init --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "agents-init: scaffolds and returns 0" 0 "$irc"
+check "agents-init: committed the AGENTS repo" true (test (git -C $ip/AGENTS rev-list --count HEAD) -ge 1; and echo true; or echo false)
+
+# Offline. The pull that used to run here blocked the launch until the
+# remote timed out and then took the commit down with it, so an agent's
+# edits went unrecorded on every launch away from the network.
+set -l ibare (mktemp -d); set -ga TMPDIRS $ibare
+git init -q --bare $ibare
+git -C $ip/AGENTS remote add origin $ibare
+git -C $ip/AGENTS push -q -u origin HEAD 2>/dev/null
+git -C $ip/AGENTS remote set-url origin /nonexistent/unreachable.git
+echo note >$ip/AGENTS/devlogs/offline.md
+set -l ihead (git -C $ip/AGENTS rev-list --count HEAD)
+pushd $ip >/dev/null
+set -l iorc (agents-init --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "agents-init: offline run returns 0" 0 "$iorc"
+check "agents-init: offline run still committed" (math $ihead + 1) (git -C $ip/AGENTS rev-list --count HEAD)
+check "agents-init: the offline commit holds the file" note (git -C $ip/AGENTS show HEAD:devlogs/offline.md 2>/dev/null)
+
+# A rejected commit records nothing, so reporting success tells the user
+# their agent's edits were captured when they were not. agents-init points
+# core.hooksPath at .agents-tools/hooks itself, which is where a real
+# secret scanner would sit, and the shims are only refreshed when their
+# version marker moves -- so this replacement survives the run under test.
+printf '#!/bin/sh\nexit 1\n' >$ip/AGENTS/.agents-tools/hooks/pre-commit
+chmod +x $ip/AGENTS/.agents-tools/hooks/pre-commit
+echo blocked >$ip/AGENTS/devlogs/blocked.md
+set -l ibhead (git -C $ip/AGENTS rev-list --count HEAD)
+set -l ierr (mktemp); set -ga TMPDIRS $ierr
+pushd $ip >/dev/null
+set -l ibrc (agents-init --silent 2>$ierr; echo $status)
+popd >/dev/null
+check "agents-init: a rejected commit returns non-zero" 1 "$ibrc"
+check "agents-init: a rejected commit says nothing was recorded" true (string match -q '*nothing recorded*' -- (cat $ierr); and echo true; or echo false)
+check "agents-init: a rejected commit really recorded nothing" $ibhead (git -C $ip/AGENTS rev-list --count HEAD)
 
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The

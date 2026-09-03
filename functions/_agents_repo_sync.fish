@@ -5,13 +5,25 @@
 #   _agents_repo_sync <dir> <message>
 #
 # DESCRIPTION
-#   Pulls (when an upstream is configured), stages everything, and commits
-#   with <message>. Shared by agents-init and agents-vault.
+#   Stages everything in <dir> and commits it with <message>. Shared by
+#   agents-init and agents-vault.
 #
-#   A failed rebase is aborted and nothing is committed. Committing blindly
-#   after a failed pull would stage conflict markers and record them under a
-#   routine-looking message, so the failure is surfaced instead: the repo is
-#   left clean at local HEAD for the user to resolve by hand.
+#   It never touches the network, and that is the point rather than an
+#   omission. Both callers run on every agent launch, synchronously, ahead
+#   of the agent itself, and a fetch there blocks the launch for as long as
+#   an unreachable remote takes to time out and can prompt for credentials
+#   invisibly underneath a starting agent. Committing needs no remote at
+#   all -- only pushing does -- so the pull lives on agents-vault's push
+#   path, which is already opt-in for exactly this reason. An offline
+#   laptop therefore still gets a complete local backup, which is the whole
+#   point of keeping one.
+#
+#   A rebase already in progress is refused rather than committed: the
+#   worktree then holds conflict markers, and recording those under a
+#   routine-looking message buries the conflict in the history instead of
+#   reporting it. The rebase is left exactly as it stands -- this function
+#   did not start it, so it is not this function's to abort -- and the
+#   caller says so.
 #
 #   Commits are made with commit.gpgsign=false so a pinentry prompt can
 #   never block a shell or an agent launch. If a pre-commit or commit-msg
@@ -26,7 +38,7 @@
 #   0  Committed, or nothing needed committing
 #   1  <dir> is not a git repository, arguments were missing, or the commit
 #      itself failed (e.g. a pre-commit/commit-msg hook rejected it)
-#   2  Rebase conflict; aborted, nothing committed
+#   2  A rebase is in progress; nothing committed, nothing touched
 #
 # RETURNS
 #   A single "→ Committed (<sha>) <subject>" line on stdout when it
@@ -38,12 +50,11 @@ function _agents_repo_sync --argument-names dir msg
     test -n "$dir" -a -n "$msg"; or return 1
     test -d "$dir/.git"; or return 1
 
-    if git -C "$dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
-        if not git -C "$dir" pull --rebase --autostash -q >/dev/null 2>/dev/null
-            git -C "$dir" rebase --abort >/dev/null 2>/dev/null
-            echo "_agents_repo_sync: rebase conflict in $dir; aborted, left at local HEAD" >&2
-            return 2
-        end
+    # The guard above proved .git is a directory, so these are the same two
+    # paths `agents-vault --status` reports an unresolved rebase from.
+    if test -d "$dir/.git/rebase-merge"; or test -d "$dir/.git/rebase-apply"
+        echo "_agents_repo_sync: unresolved rebase in $dir; nothing committed" >&2
+        return 2
     end
 
     git -C "$dir" add -A 2>/dev/null
