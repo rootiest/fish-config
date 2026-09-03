@@ -679,6 +679,272 @@ set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
 set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 
+#   ──────────────────── status / adopt / remote / push ───────────────────
+# The four report-and-rebind modes. --status is a *report*: the checks
+# below pin that it never mutates, because it is dispatched ahead of the
+# scaffold rather than behind it.
+echo ""
+echo "== agents-vault (status, remote, adopt) =="
+
+set -l vroot9 (mktemp -d); set -ga TMPDIRS $vroot9
+set -l croot9 (mktemp -d); set -ga TMPDIRS $croot9
+set -l chome9 (mktemp -d); set -ga TMPDIRS $chome9
+set -l agy9 (mktemp -d); set -ga TMPDIRS $agy9
+set -g __fish_agent_vault_dir $vroot9/agent-vault
+set -g __fish_agent_vault_claude_root $croot9
+set -g __fish_agent_vault_claude_home $chome9
+set -g __fish_agent_vault_agy_root $agy9
+
+# A report asked for before the vault exists must say so, not scaffold one.
+set -l s0out (mktemp); set -ga TMPDIRS $s0out
+set -l s0rc (agents-vault --status >$s0out; echo $status)
+check "status without a vault exits 0" 0 "$s0rc"
+check "status without a vault says so" true (string match -q '*no vault*' -- (cat $s0out); and echo true; or echo false)
+check "status without a vault scaffolds nothing" false (test -e $vroot9/agent-vault; and echo true; or echo false)
+
+set -l sp (new_repo https://git.rootiest.dev/rootiest/statusrepo.git)
+set -l smangled (string replace -a '/' '-' -- $sp | string replace -a '.' '-')
+mkdir -p $croot9/$smangled/memory
+echo m >$croot9/$smangled/memory/m.md
+pushd $sp >/dev/null
+agents-vault --silent
+set -l report (agents-vault --status)
+popd >/dev/null
+
+check "status names the slug" true (string match -q '*git.rootiest.dev-rootiest-statusrepo*' -- "$report"; and echo true; or echo false)
+check "status reports no remote" true (string match -q '*no remote*' -- "$report"; and echo true; or echo false)
+check "status reports the link as healthy" true (string match -q '*linked*' -- "$report"; and echo true; or echo false)
+
+# --status must not mutate. Global state that a default run *would* sync is
+# staged here and must still be untouched afterwards: a report that first
+# copies the agy knowledge store and claims ~/.claude/memory is not a
+# report. This is what dispatching --status ahead of the scaffold buys.
+mkdir -p $agy9/knowledge
+echo learned >$agy9/knowledge/fact.md
+mkdir -p $chome9/memory
+echo global >$chome9/memory/g.md
+set -l head_before (git -C $vroot9/agent-vault rev-list --count HEAD)
+set -l porcelain_before (git -C $vroot9/agent-vault status --porcelain | string join ',')
+agents-vault --status >/dev/null
+check "status did not copy agy state" false (test -e $vroot9/agent-vault/global/agy; and echo true; or echo false)
+check "status did not claim the global memory path" false (test -L $chome9/memory; and echo true; or echo false)
+check "status made no commit" "$head_before" (git -C $vroot9/agent-vault rev-list --count HEAD)
+check "status left the vault worktree as it found it" "$porcelain_before" (git -C $vroot9/agent-vault status --porcelain | string join ',')
+
+# An entry no live project links to is surfaced as an orphan.
+mkdir -p $vroot9/agent-vault/projects/ghost-entry/claude/memory
+echo x >$vroot9/agent-vault/projects/ghost-entry/claude/memory/x.md
+set -l oreport (agents-vault --status)
+check "status lists the orphan" true (string match -q '*orphan*ghost-entry*' -- "$oreport"; and echo true; or echo false)
+rm -rf $vroot9/agent-vault/projects/ghost-entry
+
+# --remote sets origin on the vault.
+agents-vault --remote=https://git.rootiest.dev/rootiest/agent-vault.git --silent
+check "remote set" https://git.rootiest.dev/rootiest/agent-vault.git (git -C $vroot9/agent-vault remote get-url origin)
+check "status reports the remote" true (string match -q '*rootiest/agent-vault.git*' -- (agents-vault --status); and echo true; or echo false)
+
+# A *failed* remote update must return non-zero. Reporting success after a
+# git command that did not run is the same silent-false-success shape that
+# a hook-rejected commit produced earlier in this project.
+set -l rerr (mktemp); set -ga TMPDIRS $rerr
+chmod 500 $vroot9/agent-vault/.git
+set -l rrc (agents-vault --remote=https://git.rootiest.dev/rootiest/other.git --silent 2>$rerr; echo $status)
+chmod 700 $vroot9/agent-vault/.git
+check "failing --remote returns 1" 1 "$rrc"
+check "failing --remote reports on stderr" true (string match -q '*could not set*remote*' -- (cat $rerr); and echo true; or echo false)
+check "failing --remote left the old remote in place" https://git.rootiest.dev/rootiest/agent-vault.git (git -C $vroot9/agent-vault remote get-url origin)
+
+# --adopt renames the current project's entry.
+set -l ap (new_repo)
+set -l amang (string replace -a '/' '-' -- $ap | string replace -a '.' '-')
+mkdir -p $croot9/$amang/memory
+echo adopted >$croot9/$amang/memory/a.md
+pushd $ap >/dev/null
+agents-vault --silent
+set -l aslug (_agents_repo_slug $ap)
+agents-vault --adopt=my-chosen-slug --silent
+popd >/dev/null
+check "adopt renamed the entry" adopted (cat $vroot9/agent-vault/projects/my-chosen-slug/claude/memory/a.md)
+check "adopt repinned the link" (path resolve $vroot9/agent-vault/projects/my-chosen-slug/claude/memory) (path resolve $croot9/$amang/memory)
+check "adopt removed the old entry" false (test -d $vroot9/agent-vault/projects/$aslug; and echo true; or echo false)
+check "adopt recorded the rebind" true (string match -q "*$aslug*my-chosen-slug*" -- (cat $vroot9/agent-vault/projects/my-chosen-slug/origin); and echo true; or echo false)
+
+# An unvalidated --adopt slug is a path-traversal primitive: it lands in
+# "$vault/projects/$slug" and in `git mv`. Only the charset the slug
+# formula itself emits is accepted, and a leading dot is refused too.
+set -l bp (new_repo)
+set -l bmang (string replace -a '/' '-' -- $bp | string replace -a '.' '-')
+mkdir -p $croot9/$bmang/memory
+echo bad >$croot9/$bmang/memory/b.md
+pushd $bp >/dev/null
+agents-vault --silent
+popd >/dev/null
+set -l projects_before (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+
+set -l bad_slugs ../escape .hidden has/slash . .. 'UPPER' 'sp ace' ''
+pushd $bp >/dev/null
+for bad in $bad_slugs
+    set -l berr (mktemp); set -ga TMPDIRS $berr
+    set -l brc (agents-vault --adopt=$bad --silent 2>$berr; echo $status)
+    check "adopt refuses '$bad'" 1 "$brc"
+    check "adopt refuses '$bad' out loud" true (string match -q '*invalid*' -- (cat $berr); and echo true; or echo false)
+end
+popd >/dev/null
+
+check "refused adopts moved nothing" "$projects_before" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+check "refused adopts escaped nothing above projects/" false (test -e $vroot9/agent-vault/escape; and echo true; or echo false)
+check "refused adopts created no dotted entry" false (test -e $vroot9/agent-vault/projects/.hidden; and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ─────────────────────────────── restore ───────────────────────────────
+# The batch counterpart of the emergent per-project restore: walk the vault
+# and relink every entry whose recorded origin path still exists.
+echo ""
+echo "== agents-vault (restore) =="
+
+set -l vroot10 (mktemp -d); set -ga TMPDIRS $vroot10
+set -l croot10 (mktemp -d); set -ga TMPDIRS $croot10
+set -l chome10 (mktemp -d); set -ga TMPDIRS $chome10
+set -l agy10 (mktemp -d); set -ga TMPDIRS $agy10
+set -g __fish_agent_vault_dir $vroot10/agent-vault
+set -g __fish_agent_vault_claude_root $croot10
+set -g __fish_agent_vault_claude_home $chome10
+set -g __fish_agent_vault_agy_root $agy10
+
+set -l rp (new_repo https://git.rootiest.dev/rootiest/restoreme.git)
+set -l rmang (string replace -a '/' '-' -- $rp | string replace -a '.' '-')
+mkdir -p $croot10/$rmang/memory
+echo restore-precious >$croot10/$rmang/memory/keep.md
+pushd $rp >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+# Lose the live link the way a reinstalled machine would.
+rm -f $croot10/$rmang/memory
+check "restore: link gone to begin with" false (test -e $croot10/$rmang/memory; and echo true; or echo false)
+
+set -l rout (agents-vault --restore)
+check "restore: relinked from the origin file" restore-precious (cat $croot10/$rmang/memory/keep.md 2>/dev/null)
+check "restore: the live path is a link" true (test -L $croot10/$rmang/memory; and echo true; or echo false)
+check "restore: names what it restored" true (string match -q '*restoreme*' -- "$rout"; and echo true; or echo false)
+
+# An entry whose recorded path is gone cannot be placed; the run still
+# succeeds and says which entry needs --adopt.
+mkdir -p $vroot10/agent-vault/projects/ghost-entry/claude/memory
+echo x >$vroot10/agent-vault/projects/ghost-entry/claude/memory/x.md
+printf 'remote: (none)\npath:   %s\nhost:   t\n' $vroot10/gone-forever \
+    >$vroot10/agent-vault/projects/ghost-entry/origin
+set -l r2out (mktemp); set -ga TMPDIRS $r2out
+set -l r2rc (agents-vault --restore >$r2out; echo $status)
+check "restore: exits 0 with an unplaceable entry" 0 "$r2rc"
+check "restore: reports the unplaceable entry" true (string match -q '*ghost-entry*' -- (cat $r2out); and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ──────────────────────────────── push ─────────────────────────────────
+echo ""
+echo "== agents-vault (push) =="
+
+set -l vroot11 (mktemp -d); set -ga TMPDIRS $vroot11
+set -l croot11 (mktemp -d); set -ga TMPDIRS $croot11
+set -l chome11 (mktemp -d); set -ga TMPDIRS $chome11
+set -l agy11 (mktemp -d); set -ga TMPDIRS $agy11
+set -l bare (mktemp -d); set -ga TMPDIRS $bare
+git init -q --bare $bare
+set -g __fish_agent_vault_dir $vroot11/agent-vault
+set -g __fish_agent_vault_claude_root $croot11
+set -g __fish_agent_vault_claude_home $chome11
+set -g __fish_agent_vault_agy_root $agy11
+
+set -l pp (new_repo https://git.rootiest.dev/rootiest/pushme.git)
+set -l pslug git.rootiest.dev-rootiest-pushme
+set -l pmang (string replace -a '/' '-' -- $pp | string replace -a '.' '-')
+mkdir -p $croot11/$pmang/memory
+echo pushed >$croot11/$pmang/memory/p.md
+
+# --push with no remote must fail loudly. The commit still happened, so
+# silently returning 0 would read as "backed up off this machine".
+set -l perr (mktemp); set -ga TMPDIRS $perr
+pushd $pp >/dev/null
+set -l prc0 (agents-vault --push --silent 2>$perr; echo $status)
+popd >/dev/null
+check "push without a remote returns 1" 1 "$prc0"
+check "push without a remote says so" true (string match -q '*no remote*' -- (cat $perr); and echo true; or echo false)
+check "push without a remote still committed locally" true (git -C $vroot11/agent-vault ls-files --error-unmatch projects/$pslug/claude/memory/p.md >/dev/null 2>&1; and echo true; or echo false)
+
+agents-vault --remote=$bare --silent
+set -l vbranch (git -C $vroot11/agent-vault rev-parse --abbrev-ref HEAD)
+pushd $pp >/dev/null
+set -l prc (agents-vault --push --silent; echo $status)
+popd >/dev/null
+check "push exits 0" 0 "$prc"
+check "push landed in the remote" pushed (git -C $bare show $vbranch:projects/$pslug/claude/memory/p.md 2>/dev/null)
+
+# Autopush is opt-in and off by default: a plain run must not push.
+echo pushed-later >$croot11/$pmang/memory/p2.md
+pushd $pp >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "no autopush by default" false (git -C $bare cat-file -e $vbranch:projects/$pslug/claude/memory/p2.md 2>/dev/null; and echo true; or echo false)
+
+set -g __fish_agent_vault_autopush 1
+echo pushed-auto >$croot11/$pmang/memory/p3.md
+pushd $pp >/dev/null
+agents-vault --silent
+popd >/dev/null
+set -e __fish_agent_vault_autopush
+check "autopush pushes when enabled" pushed-auto (git -C $bare show $vbranch:projects/$pslug/claude/memory/p3.md 2>/dev/null)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ────────────── a dangling global memory link is repinned ──────────────
+# The one state from the real incident the suite never pinned down. For a
+# *broken* symlink both -d and -e are false, so only the `-L` disjunct in
+# the global-memory guard can notice it; the vault side is deliberately
+# left empty so no other disjunct can stand in and pass this by accident.
+echo ""
+echo "== agents-vault (dangling global memory link) =="
+
+set -l vroot12 (mktemp -d); set -ga TMPDIRS $vroot12
+set -l croot12 (mktemp -d); set -ga TMPDIRS $croot12
+set -l chome12 (mktemp -d); set -ga TMPDIRS $chome12
+set -l agy12 (mktemp -d); set -ga TMPDIRS $agy12
+set -g __fish_agent_vault_dir $vroot12/agent-vault
+set -g __fish_agent_vault_claude_root $croot12
+set -g __fish_agent_vault_claude_home $chome12
+set -g __fish_agent_vault_agy_root $agy12
+
+ln -s $vroot12/vanished-vault/global/claude/memory $chome12/memory
+check "dangling: -e is false for the broken link" false (test -e $chome12/memory; and echo true; or echo false)
+check "dangling: -L is the only signal" true (test -L $chome12/memory; and echo true; or echo false)
+check "dangling: the vault side is empty" false (test -e $vroot12/agent-vault/global/claude/memory; and echo true; or echo false)
+
+set -l dp (new_repo https://git.rootiest.dev/rootiest/dangling.git)
+set -l derr (mktemp); set -ga TMPDIRS $derr
+pushd $dp >/dev/null
+set -l drc (agents-vault --silent 2>$derr; echo $status)
+popd >/dev/null
+
+check "dangling: exits 0" 0 "$drc"
+check "dangling: warns about nothing" "" (cat $derr)
+check "dangling: repinned into the vault" (path resolve $vroot12/agent-vault/global/claude/memory) (path resolve $chome12/memory)
+check "dangling: the link resolves again" true (test -d $chome12/memory; and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The
 # failure this guards is specific: a global-memory sync with no test

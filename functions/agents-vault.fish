@@ -55,6 +55,29 @@
 #   If both the old and new entries already hold content the migration is
 #   ambiguous and is refused; resolve it with --adopt=SLUG.
 #
+#   Run with no flags, the command scaffolds the vault, syncs global state,
+#   links the current project, and commits. The other modes are exclusive
+#   and each returns as soon as it is done:
+#
+#   --status is a report and mutates nothing at all. It is answered before
+#   the vault is even scaffolded, so asking what the vault looks like never
+#   creates it, never copies agy state into it, and never claims
+#   ~/.claude/memory. A missing vault is reported rather than built.
+#
+#   --restore walks every vault entry and relinks the live memory directory
+#   of each one whose recorded origin path still exists, naming the rest so
+#   they can be rebound by hand. It is a convenience: the ordinary per-
+#   project run restores a cloned vault's memory on its own.
+#
+#   --adopt=SLUG rebinds the current project's entry to SLUG, which is how
+#   a machine-specific local-* key or an ambiguous migration is resolved.
+#   SLUG must match [a-z0-9._-]+ with no slash and no leading dot -- the
+#   charset the slug formula itself emits -- since it is interpolated into
+#   a vault path and handed to git mv.
+#
+#   --remote=URL points the vault at a remote; --push commits and then
+#   pushes there.
+#
 # ARGUMENTS
 #   --link         Scaffold the vault and link this project's memory; skip
 #                  the final commit
@@ -70,19 +93,28 @@
 #
 # EXIT STATUS
 #   0  Completed successfully
-#   1  Fatal error (vault unavailable, git failure, ambiguous migration)
+#   1  Fatal error (vault unavailable, git failure, ambiguous migration,
+#      invalid --adopt slug, or --push with no remote configured)
 #
 # EXAMPLE
 #   agents-vault
 #   agents-vault --status
 #   agents-vault --remote=https://git.rootiest.dev/rootiest/agent-vault.git
 #   agents-vault --push
+#   agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
+#   agents-vault --restore
 #
 # NOTES
 #   Set __fish_agent_vault_dir to relocate the vault. Set
 #   __fish_agent_vault_autopush to 1 to also push on wrapper launch;
 #   it defaults to off so a backgrounded push can never hang or prompt
 #   invisibly underneath a starting agent.
+#
+#   An entry's origin file records the project path once, when the entry is
+#   created, and is never refreshed. A project that later moves on disk
+#   therefore keeps a stale path there and --restore degrades to reporting
+#   it as unplaceable rather than relinking the wrong directory. Rebind
+#   such an entry from the project itself with --adopt=SLUG.
 #
 #   The agy knowledge copy is merge-only. Files are copied into the vault
 #   but are never removed from it, so a fact deleted upstream from agy's
@@ -112,6 +144,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     set -l c_ok (set_color green)
     set -l c_warn (set_color yellow)
     set -l c_err (set_color red)
+    set -l c_dim (set_color brblack)
     set -l c_reset (set_color normal)
 
     argparse h/help link push restore status 'adopt=' 'remote=' \
@@ -154,6 +187,69 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     set -l vault (_agents_vault_dir)
     set -l changed 0
     set -l did_init 0
+
+    #   ─────────────────────────── --status ──────────────────────────────
+    # A report, and nothing but a report. This is dispatched here -- ahead
+    # of the scaffold, the tool install, and the global-state sync -- on
+    # purpose: asking what the vault looks like must never be the thing
+    # that creates it, copies the agy knowledge store into it, or claims
+    # ~/.claude/memory. A status command that mutates cannot be trusted to
+    # diagnose the thing it just changed.
+    if set -q _flag_status
+        echo "$c_head""Vault:$c_reset $vault"
+        if not test -d "$vault"
+            echo "  $c_warn""no vault yet — run agents-vault inside a project to create one$c_reset"
+            return 0
+        end
+
+        set -l url (git -C "$vault" remote get-url origin 2>/dev/null)
+        if test -z "$url"
+            echo "$c_head""Remote:$c_reset $c_warn""no remote configured — nothing is backed up off this machine$c_reset"
+        else
+            echo "$c_head""Remote:$c_reset $url"
+            if git -C "$vault" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
+                set -l ahead (git -C "$vault" rev-list --count '@{u}..HEAD' 2>/dev/null)
+                if test -n "$ahead"; and test "$ahead" != 0
+                    echo "  $c_warn$ahead commit(s) not yet pushed$c_reset"
+                end
+            else
+                echo "  $c_warn""no upstream branch — never pushed$c_reset"
+            end
+        end
+
+        if test -d "$vault/.git/rebase-merge"; or test -d "$vault/.git/rebase-apply"
+            echo "  $c_err""unresolved rebase in progress — resolve it before syncing$c_reset"
+        end
+
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+
+        echo ""
+        echo "$c_head""Entries:$c_reset"
+        set -l seen 0
+        for entry in "$vault"/projects/*
+            test -d "$entry"; or continue
+            set seen 1
+            set -l eslug (path basename "$entry")
+            set -l count (command ls -A "$entry/claude/memory" 2>/dev/null | count)
+            set -l want (path resolve "$entry/claude/memory")
+            set -l linked 0
+            for cand in "$claude_root"/*/memory
+                test -L "$cand"; or continue
+                if test (path resolve "$cand") = "$want"
+                    set linked 1
+                    break
+                end
+            end
+            if test $linked -eq 1
+                echo "  $c_ok""linked$c_reset  $eslug $c_dim($count file(s))$c_reset"
+            else
+                echo "  $c_warn""orphan$c_reset  $eslug $c_dim($count file(s)) — no live project links here$c_reset"
+            end
+        end
+        test $seen -eq 0; and echo "  $c_dim(none)$c_reset"
+        return 0
+    end
 
     #   ────────────────────── ensure the vault repo ──────────────────────
     if not test -d "$vault"
@@ -227,6 +323,132 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             return 1
         end
         set changed 1
+    end
+
+    #   ─────────────────────────── --remote ──────────────────────────────
+    # Mutating modes are dispatched here: after the vault repo exists (they
+    # all need one) but before the global-state sync below, which belongs
+    # to a default backup run and has no business running as a side effect
+    # of rebinding an entry or setting a URL.
+    if set -q _flag_remote
+        if test -z "$_flag_remote"
+            echo "$c_err""agents-vault: --remote needs a URL$c_reset" >&2
+            return 1
+        end
+        # The result is captured explicitly rather than chained off the
+        # block terminator with `or`. `end` does carry the taken branch's
+        # status in fish, but only when a branch was taken at all: the same
+        # construct one `else` away silently reports success, which is
+        # exactly how a hook-rejected commit once passed for a good one.
+        set -l rc 0
+        if git -C "$vault" remote get-url origin >/dev/null 2>&1
+            git -C "$vault" remote set-url origin "$_flag_remote"
+            set rc $status
+        else
+            git -C "$vault" remote add origin "$_flag_remote"
+            set rc $status
+        end
+        if test $rc -ne 0
+            echo "$c_err""agents-vault: could not set the vault remote to $_flag_remote$c_reset" >&2
+            return 1
+        end
+        test $verbose -eq 1; and echo "$c_ok→ Vault remote set to $_flag_remote$c_reset"
+        return 0
+    end
+
+    #   ─────────────────────────── --adopt ───────────────────────────────
+    if set -q _flag_adopt
+        # The requested slug is interpolated into a vault path and handed
+        # to `git mv`, so it is validated before it is used anywhere:
+        # --adopt=../../../etc would otherwise walk straight out of the
+        # vault. Only the charset the slug formula itself emits is
+        # accepted, and a leading dot is refused as well, which also rules
+        # out the bare "." and ".." entries.
+        if not string match -qr '^[a-z0-9_-][a-z0-9._-]*$' -- "$_flag_adopt"
+            echo "$c_err""agents-vault: invalid slug '$_flag_adopt'$c_reset" >&2
+            echo "$c_err""  A slug is [a-z0-9._-]+ with no slash and no leading dot.$c_reset" >&2
+            return 1
+        end
+
+        set -l root (git rev-parse --show-toplevel 2>/dev/null)
+        if test -z "$root"
+            echo "$c_err""agents-vault: --adopt must run inside a project$c_reset" >&2
+            return 1
+        end
+        set -l cur (_agents_repo_slug "$root")
+        set -l from "$vault/projects/$cur"
+        set -l to "$vault/projects/$_flag_adopt"
+        if test "$cur" = "$_flag_adopt"
+            test $verbose -eq 1; and echo "$c_ok→ Already bound to $_flag_adopt$c_reset"
+            return 0
+        end
+        if not test -d "$from"
+            echo "$c_err""agents-vault: no vault entry for this project ($cur)$c_reset" >&2
+            return 1
+        end
+
+        set -l to_content
+        test -d "$to/claude/memory"; and set to_content (command ls -A "$to/claude/memory" 2>/dev/null)
+        if test (count $to_content) -gt 0
+            echo "$c_err""agents-vault: $_flag_adopt already holds content; refusing to overwrite$c_reset" >&2
+            return 1
+        end
+        test -d "$to"; and rm -rf "$to"
+        if not git -C "$vault" mv "projects/$cur" "projects/$_flag_adopt" 2>/dev/null
+            command mv "$from" "$to"; or return 1
+        end
+        printf 'adopted: %s → %s (%s)\n' "$cur" "$_flag_adopt" (date -I) >>"$to/origin"
+
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+        set -l mangled (string replace -a '/' '-' -- "$root" | string replace -a '.' '-')
+        # The live path still points at the old entry, which no longer
+        # exists; drop it so ensure_symlink is not asked to resolve a
+        # broken link before repinning it.
+        test -L "$claude_root/$mangled/memory"; and rm -f "$claude_root/$mangled/memory"
+        if not _agents_repo_ensure_symlink "$claude_root/$mangled/memory" "$to/claude/memory" >/dev/null
+            echo "$c_err""agents-vault: adopted $_flag_adopt but could not relink $claude_root/$mangled/memory$c_reset" >&2
+            return 1
+        end
+
+        _agents_repo_sync "$vault" "chore: adopt $cur as $_flag_adopt" >/dev/null
+        test $verbose -eq 1; and echo "$c_ok→ Adopted $cur as $_flag_adopt$c_reset"
+        return 0
+    end
+
+    #   ────────────────────────── --restore ──────────────────────────────
+    # The batch counterpart of the emergent per-project restore. Each entry
+    # records the path it was created at; where that path still exists the
+    # live memory directory is relinked, and where it does not the entry is
+    # named so it can be rebound with --adopt. The origin file is written
+    # once and never refreshed, so a project that has since moved on disk
+    # simply degrades to "cannot place" rather than relinking the wrong
+    # directory.
+    if set -q _flag_restore
+        set -l claude_root $__fish_agent_vault_claude_root
+        test -n "$claude_root"; or set claude_root "$HOME/.claude/projects"
+        for entry in "$vault"/projects/*
+            test -d "$entry/claude/memory"; or continue
+            set -l eslug (path basename "$entry")
+            set -l opath ""
+            if test -f "$entry/origin"
+                set -l line (command grep -m1 '^path:' "$entry/origin" 2>/dev/null)
+                test -n "$line"; and set opath (string replace -r '^path:\s+' '' -- "$line")
+            end
+            if test -n "$opath"; and test -d "$opath"
+                set -l m (string replace -a '/' '-' -- "$opath" | string replace -a '.' '-')
+                set -l msg (_agents_repo_ensure_symlink "$claude_root/$m/memory" "$entry/claude/memory")
+                if test $status -ne 0
+                    echo "$c_err""agents-vault: could not relink $eslug$c_reset" >&2
+                else if test -n "$msg"
+                    test $verbose -eq 1; and echo "$c_ok→ Restored $eslug$c_reset"
+                end
+            else
+                test $verbose -eq 1
+                and echo "$c_warn→ Cannot place $eslug: no live project found; use --adopt from the project$c_reset"
+            end
+        end
+        return 0
     end
 
     #   ────────────────────────── global state ───────────────────────────
@@ -324,14 +546,6 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 set changed 1
                 test $verbose -eq 1; and echo "$c_ok$gmsg$c_reset"
             end
-        end
-    end
-
-    #   ─────────────────────── unimplemented modes ───────────────────────
-    for f in _flag_push _flag_restore _flag_status _flag_adopt _flag_remote
-        if set -q $f
-            echo "$c_err""agents-vault: that mode is not implemented yet$c_reset" >&2
-            return 1
         end
     end
 
@@ -438,6 +652,33 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         else if test -n "$sync_out"
             set changed 1
             test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
+        end
+    end
+
+    #   ────────────────────────────── push ───────────────────────────────
+    # Pushing is explicit. Autopush exists but is opt-in, because this runs
+    # on every agent launch and a network operation there can hang or
+    # prompt for credentials invisibly underneath a starting agent.
+    set -l do_push 0
+    set -q _flag_push; and set do_push 1
+    if set -q __fish_agent_vault_autopush; and test "$__fish_agent_vault_autopush" = 1
+        set do_push 1
+    end
+    if test $do_push -eq 1
+        if git -C "$vault" remote get-url origin >/dev/null 2>&1
+            if git -C "$vault" push -q origin HEAD
+                test $verbose -eq 1; and echo "$c_ok→ Pushed the vault to origin$c_reset"
+            else
+                # Not fatal: the commit above already happened, so the
+                # memory is safe locally and the next push will carry it.
+                echo "$c_warn""agents-vault: push failed; the vault is committed locally$c_reset" >&2
+            end
+        else if set -q _flag_push
+            # An explicit --push that pushed nowhere must not read as a
+            # successful backup. Autopush stays quiet: it is a background
+            # convenience on a vault that may deliberately have no remote.
+            echo "$c_err""agents-vault: no remote configured; set one with --remote=URL$c_reset" >&2
+            return 1
         end
     end
 
