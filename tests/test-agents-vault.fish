@@ -563,6 +563,54 @@ set -l dirty_new_slug git.rootiest.dev-rootiest-dirty
 check "fallback finds sanitized local entry" dirty-precious (cat $vroot2/agent-vault/projects/$dirty_new_slug/claude/memory/keep.md)
 check "fallback old entry removed" false (test -d $vroot2/agent-vault/projects/$dirty_local_slug; and echo true; or echo false)
 
+# Same fallback path, but the live memory directory is a real populated
+# directory rather than a symlink -- the shape a machine ends up in when
+# an agent wrote memory while the link was missing. The migration then
+# tries to clear the live path out of the relink's way, and clearing a
+# directory is not something it may do: that is somebody's memory, and
+# _agents_repo_ensure_symlink already folds it into the vault without
+# clobbering. Refusing is therefore correct, but refusing in rm's voice
+# is not: a --silent run that did the right thing and returned 0 still
+# printed "rm: cannot remove ...: Is a directory", which is the only
+# thing the user sees and reads as a failure.
+set -l real_root (mktemp -d); set -ga TMPDIRS $real_root
+set -l rp "$real_root/proj"
+mkdir -p "$rp"
+git -C "$rp" init -q
+git -C "$rp" config user.email t@t
+git -C "$rp" config user.name t
+git -C "$rp" config commit.gpgsign false
+git -C "$rp" config core.hooksPath /dev/null
+
+set -l rmangled (string replace -a '/' '-' -- $rp | string replace -a '.' '-')
+mkdir -p $croot2/$rmangled/memory
+echo "banked" >$croot2/$rmangled/memory/old.md
+
+pushd $rp >/dev/null
+agents-vault --silent
+set -l real_local_slug (_agents_repo_slug $rp)
+popd >/dev/null
+
+# Replace the link with a real directory holding memory the vault has
+# never seen, then change the slug so the migration runs.
+rm -f $croot2/$rmangled/memory
+mkdir -p $croot2/$rmangled/memory
+echo "written-live" >$croot2/$rmangled/memory/fresh.md
+git -C $rp remote add origin https://git.rootiest.dev/rootiest/realdir.git
+
+set -l rerr (mktemp); set -ga TMPDIRS $rerr
+pushd $rp >/dev/null
+set -l real_rc (agents-vault --silent 2>$rerr; echo $status)
+popd >/dev/null
+set -l real_err (cat $rerr)
+set -l real_new_slug git.rootiest.dev-rootiest-realdir
+check "real-directory migration succeeds" 0 "$real_rc"
+check "real-directory migration stays silent" "" "$real_err"
+check "real-directory migration keeps banked memory" banked (cat $vroot2/agent-vault/projects/$real_new_slug/claude/memory/old.md 2>/dev/null)
+check "real-directory migration keeps live memory" written-live (cat $vroot2/agent-vault/projects/$real_new_slug/claude/memory/fresh.md 2>/dev/null)
+check "real-directory migration relinks" true (test -L $croot2/$rmangled/memory; and echo true; or echo false)
+check "real-directory old entry removed" false (test -d $vroot2/agent-vault/projects/$real_local_slug; and echo true; or echo false)
+
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 
@@ -699,6 +747,30 @@ printf 'transcript\n' >$agy5/knowledge/session.jsonl
 : >$agy5/knowledge/conversations.db-wal
 : >$agy5/knowledge/conversations.db-shm
 
+# Symlinks inside the store. The extension allowlist bounds what *kind* of
+# file is collected; it says nothing about whose. A store-relative walk
+# that dereferenced links would pull qualifying .md and .json out of
+# whatever the link names -- a real home directory is full of them -- so
+# the store boundary has to hold on its own. $outside5 stands in for that
+# home: a directory the store has no business reaching into, planted with
+# exactly the shapes that qualify.
+set -l outside5 (mktemp -d); set -ga TMPDIRS $outside5
+mkdir -p $outside5/nested
+echo SECRET-OUTSIDE-KNOWLEDGE >$outside5/leaked.json
+echo SECRET-OUTSIDE-KNOWLEDGE >$outside5/target.md
+echo SECRET-OUTSIDE-KNOWLEDGE >$outside5/nested/deep.md
+ln -s $outside5 $agy5/knowledge/linked
+ln -s $outside5/target.md $agy5/knowledge/alias.md
+# Not a cycle, so a recursive glob's cycle guard does not catch it: a link
+# to the filesystem root simply makes the walk enormous. This one is here
+# for the clock as much as for the contents -- the copy runs synchronously
+# in front of every agent launch, and a `**` glob over this fixture did
+# not return within 20s.
+ln -s / $agy5/knowledge/root
+# A genuine cycle too, since the walk must not depend on the glob's guard.
+mkdir -p $agy5/knowledge/cyc
+ln -s $agy5/knowledge $agy5/knowledge/cyc/loop
+
 # A global (non-per-project) Claude memory directory with a sentinel file.
 # __fish_agent_vault_claude_home is what keeps this off the real ~/.claude:
 # if agents-vault ignored the override, these checks would fail here *and*
@@ -707,9 +779,11 @@ mkdir -p $chome5/memory
 echo global-memory >$chome5/memory/g.md
 
 set -l gp (new_repo https://git.rootiest.dev/rootiest/globals.git)
+set -l t5_start (date +%s)
 pushd $gp >/dev/null
 agents-vault --silent
 popd >/dev/null
+set -l t5_elapsed (math (date +%s) - $t5_start)
 
 check "agy knowledge copied" learned (cat $vroot5/agent-vault/global/agy/knowledge/fact.md)
 check "agy settings copied" '{"model":"x"}' (cat $vroot5/agent-vault/global/agy/settings.json)
@@ -726,9 +800,27 @@ end
 # Not merely absent from the worktree: absent from the history, which is
 # what actually leaves the machine on a push.
 check "knowledge: no secret reached a commit" false (git -C $vroot5/agent-vault grep -q SECRET-INSIDE-KNOWLEDGE HEAD -- global 2>/dev/null; and echo true; or echo false)
+
+# Symlinks: nothing the links name may appear, under any name. The linked
+# directory must not exist in the vault at all (following it would recreate
+# its tree wholesale), and the aliased file must not exist either, even
+# though its own name qualifies -- a dereferencing copy writes a real file
+# at the link's name and the extension rule waves it through.
+for escapee in linked linked/leaked.json linked/nested/deep.md alias.md root cyc/loop
+    check "knowledge: symlinked $escapee stayed out" false (test -e $vroot5/agent-vault/global/agy/knowledge/$escapee; and echo true; or echo false)
+end
+check "knowledge: nothing outside the store reached a commit" false (git -C $vroot5/agent-vault grep -q SECRET-OUTSIDE-KNOWLEDGE HEAD 2>/dev/null; and echo true; or echo false)
+# The clock, not the contents: a walk that descends a link to / does not
+# finish, and this is the every-launch path. Generous enough that a loaded
+# machine cannot fail it by being slow.
+check "knowledge: a link to / does not stall the launch path" true (test $t5_elapsed -lt 20; and echo true; or echo false)
 # A torn database with its completing write-ahead log deliberately excluded
 # is worse than no database at all, so the scaffold ignores all three.
 check "scaffolded .gitignore excludes *.db" true (grep -qxF '*.db' $vroot5/agent-vault/.gitignore; and echo true; or echo false)
+# Both stash fallbacks, or a crash mid-rename leaves a shadow copy of an
+# entry sitting at the vault root for the next `git add -A` to commit.
+check "scaffolded .gitignore excludes /.adopt-stash" true (grep -qxF '/.adopt-stash' $vroot5/agent-vault/.gitignore; and echo true; or echo false)
+check "scaffolded .gitignore excludes /.migrate-stash" true (grep -qxF '/.migrate-stash' $vroot5/agent-vault/.gitignore; and echo true; or echo false)
 
 check "global claude memory in the vault" global-memory (cat $vroot5/agent-vault/global/claude/memory/g.md)
 check "global claude memory is now a link" true (test -L $chome5/memory; and echo true; or echo false)
@@ -1368,6 +1460,33 @@ set -l fp2rc (agents-vault --quiet 2>$fp2err >/dev/null; echo $status)
 popd >/dev/null
 set -e __fish_agent_vault_autopush
 check "failing autopush returns non-zero" 1 "$fp2rc"
+
+# Autopush runs synchronously in front of every agent launch, so it must be
+# bounded. Nothing in git bounds it: there is no HTTP connect timeout in
+# its configuration, http.lowSpeedLimit/http.lowSpeedTime only start
+# counting once bytes move, and GIT_TERMINAL_PROMPT/GIT_ASKPASS close the
+# credential prompt rather than the socket. Unwrapped, this remote took
+# 135s to give up. 192.0.2.1 is TEST-NET-1: reserved, unrouted, and
+# therefore a blackhole rather than a fast refusal. A network that does
+# refuse it quickly makes this pass without proving much, which is the
+# right way round for a test that must never fail spuriously.
+#
+# This test costs its own bound in wall time. That is the price of
+# measuring a timeout, and this defect -- a network call on the launch
+# path -- has now been introduced twice.
+set -l blackhole https://192.0.2.1/vault.git
+agents-vault --remote=$blackhole --silent
+echo pushed-into-the-void >$croot11/$pmang/memory/p6.md
+set -g __fish_agent_vault_autopush 1
+set -l bh_start (date +%s)
+pushd $pp >/dev/null
+set -l bhrc (agents-vault --silent 2>/dev/null; echo $status)
+popd >/dev/null
+set -l bh_elapsed (math (date +%s) - $bh_start)
+set -e __fish_agent_vault_autopush
+check "autopush to a blackholed remote returns non-zero" 1 "$bhrc"
+check "autopush to a blackholed remote is bounded" true (test $bh_elapsed -lt 60; and echo true; or echo false)
+check "a bounded autopush still committed locally" true (git -C $vroot11/agent-vault ls-files --error-unmatch projects/$pslug/claude/memory/p6.md >/dev/null 2>&1; and echo true; or echo false)
 
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root

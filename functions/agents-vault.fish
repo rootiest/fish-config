@@ -38,7 +38,9 @@
 #   allowlist runs all the way down, not just at the top: inside agy's
 #   knowledge store only *.md and *.json files are copied, so a credential
 #   file or a conversation database appearing there is left behind by the
-#   same rule rather than by being known about in advance.
+#   same rule rather than by being known about in advance. Symlinks found
+#   inside the store are neither followed nor copied, so the allowlist
+#   bounds whose files it collects and not merely what kind.
 #
 #   Global state that belongs to no project is tracked as well. Claude's
 #   global memory directory (~/.claude/memory) is symlinked into the vault
@@ -131,9 +133,13 @@
 #
 # NOTES
 #   Set __fish_agent_vault_dir to relocate the vault. Set
-#   __fish_agent_vault_autopush to 1 to also push on wrapper launch;
-#   it defaults to off so a backgrounded push can never hang or prompt
-#   invisibly underneath a starting agent.
+#   __fish_agent_vault_autopush to 1 to also push on wrapper launch; it
+#   defaults to off because that push is synchronous and so delays every
+#   launch. With it on, the pull and the push are each capped at 20
+#   seconds, since git has no connect timeout of its own and an
+#   unreachable remote otherwise blocks for minutes. An explicit --push
+#   is left uncapped: it is watched, and it must report what a real
+#   transfer really did.
 #
 #   --adopt rebinds an entry; it does not pin its name. The slug is
 #   re-derived from the project on every run, so the next ordinary run
@@ -329,10 +335,12 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             '*.db-wal' \
             '*.db-shm' \
             '' \
-            '# --adopt stashes the entry it is about to overwrite inside .git/,' \
-            '# out of reach of `git add -A`. This covers the fallback location' \
-            '# it uses when .git is not a directory.' \
-            '/.adopt-stash' >"$vault/.gitignore"
+            '# --adopt and the slug migration each stash the entry they are' \
+            '# about to overwrite inside .git/, out of reach of `git add -A`.' \
+            '# These cover the fallback locations they use when .git is not a' \
+            '# directory.' \
+            '/.adopt-stash' \
+            '/.migrate-stash' >"$vault/.gitignore"
         set changed 1
     end
 
@@ -627,7 +635,39 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         # Fish wildcards skip dot-led names at every path component, so
         # dotfiles and hidden subdirectories are already out; the extension
         # allowlist is what keeps them out on purpose rather than by luck.
-        set -l kfiles $knowledge/**.md $knowledge/**.json
+        #
+        # The tree is walked a level at a time rather than globbed with **,
+        # because a symlink has to stop the walk and ** has no way to say
+        # so. A recursive ** descends through a symlinked directory and cp
+        # follows a symlinked file, which between them undo the whole point
+        # of the allowlist twice over. A `ln -s ~ knowledge/x` puts every
+        # qualifying .md and .json in the home directory -- settings.json,
+        # CLAUDE.md, cache and status files -- into the vault and into a
+        # commit: the extension rule still bounds what *kind* of file goes
+        # in, but the store boundary that decides *whose* files they are is
+        # gone. Worse, `ln -s / knowledge/x` makes the walk itself
+        # unbounded, and this runs synchronously in front of every agent
+        # launch. Fish does stop a true self-referential cycle; a symlink
+        # to a merely enormous tree is not a cycle.
+        #
+        # So nothing that is a symlink is ever followed or copied, whether
+        # it names a file or a directory. The knowledge store's own root
+        # may still be a link -- that one is the configured location of the
+        # store rather than something found inside it.
+        set -l kfiles
+        set -l kdirs "$knowledge"
+        while set -q kdirs[1]
+            set -l dir $kdirs[1]
+            set -e kdirs[1]
+            for e in $dir/*
+                test -L "$e"; and continue
+                if test -d "$e"
+                    set -a kdirs "$e"
+                else if string match -qr '\.(md|json)$' -- "$e"
+                    set -a kfiles "$e"
+                end
+            end
+        end
         set -l kfailed 0
         for f in $kfiles
             test -f "$f"; or continue
@@ -836,7 +876,18 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             end
             printf 'renamed: %s → %s (%s)\n' "$prev_slug" "$slug" (date -I) \
                 >>"$entry/origin"
-            rm -f "$live"
+            # Only a link is dropped here, and only so the relink below has
+            # somewhere to put the new one. Usually $live is exactly that: a
+            # symlink at the old entry, now dangling. But the migration is
+            # also reachable from the path-derived fallback candidate, and
+            # there $live can be a real, populated directory -- someone's
+            # actual memory. rm -f cannot delete it, which is the right
+            # outcome, but it says so on stderr in rm's own voice, so a
+            # --silent run that succeeded printed what reads as an error.
+            # The directory case needs no removal anyway:
+            # _agents_repo_ensure_symlink copies a populated live directory
+            # into the vault without clobbering before it replaces it.
+            test -L "$live"; and rm -f "$live"
             set changed 1
             test $verbose -eq 1; and echo "$c_ok→ Migrated vault entry $prev_slug → $slug$c_reset"
         end
@@ -930,10 +981,41 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             # helper, which git consults before it ever falls back to
             # prompting; they only close off the interactive last resort,
             # which under a starting agent is indistinguishable from a hang.
+            #
+            # They close the prompt, not the socket, and git has no knob
+            # that closes the socket either: there is no HTTP connect
+            # timeout in its configuration at all, and http.lowSpeedLimit /
+            # http.lowSpeedTime -- the usual suggestion -- only start
+            # counting once bytes are moving, so they expire never against
+            # an address that simply blackholes the SYN. Measured against
+            # 192.0.2.1 with both set: no return inside 30s; unset: 135s.
+            #
+            # ssh is the one transport that can time itself out, so it is
+            # told to, unless the user has already said how to run ssh.
+            # Everything else is bounded from outside with timeout(1).
+            set -l gitenv GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true
+            set -q GIT_SSH_COMMAND
+            or set -a gitenv 'GIT_SSH_COMMAND=ssh -o ConnectTimeout=10'
+            set -l gitnet env $gitenv
+
+            # Only autopush is wrapped. An explicit --push is a thing the
+            # user asked for and is watching, and it must report the real
+            # exit status of a real transfer, so it is allowed to take as
+            # long as the transfer honestly takes. Autopush runs
+            # synchronously in front of every agent launch, which is the
+            # block this whole design exists to remove; there an
+            # unreachable remote costs a bounded 20s per operation instead
+            # of an open-ended wait. timeout's own 124 is a non-zero exit
+            # like any other, so a bounded push still reports as failed and
+            # the commit it could not send has already landed locally. A
+            # push too slow for the bound can always be run by hand.
+            if not set -q _flag_push; and type -q timeout
+                set gitnet timeout 20 $gitnet
+            end
             set -l reached 1
             if git -C "$vault" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
-                if not GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true \
-                        git -C "$vault" pull --rebase --autostash -q >/dev/null 2>/dev/null
+                if not $gitnet git -C "$vault" pull --rebase --autostash -q \
+                        >/dev/null 2>/dev/null
                     # Two unrelated failures land here and reporting them as
                     # one sends the user hunting for a conflict that never
                     # existed. A rebase that genuinely started and stopped
@@ -956,7 +1038,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             # push would only fail a second time, more confusingly, and the
             # pull has already said exactly what went wrong.
             if test $reached -eq 1
-                if GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true git -C "$vault" push -q origin HEAD
+                if $gitnet git -C "$vault" push -q origin HEAD
                     test $verbose -eq 1; and echo "$c_ok→ Pushed the vault to origin$c_reset"
                 else
                     # The commit above did happen, so the memory is safe
