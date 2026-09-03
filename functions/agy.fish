@@ -8,7 +8,7 @@
 #   aliases/dev-tools
 #
 # DEPENDENCIES
-#   agents-init
+#   agents-init, agents-vault
 #
 # SYNOPSIS
 #   agy [ARGS...]
@@ -18,9 +18,14 @@
 #   sub-repository is initialized and any agent-made changes are committed
 #   before launch. Delegates all scaffold and commit logic to agents-init
 #   --quiet (full setup), which ensures AGENTS/ is scaffolded and CLAUDE.md
-#   is symlinked to AGENTS/AGENTS.md in the current project. Arguments are
-#   forwarded verbatim to the real agy binary, except for -r/--resume which
-#   are translated to -c/--continue.
+#   is symlinked to AGENTS/AGENTS.md in the current project.
+#
+#   Also syncs the host-scoped agent memory vault (agents-vault). agy has
+#   no session-end hook, so its memory is captured on the next launch
+#   rather than at session end.
+#
+#   Arguments are forwarded verbatim to the real agy binary, except for
+#   -r/--resume which are translated to -c/--continue.
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases
 #   (or the __fish_config_opinionated master), the command is passed through
@@ -44,6 +49,7 @@ function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ su
     end
 
     agents-init --quiet
+    agents-vault --quiet
 
     for i in (seq (count $argv))
         if test "$argv[$i]" = "-r"

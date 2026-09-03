@@ -475,8 +475,12 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 # named: git add refuses a pathspec that matches nothing --
                 # which one of the two always is, once it has been moved
                 # back -- and then stages none of them, not even the one
-                # that did match.
-                git -C "$vault" add -A -- projects 2>/dev/null
+                # that did match. Its stderr is deliberately not swallowed:
+                # projects/ provably exists here, so the only thing a
+                # redirect could hide is a real failure -- a held
+                # index.lock, say -- after which the index stays
+                # half-applied while nothing says so.
+                git -C "$vault" add -A -- projects
                 return 1
             end
         end
@@ -498,8 +502,9 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             # because even the git-native rollback leaves it out of line:
             # the forward `git mv` overwrote the stashed entry's index
             # entries, and moving the files back does not bring them back.
-            # See the same call above for why projects/ is named whole.
-            git -C "$vault" add -A -- projects 2>/dev/null
+            # See the same call above for why projects/ is named whole,
+            # and why its stderr is left visible.
+            git -C "$vault" add -A -- projects
             echo "$c_err""agents-vault: could not relink $claude_root/$mangled/memory; $cur was left as it was$c_reset" >&2
             return 1
         end

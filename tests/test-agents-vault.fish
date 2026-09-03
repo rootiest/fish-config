@@ -958,6 +958,68 @@ popd >/dev/null
 check "stash adopt rollback: ordinary run fabricated no entry" "$sf_entries" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
 check "stash adopt rollback: ordinary run kept the memory reachable" stashfail-precious (cat $croot9/$sfmang/memory/keep.md 2>/dev/null)
 
+# The other rollback in --adopt: the *forward* move failing outright,
+# before the relink is ever reached. A plain file sitting where the target
+# entry would go makes `git mv` refuse ("destination already exists") and
+# the coreutils fallback refuse too ("cannot overwrite non-directory"), so
+# the worktree needs no repair -- but the index does, and that is the half
+# of the rollback nothing else pins. With a real git there is no way for a
+# test to leave a genuinely half-applied rename here, so the divergence
+# stands in for one: the index is desynced by hand first, and the check
+# that matters is that the way out re-read projects/ and healed it.
+# Without that setup the repair is an invisible no-op, and a refactor can
+# drop it with the suite still green.
+set -l ff (new_repo https://git.rootiest.dev/rootiest/fwd-fail.git)
+set -l ffslug git.rootiest.dev-rootiest-fwd-fail
+set -l ffmang (string replace -a '/' '-' -- $ff | string replace -a '.' '-')
+mkdir -p $croot9/$ffmang/memory
+echo fwdfail-precious >$croot9/$ffmang/memory/keep.md
+pushd $ff >/dev/null
+agents-vault --silent
+popd >/dev/null
+
+# The blocker must be tracked and committed, so that the only thing dirty
+# at adopt time is the divergence staged just below.
+echo occupied >$vroot9/agent-vault/projects/fwdfail-target
+pushd $ff >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "fwd-fail adopt: the blocking file is tracked" true (git -C $vroot9/agent-vault ls-files --error-unmatch projects/fwdfail-target >/dev/null 2>&1; and echo true; or echo false)
+check "fwd-fail adopt: vault clean before the divergence" "" (git -C $vroot9/agent-vault status --porcelain | string join ',')
+
+git -C $vroot9/agent-vault rm -q --cached projects/$ffslug/origin >/dev/null
+set -l ff_dirty (git -C $vroot9/agent-vault status --porcelain | string join ',')
+check "fwd-fail adopt: index diverges before the adopt" true (string match -q "*D  projects/$ffslug/origin*" -- "$ff_dirty"; and echo true; or echo false)
+
+set -l ff_entries (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+set -l ff_head (git -C $vroot9/agent-vault rev-list --count HEAD)
+set -l ff_link (path resolve $croot9/$ffmang/memory)
+
+pushd $ff >/dev/null
+set -l ffrc (agents-vault --adopt=fwdfail-target --silent 2>/dev/null; echo $status)
+popd >/dev/null
+
+check "fwd-fail adopt: returns 1" 1 "$ffrc"
+check "fwd-fail adopt: entries unchanged" "$ff_entries" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+check "fwd-fail adopt: source entry intact" fwdfail-precious (cat $vroot9/agent-vault/projects/$ffslug/claude/memory/keep.md 2>/dev/null)
+check "fwd-fail adopt: blocking file untouched" occupied (cat $vroot9/agent-vault/projects/fwdfail-target 2>/dev/null)
+check "fwd-fail adopt: no origin note appended" false (string match -q '*adopted:*' -- (cat $vroot9/agent-vault/projects/$ffslug/origin); and echo true; or echo false)
+check "fwd-fail adopt: nothing committed" "$ff_head" (git -C $vroot9/agent-vault rev-list --count HEAD)
+check "fwd-fail adopt: live link never removed" "$ff_link" (path resolve $croot9/$ffmang/memory)
+check "fwd-fail adopt: memory still reachable live" fwdfail-precious (cat $croot9/$ffmang/memory/keep.md 2>/dev/null)
+check "fwd-fail adopt: no stash left behind" false (test -e $vroot9/agent-vault/.git/agents-vault-adopt-stash -o -e $vroot9/agent-vault/.adopt-stash; and echo true; or echo false)
+# The pin: projects/ was re-read on the way out, so git describes the
+# files as they actually are rather than as the abandoned rename left them.
+check "fwd-fail adopt: index re-read to match the worktree" "" (git -C $vroot9/agent-vault status --porcelain | string join ',')
+check "fwd-fail adopt: nothing left staged against HEAD" "" (git -C $vroot9/agent-vault diff HEAD --name-only | string join ',')
+
+# And the ordinary run afterwards still finds the original entry.
+pushd $ff >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "fwd-fail adopt: ordinary run fabricated no entry" "$ff_entries" (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
+check "fwd-fail adopt: ordinary run kept the memory reachable" fwdfail-precious (cat $croot9/$ffmang/memory/keep.md 2>/dev/null)
+
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
