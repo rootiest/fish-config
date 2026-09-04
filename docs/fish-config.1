@@ -4283,7 +4283,7 @@ C6         Greeting & First-Run UI \[em] Custom startup banner
 \f[R]
 .fi
 .PP
-Each category further sub-divides into two to six sub-categories (24 in
+Each category further sub-divides into two to six sub-categories (25 in
 total) with their own
 \f[V]__fish_config_op_<category>_<subcategory>\f[R] toggles \[en] see
 that category\[cq]s page for its sub-category list.
@@ -4467,6 +4467,8 @@ Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
 Catppuccin colors         30+ fish_color_* variables set to Mocha palette
 FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
 Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
+DO_NOT_TRACK=1            Universal telemetry opt-out for tools and AI agents
+DISABLE_TELEMETRY=1       Telemetry opt-out for telemetry-aware CLIs
 \f[R]
 .fi
 .PP
@@ -4482,7 +4484,7 @@ The scrollback capture block is independently controlled by C5 (see
 below).
 .SS Sub-categories
 .PP
-\f[V]__fish_config_op_overrides\f[R] sub-divides into three
+\f[V]__fish_config_op_overrides\f[R] sub-divides into four
 sub-categories, each with its own
 \f[V]__fish_config_op_overrides_<slug>\f[R] toggle:
 .SS key-bindings
@@ -4498,6 +4500,11 @@ and \f[V]$CDPATH\f[R].
 Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
 theming (\f[V]$FZF_DEFAULT_OPTS\f[R]) \[en] all driven by the same guard
 as a single unit, not independently toggleable from each other.
+.SS privacy
+.PP
+\f[V]$DO_NOT_TRACK\f[R] and \f[V]$DISABLE_TELEMETRY\f[R] environment
+variables for telemetry opt-out across CLI tools, runtimes, and AI
+agents.
 .SS C4 \[em] Terminal and Tool Integration
 .PP
 These features couple the shell to specific external tools.
