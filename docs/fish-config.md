@@ -82,52 +82,54 @@ The configuration uses a structured file tree:
 
 # TABLE OF CONTENTS
 
-    1.  Configuration Variables
-    2.  PATH Setup
-    3.  Key Bindings
-    4.  Abbreviations
-        4.1  Editors
-        4.2  Navigation and Listing
-        4.3  Git
-        4.4  Terminal Windows, Tabs, and Panes
-        4.5  Chezmoi
-        4.6  Docker
-        4.7  Systemctl
-        4.8  AI Assistants
-        4.9  History Expansion
-        4.10 Miscellaneous
-        4.11 Shell Aliases
-    5.  Functions Reference
-        5.1  File and Directory
-        5.2  Navigation
-        5.3  Editors and Viewers
-        5.4  Git and Version Control
-        5.5  Package Management
-        5.6  Dependency Management
-        5.7  System and Monitoring
-        5.8  Terminal Management
-        5.9  Clipboard
-        5.10 Network
-        5.11 Pager and Logging
-        5.12 AI and Developer Tools
-        5.13 Media and Utilities
-        5.14 Miscellaneous
-    6.  Dependency Catalog
-    7.  Customization
-    8.  Fisher Plugins
-    9.  Installation
-    10. Personalization
-    11. Troubleshooting
-        11.1 Uninstalling and Reverting to Backup
-        11.2 Fish Version Requirement
-        11.3 Enable or Disable Session Logging
-        11.4 Change or Disable the Greeting
-        11.5 Secrets and Machine-Local Configuration
-        11.6 Tool Init Does Nothing (Return Sentinel)
-        11.7 Missing Dependencies
-        11.8 Vi Mode Keybindings
-        11.9 What's with the C1-C6 stuff?
-    12. Viewing This Manual
+    1. Configuration Variables
+    2. PATH Setup
+    3. Key Bindings
+    4. Abbreviations
+        - Editors
+        - Navigation and Listing
+        - Git
+        - Terminal Windows, Tabs, and Panes
+        - Chezmoi
+        - Docker
+        - Systemctl
+        - AI Assistants
+        - History Expansion
+        - Miscellaneous
+        - Shell Aliases
+    5. Functions Reference
+        - File and Directory
+        - Navigation
+        - Editors and Viewers
+        - Git and Version Control
+        - Package Management
+        - Dependency Management
+        - System and Monitoring
+        - Terminal Management
+        - Clipboard
+        - Network
+        - Pager and Logging
+        - AI and Developer Tools
+        - Media and Utilities
+        - Miscellaneous
+    6. Dependency Catalog
+    7. Customization
+    8. Components Reference
+        - C1 — Command Shadows
+        - C2 — Startup Side-Effects
+        - C3 — Key and Environment Overrides
+        - C4 — Terminal and Tool Integration
+        - C5 — Logging and Capture
+        - C6 — Greeting and First-Run UI
+    9. Fisher Plugins
+    10. Installation
+    11. Personalization
+    12. Troubleshooting
+    13. Viewing This Manual
+    14. Testing
+    15. Contributing
+    16. Attribution
+    17. License
 
 ---
 
@@ -4309,3 +4311,34 @@ to correct its documentation, open the function itself:
 
 The files under `docs/manual/05-functions/` carry only the category
 titles, ordering, and search keywords.
+
+# 14. TESTING
+
+    fish tests/run-tests.fish
+
+Runs before every push (and gates the [documentation build](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/.github/workflows/ci.yml) in CI, so a broken config can't get published): syntax-lints every `.fish` file, then loads the config in an isolated `HOME`/XDG sandbox — never this checkout itself, since it doubles as a real `~/.config/fish` — and runs functional checks against foundational behavior (XDG/PATH/CDPATH setup, key bindings, abbreviations, core functions, the opinionated-component registry, and more).
+
+# 15. CONTRIBUTING
+
+Interested in contributing? See [`CONTRIBUTING.md`](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/CONTRIBUTING.md) for the
+branching/PR workflow, commit conventions, fish coding standards, and the
+docs/testing pipeline this repo follows.
+
+**Preferred forge:** [git.rootiest.dev/rootiest/fish-config](https://git.rootiest.dev/rootiest/fish-config)
+is the base repository. [github.com/rootiest/fish-config](https://github.com/rootiest/fish-config)
+is a push-mirror of it — identical content, but one-way and read-only from a
+contributor's perspective. Branches, forks, and merges made on the GitHub
+side aren't fed back upstream, so they risk being silently overwritten by
+the next mirror push. Until two-way sync exists, please fork, branch, and
+open issues/PRs from the Gitea repository rather than the GitHub mirror.
+
+# 16. ATTRIBUTION
+
+The core of the [Zoxide integration](https://fish.rootiest.fyi/02-path-setup/) in this repository was originally adapted from the [icezyclon/zoxide.fish](https://github.com/icezyclon/zoxide.fish) plugin (MIT Licensed) and has since been heavily customized for performance and Fish 4.x compatibility.
+
+# 17. LICENSE
+
+Copyright (C) 2026 Rootiest
+
+This project is licensed under the **GNU Affero General Public License v3.0 or later** (AGPLv3+).
+See the [LICENSE](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/LICENSE) file for the full license text.

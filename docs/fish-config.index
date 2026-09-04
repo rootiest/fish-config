@@ -403,4 +403,23 @@ site=## The documentation website
 source=## Reading the source directly
 raw-source=## Reading the source directly
 
+# ── Section 14: Testing ───────────────────────────────────────
+testing=# 14. TESTING
+tests=# 14. TESTING
+
+# ── Section 15: Contributing ──────────────────────────────────
+contributing=# 15. CONTRIBUTING
+contribute=# 15. CONTRIBUTING
+forge=# 15. CONTRIBUTING
+
+# ── Section 16: Attribution ───────────────────────────────────
+attribution=# 16. ATTRIBUTION
+credits=# 16. ATTRIBUTION
+
+# ── Section 17: License ───────────────────────────────────────
+license=# 17. LICENSE
+licensing=# 17. LICENSE
+agpl=# 17. LICENSE
+copyright=# 17. LICENSE
+
 

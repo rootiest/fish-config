@@ -23,6 +23,8 @@ DOCS = Path(__file__).parent
 MANUAL = DOCS / "manual"
 FUNCTIONS = DOCS.parent / "functions"
 COMPLETIONS = DOCS.parent / "completions"
+README = DOCS.parent / "README.md"
+REPO_BLOB_BASE = "https://git.rootiest.dev/rootiest/fish-config/src/branch/main/"
 SLUG_DIR = "reference"
 
 # File-tree branches whose real directory contents get listed inline on the
@@ -80,8 +82,102 @@ def _with_abbreviations(body: str, abbrs: dict[str, list[dict]]) -> str:
     for cat, table in rendered_abbrs.items():
         placeholder = f"<!-- GENERATED: {cat} -->"
         body = body.replace(placeholder, table)
-        
+
     return body
+
+
+TOC_PLACEHOLDER = "<!-- GENERATED: toc -->"
+TOC_SKIP_STEMS = {"index"}
+
+
+def _build_toc(root: Path) -> str:
+    """Render the section list for docs/manual/00-table-of-contents.md.
+
+    Walks the same tree `build_concat` does, so it can never drift from the
+    man page's actual section order. `index.md` and the `00-*` front-matter
+    pages (Name, Synopsis, this page) sit before section 1 and are excluded,
+    same as any `man: false` page (currently only 404).
+    """
+    lines: list[str] = []
+    n = 0
+    for path, depth in mt.walk(root):
+        rel = path.relative_to(root)
+        # len(rel.parts) == 1 means a root-level file, not a directory's own
+        # index page (e.g. 04-abbreviations/index.md), which must keep its
+        # own numbered line even though its stem is also "index".
+        if depth == 0 and len(rel.parts) == 1 and (rel.stem in TOC_SKIP_STEMS or rel.stem.startswith("00-")):
+            continue
+        fm, _ = mt.parse(path)
+        if not fm.get("man", True):
+            continue
+        title = fm.get("title", path.stem)
+        if depth == 0:
+            n += 1
+            lines.append(f"    {n}. {title}")
+        else:
+            lines.append(f"        - {title}")
+    return "\n".join(lines)
+
+
+def _with_toc(body: str, root: Path) -> str:
+    """Inject the `<!-- GENERATED: toc -->` placeholder with the built section list."""
+    return body.replace(TOC_PLACEHOLDER, _build_toc(root)) if TOC_PLACEHOLDER in body else body
+
+
+README_LINK_RE = re.compile(r"\]\((?!https?://|#|mailto:)([^)]+)\)")
+README_FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```\n?", re.DOTALL)
+README_PLACEHOLDER_RE = re.compile(r"<!-- README: (.+?) -->")
+
+
+def _rewrite_repo_links(text: str) -> str:
+    """Point a README-relative link (`CONTRIBUTING.md`, `LICENSE`) at its file on Gitea."""
+    return README_LINK_RE.sub(lambda m: f"]({REPO_BLOB_BASE}{m.group(1)})", text)
+
+
+def _defence(text: str) -> str:
+    """Rewind a README fenced code block into the manual's indented-block form.
+
+    `docs/manual` bodies are authored man-page style (4-space indent), never
+    fenced: `codespans`/pandoc pair backticks per line, and a fence line's
+    triple backtick throws that count off. README.md is ordinary markdown
+    and fences its examples, so an injected section is converted back.
+    """
+    def repl(m: re.Match) -> str:
+        block = m.group(1).rstrip("\n")
+        return "\n".join("    " + line for line in block.split("\n")) + "\n"
+
+    return README_FENCE_RE.sub(repl, text)
+
+
+@functools.lru_cache(maxsize=1)
+def _readme_sections() -> dict[str, str]:
+    """Split README.md into {H2 heading: body}, links rewritten to point at the repo.
+
+    Lets a manual stub pull one README section in verbatim via a
+    `<!-- README: <Heading> -->` placeholder, so the README stays the single
+    source of truth for sections that describe the repo itself rather than
+    the shell config (Testing, Contributing, Attribution, License).
+    """
+    sections: dict[str, str] = {}
+    heading: str | None = None
+    lines: list[str] = []
+    for line in README.read_text().split("\n") + ["## "]:
+        if line.startswith("## "):
+            if heading is not None:
+                body = "\n".join(lines).strip()
+                if body.endswith("---"):
+                    body = body[:-3].rstrip()
+                sections[heading] = _defence(_rewrite_repo_links(body))
+            heading = line[3:].strip()
+            lines = []
+        else:
+            lines.append(line)
+    return sections
+
+
+def _with_readme(body: str) -> str:
+    """Inject `<!-- README: Heading -->` placeholders with that README section's body."""
+    return README_PLACEHOLDER_RE.sub(lambda m: _readme_sections().get(m.group(1), ""), body)
 
 
 def build_concat(root: Path) -> str:
@@ -123,6 +219,8 @@ def build_concat(root: Path) -> str:
         elif "04-abbreviations" in path.parts:
             abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
             body = _with_abbreviations(body, abbrs)
+        body = _with_readme(body)
+        body = _with_toc(body, root)
         if body:
             body = re.sub(r"<LinkButton.*?</LinkButton>\n*", "", body, flags=re.DOTALL)
             body = re.sub(r"<CardGrid.*?</CardGrid>\n*", "", body, flags=re.DOTALL)
@@ -749,6 +847,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
             if "04-abbreviations" in path.parts:
                 abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
                 body = _with_abbreviations(body, abbrs)
+            body = _with_readme(body)
             target.parent.mkdir(parents=True, exist_ok=True)
             body = _inject_subheading_cards(body)
             _write_prettified(target, _page_fm(fm), prettify(body))
