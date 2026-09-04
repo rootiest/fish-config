@@ -48,6 +48,17 @@ function test_op_registry_lookup
     test $status -eq 0 -a (count $tags) -gt 0
 end
 
+function test_privacy_variables
+    test "$DO_NOT_TRACK" = "1" -a "$DISABLE_TELEMETRY" = "1"
+end
+
+function test_privacy_op_registry_lookup
+    functions -q __fish_config_op_registry_lookup
+    or return 1
+    set -l tags (__fish_config_op_registry_lookup config privacy)
+    test $status -eq 0 -a "$tags" = "overrides/privacy"
+end
+
 function test_op_enabled_fail_open
     # An identity/site pair with no registry entry must resolve to
     # enabled -- the documented fail-open default.

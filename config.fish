@@ -25,6 +25,7 @@
 #   site cachyos-tricks: overrides/environment
 #   site cachyos-strip-aliases: aliases/filesystem
 #   site cachyos-strip-overrides: overrides/key-bindings
+#   site privacy: overrides/privacy
 #   site pager-editor-gpg: overrides/environment
 #   site exit-wiring: overrides/key-bindings
 #   site path-setup: overrides/environment
@@ -103,6 +104,14 @@ set -q EXINIT; or set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | 
 set -q NVIDIA_SETTINGS_RW_CONFIG_FILE; or set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
 set -q CODEIUM_HOME; or set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
 set -q WORDLIST; or set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
+
+#   ───────────────────────── Privacy variables ────────────────────────────
+# Global telemetry opt-out variables (C3 overrides: privacy)
+# Various CLI tools, runtimes, and AI-agent tools respect these variables.
+if __fish_config_op_enabled (status basename) privacy
+    set -gx DO_NOT_TRACK 1
+    set -gx DISABLE_TELEMETRY 1
+end
 
 #   ─────────────────────────── Pager variables ────────────────────────────
 # Overriding $PAGER, $EDITOR, and $GPG_TTY is opinionated (C3 overrides)
