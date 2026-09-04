@@ -293,7 +293,7 @@ If you'd rather set them by hand, each category is controlled by a universal var
 |---|---|
 | `__fish_config_op_aliases` | Command shadows: `ls`→eza, `cat`→bat, `cd`→zoxide, `rm`→trash, `top`→btop, `edit`→multi-editor launcher, and friends; `grep`/`cp`/`mv`/`wget` flag injection |
 | `__fish_config_op_autoexec` | Startup side-effects: Fisher bootstrap, theme apply, `paru`/`yay` wrapper generation, auto venv activation, WakaTime hook, auto-pull background fast-forward |
-| `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`/`XDG`/`PATH`, bang-bang history expansion, autopair, puffer, Starship prompt, theme colors |
+| `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`/`XDG`/`PATH`, `$DO_NOT_TRACK`/`$DISABLE_TELEMETRY`, bang-bang history expansion, autopair, puffer, Starship prompt, theme colors |
 | `__fish_config_op_integrations` | Kitty/WezTerm window abbreviations, `done` notifications, `spwin`/`tab`/`split`, `hist`, `logs`, `upgrade`, WakaTime |
 | `__fish_config_op_logging` | **Opt-in — off unless explicitly enabled.** Scrollback capture on exit, tmux `pipe-pane` pane logging, zellij `dump-screen` capture on exit, `paru`/`yay` AUR log wrappers, Kitty watcher capture (sentinel-file coordinated) |
 | `__fish_config_op_greeting` | Per-session `fish_greeting` (suppresses distro greetings such as CachyOS fastfetch by overriding with an empty function); first-run welcome banner |

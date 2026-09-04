@@ -44,7 +44,8 @@ function __config_settings_subcats --description 'List the sub-categories for on
             printf '%s\t%s\t%s\n' \
                 key-bindings Key-bindings "vi-mode, autopair, puffer, bang-bang" \
                 environment Environment "PATH, PAGER, EDITOR, CDPATH" \
-                prompt Prompt "Starship, right prompt, theme + FZF colors"
+                prompt Prompt "Starship, right prompt, theme + FZF colors" \
+                privacy Privacy "DO_NOT_TRACK, DISABLE_TELEMETRY"
         case __fish_config_op_integrations
             printf '%s\t%s\t%s\n' \
                 terminal-abbrs Term-abbrs "Kitty/WezTerm abbreviations" \

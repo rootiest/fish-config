@@ -3358,7 +3358,7 @@ category variable.
     C5         Logging and Capture — Session logs, command duration
     C6         Greeting & First-Run UI — Custom startup banner
 
-Each category further sub-divides into two to six sub-categories (24 in
+Each category further sub-divides into two to six sub-categories (25 in
 total) with their own `__fish_config_op_<category>_<subcategory>` toggles
 -- see that category's page for its sub-category list.
 
@@ -3528,6 +3528,8 @@ all of them.
     Catppuccin colors         30+ fish_color_* variables set to Mocha palette
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
     Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
+    DO_NOT_TRACK=1            Universal telemetry opt-out for tools and AI agents
+    DISABLE_TELEMETRY=1       Telemetry opt-out for telemetry-aware CLIs
 
 The bang-bang system spans `key_bindings.fish`, `abbr.fish`, `puffer.fish`, and
 six `expand_bang_*.fish` functions. All are gated together — disabling C3
@@ -3539,7 +3541,7 @@ is independently controlled by C5 (see below).
 
 ### Sub-categories
 
-`__fish_config_op_overrides` sub-divides into three sub-categories, each
+`__fish_config_op_overrides` sub-divides into four sub-categories, each
 with its own `__fish_config_op_overrides_<slug>` toggle:
 
 ### key-bindings
@@ -3556,6 +3558,11 @@ and `smart_exit`'s plain-exit path.
 Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
 theming (`$FZF_DEFAULT_OPTS`) -- all driven by the same guard as a single
 unit, not independently toggleable from each other.
+
+### privacy
+
+`$DO_NOT_TRACK` and `$DISABLE_TELEMETRY` environment variables for
+telemetry opt-out across CLI tools, runtimes, and AI agents.
 
 ## C4 — Terminal and Tool Integration
 

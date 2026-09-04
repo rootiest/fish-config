@@ -34,6 +34,7 @@ set -g __fish_config_op_registry_keys \
     "config:greeting-stamp" \
     "config:pager-editor-gpg" \
     "config:path-setup" \
+    "config:privacy" \
     "config:vi-mode" \
     "done:" \
     "du:" \
@@ -100,6 +101,7 @@ set -g __fish_config_op_registry_values \
     "greeting/greeting-message" \
     "overrides/environment" \
     "overrides/environment" \
+    "overrides/privacy" \
     "overrides/key-bindings" \
     "integrations/notifications" \
     "aliases/filesystem" \
