@@ -20,7 +20,7 @@ const links = config.social || [];
         return (
           <a href={href} rel="me" class="sl-flex">
             <span class="sr-only">{label}</span>
-            {customIcon ? <span class={`social-icon ${customIcon}`} aria-hidden="true" /> : <Icon name={icon} />}
+            {customIcon ? <span class={`social-icon ${customIcon}`} aria-hidden="true" /> : <Icon name={icon} size="2em" />}
           </a>
         );
       })}
@@ -39,8 +39,8 @@ const links = config.social || [];
       color: var(--sl-color-white);
     }
     .social-icon {
-      width: 1.5rem;
-      height: 1.5rem;
+      width: 3rem;
+      height: 3rem;
     }
   }
 </style>
