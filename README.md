@@ -146,9 +146,12 @@ Contributing to the docs? There are two sources, split by content type:
   above each function in `functions/*.fish`. Edit the function; the entry
   and its site page are generated from the header.
 - **Everything else** lives under `docs/manual/**`.
+- **Testing, Contributing, Attribution, and License** are pulled straight
+  from this README (the sections below) rather than authored twice — edit
+  them here and the manual, man page, and site all pick up the change.
 
-Never edit the generated `docs/fish-config.md` — it's rebuilt from both
-sources and any hand-edits are discarded.
+Never edit the generated `docs/fish-config.md` — it's rebuilt from all
+three sources and any hand-edits are discarded.
 
 To browse the docs from the terminal:
 
@@ -347,6 +350,14 @@ Runs before every push (and gates the [documentation build](.github/workflows/ci
 Interested in contributing? See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the
 branching/PR workflow, commit conventions, fish coding standards, and the
 docs/testing pipeline this repo follows.
+
+**Preferred forge:** [git.rootiest.dev/rootiest/fish-config](https://git.rootiest.dev/rootiest/fish-config)
+is the base repository. [github.com/rootiest/fish-config](https://github.com/rootiest/fish-config)
+is a push-mirror of it — identical content, but one-way and read-only from a
+contributor's perspective. Branches, forks, and merges made on the GitHub
+side aren't fed back upstream, so they risk being silently overwritten by
+the next mirror push. Until two-way sync exists, please fork, branch, and
+open issues/PRs from the Gitea repository rather than the GitHub mirror.
 
 ---
 

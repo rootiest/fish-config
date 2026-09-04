@@ -28,6 +28,11 @@ export default defineConfig({
             label: 'Gitea',
             href: 'https://git.rootiest.dev/rootiest/fish-config',
           },
+          {
+            icon: 'github',
+            label: 'GitHub',
+            href: 'https://github.com/rootiest/fish-config',
+          },
         ],
         components: {
           SocialIcons: './src/components/starlight/SocialIcons.astro',
