@@ -182,6 +182,61 @@ function test_help_renderer
     test $failed -eq 0
 end
 
+function test_help_renderer_degrades_safely
+    # The renderer must return 1 ONLY when argv[1] is not a help flag.
+    # A missing or label-less header must still print and exit 0, because
+    # returning 1 hands control back to the caller's body -- and the body
+    # of upgrade(1) is `paru -Syu --noconfirm`.
+    set -l tmp (mktemp -d)
+    printf '%s\n' \
+        'function headerless' \
+        '    __fish_help_header (status current-function) $argv; and return 0' \
+        "    touch $tmp/BODY-RAN" \
+        'end' >$tmp/headerless.fish
+    # A comment run carrying no `# LABEL` line at all.
+    printf '%s\n' \
+        '# just an ordinary comment, no labels here' \
+        'function malformed' \
+        '    __fish_help_header (status current-function) $argv; and return 0' \
+        "    touch $tmp/BODY-RAN" \
+        'end' >$tmp/malformed.fish
+
+    set -l failed 0
+    for fn in headerless malformed
+        set -l out (_help_probe $tmp "$fn --help")
+        set -l code $status
+        if test $code -ne 0
+            echo "    $fn --help exited $code, expected 0"
+            set failed 1
+        end
+        if test (count $out) -eq 0
+            echo "    $fn --help printed nothing"
+            set failed 1
+        end
+        if not contains -- $fn $out
+            echo "    $fn --help did not name the function"
+            set failed 1
+        end
+        if test -e $tmp/BODY-RAN
+            echo "    $fn executed its body despite --help"
+            set failed 1
+            rm -f $tmp/BODY-RAN
+        end
+    end
+
+    # The inverse: no help flag must return 1 and let the body run.
+    _help_probe $tmp headerless >/dev/null 2>&1
+    if not test -e $tmp/BODY-RAN
+        echo "    body did NOT run when no help flag was passed"
+        set failed 1
+    end
+
+    rm -rf $tmp
+    # Explicit, never a trailing `if`: standing gotcha #5 -- an if with no
+    # branch taken resolves $status to 0 and the test would pass silently.
+    test $failed -eq 0
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0
