@@ -97,6 +97,91 @@ function test_vault_dir_honors_override
     test "$got" = /tmp/vault-override-check
 end
 
+# ── Header-driven --help ─────────────────────────────────────────────
+# Helper: run `<fn> $argv` in a throwaway fish that can see both $dir and
+# the loaded session's function path, so a fixture function can call the
+# real __fish_help_header. Paths here are mktemp -d output, never spaced.
+function _help_probe --argument-names dir
+    env TERM=dumb fish --no-config -c \
+        "set -g fish_function_path $dir $fish_function_path; $argv[2..]"
+end
+
+function test_help_renderer
+    set -l tmp (mktemp -d)
+    printf '%s\n' \
+        '# Copyright (C) 2026 Rootiest' \
+        '' \
+        '# CATEGORY' \
+        '#   99-fixture' \
+        '#' \
+        '# SYNOPSIS' \
+        '#   fixturefn [options]' \
+        '#' \
+        '# DESCRIPTION' \
+        '#   First paragraph.' \
+        '#' \
+        '#   Second paragraph.' \
+        '#' \
+        '# ARGUMENTS' \
+        '#   -x        Do the thing' \
+        '#       more  Indented continuation' \
+        '#' \
+        '# EXAMPLE' \
+        '#   fixturefn -x' \
+        'function fixturefn' \
+        '    __fish_help_header (status current-function) $argv; and return 0' \
+        '    echo RAN-BODY' \
+        'end' >$tmp/fixturefn.fish
+
+    set -l out (_help_probe $tmp 'fixturefn --help')
+    set -l code $status
+    set -l text (string join \n $out)
+    rm -rf $tmp
+
+    set -l failed 0
+    if test $code -ne 0
+        echo "    renderer exited $code, expected 0"
+        set failed 1
+    end
+    if contains -- RAN-BODY $out
+        echo "    body executed despite --help"
+        set failed 1
+    end
+    if not contains -- USAGE $out
+        echo "    missing USAGE heading (SYNOPSIS should render as USAGE)"
+        set failed 1
+    end
+    if contains -- CATEGORY $out
+        echo "    CATEGORY leaked into the menu"
+        set failed 1
+    end
+    if not string match -q '*      more  Indented continuation*' -- $text
+        echo "    nested ARGUMENTS indentation lost"
+        set failed 1
+    end
+    # Index-based, not a glob: fish's `string match` glob `*` does not
+    # span newlines, so a pattern straddling two lines silently never
+    # matches and the assertion would pass for the wrong reason.
+    set -l i (contains -i -- "  First paragraph." $out)
+    if test -z "$i"
+        echo "    DESCRIPTION body missing entirely"
+        set failed 1
+    else
+        # Indices hoisted: a command substitution inside a quoted index
+        # ("$out[(math ...)]") is a fish parse error, not an expansion.
+        set -l gap (math $i + 1)
+        set -l nxt (math $i + 2)
+        if test -n "$out[$gap]"
+            echo "    multi-paragraph DESCRIPTION lost its blank line"
+            set failed 1
+        else if test "$out[$nxt]" != "  Second paragraph."
+            echo "    second paragraph missing after the blank"
+            set failed 1
+        end
+    end
+    test $failed -eq 0
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0
