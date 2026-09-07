@@ -93,11 +93,43 @@ end
 # the suite builds its own throwaway git repos and binds the vault, claude
 # and agy roots to them, so it needs no loaded config and must never see
 # the real ~/.claude.
+#
+# HOME is deliberately NOT overridden here. Read this before "improving" it.
+#
+# Overriding XDG_CONFIG_HOME/XDG_DATA_HOME plus --no-config is what makes
+# this run isolated: the universal-variable file fish can reach is a fresh
+# empty one, and no config.fish/conf.d is loaded. Without that, an
+# "isolated" suite runs against the user's LIVE config and real universal
+# variables -- this repo doubles as a real ~/.config/fish -- so a test
+# doing `set -e __fish_config_op_logging` would erase a real universal
+# variable out of the running shell. Measured:
+# $__fish_config_op_registry_keys has 65 entries under a plain `fish`, 0
+# under `fish --no-config`.
+#
+# `env -i HOME=$sandbox` was tried and REJECTED. It looks strictly more
+# hermetic, but test-agents-vault.fish's hermeticity floor snapshots the
+# real $HOME/.claude/memory and $HOME/.gemini/antigravity-cli and asserts
+# them unchanged at the end. Point HOME at a sandbox and both snapshots
+# read "absent" before and after: the assertions still pass while
+# asserting nothing. A change that turns a real assertion into a tautology
+# without turning anything red is the worst failure mode a test harness
+# has. Keeping HOME real is what keeps those two assertions biting.
+#
+# Overriding XDG_DATA_HOME is a hermeticity gain on top of the isolation:
+# _agents_vault_dir falls back to
+# ${XDG_DATA_HOME:-$HOME/.local/share}/agent-vault, so a vault path that
+# no test overrode lands in a temp dir instead of the user's real
+# ~/.local/share/agent-vault.
 echo ""
 echo "== Vault helper tests =="
-fish $repo_root/tests/test-agents-vault.fish
+set -l vault_xdg (mktemp -d)
+env XDG_CONFIG_HOME=$vault_xdg/cfg XDG_DATA_HOME=$vault_xdg/data \
+    fish --no-config $repo_root/tests/test-agents-vault.fish
 if test $status -ne 0
     set overall_failed 1
 end
+# `command rm`, not bare `rm`: this driver runs under the config it tests,
+# which shadows rm/cp/cat. See the Phase 2 note for the full reasoning.
+command rm -rf $vault_xdg
 
 exit $overall_failed
