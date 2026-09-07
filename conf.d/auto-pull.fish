@@ -13,6 +13,11 @@
 #
 # Manage the registry with: auto-pull add / remove / list / status
 
+# Registers an --on-variable PWD handler that backgrounds a git fetch. In a
+# script that cd's, that is both wasted work and AGENTS.md Task #4's
+# credential-prompt hazard fired from a background job.
+status is-interactive; or return
+
 # C2 guard: when auto-execution is disabled, do not register the handler.
 __fish_config_op_enabled (status basename); or exit
 
