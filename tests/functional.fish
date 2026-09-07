@@ -97,6 +97,33 @@ function test_vault_dir_honors_override
     test "$got" = /tmp/vault-override-check
 end
 
+function test_palette_roles_defined
+    functions -q __fish_palette
+    or begin
+        echo "    __fish_palette is not defined"
+        return 1
+    end
+    # Called from inside a function, the palette must land in THIS scope.
+    __fish_palette
+    set -l missing
+    for role in c_reset c_head c_cmd c_arg c_flag c_warn c_err c_ok \
+        c_accent c_dim c_sel c_hi
+        if not set -q $role; or test -z "$$role"
+            set -a missing $role
+        end
+    end
+    if test (count $missing) -gt 0
+        echo "    palette roles empty or unset: $missing"
+        return 1
+    end
+    # Nothing may leak to global scope.
+    if set -q -g c_reset
+        echo "    __fish_palette leaked c_reset into global scope"
+        return 1
+    end
+    return 0
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0
