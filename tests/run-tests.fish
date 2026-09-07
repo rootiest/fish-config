@@ -53,12 +53,22 @@ mkdir -p $sandbox_cfg
 # no-op on missing paths), so give it $HOME/.local/bin to find.
 mkdir -p $sandbox/home/.local/bin
 
-cp $repo_root/config.fish $sandbox_cfg/
+# Every utility below goes through `command`. This driver runs under the
+# very config it tests, which shadows these: `cp` is an alias for `cp -i`,
+# `rm` is a trash wrapper, `cat` resolves to bat. Only `cp` is an actual
+# hazard today -- `-i` on a non-empty destination reads EOF in a
+# non-interactive runner and SILENTLY SKIPS the copy while exiting 0,
+# which would leave the sandbox missing config files and report success.
+# `rm -rf` and `cat` were measured and behave correctly as-is (the rm
+# wrapper bails to `command rm` on any non-recursive flag, so -rf really
+# deletes and does not trash). Prefixed anyway: a test runner must not
+# depend on the configuration under test.
+command cp $repo_root/config.fish $sandbox_cfg/
 test -f $repo_root/fish_plugins
-and cp $repo_root/fish_plugins $sandbox_cfg/
+and command cp $repo_root/fish_plugins $sandbox_cfg/
 for d in functions conf.d completions integrations themes data
     test -d $repo_root/$d
-    and cp -r $repo_root/$d $sandbox_cfg/
+    and command cp -r $repo_root/$d $sandbox_cfg/
 end
 
 set -l err_file (mktemp)
@@ -72,8 +82,8 @@ env -i \
     2>$err_file
 set -l functional_status $status
 
-set -l stderr_out (cat $err_file)
-rm -rf $sandbox $err_file
+set -l stderr_out (command cat $err_file)
+command rm -rf $sandbox $err_file
 
 if test -n "$stderr_out"
     # Diagnostic only, not a gate: on machines with vendor fish configs
