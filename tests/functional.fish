@@ -124,6 +124,53 @@ function test_palette_roles_defined
     return 0
 end
 
+# Every user-facing function that renders a coloured --help must still emit
+# escape sequences.
+#
+# This is deliberately a RUNTIME check, never a static grep for
+# __fish_palette. Measured on a deliberately broken functions/logs.fish --
+# the palette call de-duplicated per indentation depth instead of per
+# contiguous run, so the --help block lost its declarations without gaining
+# a call:
+#
+#     fish tests/palette-bytes.fish
+#       FAIL  logs --help    stdout=DIFF stderr=ok
+#       baseline 431 B -> broken 150 B (every escape stripped)
+#
+#     fish -n functions/logs.fish        -> exit 0   (lint PASSES)
+#     grep -c '__fish_palette' logs.fish -> 1        (grep PASSES)
+#
+# Both cheap checks are green on a file whose help output has lost all of
+# its colour. Only running the function and looking for an \e byte catches
+# it. The full test suite was also green throughout.
+#
+# functions/fish_prompt.fish is excluded BY NAME. It interpolates $c_dim
+# from its own Catppuccin hex palette -- those are colour arguments passed
+# to set_color, not captured escapes -- so it legitimately never calls
+# __fish_palette and would otherwise look unconverted forever.
+#
+# qc is absent from the list on purpose: its --help shells out to aichat,
+# which is not installed in CI, so its colour path is unreachable here.
+# tests/palette-bytes.fish stubs aichat and does cover it.
+function test_functions_keep_their_palette
+    set -l colored agents-init agents-vault auto-pull config-settings \
+        config-update detach dng2avif dockup edit jobrunner kitty-logging \
+        logs mkcd open-url p pkg play-media rand_string replay repo-open \
+        scrub smart_exit spark y
+    set -l uncolored
+    for fn in $colored
+        functions -q $fn; or continue
+        if not $fn --help 2>&1 | string match -qr \e
+            set -a uncolored $fn
+        end
+    end
+    if test (count $uncolored) -gt 0
+        echo "    --help lost its colour: $uncolored"
+        return 1
+    end
+    return 0
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0
