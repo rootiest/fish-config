@@ -13,6 +13,9 @@
 #   files tracked by sbctl. Combines the edit and sign steps into a single
 #   command.
 #
+# EXIT STATUS
+#   0  Always (individual step failures are not propagated)
+#
 # EXAMPLE
 #   limine-edit
 function limine-edit --description 'Safely edit and re-verify Limine configuration'

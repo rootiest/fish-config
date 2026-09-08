@@ -12,6 +12,9 @@
 #   README.md, ensuring all features and examples are accurate and pruning
 #   obsolete content.
 #
+# EXIT STATUS
+#   Exit status of the `claude` invocation
+#
 # EXAMPLE
 #   claude-docs
 function claude-docs --description 'Claude-code: Sync README with recent changes'

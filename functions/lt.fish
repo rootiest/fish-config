@@ -14,6 +14,9 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the listing command
 #
+# EXIT STATUS
+#   Exit status of eza, lsd, or ls, whichever ran
+#
 # EXAMPLE
 #   lt ~/projects
 function lt --description 'Tree listing, depth 2'

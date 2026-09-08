@@ -12,6 +12,9 @@
 #   zRAM compression ratio, zRAM device details (via zramctl), and
 #   active swap priority (via swapon).
 #
+# EXIT STATUS
+#   0  Always
+#
 # EXAMPLE
 #   swapstat
 function swapstat --description 'View colorized zRAM and swappiness status'

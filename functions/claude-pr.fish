@@ -12,6 +12,9 @@
 #   branch, write a Conventional Commit, run verification, push, and open a
 #   pull request with a manual verification checklist.
 #
+# EXIT STATUS
+#   Exit status of the `claude` invocation
+#
 # EXAMPLE
 #   claude-pr
 function claude-pr --description 'Claude-code: New branch, commit, push, and PR'

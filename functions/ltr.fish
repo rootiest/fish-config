@@ -15,6 +15,9 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the listing command
 #
+# EXIT STATUS
+#   Exit status of eza, lsd, or ls, whichever ran
+#
 # EXAMPLE
 #   ltr ~/projects
 function ltr --description 'Reversed time-sorted listing'

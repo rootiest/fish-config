@@ -11,6 +11,10 @@
 #   Installs or upgrades fzf from git HEAD into ~/.fzf. Pulls the latest
 #   changes if ~/.fzf already exists, or clones the repository if not.
 #
+# EXIT STATUS
+#   0        fzf installed or updated successfully
+#   Nonzero  git or the fzf install script failed
+#
 # EXAMPLE
 #   fzf-update
 function fzf-update --description 'Install or upgrade fzf from git HEAD'

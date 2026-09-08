@@ -33,6 +33,9 @@
 #   Displays a styled message indicating that the fast command is unavailable
 #   and suggests using fast-cli instead.
 #
+# EXIT STATUS
+#   0  Always
+#
 # EXAMPLE
 #   fast
 function fast --description 'Placeholder for future fast utility'

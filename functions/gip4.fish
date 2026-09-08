@@ -10,6 +10,9 @@
 # DESCRIPTION
 #   Fetches and prints the machine's public IPv4 address using icanhazip.com.
 #
+# EXIT STATUS
+#   Exit status of curl
+#
 # EXAMPLE
 #   gip4
 function gip4 --wraps='curl' --description 'Get public IPv4 address'
