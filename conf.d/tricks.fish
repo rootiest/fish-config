@@ -18,20 +18,32 @@ if test -f ~/.fish_profile
     source ~/.fish_profile
 end
 
-# Append unique directories to $PATH (fish_add_path handles duplicates automatically)
-fish_add_path ~/.local/bin
-fish_add_path ~/Applications/depot_tools
+# This file is sourced twice per shell on CachyOS (once by the conf.d
+# autoload, once forced by config.fish to re-win over the distro's own
+# tricks.fish). The PATH/MANPAGER setup below doesn't need to repeat on
+# the second pass -- only the functions/aliases further down do, since
+# those are what re-assert over the distro config. Gate the expensive
+# calls (fish_add_path, type -q bat) behind a once-per-session guard.
+# ponytail: per-session guard, not per-value; if this file grows more
+# expensive one-time setup, extend the same guard rather than adding more.
+if not set -q __fish_config_tricks_env_applied
+    set -g __fish_config_tricks_env_applied 1
 
-# Expose user-local man pages
-if not contains ~/.local/share/man $MANPATH
-    set -gx MANPATH ~/.local/share/man $MANPATH
-end
+    # Append unique directories to $PATH (fish_add_path handles duplicates automatically)
+    fish_add_path ~/.local/bin
+    fish_add_path ~/Applications/depot_tools
 
-# Format man pages using bat (only if bat is installed)
-# Overriding $MANPAGER is opinionated (C3 overrides)
-if type -q bat; and __fish_config_op_enabled (status basename) tricks-manpager
-    set -gx MANROFFOPT -c
-    set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
+    # Expose user-local man pages
+    if not contains ~/.local/share/man $MANPATH
+        set -gx MANPATH ~/.local/share/man $MANPATH
+    end
+
+    # Format man pages using bat (only if bat is installed)
+    # Overriding $MANPAGER is opinionated (C3 overrides)
+    if type -q bat; and __fish_config_op_enabled (status basename) tricks-manpager
+        set -gx MANROFFOPT -c
+        set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
+    end
 end
 
 # Set settings for https://github.com/franciscolourenco/done
