@@ -71,4 +71,71 @@ __fish_variable_check __probe_v
 check "multi-element list -> 3" 3 $status
 set -e __probe_v
 
+section "cascade: category only"
+
+# Invented variable names the real config can never set, so nothing ambient can
+# perturb these -- only the C5 and master cases below need real names.
+set -e __fish_config_opinionated __probe_cat __probe_cat_sub
+
+__fish_config_op_cascade __probe_cat
+check "all unset -> enabled" 0 $status
+
+set -g __probe_cat 0
+__fish_config_op_cascade __probe_cat
+check "category falsy -> disabled" 1 $status
+
+set -g __probe_cat 1
+__fish_config_op_cascade __probe_cat
+check "category truthy -> enabled" 0 $status
+
+set -g __probe_cat garbage
+__fish_config_op_cascade __probe_cat
+check "category unrecognized defers to master -> enabled" 0 $status
+set -e __probe_cat
+
+section "cascade: subcategory beats category"
+
+set -g __probe_cat 0
+set -g __probe_cat_sub 1
+__fish_config_op_cascade __probe_cat __probe_cat_sub
+check "sub on, category off -> enabled" 0 $status
+
+set -g __probe_cat 1
+set -g __probe_cat_sub 0
+__fish_config_op_cascade __probe_cat __probe_cat_sub
+check "sub off, category on -> disabled" 1 $status
+
+set -e __probe_cat_sub
+set -g __probe_cat 0
+__fish_config_op_cascade __probe_cat __probe_cat_sub
+check "sub unset, category off -> disabled" 1 $status
+
+set -g __probe_cat_sub garbage
+__fish_config_op_cascade __probe_cat __probe_cat_sub
+check "sub unrecognized defers, category off -> disabled" 1 $status
+set -e __probe_cat __probe_cat_sub
+
+__fish_config_op_cascade __probe_cat ""
+check "empty subcategory argument -> category-only chain" 0 $status
+
+section "cascade: the master is an off switch only"
+
+set -g __fish_config_opinionated 0
+__fish_config_op_cascade __probe_cat
+check "master off, category unset -> disabled" 1 $status
+
+set -g __probe_cat 1
+__fish_config_op_cascade __probe_cat
+check "master off, category on -> enabled" 0 $status
+set -e __probe_cat
+
+set -g __fish_config_opinionated 1
+__fish_config_op_cascade __probe_cat
+check "master on, category unset -> enabled" 0 $status
+
+set -g __fish_config_opinionated garbage
+__fish_config_op_cascade __probe_cat
+check "master unrecognized, category unset -> enabled" 0 $status
+set -e __fish_config_opinionated
+
 report
