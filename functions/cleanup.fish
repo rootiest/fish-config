@@ -11,9 +11,15 @@
 #   Identifies and removes Arch Linux orphan packages using pacman. Logs
 #   package names and versions to ~/.removed_orphans before removal.
 #
+# EXIT STATUS
+#   0        No orphans found, or orphans removed successfully
+#   Nonzero  `sudo pacman -Rns` failed
+#
 # EXAMPLE
 #   cleanup
 function cleanup --description 'Log orphans to ~/.removed_orphans and remove them'
+    __fish_help_header (status current-function) $argv; and return 0
+
     set -l orphans (pacman -Qtdq)
     if test -n "$orphans"
         echo "📝 Logging orphans to ~/.removed_orphans..."

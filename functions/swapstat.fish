@@ -12,9 +12,14 @@
 #   zRAM compression ratio, zRAM device details (via zramctl), and
 #   active swap priority (via swapon).
 #
+# EXIT STATUS
+#   0  Always
+#
 # EXAMPLE
 #   swapstat
 function swapstat --description 'View colorized zRAM and swappiness status'
+    __fish_help_header (status current-function) $argv; and return 0
+
     set -l swappiness (sysctl -n vm.swappiness)
     set -l zdata (zramctl --bytes --noheadings --output DATA,TOTAL /dev/zram0 2>/dev/null)
     

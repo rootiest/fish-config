@@ -23,12 +23,11 @@
 # EXAMPLE
 #   bkg firefox
 function bkg --description 'Execute bkg'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Check if a command was provided as an argument.
     if test -z "$argv[1]"
-        set -l c_head (set_color --bold cyan)
-        set -l c_cmd (set_color --bold)
-        set -l c_arg (set_color cyan)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""bkg$c_reset $c_arg""<command> [arguments...]$c_reset"
         return 1
     end

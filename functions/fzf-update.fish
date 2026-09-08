@@ -11,9 +11,15 @@
 #   Installs or upgrades fzf from git HEAD into ~/.fzf. Pulls the latest
 #   changes if ~/.fzf already exists, or clones the repository if not.
 #
+# EXIT STATUS
+#   0        fzf installed or updated successfully
+#   Nonzero  git or the fzf install script failed
+#
 # EXAMPLE
 #   fzf-update
 function fzf-update --description 'Install or upgrade fzf from git HEAD'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if test -d ~/.fzf
         echo "Updating fzf..."
         git -C ~/.fzf pull --ff-only

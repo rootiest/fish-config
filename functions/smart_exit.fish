@@ -44,20 +44,16 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
     argparse $options -- $argv
     or return 1
 
-    set -l c_primary (set_color cyan)
-    set -l c_accent (set_color green)
-    set -l c_warn (set_color yellow)
-    set -l c_bold (set_color --bold)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     if set -q _flag_help
-        echo -e "Usage: $c_accent"exit"$c_reset [$c_primary""OPTIONS""$c_reset]"
+        echo -e "Usage: $c_accent"exit"$c_reset [$c_arg""OPTIONS""$c_reset]"
         echo ""
         echo "Closes the current shell session, automatically archiving the window scrollback."
         echo ""
         echo "Options:"
-        echo -e "  $c_primary""-h, --help""$c_reset    Show this help message"
-        echo -e "  $c_primary""-n, --no-log""$c_reset  Exit immediately $c_bold""without""$c_reset saving a scrollback history log"
+        echo -e "  $c_arg""-h, --help""$c_reset    Show this help message"
+        echo -e "  $c_arg""-n, --no-log""$c_reset  Exit immediately $c_cmd""without""$c_reset saving a scrollback history log"
         return 0
     end
 
@@ -112,7 +108,7 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
             end
         end
     else
-        echo -e "$c_warn""➔""$c_reset Exiting discreetly; $c_bold""no history logs saved.""$c_reset"
+        echo -e "$c_warn""➔""$c_reset Exiting discreetly; $c_cmd""no history logs saved.""$c_reset"
         sleep 0.4
     end
 

@@ -27,8 +27,7 @@ function __config_settings_pagetab
     set -l active $argv[1]
     set -l iw     $argv[2]
 
-    set -l c_hi    (set_color --bold white)
-    set -l c_reset (set_color normal)
+    __fish_palette
     set -l names Universal Session Sponge Paths
 
     set -l strip ' '

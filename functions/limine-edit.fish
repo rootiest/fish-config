@@ -13,9 +13,14 @@
 #   files tracked by sbctl. Combines the edit and sign steps into a single
 #   command.
 #
+# EXIT STATUS
+#   0  Always (individual step failures are not propagated)
+#
 # EXAMPLE
 #   limine-edit
 function limine-edit --description 'Safely edit and re-verify Limine configuration'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # 1. Open the config with sudoedit
     sudoedit /boot/limine.conf
 

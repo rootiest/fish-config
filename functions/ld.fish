@@ -17,6 +17,8 @@
 # EXAMPLE
 #   ld
 function ld --description 'Run lazydocker on the current Docker context'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if not type -q docker
         echo "ld: docker is not installed" >&2
         return 1

@@ -29,10 +29,13 @@
 #   split
 #   split -v nvim README.md
 function split --description 'Run a command in a new terminal split'
+    # -h is --horizontal here (see this function's own ARGUMENTS),
+    # so only the long form may reach the renderer.
+    test "$argv[1]" = --help; and __fish_help_header (status current-function) --help; and return 0
+
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
-        set -l c_err (set_color red)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_err"'split: disabled by __fish_config_op_integrations'"$c_reset" >&2
         return 1
     end

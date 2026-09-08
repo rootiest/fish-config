@@ -32,26 +32,21 @@
 if type -q aichat
     function qc --wraps aichat --description 'Quick-chat wrapper around aichat (cli role)'
         if contains -- -h $argv; or contains -- --help $argv
-            set -l c_ttl (set_color --bold cyan)
-            set -l c_cmd (set_color --bold)
-            set -l c_flag (set_color yellow)
-            set -l c_txt (set_color normal)
-            set -l c_dim (set_color brblack)
-            set -l c_rst (set_color normal)
+            __fish_palette
             set -l w 59
             set -l bar (string repeat -n $w ─)
             # Title line, padded to the box width (plain form drives the math).
             set -l title "  qc — quick-chat: a thin aichat wrapper"
             set -l pad (string repeat -n (math $w - (string length -- $title)) ' ')
-            echo "$c_dim╭$bar╮$c_rst"
-            echo "$c_dim│$c_rst  $c_ttl""qc$c_rst $c_dim—$c_rst quick-chat: a thin $c_cmd""aichat$c_rst wrapper$pad$c_dim│$c_rst"
-            echo "$c_dim╰$bar╯$c_rst"
-            echo "  Defaults to the $c_flag'cli'$c_rst role — an AI system prompt tuned"
-            echo "  for concise, $c_txt""terminal-friendly$c_rst output."
+            echo "$c_dim╭$bar╮$c_reset"
+            echo "$c_dim│$c_reset  $c_head""qc$c_reset $c_dim—$c_reset quick-chat: a thin $c_cmd""aichat$c_reset wrapper$pad$c_dim│$c_reset"
+            echo "$c_dim╰$bar╯$c_reset"
+            echo "  Defaults to the $c_flag'cli'$c_reset role — an AI system prompt tuned"
+            echo "  for concise, $c_reset""terminal-friendly$c_reset output."
             echo
-            echo "  Accepts every $c_cmd""aichat$c_rst flag; passing $c_flag--role$c_rst/$c_flag-r$c_rst overrides"
-            echo "  the default role. $c_cmd""aichat$c_rst's own help follows:"
-            echo "$c_dim$bar$c_rst"
+            echo "  Accepts every $c_cmd""aichat$c_reset flag; passing $c_flag--role$c_reset/$c_flag-r$c_reset overrides"
+            echo "  the default role. $c_cmd""aichat$c_reset's own help follows:"
+            echo "$c_dim$bar$c_reset"
             aichat --help | string replace -a aichat qc
             return 0
         end

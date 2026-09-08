@@ -14,13 +14,18 @@
 #   Searches fish history interactively using fzf, inserts the selected command
 #   into the command line, and copies it to the clipboard via wl-copy.
 #
+# EXIT STATUS
+#   0  Command selected and inserted, or fzf was cancelled
+#   1  Disabled by __fish_config_op_integrations
+#
 # EXAMPLE
 #   hist
 function hist --description 'Search fish history and put it in the prompt'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
-        set -l c_err (set_color red)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_err"'hist: disabled by __fish_config_op_integrations'"$c_reset" >&2
         return 1
     end

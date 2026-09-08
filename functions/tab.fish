@@ -25,10 +25,11 @@
 # EXAMPLE
 #   tab
 function tab --description 'Spawn a new tab in the current terminal'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
-        set -l c_err (set_color red)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_err"'tab: disabled by __fish_config_op_integrations'"$c_reset" >&2
         return 1
     end

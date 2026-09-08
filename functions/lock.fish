@@ -10,8 +10,13 @@
 # DESCRIPTION
 #   Locks the current desktop session using loginctl lock-session.
 #
+# EXIT STATUS
+#   Exit status of `loginctl lock-session`
+#
 # EXAMPLE
 #   lock
 function lock --wraps='loginctl' --description 'alias lock=loginctl'
+    __fish_help_header (status current-function) $argv; and return 0
+
     loginctl lock-session
 end

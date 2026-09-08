@@ -15,10 +15,15 @@
 # ARGUMENTS
 #   text...  Text to encode; reads from stdin if omitted
 #
+# EXIT STATUS
+#   Exit status of qrencode, or curl if qrencode is unavailable
+#
 # EXAMPLE
 #   qr "https://example.com"
 #   echo "hello" | qr
 function qr --description 'Generate a QR code from text or pipe'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if type -q qrencode
         if set -q argv[1]
             echo $argv | qrencode -t utf8

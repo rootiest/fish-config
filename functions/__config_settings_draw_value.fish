@@ -33,10 +33,7 @@ function __config_settings_draw_value
     set -l edit_mode $argv[3]
     set -l edit_buf  $argv[4]
 
-    set -l c_ok (set_color green)
-    set -l c_dim (set_color brblack)
-    set -l c_head (set_color --bold cyan)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     # ── Page row metadata (parallel lists) ────────────────────────────────
     set -l title

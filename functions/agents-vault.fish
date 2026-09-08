@@ -186,14 +186,7 @@
 #   throwaway directory and leave a dangling symlink behind, which is
 #   strictly worse than having had no backup at all.
 function agents-vault --description 'track curated agent memory in a host-scoped vault repo'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_flag (set_color yellow)
-    set -l c_ok (set_color green)
-    set -l c_warn (set_color yellow)
-    set -l c_err (set_color red)
-    set -l c_dim (set_color brblack)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     argparse h/help link push restore status 'adopt=' 'remote=' \
         v/verbose q/quiet s/silent -- $argv

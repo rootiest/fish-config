@@ -99,6 +99,11 @@ end
 # Sourced, not autoloaded: XDG_CONFIG_HOME points at the empty sandbox. Only
 # the draw path is ever called -- __config_settings_apply and
 # __config_settings_set_value are defined here and never invoked.
+# __fish_palette is sourced too: the draw functions call it (instead of
+# declaring $c_head/$c_dim/etc. inline) and it doesn't match the
+# __config_settings_* glob, so without this line every draw function's
+# colors silently unset and the golden loses all its escape sequences.
+source $repo/functions/__fish_palette.fish
 for f in $repo/functions/__config_settings_*.fish
     source $f
 end

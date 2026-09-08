@@ -31,8 +31,7 @@
 # EXAMPLE
 #   _agents_init_ensure_gitignore /home/user/myproject "agents-init" "AGENTS/" "/AGENTS.md"
 function _agents_init_ensure_gitignore
-    set -l c_ok    (set_color green)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     if test (count $argv) -lt 3
         echo (set_color red)"_agents_init_ensure_gitignore: requires <root> <label> <pattern>..."(set_color normal) >&2

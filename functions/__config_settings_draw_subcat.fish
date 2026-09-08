@@ -41,9 +41,7 @@ function __config_settings_draw_subcat
     set -l cur_scope    $argv[2]
     set -l category_var $argv[3]
 
-    set -l c_dim (set_color brblack)
-    set -l c_head (set_color --bold cyan)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     set -l rows (__config_settings_subcats $category_var)
     set -l n (count $rows)

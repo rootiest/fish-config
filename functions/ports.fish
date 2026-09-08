@@ -11,8 +11,13 @@
 #   Lists all active TCP listeners on the system using lsof, showing
 #   port numbers and addresses without hostname resolution.
 #
+# EXIT STATUS
+#   Exit status of `lsof`
+#
 # EXAMPLE
 #   ports
 function ports --wraps='sudo' --description 'Show active network listeners'
+    __fish_help_header (status current-function) $argv; and return 0
+
     sudo lsof -iTCP -sTCP:LISTEN -P -n
 end

@@ -42,14 +42,7 @@
 #   auto-pull list
 #   auto-pull remove qmk_firmware
 function auto-pull --description 'Manage the auto-pull repository registry'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_flag (set_color yellow)
-    set -l c_ok (set_color green)
-    set -l c_warn (set_color yellow)
-    set -l c_err (set_color red)
-    set -l c_dim (set_color brblack)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     set -q __fish_config_dir; or set -l __fish_config_dir $XDG_CONFIG_HOME/fish
     set -q __fish_user_dots_path; or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
