@@ -11,6 +11,9 @@
 #   Kills all detached (unattached) tmux sessions, leaving any currently
 #   attached sessions running.
 #
+# EXIT STATUS
+#   0  Always
+#
 # EXAMPLE
 #   tmux-clean
 function tmux-clean --description 'Kill all tmux sessions except the current one'

@@ -11,6 +11,9 @@
 #   Fetches and prints both the public IPv4 and IPv6 addresses using
 #   icanhazip.com. Shows "Not detected" for any address that times out.
 #
+# EXIT STATUS
+#   0  Always (network failures print "Not detected" instead of failing)
+#
 # EXAMPLE
 #   gip
 function gip --description 'Show all public IP addresses'

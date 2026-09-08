@@ -14,6 +14,10 @@
 #   Searches fish history interactively using fzf, inserts the selected command
 #   into the command line, and copies it to the clipboard via wl-copy.
 #
+# EXIT STATUS
+#   0  Command selected and inserted, or fzf was cancelled
+#   1  Disabled by __fish_config_op_integrations
+#
 # EXAMPLE
 #   hist
 function hist --description 'Search fish history and put it in the prompt'

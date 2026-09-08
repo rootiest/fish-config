@@ -11,6 +11,9 @@
 #   Launches Steam with systemd-inhibit to prevent the system from idling
 #   or sleeping during active downloads.
 #
+# EXIT STATUS
+#   Exit status of `steam` (via systemd-inhibit)
+#
 # EXAMPLE
 #   steam-dl
 function steam-dl --description 'Run Steam while inhibiting system sleep'

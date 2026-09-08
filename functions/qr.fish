@@ -15,6 +15,9 @@
 # ARGUMENTS
 #   text...  Text to encode; reads from stdin if omitted
 #
+# EXIT STATUS
+#   Exit status of qrencode, or curl if qrencode is unavailable
+#
 # EXAMPLE
 #   qr "https://example.com"
 #   echo "hello" | qr

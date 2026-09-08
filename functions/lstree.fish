@@ -14,6 +14,9 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the listing command
 #
+# EXIT STATUS
+#   Exit status of eza, lsd, or ls, whichever ran
+#
 # EXAMPLE
 #   lstree ~/projects/myapp
 function lstree --description 'Full recursive tree listing'
