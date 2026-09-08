@@ -24,6 +24,8 @@
 #   sbver
 #   sbver --brief
 function sbver --description 'Verifies Secure Boot status of EFI binaries using sbctl'
+  __fish_help_header (status current-function) $argv; and return 0
+
   if not type -q sbctl
     echo "Error: 'sbctl' is not installed."
     return 1

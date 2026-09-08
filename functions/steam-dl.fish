@@ -14,6 +14,8 @@
 # EXAMPLE
 #   steam-dl
 function steam-dl --description 'Run Steam while inhibiting system sleep'
+    __fish_help_header (status current-function) $argv; and return 0
+
     echo "Inhibiting sleep while Steam downloads..."
     systemd-inhibit --why="Active Download" --who="User" --what=idle:sleep steam
 end
