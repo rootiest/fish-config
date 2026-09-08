@@ -125,6 +125,22 @@ function test_draw_line_count_matches_panel_h
     end
 end
 
+function test_diff_redraw_unchanged_lines_are_bare_newlines
+    functions -q __config_settings_diff_redraw; or return 1
+    set -l old (string join \n -- AAA BBB CCC | string collect)
+    set -l new (string join \n -- AAA BBB CCC | string collect)
+    set -l out (__config_settings_diff_redraw "$old" "$new" | string collect -N)
+    test "$out" = \n\n\n
+end
+
+function test_diff_redraw_changed_line_is_cleared_and_rewritten
+    functions -q __config_settings_diff_redraw; or return 1
+    set -l old (string join \n -- AAA BBB CCC | string collect)
+    set -l new (string join \n -- AAA XYZ CCC | string collect)
+    set -l out (__config_settings_diff_redraw "$old" "$new" | string collect -N)
+    test "$out" = \n\e\[2K\rXYZ\n\n
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0
