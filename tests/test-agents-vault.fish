@@ -8,12 +8,9 @@
 #
 # Usage: fish tests/test-agents-vault.fish
 
-set -l here (realpath (dirname (status filename)))
-set -g repo_root (realpath $here/..)
+source (realpath (dirname (status filename)))/lib.fish
 set -p fish_function_path $repo_root/functions
 
-set -g TESTS_RUN 0
-set -g TESTS_FAILED 0
 set -g TMPDIRS
 
 # The suite is hermetic against $HOME and ~/.claude, but it was not
@@ -49,18 +46,6 @@ set -gx GIT_CONFIG_KEY_0 commit.gpgsign
 set -gx GIT_CONFIG_VALUE_0 false
 set -gx GIT_CONFIG_KEY_1 init.defaultBranch
 set -gx GIT_CONFIG_VALUE_1 main
-
-function check --argument-names label want got
-    set -g TESTS_RUN (math $TESTS_RUN + 1)
-    if test "$want" = "$got"
-        echo "  PASS  $label"
-    else
-        echo "  FAIL  $label"
-        echo "        want: $want"
-        echo "        got:  $got"
-        set -g TESTS_FAILED (math $TESTS_FAILED + 1)
-    end
-end
 
 # Failure injection that survives uid 0.
 #
@@ -1995,6 +1980,4 @@ set -e __fish_agent_vault_claude_home
 set -e __fish_agent_vault_agy_root
 
 cleanup
-echo ""
-echo (math $TESTS_RUN - $TESTS_FAILED)"/$TESTS_RUN passed"
-exit $TESTS_FAILED
+report

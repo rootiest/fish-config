@@ -21,6 +21,8 @@
 # EXAMPLE
 #   upgrade
 function upgrade --description 'Full system upgrade via paru or yay'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
         __fish_palette

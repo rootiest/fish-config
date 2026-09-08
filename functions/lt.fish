@@ -14,9 +14,14 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the listing command
 #
+# EXIT STATUS
+#   Exit status of eza, lsd, or ls, whichever ran
+#
 # EXAMPLE
 #   lt ~/projects
 function lt --description 'Tree listing, depth 2'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if which eza >/dev/null 2>&1
         eza --tree --level=2 --icons --color=auto --hyperlink $argv
     else if which lsd >/dev/null 2>&1

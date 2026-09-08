@@ -23,6 +23,8 @@
 # EXAMPLE
 #   bkg firefox
 function bkg --description 'Execute bkg'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Check if a command was provided as an argument.
     if test -z "$argv[1]"
         __fish_palette

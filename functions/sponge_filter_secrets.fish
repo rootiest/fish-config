@@ -31,7 +31,6 @@
 # EXAMPLE
 #   # Register with sponge (done automatically by conf.d/sponge_privacy.fish):
 #   set -U -a sponge_filters sponge_filter_secrets
-
 function sponge_filter_secrets --argument-names command
     # Find all exported variables with security-sensitive names
     set -l sensitive_vars (set --names --export | string match --regex -- \

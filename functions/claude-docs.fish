@@ -12,8 +12,13 @@
 #   README.md, ensuring all features and examples are accurate and pruning
 #   obsolete content.
 #
+# EXIT STATUS
+#   Exit status of the `claude` invocation
+#
 # EXAMPLE
 #   claude-docs
 function claude-docs --description 'Claude-code: Sync README with recent changes'
+    __fish_help_header (status current-function) $argv; and return 0
+
     claude "Analyze the recent changes and update the README.md to ensure all features, setup instructions, and examples are 100% accurate. Prune any obsolete information."
 end

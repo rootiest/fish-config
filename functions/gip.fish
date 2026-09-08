@@ -11,9 +11,14 @@
 #   Fetches and prints both the public IPv4 and IPv6 addresses using
 #   icanhazip.com. Shows "Not detected" for any address that times out.
 #
+# EXIT STATUS
+#   0  Always (network failures print "Not detected" instead of failing)
+#
 # EXAMPLE
 #   gip
 function gip --description 'Show all public IP addresses'
+    __fish_help_header (status current-function) $argv; and return 0
+
     echo -n "IPv4: "
     curl -4 -s --max-time 2 https://icanhazip.com || echo "Not detected"
     echo -n "IPv6: "

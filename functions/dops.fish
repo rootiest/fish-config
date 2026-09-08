@@ -4,27 +4,28 @@
 # CATEGORY
 #   12-ai-and-developer-tools
 #
+# DEPENDENCIES
+#   docker
+#
 # SYNOPSIS
-#   docker [subcommand] [args...]
+#   dops [args...]
 #
 # DESCRIPTION
-#   Wrapper for docker that intercepts the ps subcommand and redirects it to
-#   the dops function for enhanced container listing. All other subcommands are
-#   passed through to the real docker binary.
+#   Enhanced container listing: runs docker ps with a clean custom table
+#   (Names, Image, Status, Ports) instead of docker's noisier default
+#   columns. Extra arguments (e.g. -a) are forwarded to docker ps.
 #
 # ARGUMENTS
-#   subcommand  Docker subcommand (ps is redirected to dops)
-#   args...     Arguments forwarded to docker or dops
+#   args...  Arguments forwarded to `docker ps`
+#
+# EXIT STATUS
+#   Exit status of `docker ps`
 #
 # EXAMPLE
-#   docker ps
-function docker --description 'Execute docker'
-    if test -n "$argv[1]"
-        switch $argv[1]
-            case ps
-                dops $argv[2..-1]
-            case '*'
-                command docker $argv[1..-1]
-        end
-    end
+#   dops
+#   dops -a
+function dops --description 'Enhanced, formatted docker ps listing'
+    __fish_help_header (status current-function) $argv; and return 0
+
+    command docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' $argv
 end

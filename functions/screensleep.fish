@@ -11,9 +11,14 @@
 #   Turns off the display after a 1-second delay by invoking the KDE
 #   PowerDevil "Turn Off Screen" global shortcut via busctl.
 #
+# EXIT STATUS
+#   Exit status of `busctl`
+#
 # EXAMPLE
 #   screensleep
 function screensleep --description 'Turn off the display using KDE PowerDevil'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Optional: 1-second delay to ensure no keystrokes wake it immediately
     sleep 1
     busctl --user call \

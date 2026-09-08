@@ -11,8 +11,13 @@
 #   Backwards-compatibility wrapper that delegates to fish-deps status to
 #   report which fish shell dependencies are installed or missing.
 #
+# EXIT STATUS
+#   Exit status of `fish-deps status`
+#
 # EXAMPLE
 #   check_fish_deps
 function check_fish_deps --description 'Check all fish-related dependencies'
+    __fish_help_header (status current-function) $argv; and return 0
+
     fish-deps status
 end

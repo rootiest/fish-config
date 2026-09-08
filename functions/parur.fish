@@ -19,6 +19,8 @@
 # EXAMPLE
 #   parur
 function parur --description 'Interactively search and remove an installed package using fzf'
+    __fish_help_header (status current-function) $argv; and return 0
+
     set -l aur ""
     if type -q paru
         set aur paru

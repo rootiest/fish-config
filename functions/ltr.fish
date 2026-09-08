@@ -15,9 +15,14 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the listing command
 #
+# EXIT STATUS
+#   Exit status of eza, lsd, or ls, whichever ran
+#
 # EXAMPLE
 #   ltr ~/projects
 function ltr --description 'Reversed time-sorted listing'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if which eza >/dev/null 2>&1
         eza --long --all --sort=modified --icons --hyperlink --color=auto --color-scale=age --color-scale-mode=gradient $argv
     else if which lsd >/dev/null 2>&1

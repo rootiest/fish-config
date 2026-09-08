@@ -228,16 +228,15 @@ function __tailscale_prepare_completions
     return 0
 end
 
-# Since Fish completions are only loaded once the user triggers them, we trigger them ourselves
-# so we can properly delete any completions provided by another script.
-# Only do this if the program can be found, or else fish may print some errors; besides,
-# the existing completions will only be loaded if the program can be found.
-if type -q "tailscale"
-    # The space after the program name is essential to trigger completion for the program
-    # and not completion of the program name itself.
-    # Also, we use '> /dev/null 2>&1' since '&>' is not supported in older versions of fish.
-    complete --do-complete "tailscale " > /dev/null 2>&1
-end
+# REMOVED (2026-09-07): Cobra's self-priming block —
+#   if type -q "tailscale"; complete --do-complete "tailscale " >/dev/null 2>&1; end
+# It existed to force any pre-existing tailscale completions to load so the
+# `complete -c tailscale -e` below could erase them. From completions/ it has
+# no job: fish autoloads only the FIRST match on $fish_complete_path, and
+# $__fish_config_dir/completions precedes /usr/share/fish/vendor_completions.d,
+# so the vendor file is never sourced and there is nothing to erase. It also
+# executed the tailscale binary at startup. Verified: completion output is
+# byte-identical with and without it. See AGENTS/specs/2026-09-07-startup-latency-design.md D2.
 
 # Remove any pre-existing completions for the program since we will be handling all of them.
 complete -c tailscale -e
