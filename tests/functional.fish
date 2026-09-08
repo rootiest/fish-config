@@ -316,8 +316,9 @@ function test_every_user_facing_function_has_help
         # Published == carries a `# CATEGORY` block, matching
         # manualtools.parse_functions.
         contains -- "# CATEGORY" (string trim -- $lines); or continue
-        # Resolve the real defined name; the file stem can disagree
-        # (dops.fish defines `docker` -- see JOB-BRIEF-FINDINGS.md §1).
+        # Resolve the real defined name; the file stem can disagree with it
+        # (formerly dops.fish defined `docker` -- see JOB-BRIEF-FINDINGS.md
+        # §1, fixed by splitting it into dops.fish and docker.fish).
         set -l name (string match -rg '^\s*function\s+(\S+)' -- $lines)[1]
         test -n "$name"; or continue
         set name (string trim -c "'\"" -- $name)
