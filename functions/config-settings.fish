@@ -145,7 +145,9 @@ function config-settings --description 'Interactive TUI for managing fish config
 
     set -l cur_page  0           # 0=Universal 1=Session 2=Sponge 3=Paths
     set -l cur_row   0
-    set -l panel_h   16
+    set -l panel_h   0            # real value set by the first dispatch call below
+    set -l new_frame              # captured by __cs_dispatch_draw
+    set -l prev_frame             # frame currently on screen; empty until first paint
     set -l last_cols $COLUMNS
 
     # ── Terminal setup ────────────────────────────────────
@@ -153,37 +155,34 @@ function config-settings --description 'Interactive TUI for managing fish config
     trap 'printf "\e[?25h"; set -g __config_settings_exit 1' INT
 
     # ── Draw dispatch (page 0/1 = toggle table; 2/3 = value page) ─────────
-    # Records the actual line count of whatever it just drew into panel_h,
-    # so every erase (redraw loop, inline editor, final cleanup) matches
-    # reality -- the sub-category page is n+7 lines (2-6 sub-categories:
-    # 9-13 lines), never the category list's fixed 16.
+    # Captures the page's rendered lines into new_frame and derives panel_h
+    # from their count. panel_h is never hand-set again: the sub-category
+    # page is n+7 lines (2-6 sub-categories: 9-13 lines), never the
+    # category list's fixed 16, and deriving it from the real output means
+    # that fact can no longer drift out of sync with what got drawn.
     function __cs_dispatch_draw --no-scope-shadowing
         switch $cur_page
             case 0
                 if test $in_subcat -eq 1
-                    __config_settings_draw_subcat $subcat_row universal $toggle_vars[(math $cur_row + 1)]
-                    set panel_h (math 7 + (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])))
+                    set new_frame (__config_settings_draw_subcat $subcat_row universal $toggle_vars[(math $cur_row + 1)])
                 else
-                    __config_settings_draw $cur_row universal $toggle_vars
-                    set panel_h 16
+                    set new_frame (__config_settings_draw $cur_row universal $toggle_vars)
                 end
             case 1
                 if test $in_subcat -eq 1
-                    __config_settings_draw_subcat $subcat_row session $toggle_vars[(math $cur_row + 1)]
-                    set panel_h (math 7 + (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])))
+                    set new_frame (__config_settings_draw_subcat $subcat_row session $toggle_vars[(math $cur_row + 1)])
                 else
-                    __config_settings_draw $cur_row session $toggle_vars
-                    set panel_h 16
+                    set new_frame (__config_settings_draw $cur_row session $toggle_vars)
                 end
             case 2
-                __config_settings_draw_value $cur_row sponge
-                set panel_h 16
+                set new_frame (__config_settings_draw_value $cur_row sponge)
             case 3
-                __config_settings_draw_value $cur_row paths
-                set panel_h 16
+                set new_frame (__config_settings_draw_value $cur_row paths)
         end
+        set panel_h (count $new_frame)
     end
     __cs_dispatch_draw
+    printf '%s\n' $new_frame
 
     # ── Event loop ────────────────────────────────────────
     # __config_settings_read_key reads a single keypress from /dev/tty in raw
