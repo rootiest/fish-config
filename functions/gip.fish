@@ -14,6 +14,8 @@
 # EXAMPLE
 #   gip
 function gip --description 'Show all public IP addresses'
+    __fish_help_header (status current-function) $argv; and return 0
+
     echo -n "IPv4: "
     curl -4 -s --max-time 2 https://icanhazip.com || echo "Not detected"
     echo -n "IPv6: "

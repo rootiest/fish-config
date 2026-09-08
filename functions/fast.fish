@@ -36,6 +36,8 @@
 # EXAMPLE
 #   fast
 function fast --description 'Placeholder for future fast utility'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # ANSI Escape Codes (Standard 16-color palette)
     set -l bold "\e[1m"
     set -l italic "\e[3m"

@@ -21,6 +21,8 @@
 # EXAMPLE
 #   poke ~/projects/new/src/main.fish
 function poke --description 'touch with automatic parent directory creation'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if test (count $argv) -eq 0
         echo (set_color red)"poke: no file specified"(set_color normal) >&2
         return 1

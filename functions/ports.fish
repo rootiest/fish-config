@@ -14,5 +14,7 @@
 # EXAMPLE
 #   ports
 function ports --wraps='sudo' --description 'Show active network listeners'
+    __fish_help_header (status current-function) $argv; and return 0
+
     sudo lsof -iTCP -sTCP:LISTEN -P -n
 end

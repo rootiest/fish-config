@@ -21,6 +21,8 @@
 # EXAMPLE
 #   gip6
 function gip6 --description 'Get public IPv6 address'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Use -6 to force IPv6 and --fail to catch network errors
     set -l ip (curl -6 -s --fail https://icanhazip.com 2>/dev/null)
     

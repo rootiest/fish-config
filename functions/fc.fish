@@ -24,6 +24,8 @@
 #   fc
 #   fc git
 function fc --description 'Edit and execute the last command (Bash-style fc)'
+    __fish_help_header (status current-function) $argv; and return 0
+
     set -l tmpfile (mktemp /tmp/fish_fc.XXXXXX).fish
 
     if count $argv >/dev/null

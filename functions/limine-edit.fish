@@ -16,6 +16,8 @@
 # EXAMPLE
 #   limine-edit
 function limine-edit --description 'Safely edit and re-verify Limine configuration'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # 1. Open the config with sudoedit
     sudoedit /boot/limine.conf
 

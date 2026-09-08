@@ -14,5 +14,7 @@
 # EXAMPLE
 #   check_fish_deps
 function check_fish_deps --description 'Check all fish-related dependencies'
+    __fish_help_header (status current-function) $argv; and return 0
+
     fish-deps status
 end

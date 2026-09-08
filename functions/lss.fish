@@ -17,6 +17,8 @@
 # EXAMPLE
 #   lss ~/downloads
 function lss --description 'Size-sorted listing'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if which eza >/dev/null 2>&1
         eza --oneline --long --all --sort=size --icons --color=auto --hyperlink --color-scale=size --color-scale-mode=gradient $argv
     else if which lsd >/dev/null 2>&1
