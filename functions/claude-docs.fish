@@ -13,7 +13,7 @@
 #   obsolete content.
 #
 # EXIT STATUS
-#   Exit status of the `claude` invocation
+#   Exit status of the claude invocation
 #
 # EXAMPLE
 #   claude-docs

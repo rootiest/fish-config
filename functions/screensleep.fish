@@ -12,7 +12,7 @@
 #   PowerDevil "Turn Off Screen" global shortcut via busctl.
 #
 # EXIT STATUS
-#   Exit status of `busctl`
+#   Exit status of busctl
 #
 # EXAMPLE
 #   screensleep

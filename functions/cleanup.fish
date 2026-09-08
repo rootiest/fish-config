@@ -13,7 +13,7 @@
 #
 # EXIT STATUS
 #   0        No orphans found, or orphans removed successfully
-#   Nonzero  `sudo pacman -Rns` failed
+#   Nonzero  sudo pacman -Rns failed
 #
 # EXAMPLE
 #   cleanup

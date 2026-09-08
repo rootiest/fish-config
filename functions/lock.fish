@@ -11,7 +11,7 @@
 #   Locks the current desktop session using loginctl lock-session.
 #
 # EXIT STATUS
-#   Exit status of `loginctl lock-session`
+#   Exit status of loginctl lock-session
 #
 # EXAMPLE
 #   lock

@@ -16,10 +16,10 @@
 #   columns. Extra arguments (e.g. -a) are forwarded to docker ps.
 #
 # ARGUMENTS
-#   args...  Arguments forwarded to `docker ps`
+#   args...  Arguments forwarded to docker ps
 #
 # EXIT STATUS
-#   Exit status of `docker ps`
+#   Exit status of docker ps
 #
 # EXAMPLE
 #   dops
