@@ -205,4 +205,30 @@ check "sited key config:cdpath" overrides/environment "$t2"
 __fish_config_op_registry_lookup cat wrongsite >/dev/null
 check "known identity, wrong site -> not found" 1 $status
 
+section "op_enabled: against the real registry"
+
+set -e __fish_config_op_aliases __fish_config_op_aliases_filesystem
+set -e __fish_config_opinionated
+
+__fish_config_op_enabled cat
+check "cat, nothing set -> enabled" 0 $status
+
+__fish_config_op_enabled cat.fish
+check "a .fish suffix is stripped" 0 $status
+
+set -g __fish_config_op_aliases 0
+__fish_config_op_enabled cat
+check "cat, aliases off -> disabled" 1 $status
+
+set -g __fish_config_op_aliases_filesystem 1
+__fish_config_op_enabled cat
+check "cat, aliases off but its subcategory on -> enabled" 0 $status
+set -e __fish_config_op_aliases __fish_config_op_aliases_filesystem
+
+# Fail-open: an unclassified identity, or one whose doc header has no
+# # COMPONENT section, resolves to enabled. This is what keeps user-authored
+# and third-party functions unaffected.
+__fish_config_op_enabled __totally_unregistered somesite
+check "no registry entry -> fail open" 0 $status
+
 report
