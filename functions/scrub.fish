@@ -63,10 +63,7 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
 
     # Helper function for help menu text
     function _scrub_help
-        set -l c_head (set_color --bold cyan)
-        set -l c_cmd (set_color --bold)
-        set -l c_flag (set_color yellow)
-        set -l c_reset (set_color normal)
+        __fish_palette
 
         echo "$c_head""Usage:$c_reset $c_cmd""scrub$c_reset $c_flag""[options]$c_reset"
         echo

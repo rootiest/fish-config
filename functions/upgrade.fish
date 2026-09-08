@@ -23,8 +23,7 @@
 function upgrade --description 'Full system upgrade via paru or yay'
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
-        set -l c_err (set_color red)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_err"'upgrade: disabled by __fish_config_op_integrations'"$c_reset" >&2
         return 1
     end

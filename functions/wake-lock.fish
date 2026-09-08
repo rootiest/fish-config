@@ -23,10 +23,7 @@
 #   wake-lock rsync -avz src/ dest/
 function wake-lock --description 'Run a command while inhibiting system sleep'
     if test (count $argv) -eq 0
-        set -l c_head (set_color --bold cyan)
-        set -l c_cmd (set_color --bold)
-        set -l c_arg (set_color cyan)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""wake-lock$c_reset $c_arg""[command] [args...]$c_reset"
         return 1
     end
