@@ -12,7 +12,7 @@
 #   port numbers and addresses without hostname resolution.
 #
 # EXIT STATUS
-#   Exit status of `lsof`
+#   Exit status of lsof
 #
 # EXAMPLE
 #   ports

@@ -12,7 +12,7 @@
 #   or sleeping during active downloads.
 #
 # EXIT STATUS
-#   Exit status of `steam` (via systemd-inhibit)
+#   Exit status of steam (via systemd-inhibit)
 #
 # EXAMPLE
 #   steam-dl

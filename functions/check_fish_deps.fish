@@ -12,7 +12,7 @@
 #   report which fish shell dependencies are installed or missing.
 #
 # EXIT STATUS
-#   Exit status of `fish-deps status`
+#   Exit status of fish-deps status
 #
 # EXAMPLE
 #   check_fish_deps
