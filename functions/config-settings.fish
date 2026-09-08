@@ -341,13 +341,15 @@ function config-settings --description 'Interactive TUI for managing fish config
                         set -l buf (__config_settings_get_raw $varname)
                         test "$buf" = DEFAULT; and set buf ""
                         set -l committed 0
+                        # Full erase once to enter edit mode; per-keystroke
+                        # redraws below diff against the previous edit frame.
+                        set -l edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
+                        set -l pml (math --scale=0 "($last_cols + 78) / 2")
+                        set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
+                        printf '\e[%dA\e[J' $eh
+                        printf '%s\n' $edit_frame
+                        set last_cols $COLUMNS
                         while true
-                            set -l pml (math --scale=0 "($last_cols + 78) / 2")
-                            set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
-                            printf '\e[%dA\e[J' $eh
-                            set last_cols $COLUMNS
-                            __config_settings_draw_value $cur_row $page edit "$buf"
-
                             set -l ek (__config_settings_read_key)
                             or break
                             switch $ek
@@ -365,6 +367,22 @@ function config-settings --description 'Interactive TUI for managing fish config
                                 case '*'
                                     set buf "$buf$ek"
                             end
+
+                            set prev_edit_frame $edit_frame
+                            set edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
+                            if test (count $edit_frame) -eq (count $prev_edit_frame) -a "$COLUMNS" = "$last_cols"
+                                # `| string collect` is required on each join --
+                                # see the identical note in the main loop's
+                                # diff-path call.
+                                printf '\e[%dA' (count $edit_frame)
+                                __config_settings_diff_redraw (string join \n -- $prev_edit_frame | string collect) (string join \n -- $edit_frame | string collect)
+                            else
+                                set -l pml (math --scale=0 "($last_cols + 78) / 2")
+                                set -l eh (math --scale=0 "(count $prev_edit_frame) * max(1, ceil($pml / $COLUMNS))")
+                                printf '\e[%dA\e[J' $eh
+                                printf '%s\n' $edit_frame
+                            end
+                            set last_cols $COLUMNS
                         end
                         if test $committed -eq 1
                             # Empty buffer reverts to the row default (a value, or
