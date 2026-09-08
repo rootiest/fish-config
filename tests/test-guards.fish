@@ -138,4 +138,53 @@ __fish_config_op_cascade __probe_cat
 check "master unrecognized, category unset -> enabled" 0 $status
 set -e __fish_config_opinionated
 
+section "cascade: C5 logging is opt-in"
+
+# Uses the REAL __fish_config_op_logging name because the opt-in list lives
+# inside the cascade keyed on it. AGENTS.md: "C5 is opt-in (do not 'fix' this)"
+# -- unset or unrecognized means off, and the master switch cannot enable it.
+# If any of these three fail, that is a real defect: record it in
+# JOB-BRIEF-FINDINGS.md, do not repair the guard.
+set -e __fish_config_op_logging __fish_config_opinionated
+
+__fish_config_op_cascade __fish_config_op_logging
+check "C5 unset -> disabled" 1 $status
+
+set -g __fish_config_opinionated 1
+__fish_config_op_cascade __fish_config_op_logging
+check "C5 unset + master truthy -> still disabled" 1 $status
+set -e __fish_config_opinionated
+
+set -g __fish_config_op_logging garbage
+__fish_config_op_cascade __fish_config_op_logging
+check "C5 unrecognized is not consent -> disabled" 1 $status
+
+set -g __fish_config_op_logging on
+__fish_config_op_cascade __fish_config_op_logging
+check "C5 explicit truthy -> enabled" 0 $status
+
+set -g __fish_config_op_logging off
+__fish_config_op_cascade __fish_config_op_logging
+check "C5 explicit falsy -> disabled" 1 $status
+set -e __fish_config_op_logging
+
+section "cascade: C5 subcategories inherit opt-in"
+
+# The opt-in check reads chain[-1], which is always the CATEGORY variable, so
+# nesting inherits "off unless explicit" with no per-subcategory special case.
+set -e __fish_config_op_logging_terminal_capture
+
+__fish_config_op_cascade __fish_config_op_logging __fish_config_op_logging_terminal_capture
+check "C5 sub unset, C5 unset -> disabled" 1 $status
+
+set -g __fish_config_op_logging_terminal_capture 1
+__fish_config_op_cascade __fish_config_op_logging __fish_config_op_logging_terminal_capture
+check "C5 sub explicit truthy -> enabled" 0 $status
+
+set -g __fish_config_op_logging_terminal_capture 0
+set -g __fish_config_op_logging on
+__fish_config_op_cascade __fish_config_op_logging __fish_config_op_logging_terminal_capture
+check "C5 sub falsy, C5 truthy -> disabled" 1 $status
+set -e __fish_config_op_logging_terminal_capture __fish_config_op_logging
+
 report
