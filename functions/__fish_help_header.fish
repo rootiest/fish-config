@@ -67,8 +67,8 @@ function __fish_help_header --argument-names name
     # accurate at runtime: in dops.fish it finds the header above
     # `function docker` rather than attributing it to the file stem.
     # One blank separator line is tolerated -- sponge_filter_secrets.fish
-    # is the only file that has one, and JOB-BRIEF-FINDINGS.md records it
-    # so this skip is not mistaken for dead code.
+    # is the only file that has one. Do not remove this tolerance as dead
+    # code.
     set -l lines (string split \n -- (command cat $file))
     set -l pat '^\s*function\s+'(string escape --style=regex -- $name)'(\s|$)'
     set -l start 0

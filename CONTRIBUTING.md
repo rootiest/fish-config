@@ -480,11 +480,9 @@ variable, or otherwise falls under an existing category, tag it with a
 `# COMPONENT` header (`<category>/<subcategory>`, e.g.
 `overrides/key-bindings`) and guard it with `__fish_config_op_enabled`. See
 the [README's Minimal Mode section](README.md#minimal-mode) for the full
-category list and toggle semantics, and
-`AGENTS/specs/2026-08-17-opinionated-component-subcategories-design.md` for
-the underlying design. Most new functions are *not* opinionated components
-— only tag something if it fits an existing category; this isn't something
-to force.
+category list and toggle semantics. Most new functions are *not*
+opinionated components — only tag something if it fits an existing
+category; this isn't something to force.
 
 ## Documentation Pipeline
 

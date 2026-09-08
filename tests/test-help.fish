@@ -202,8 +202,8 @@ function test_help_never_executes_destructive_path
 end
 
 # Functions published in the manual that are exempt from the -h/--help
-# rule. Rationale per entry: AGENTS/specs/2026-09-07-header-driven-help-design.md
-# §4. This array is the ONLY machine-readable copy of the exempt set.
+# rule. Rationale per entry is in the EXEMPT-* comments below. This array
+# is the ONLY machine-readable copy of the exempt set.
 #
 # EXEMPT-A -- shadows a same-named binary, or forwards $argv to one named
 # tool that owns its own --help. Intercepting would hide that tool's help,
@@ -228,8 +228,8 @@ function test_every_user_facing_function_has_help
         # manualtools.parse_functions.
         contains -- "# CATEGORY" (string trim -- $lines); or continue
         # Resolve the real defined name; the file stem can disagree with it
-        # (formerly dops.fish defined `docker` -- see JOB-BRIEF-FINDINGS.md
-        # §1, fixed by splitting it into dops.fish and docker.fish).
+        # (formerly dops.fish defined `docker`, fixed by splitting it into
+        # dops.fish and docker.fish).
         set -l name (string match -rg '^\s*function\s+(\S+)' -- $lines)[1]
         test -n "$name"; or continue
         set name (string trim -c "'\"" -- $name)
