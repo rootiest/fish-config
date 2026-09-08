@@ -404,15 +404,30 @@ function config-settings --description 'Interactive TUI for managing fish config
             continue
         end
 
-        # Wrap-aware erase: a panel drawn on a wider terminal has longer lines
-        # (due to center-padding) that wrap into extra physical rows when the
-        # terminal narrows. 78 = widest box (IW=76+2); the formula gives the
-        # worst-case old line width for any tier drawn at last_cols.
-        set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
-        set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
-        printf '\e[%dA\e[J' $erase_h
-        set last_cols $COLUMNS
+        set -l old_h $panel_h
+        set prev_frame $new_frame
         __cs_dispatch_draw
+
+        if test $panel_h -eq $old_h -a "$COLUMNS" = "$last_cols"
+            # Diff path: geometry and width unchanged since the last frame --
+            # move up without erasing, rewrite only the lines that changed.
+            # `| string collect` is required on each join: command
+            # substitution always re-splits on newlines, so without it
+            # __config_settings_diff_redraw would receive many positional
+            # arguments instead of the two joined strings it expects.
+            printf '\e[%dA' $panel_h
+            __config_settings_diff_redraw (string join \n -- $prev_frame | string collect) (string join \n -- $new_frame | string collect)
+        else
+            # Full-redraw path: resize, page switch, or subcat enter/exit --
+            # same wrap-aware erase math as before, unchanged. 78 = widest
+            # box (IW=76+2); the formula gives the worst-case old line width
+            # for any tier drawn at last_cols.
+            set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
+            set -l erase_h (math --scale=0 "$old_h * max(1, ceil($prev_max_lw / $COLUMNS))")
+            printf '\e[%dA\e[J' $erase_h
+            printf '%s\n' $new_frame
+        end
+        set last_cols $COLUMNS
     end
 
     # ── Cleanup ───────────────────────────────────────────
