@@ -42,10 +42,15 @@ function __config_settings_draw
 
     set -l labels Aliases Auto-exec Overrides Integrations Logging Greeting Master
 
-    # ── Width tier: 6-col buffer per side before stepping up ──────────────
+    # ── Width tier ────────────────────────────────────────────────────────
+    # The tier thresholds live in __config_settings_frame; this file only
+    # chooses which hand-authored description set goes with the width.
     # IW = inner width (chars between │ │); desc field = IW - 33.
     # All four layouts are exactly 16 lines tall — panel_h in caller stays 16.
-    set -l iw 50
+    # Descriptions are authored to fit their field exactly at every tier
+    # (43/43, 39/39, 35/35, 17/17), which is why the rows below pass `pad`
+    # and not `cut` -- see the NOTES in __config_settings_frame.
+    set -l iw (__config_settings_frame width)
     set -l descs \
         "cmd shadows" \
         startup \
@@ -55,36 +60,34 @@ function __config_settings_draw
         fish_greeting \
         "disable all"
 
-    if test "$COLUMNS" -ge 90
-        set iw 76
-        set descs \
-            "shadows: ls→eza, cat→bat, cd→z, rm→trash" \
-            "Fisher bootstrap, themes, py-venv activate" \
-            "vi-mode, bang-bang, PAGER, CDPATH, starship" \
-            "Kitty/WezTerm tab/split fns, notifications" \
-            "scrollback capture & paru/yay AUR wrappers" \
-            "fish_greeting & first-run welcome banner" \
-            "master off-switch: overrides all categories"
-    else if test "$COLUMNS" -ge 86
-        set iw 72
-        set descs \
-            "ls→eza, cat→bat, cd→zoxide, rm→trash" \
-            "Fisher bootstrap, themes, py-venv auto" \
-            "vi-mode, bang-bang, PAGER, starship" \
-            "Kitty/WezTerm fns, done notifications" \
-            "scrollback capture & paru/yay wrappers" \
-            "fish_greeting: first-run welcome banner" \
-            "master off-switch for all categories"
-    else if test "$COLUMNS" -ge 82
-        set iw 68
-        set descs \
-            "ls→eza, cat→bat, cd→z, rm→trash" \
-            "Fisher, themes, py-venv activate" \
-            "vi-mode, bang-bang, PAGER, starship" \
-            "Kitty/WezTerm, done notifications" \
-            "scrollback & paru/yay log wrappers" \
-            "fish_greeting & first-run banner" \
-            "master disable for all categories"
+    switch $iw
+        case 76
+            set descs \
+                "shadows: ls→eza, cat→bat, cd→z, rm→trash" \
+                "Fisher bootstrap, themes, py-venv activate" \
+                "vi-mode, bang-bang, PAGER, CDPATH, starship" \
+                "Kitty/WezTerm tab/split fns, notifications" \
+                "scrollback capture & paru/yay AUR wrappers" \
+                "fish_greeting & first-run welcome banner" \
+                "master off-switch: overrides all categories"
+        case 72
+            set descs \
+                "ls→eza, cat→bat, cd→zoxide, rm→trash" \
+                "Fisher bootstrap, themes, py-venv auto" \
+                "vi-mode, bang-bang, PAGER, starship" \
+                "Kitty/WezTerm fns, done notifications" \
+                "scrollback capture & paru/yay wrappers" \
+                "fish_greeting: first-run welcome banner" \
+                "master off-switch for all categories"
+        case 68
+            set descs \
+                "ls→eza, cat→bat, cd→z, rm→trash" \
+                "Fisher, themes, py-venv activate" \
+                "vi-mode, bang-bang, PAGER, starship" \
+                "Kitty/WezTerm, done notifications" \
+                "scrollback & paru/yay log wrappers" \
+                "fish_greeting & first-run banner" \
+                "master disable for all categories"
     end
 
     set -l HBR (string repeat -n $iw '─')
@@ -95,8 +98,7 @@ function __config_settings_draw
 
     # ── Top border ────────────────────────────────────────────────────────
     # ┌─ Opinionated Settings (iw-23)×─ ┐  total = iw+2
-    printf '%s┌─%s Opinionated Settings %s┐\n' \
-        $p $c_head $c_reset(string repeat -n (math $iw - 23) '─')
+    __config_settings_frame title $iw $p "$c_head Opinionated Settings $c_reset"
 
     # ── Page-tab header ───────────────────────────────────────────────────
     set -l active_idx 0
@@ -109,36 +111,18 @@ function __config_settings_draw
     printf '%s│%s│\n' $p $HBR
 
     # ── Category rows 0–5 ─────────────────────────────────────────────────
+    # Label field 12 wide; the description field falls out of it inside the
+    # frame (field_w = iw - 21 - label_w = iw - 33). `pad`, not `cut`: these
+    # descriptions are authored per tier to fit exactly, so truncating them
+    # would be a silent no-op that discards that property.
     for i in (seq 0 5)
-        set -l idx   (math $i + 1)
-        set -l var   $vars[$idx]
-        set -l label $labels[$idx]
-        set -l desc  $descs[$idx]
-
-        set -l val (__config_settings_get_val $var $cur_scope)
-
-        # Badge: 7 visible chars, coloured
-        set -l badge
-        switch $val
-            case on
-                set badge "$c_ok""     ON$c_reset"
-            case off
-                set badge "$c_err""OFF    $c_reset"
-            case '*'
-                set badge "$c_dim""DEFAULT$c_reset"
-        end
-
-        # Cursor: 2 visible chars
-        set -l curs "  "
-        if test $i -eq $cur_row
-            set curs "$c_sel▶$c_reset "
-        end
-
-        # Label padded to 12, desc padded to (iw-33), right margin 3
-        set -l lpad (string pad -r -w 12 -- $label)
-        set -l dpad (string pad -r -w (math $iw - 33) -- $desc)
-
-        printf '%s│  %s%s [ %s ]  %s   │\n' $p $curs $lpad $badge $dpad
+        set -l idx (math $i + 1)
+        set -l val (__config_settings_get_val $vars[$idx] $cur_scope)
+        __config_settings_frame row $iw $p \
+            (__config_settings_frame cursor $i $cur_row) \
+            $labels[$idx] 12 \
+            (__config_settings_frame badge $val) \
+            $descs[$idx] pad
     end
 
     # ── Separator before Master ───────────────────────────────────────────
@@ -146,24 +130,11 @@ function __config_settings_draw
 
     # ── Master row (index 6) ──────────────────────────────────────────────
     set -l val (__config_settings_get_val $vars[7] $cur_scope)
-    set -l badge
-    switch $val
-        case on
-            set badge "$c_ok""     ON$c_reset"
-        case off
-            set badge "$c_err""OFF    $c_reset"
-        case '*'
-            set badge "$c_dim""DEFAULT$c_reset"
-    end
-    set -l curs "  "
-    if test $cur_row -eq 6
-        set curs "$c_sel▶$c_reset "
-    end
-    printf '%s│  %s%s [ %s ]  %s   │\n' \
-        $p $curs \
-        (string pad -r -w 12 -- Master) \
-        $badge \
-        (string pad -r -w (math $iw - 33) -- $descs[7])
+    __config_settings_frame row $iw $p \
+        (__config_settings_frame cursor 6 $cur_row) \
+        Master 12 \
+        (__config_settings_frame badge $val) \
+        $descs[7] pad
 
     # ── Filler (Dots Path moved to the Paths page) ────────────────────────
     printf '%s│  %s%s│\n' $p \

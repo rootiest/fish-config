@@ -163,3 +163,57 @@ function test_functions_keep_their_palette
     return 0
 end
 check "colored --help output keeps its escape sequences" true (test_functions_keep_their_palette; and echo true; or echo false)
+
+section "session: config-settings diff redraw"
+
+# Locks in the invariant the diff-redraw renderer depends on: each draw
+# function's real line count must match the height config-settings.fish's
+# dispatch derives from it (count $new_frame) -- see
+# __cs_dispatch_draw in functions/config-settings.fish.
+function test_draw_line_count_matches_panel_h
+    set -l toggle_vars \
+        __fish_config_op_aliases __fish_config_op_autoexec \
+        __fish_config_op_overrides __fish_config_op_integrations \
+        __fish_config_op_logging __fish_config_op_greeting \
+        __fish_config_opinionated
+
+    set -l lines (__config_settings_draw 0 universal $toggle_vars)
+    if test (count $lines) -ne 16
+        echo "    __config_settings_draw: expected 16 lines, got "(count $lines)
+        return 1
+    end
+
+    set -l vlines (__config_settings_draw_value 0 sponge)
+    if test (count $vlines) -ne 16
+        echo "    __config_settings_draw_value: expected 16 lines, got "(count $vlines)
+        return 1
+    end
+
+    set -l n (count (__config_settings_subcats __fish_config_op_aliases))
+    set -l slines (__config_settings_draw_subcat 0 universal __fish_config_op_aliases)
+    set -l want (math 7 + $n)
+    if test (count $slines) -ne $want
+        echo "    __config_settings_draw_subcat: expected $want lines, got "(count $slines)
+        return 1
+    end
+    return 0
+end
+check "draw functions' line counts match their panel heights" true (test_draw_line_count_matches_panel_h; and echo true; or echo false)
+
+function test_diff_redraw_unchanged_lines_are_bare_newlines
+    functions -q __config_settings_diff_redraw; or return 1
+    set -l old (string join \n -- AAA BBB CCC | string collect)
+    set -l new (string join \n -- AAA BBB CCC | string collect)
+    set -l out (__config_settings_diff_redraw "$old" "$new" | string collect -N)
+    test "$out" = \n\n\n
+end
+check "diff_redraw: unchanged lines are bare newlines" true (test_diff_redraw_unchanged_lines_are_bare_newlines; and echo true; or echo false)
+
+function test_diff_redraw_changed_line_is_cleared_and_rewritten
+    functions -q __config_settings_diff_redraw; or return 1
+    set -l old (string join \n -- AAA BBB CCC | string collect)
+    set -l new (string join \n -- AAA XYZ CCC | string collect)
+    set -l out (__config_settings_diff_redraw "$old" "$new" | string collect -N)
+    test "$out" = \n\e\[2K\rXYZ\n\n
+end
+check "diff_redraw: a changed line is cleared and rewritten" true (test_diff_redraw_changed_line_is_cleared_and_rewritten; and echo true; or echo false)

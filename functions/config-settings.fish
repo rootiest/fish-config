@@ -140,7 +140,8 @@ function config-settings --description 'Interactive TUI for managing fish config
 
     set -l cur_page  0           # 0=Universal 1=Session 2=Sponge 3=Paths
     set -l cur_row   0
-    set -l panel_h   16
+    set -l panel_h   0            # real value set by the first dispatch call below
+    set -l new_frame              # captured by __cs_dispatch_draw
     set -l last_cols $COLUMNS
 
     # ── Terminal setup ────────────────────────────────────
@@ -148,37 +149,34 @@ function config-settings --description 'Interactive TUI for managing fish config
     trap 'printf "\e[?25h"; set -g __config_settings_exit 1' INT
 
     # ── Draw dispatch (page 0/1 = toggle table; 2/3 = value page) ─────────
-    # Records the actual line count of whatever it just drew into panel_h,
-    # so every erase (redraw loop, inline editor, final cleanup) matches
-    # reality -- the sub-category page is n+7 lines (2-6 sub-categories:
-    # 9-13 lines), never the category list's fixed 16.
+    # Captures the page's rendered lines into new_frame and derives panel_h
+    # from their count. panel_h is never hand-set again: the sub-category
+    # page is n+7 lines (2-6 sub-categories: 9-13 lines), never the
+    # category list's fixed 16, and deriving it from the real output means
+    # that fact can no longer drift out of sync with what got drawn.
     function __cs_dispatch_draw --no-scope-shadowing
         switch $cur_page
             case 0
                 if test $in_subcat -eq 1
-                    __config_settings_draw_subcat $subcat_row universal $toggle_vars[(math $cur_row + 1)]
-                    set panel_h (math 7 + (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])))
+                    set new_frame (__config_settings_draw_subcat $subcat_row universal $toggle_vars[(math $cur_row + 1)])
                 else
-                    __config_settings_draw $cur_row universal $toggle_vars
-                    set panel_h 16
+                    set new_frame (__config_settings_draw $cur_row universal $toggle_vars)
                 end
             case 1
                 if test $in_subcat -eq 1
-                    __config_settings_draw_subcat $subcat_row session $toggle_vars[(math $cur_row + 1)]
-                    set panel_h (math 7 + (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)])))
+                    set new_frame (__config_settings_draw_subcat $subcat_row session $toggle_vars[(math $cur_row + 1)])
                 else
-                    __config_settings_draw $cur_row session $toggle_vars
-                    set panel_h 16
+                    set new_frame (__config_settings_draw $cur_row session $toggle_vars)
                 end
             case 2
-                __config_settings_draw_value $cur_row sponge
-                set panel_h 16
+                set new_frame (__config_settings_draw_value $cur_row sponge)
             case 3
-                __config_settings_draw_value $cur_row paths
-                set panel_h 16
+                set new_frame (__config_settings_draw_value $cur_row paths)
         end
+        set panel_h (count $new_frame)
     end
     __cs_dispatch_draw
+    printf '%s\n' $new_frame
 
     # ── Event loop ────────────────────────────────────────
     # __config_settings_read_key reads a single keypress from /dev/tty in raw
@@ -337,13 +335,16 @@ function config-settings --description 'Interactive TUI for managing fish config
                         set -l buf (__config_settings_get_raw $varname)
                         test "$buf" = DEFAULT; and set buf ""
                         set -l committed 0
+                        # Full erase once to enter edit mode; per-keystroke
+                        # redraws below diff against the previous edit frame.
+                        set -l edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
+                        set -l prev_edit_frame
+                        set -l pml (math --scale=0 "($last_cols + 78) / 2")
+                        set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
+                        printf '\e[%dA\e[J' $eh
+                        printf '%s\n' $edit_frame
+                        set last_cols $COLUMNS
                         while true
-                            set -l pml (math --scale=0 "($last_cols + 78) / 2")
-                            set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
-                            printf '\e[%dA\e[J' $eh
-                            set last_cols $COLUMNS
-                            __config_settings_draw_value $cur_row $page edit "$buf"
-
                             set -l ek (__config_settings_read_key)
                             or break
                             switch $ek
@@ -361,6 +362,23 @@ function config-settings --description 'Interactive TUI for managing fish config
                                 case '*'
                                     set buf "$buf$ek"
                             end
+
+                            set prev_edit_frame $edit_frame
+                            set edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
+                            if test (count $edit_frame) -eq (count $prev_edit_frame) -a "$COLUMNS" = "$last_cols" -a $COLUMNS -ge 52
+                                # `| string collect` is required on each join --
+                                # see the identical note in the main loop's
+                                # diff-path call.
+                                printf '\e[%dA' (count $edit_frame)
+                                __config_settings_diff_redraw (string join \n -- $prev_edit_frame | string collect) (string join \n -- $edit_frame | string collect)
+                            else
+                                set -l ph (count $prev_edit_frame)
+                                set -l pml (math --scale=0 "($last_cols + 78) / 2")
+                                set -l eh (math --scale=0 "$ph * max(1, ceil($pml / $COLUMNS))")
+                                printf '\e[%dA\e[J' $eh
+                                printf '%s\n' $edit_frame
+                            end
+                            set last_cols $COLUMNS
                         end
                         if test $committed -eq 1
                             # Empty buffer reverts to the row default (a value, or
@@ -377,6 +395,7 @@ function config-settings --description 'Interactive TUI for managing fish config
                         printf '\e[%dA\e[J' $eh
                         set last_cols $COLUMNS
                         __cs_dispatch_draw
+                        printf '%s\n' $new_frame
                         set did_redraw 1
                     end
                 end
@@ -400,15 +419,30 @@ function config-settings --description 'Interactive TUI for managing fish config
             continue
         end
 
-        # Wrap-aware erase: a panel drawn on a wider terminal has longer lines
-        # (due to center-padding) that wrap into extra physical rows when the
-        # terminal narrows. 78 = widest box (IW=76+2); the formula gives the
-        # worst-case old line width for any tier drawn at last_cols.
-        set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
-        set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
-        printf '\e[%dA\e[J' $erase_h
-        set last_cols $COLUMNS
+        set -l old_h $panel_h
+        set -l prev_frame $new_frame
         __cs_dispatch_draw
+
+        if test $panel_h -eq $old_h -a "$COLUMNS" = "$last_cols" -a $COLUMNS -ge 52
+            # Diff path: geometry and width unchanged since the last frame --
+            # move up without erasing, rewrite only the lines that changed.
+            # `| string collect` is required on each join: command
+            # substitution always re-splits on newlines, so without it
+            # __config_settings_diff_redraw would receive many positional
+            # arguments instead of the two joined strings it expects.
+            printf '\e[%dA' $panel_h
+            __config_settings_diff_redraw (string join \n -- $prev_frame | string collect) (string join \n -- $new_frame | string collect)
+        else
+            # Full-redraw path: resize, page switch, or subcat enter/exit --
+            # same wrap-aware erase math as before, unchanged. 78 = widest
+            # box (IW=76+2); the formula gives the worst-case old line width
+            # for any tier drawn at last_cols.
+            set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
+            set -l erase_h (math --scale=0 "$old_h * max(1, ceil($prev_max_lw / $COLUMNS))")
+            printf '\e[%dA\e[J' $erase_h
+            printf '%s\n' $new_frame
+        end
+        set last_cols $COLUMNS
     end
 
     # ── Cleanup ───────────────────────────────────────────

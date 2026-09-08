@@ -47,23 +47,14 @@ function __config_settings_draw_subcat
     set -l n (count $rows)
 
     # ── Width tier: matches __config_settings_draw's 6-col-per-side steps ──
-    set -l iw 50
-    if test "$COLUMNS" -ge 90
-        set iw 76
-    else if test "$COLUMNS" -ge 86
-        set iw 72
-    else if test "$COLUMNS" -ge 82
-        set iw 68
-    end
+    set -l iw (__config_settings_frame width)
     set -l HBR (string repeat -n $iw '─')
     set -l p (string repeat -n (math --scale=0 "max(0, ($COLUMNS - ($iw + 2)) / 2)") ' ')
 
     # Label field is 13 wide (one wider than __config_settings_draw's 12) --
-    # the longest real sub-category label ("Notifications") is 13 chars.
-    # Description field absorbs the difference so every row still totals
-    # iw+2, matching the surrounding box lines exactly.
-    set -l label_w 13
-    set -l desc_w (math $iw - 34)
+    # the longest real sub-category label ("Notifications") is 13 chars. The
+    # description field absorbs the difference inside the frame
+    # (field_w = iw - 21 - label_w = iw - 34), so every row still totals iw+2.
 
     set -l cat_label (string replace -r '^__fish_config_op_' '' -- $category_var)
     # Scope indicator: toggling a row on this page writes -U (Universal,
@@ -72,32 +63,18 @@ function __config_settings_draw_subcat
     set -l scope_label Universal
     test "$cur_scope" = session; and set scope_label Session
     # Title layout is "┌─ Sub-categories: <label> (<scope>) ───┐"; the
-    # dash count must absorb every visible char added around cat_label so
-    # the line still totals iw+2, matching the surrounding box exactly --
-    # see the DESCRIPTION doc comment above for why this is hand-verified,
-    # not eyeballed.
-    set -l title_dashes (math $iw - (string length -- $cat_label) - (string length -- $scope_label) - 22)
-    printf '%s┌─%s Sub-categories: %s (%s)%s %s┐\n' \
-        $p $c_head "$cat_label" $scope_label "$c_reset" (string repeat -n (math "max(0, $title_dashes)") '─')
+    # dash count absorbs every visible char added around cat_label so the
+    # line still totals iw+2, matching the surrounding box exactly. The
+    # frame derives it from the segment's visible width, so it no longer
+    # has to be hand-verified here.
+    __config_settings_frame title $iw $p \
+        "$c_head Sub-categories: $cat_label ($scope_label)$c_reset "
 
     printf '%s│%s│\n' $p $HBR
 
     # Row 0: the category's own toggle, still meaningful as the cascade
     # default any DEFAULT-valued sub-category below falls back to.
     set -l cat_val (__config_settings_get_val $category_var $cur_scope)
-    set -l cat_badge
-    switch $cat_val
-        case on
-            set cat_badge "$c_ok""     ON$c_reset"
-        case off
-            set cat_badge "$c_err""OFF    $c_reset"
-        case '*'
-            set cat_badge "$c_dim""DEFAULT$c_reset"
-    end
-    set -l cat_curs "  "
-    if test $cur_row -eq 0
-        set cat_curs "$c_sel▶$c_reset "
-    end
     set -l cat_desc "cascade default"
     if test $iw -ge 68
         set cat_desc "default for all sub-cats below"
@@ -105,38 +82,35 @@ function __config_settings_draw_subcat
     if test $iw -ge 72
         set cat_desc "default for all sub-categories below"
     end
-    printf '%s│  %s%s [ %s ]  %s   │\n' $p $cat_curs \
-        (string pad -r -w $label_w -- "(category)") $cat_badge \
-        (string pad -r -w $desc_w -- (string sub -l $desc_w -- $cat_desc))
+    # `cut` for the same reason as the sub-category rows below. It also
+    # truncates the label, which the old code did not -- provably inert here,
+    # since "(category)" is a 10-char literal against a 13-wide field.
+    __config_settings_frame row $iw $p \
+        (__config_settings_frame cursor 0 $cur_row) \
+        "(category)" 13 \
+        (__config_settings_frame badge $cat_val) \
+        $cat_desc cut
 
     printf '%s│    %s  │\n' $p (string repeat -n (math $iw - 6) '─')
 
     for i in (seq 1 $n)
         set -l fields (string split -- \t $rows[$i])
-        set -l slug  $fields[1]
         set -l label $fields[2]
-        set -l desc  $fields[3]
-        set -l subcat_var "$category_var"_(string replace -a -- '-' '_' $slug)
-
+        set -l desc $fields[3]
+        set -l subcat_var "$category_var"_(string replace -a -- '-' '_' $fields[1])
         set -l val (__config_settings_get_val $subcat_var $cur_scope)
-        set -l badge
-        switch $val
-            case on
-                set badge "$c_ok""     ON$c_reset"
-            case off
-                set badge "$c_err""OFF    $c_reset"
-            case '*'
-                set badge "$c_dim""DEFAULT$c_reset"
-        end
-
-        set -l curs "  "
-        if test $i -eq $cur_row
-            set curs "$c_sel▶$c_reset "
-        end
-
-        set -l lpad (string pad -r -w $label_w -- (string sub -l $label_w -- $label))
-        set -l dpad (string pad -r -w $desc_w -- (string sub -l $desc_w -- $desc))
-        printf '%s│  %s%s [ %s ]  %s   │\n' $p $curs $lpad $badge $dpad
+        # `cut`: these labels and descriptions are static data from
+        # __config_settings_subcats, not authored per width tier the way
+        # __config_settings_draw's are, and several run well past the
+        # narrower tiers' fields. `string pad` only ever grows a string, so
+        # they must be truncated before padding or the box stops being
+        # rectangular. This is the divergence the DESCRIPTION block above
+        # documents -- do not "simplify" it to `pad`.
+        __config_settings_frame row $iw $p \
+            (__config_settings_frame cursor $i $cur_row) \
+            $label 13 \
+            (__config_settings_frame badge $val) \
+            $desc cut
     end
 
     printf '%s│%s│\n' $p $HBR
