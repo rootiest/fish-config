@@ -116,6 +116,11 @@ if test $mode = structural
     for f in (git -C $repo diff --name-only $baseline -- functions/)
         # fish_prompt.fish keeps its own hex palette -- see Task 10.
         string match -q '*fish_prompt.fish' $f; and continue
+        # __fish_palette.fish is the palette itself: a new file, so its diff
+        # is 100% additions and can never be "purely structural". Skipping it
+        # is not a loosening -- it declares the colours rather than rendering
+        # any, and tests/functional.fish asserts its 12 roles directly.
+        string match -q '*__fish_palette.fish' $f; and continue
         set -l offenders
         for line in (git -C $repo diff -U0 $baseline -- $f | string match -r '^[+-][^+-].*')
             set -l body (string sub -s 2 -- $line)
