@@ -21,6 +21,8 @@
 # EXAMPLE
 #   branch feature/new-ui
 function branch --description 'Switch to or create a git branch'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
         echo "Not a git repo."
         return 1

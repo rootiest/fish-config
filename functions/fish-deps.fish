@@ -66,6 +66,13 @@ function fish-deps --description 'Manage fish shell dependencies'
             _fish_deps_status
         case install
             _fish_deps_install $flags
+        case -h --help
+            # Reuse the existing menu rather than the header renderer: it
+            # is richer, and it is already the text the unknown-subcommand
+            # path prints. Previously --help fell into `case '*'` and
+            # exited 1 with "Unknown subcommand: --help".
+            __fish_deps_help
+            return 0
         case update
             _fish_deps_update
         case sync

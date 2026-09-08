@@ -289,6 +289,72 @@ function test_help_never_executes_destructive_path
     test $failed -eq 0
 end
 
+# Functions published in the manual that are exempt from the -h/--help
+# rule. Rationale per entry: AGENTS/specs/2026-09-07-header-driven-help-design.md
+# §4. This array is the ONLY machine-readable copy of the exempt set.
+#
+# EXEMPT-A -- shadows a same-named binary, or forwards $argv to one named
+# tool that owns its own --help. Intercepting would hide that tool's help,
+# and for the C1-guarded shadows it also breaks the disabled-fallback
+# contract, where the bare tool is supposed to answer.
+set -g __help_exempt \
+    agy antigravity-ide bash cat cdi cffetch cheat claude clone clonet \
+    config-toggle copy docker du dusize fast-cli ffetch gitui gitup jr \
+    joplin less ls mkdir mv paste ping rawfish rg rm search ssh top \
+    view yt-dlp
+# EXEMPT-B -- invoked by fish, never typed by a user.
+set -a __help_exempt fish_prompt fish_right_prompt fish_mode_prompt \
+    sponge_filter_secrets
+
+function test_every_user_facing_function_has_help
+    set -l root (realpath (dirname (status filename))/..)
+    set -l failed 0
+    set -l published
+
+    for f in $root/functions/*.fish
+        set -l lines (string split \n -- (command cat $f))
+        # Published == carries a `# CATEGORY` block, matching
+        # manualtools.parse_functions.
+        contains -- "# CATEGORY" (string trim -- $lines); or continue
+        # Resolve the real defined name; the file stem can disagree
+        # (dops.fish defines `docker` -- see JOB-BRIEF-FINDINGS.md §1).
+        set -l name (string match -rg '^\s*function\s+(\S+)' -- $lines)[1]
+        test -n "$name"; or continue
+        set name (string trim -c "'\"" -- $name)
+        string match -q '_*' -- $name; and continue
+        set -a published $name
+
+        contains -- $name $__help_exempt; and continue
+
+        # Body == everything from the `function` line down, comment lines
+        # dropped, so a header that merely mentions --help cannot pass.
+        set -l body
+        set -l in_body 0
+        for l in $lines
+            test $in_body -eq 1; or string match -qr '^\s*function\s' -- $l; and set in_body 1
+            test $in_body -eq 1; or continue
+            string match -qr '^\s*#' -- $l; and continue
+            set -a body $l
+        end
+        if not string match -qr -- '__fish_help_header|_flag_help|h/help|--help' \
+                (string join \n -- $body)
+            echo "    $name: no -h/--help handling and not in \$__help_exempt"
+            set failed 1
+        end
+    end
+
+    # Guard against a stale exempt list: every exempt name must still be a
+    # published function. Catches renames and deletions.
+    for e in $__help_exempt
+        if not contains -- $e $published
+            echo "    \$__help_exempt lists '$e', which is no longer published"
+            set failed 1
+        end
+    end
+
+    test $failed -eq 0
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0
