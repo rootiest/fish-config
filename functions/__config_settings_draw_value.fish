@@ -33,11 +33,9 @@ function __config_settings_draw_value
     set -l edit_mode $argv[3]
     set -l edit_buf  $argv[4]
 
-    set -l c_ok    (set_color green)
-    set -l c_err   (set_color red)
-    set -l c_dim   (set_color brblack)
-    set -l c_sel   (set_color --bold magenta)
-    set -l c_head  (set_color --bold cyan)
+    set -l c_ok (set_color green)
+    set -l c_dim (set_color brblack)
+    set -l c_head (set_color --bold cyan)
     set -l c_reset (set_color normal)
 
     # ── Page row metadata (parallel lists) ────────────────────────────────
@@ -65,21 +63,12 @@ function __config_settings_draw_value
     set -l nrows (count $vars)
 
     # ── Width tier (same thresholds as the toggle page) ───────────────────
-    set -l iw 50
-    if test "$COLUMNS" -ge 90
-        set iw 76
-    else if test "$COLUMNS" -ge 86
-        set iw 72
-    else if test "$COLUMNS" -ge 82
-        set iw 68
-    end
+    set -l iw (__config_settings_frame width)
     set -l HBR (string repeat -n $iw '─')
     set -l p (string repeat -n (math --scale=0 "max(0, ($COLUMNS - ($iw + 2)) / 2)") ' ')
 
     # ── Line 1: top border with title ─────────────────────────────────────
-    set -l title_dashes (math $iw - (string length -- $title) - 3)
-    printf '%s┌─%s %s %s┐\n' \
-        $p $c_head "$title$c_reset" (string repeat -n $title_dashes '─')
+    __config_settings_frame title $iw $p "$c_head $title$c_reset "
 
     # ── Line 2: page-tab header ───────────────────────────────────────────
     printf '%s│%s│\n' $p (__config_settings_pagetab $active_idx $iw)
@@ -100,15 +89,9 @@ function __config_settings_draw_value
         set -l field
         if test $type = bool
             # Booleans store true/false (sponge convention); unset = DEFAULT.
-            set -l val (__config_settings_get_raw $var)
-            switch $val
-                case true
-                    set badge "$c_ok""     ON$c_reset"
-                case false
-                    set badge "$c_err""OFF    $c_reset"
-                case '*'
-                    set badge "$c_dim""DEFAULT$c_reset"
-            end
+            # The frame is told this page's vocabulary rather than merging
+            # true/on: a hand-set "on" here must keep rendering DEFAULT.
+            set badge (__config_settings_frame badge (__config_settings_get_raw $var) true false)
             set field "default: $hint"
         else
             set -l raw (__config_settings_get_raw $var)
@@ -144,23 +127,18 @@ function __config_settings_draw_value
             set field "$shown"(set_color --reverse)" "(set_color normal)
         end
 
-        set -l curs "  "
-        if test $i -eq $cur_row
-            set curs "$c_sel▶$c_reset "
-        end
-
-        set -l fw (math $iw - 33)
-        set -l lpad (string pad -r -w 12 -- $label)
-        # The edit field is already length-constrained and contains a reverse
-        # caret; running it through `string shorten` miscounts the escapes, so
-        # pad it directly. Non-edit fields still shorten to add an ellipsis.
-        set -l fpad
+        # `shorten` ellipsises the value: unlike the toggle page's per-tier
+        # descriptions, these fields hold arbitrary user values. The edit row
+        # is the exception -- its field is already length-constrained above
+        # and carries a reverse-video caret whose escapes `string shorten`
+        # miscounts, so it pads directly.
+        set -l fit shorten
         if test "$edit_mode" = edit -a $i -eq $cur_row
-            set fpad (string pad -r -w $fw -- "$field")
-        else
-            set fpad (string pad -r -w $fw -- (string shorten -m $fw -- "$field"))
+            set fit pad
         end
-        printf '%s│  %s%s [ %s ]  %s   │\n' $p $curs $lpad $badge $fpad
+        __config_settings_frame row $iw $p \
+            (__config_settings_frame cursor $i $cur_row) \
+            $label 12 $badge $field $fit
     end
 
     # ── Pad blank rows so chrome(6) + nrows + blanks = 16 ─────────────────
