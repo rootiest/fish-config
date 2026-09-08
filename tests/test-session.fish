@@ -85,3 +85,81 @@ check "conf.d guards stay out of non-interactive scripts" 0 $status
 
 # Positive counterpart to the assertion above: the guard must not over-fire.
 check "fish_user_key_bindings still defined in-session" true (functions -q fish_user_key_bindings; and echo true; or echo false)
+
+section "session: shared output palette"
+
+function test_palette_roles_defined
+    functions -q __fish_palette
+    or begin
+        echo "    __fish_palette is not defined"
+        return 1
+    end
+    # Called from inside a function, the palette must land in THIS scope.
+    __fish_palette
+    set -l missing
+    for role in c_reset c_head c_cmd c_arg c_flag c_warn c_err c_ok \
+        c_accent c_dim c_sel c_hi
+        if not set -q $role; or test -z "$$role"
+            set -a missing $role
+        end
+    end
+    if test (count $missing) -gt 0
+        echo "    palette roles empty or unset: $missing"
+        return 1
+    end
+    # Nothing may leak to global scope.
+    if set -q -g c_reset
+        echo "    __fish_palette leaked c_reset into global scope"
+        return 1
+    end
+    return 0
+end
+check "palette roles all defined, non-empty, and scoped to the caller" true (test_palette_roles_defined; and echo true; or echo false)
+
+# Every user-facing function that renders a coloured --help must still emit
+# escape sequences.
+#
+# This is deliberately a RUNTIME check, never a static grep for
+# __fish_palette. Measured on a deliberately broken functions/logs.fish --
+# the palette call de-duplicated per indentation depth instead of per
+# contiguous run, so the --help block lost its declarations without gaining
+# a call:
+#
+#     fish tests/palette-bytes.fish
+#       FAIL  logs --help    stdout=DIFF stderr=ok
+#       baseline 431 B -> broken 150 B (every escape stripped)
+#
+#     fish -n functions/logs.fish        -> exit 0   (lint PASSES)
+#     grep -c '__fish_palette' logs.fish -> 1        (grep PASSES)
+#
+# Both cheap checks are green on a file whose help output has lost all of
+# its colour. Only running the function and looking for an \e byte catches
+# it.
+#
+# functions/fish_prompt.fish is excluded BY NAME. It interpolates $c_dim
+# from its own Catppuccin hex palette -- those are colour arguments passed
+# to set_color, not captured escapes -- so it legitimately never calls
+# __fish_palette and would otherwise look unconverted forever.
+#
+# qc is absent from the list on purpose: its --help shells out to aichat,
+# which is not installed in CI, so its colour path is unreachable here.
+# tests/palette-bytes.fish stubs aichat and does cover it.
+function test_functions_keep_their_palette
+    set -l colored agents-init agents-vault auto-pull config-settings \
+        config-update detach dng2avif dockup edit jobrunner kitty-logging \
+        logs mkcd open-url p pkg play-media rand_string replay repo-open \
+        scrub smart_exit spark y
+    set -l uncolored
+    for fn in $colored
+        functions -q $fn; or continue
+        if not $fn --help 2>&1 | string match -qr \e
+            set -a uncolored $fn
+        end
+    end
+    if test (count $uncolored) -gt 0
+        echo "    --help lost its colour: $uncolored"
+        return 1
+    end
+    return 0
+end
+check "colored --help output keeps its escape sequences" true (test_functions_keep_their_palette; and echo true; or echo false)

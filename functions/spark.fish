@@ -29,11 +29,7 @@ function spark --description 'Sparklines'
     if set --query _flag_version[1]
         echo "spark, version 1.1.0"
     else if set --query _flag_help[1]
-        set -l c_head (set_color --bold cyan)
-        set -l c_cmd (set_color --bold)
-        set -l c_flag (set_color yellow)
-        set -l c_arg (set_color cyan)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""spark$c_reset $c_arg""<numbers ...>$c_reset"
         echo "       stdin | $c_cmd""spark$c_reset"
         echo "$c_head""Options:$c_reset"

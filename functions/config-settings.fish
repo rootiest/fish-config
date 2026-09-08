@@ -69,12 +69,7 @@
 # EXAMPLE
 #   config-settings
 function config-settings --description 'Interactive TUI for managing fish config settings'
-    set -l c_head  (set_color --bold cyan)
-    set -l c_cmd   (set_color --bold)
-    set -l c_flag  (set_color yellow)
-    set -l c_dim   (set_color brblack)
-    set -l c_err   (set_color red)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     # ── Argument parsing ──────────────────────────────────
     for arg in $argv

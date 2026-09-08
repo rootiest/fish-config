@@ -39,8 +39,7 @@
 function logs --description 'Browse terminal log files interactively with fzf'
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
-        set -l c_err (set_color red)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_err"'logs: disabled by __fish_config_op_integrations'"$c_reset" >&2
         return 1
     end
@@ -50,24 +49,21 @@ function logs --description 'Browse terminal log files interactively with fzf'
     or return 1
 
     if set -q _flag_help
-        set -l c_accent (set_color green)
-        set -l c_primary (set_color cyan)
-        set -l c_bold (set_color --bold)
-        set -l c_reset (set_color normal)
-        echo "Usage: "$c_accent"logs"$c_reset" ["$c_primary"OPTIONS"$c_reset"]"
+        __fish_palette
+        echo "Usage: "$c_accent"logs"$c_reset" ["$c_arg"OPTIONS"$c_reset"]"
         echo ""
         echo "Browse and open terminal log files interactively."
         echo "Logs sorted newest-first. Type to fuzzy-filter by date or category."
         echo ""
         echo "Options:"
-        echo "  "$c_primary"-h, --help"$c_reset"       Show this help"
-        echo "  "$c_primary"-c, --category"$c_reset"   Limit to one category: scrollback, paru, yay"
+        echo "  "$c_arg"-h, --help"$c_reset"       Show this help"
+        echo "  "$c_arg"-c, --category"$c_reset"   Limit to one category: scrollback, paru, yay"
         echo ""
         echo "Keys in fzf:"
-        echo "  "$c_primary"Enter"$c_reset"     Open in \$PAGER"
-        echo "  "$c_primary"Ctrl-E"$c_reset"    Open in \$EDITOR"
-        echo "  "$c_primary"Ctrl-D"$c_reset"    Delete selected log"
-        echo "  "$c_primary"Ctrl-C"$c_reset"    Quit"
+        echo "  "$c_arg"Enter"$c_reset"     Open in \$PAGER"
+        echo "  "$c_arg"Ctrl-E"$c_reset"    Open in \$EDITOR"
+        echo "  "$c_arg"Ctrl-D"$c_reset"    Delete selected log"
+        echo "  "$c_arg"Ctrl-C"$c_reset"    Quit"
         return 0
     end
 

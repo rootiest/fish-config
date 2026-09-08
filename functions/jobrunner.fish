@@ -51,14 +51,7 @@
 #   redirections must be wrapped explicitly, e.g.
 #   jobrunner run sync fish -c 'a | b'.
 function jobrunner --description 'Manage detached background jobs with tmux or GNU screen'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_arg (set_color cyan)
-    set -l c_flag (set_color yellow)
-    set -l c_ok (set_color green)
-    set -l c_err (set_color red)
-    set -l c_dim (set_color brblack)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     set -l subcmds run list attach kill logs help \
         -r --run -l --list -a --attach -k --kill -o --output -h --help

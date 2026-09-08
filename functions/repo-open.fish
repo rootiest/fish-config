@@ -52,10 +52,7 @@
 # NOTES
 #   Typo abbreviation: open-repo (expands to repo-open on space/enter).
 function repo-open --description 'Open the origin remote of the current repo in a browser'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_flag (set_color yellow)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     argparse -X 0 h/help p/print r/root -- $argv
     or return 1

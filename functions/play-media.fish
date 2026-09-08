@@ -36,11 +36,7 @@
 #   play-media
 #   play-media --player mpv
 function play-media --description 'Pick audio/video files with fzf and play them'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_flag (set_color yellow)
-    set -l c_dim (set_color brblack)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     argparse h/help p/player= -- $argv
     or return 1

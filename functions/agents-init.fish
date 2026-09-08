@@ -85,14 +85,7 @@
 #   agents-init --plugins
 #   agents-init --quiet
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_flag (set_color yellow)
-    set -l c_ok (set_color green)
-    set -l c_warn (set_color yellow)
-    set -l c_dim (set_color brblack)
-    set -l c_err (set_color red)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     argparse h/help a/agents p/plugins v/verbose q/quiet s/silent -- $argv
     or return 1
