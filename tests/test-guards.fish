@@ -187,4 +187,22 @@ __fish_config_op_cascade __fish_config_op_logging __fish_config_op_logging_termi
 check "C5 sub falsy, C5 truthy -> disabled" 1 $status
 set -e __fish_config_op_logging_terminal_capture __fish_config_op_logging
 
+section "registry lookup"
+
+__fish_config_op_registry_lookup cat "" >/dev/null
+check "known unsited key found" 0 $status
+
+set -l t (__fish_config_op_registry_lookup cat "")
+check "cat's tags" aliases/filesystem "$t"
+
+__fish_config_op_registry_lookup nosuchthing "" >/dev/null
+check "unknown identity -> not found" 1 $status
+
+set -l t2 (__fish_config_op_registry_lookup config cdpath)
+check "sited key config:cdpath" overrides/environment "$t2"
+
+# The key is the identity:site PAIR, not the identity alone.
+__fish_config_op_registry_lookup cat wrongsite >/dev/null
+check "known identity, wrong site -> not found" 1 $status
+
 report
