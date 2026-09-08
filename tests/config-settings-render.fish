@@ -153,10 +153,11 @@ set -U __fish_user_dots_symlink false
 # __fish_scrollback_history_max_files: unset -> DEFAULT
 
 # ── Case emitter ──────────────────────────────────────────────────────────
-# panel_h is passed in by the caller, mirroring __cs_dispatch_draw in
-# config-settings.fish: the category list and both value pages are a fixed 16
-# lines, a sub-category page is 7 + <sub-category count>. The golden records
-# the declared height, the measured line count, and the erase sequence derived
+# panel_h is passed in by the caller, independently declaring the expected
+# height for each page so it can be cross-checked against the draw functions'
+# real output: the category list and both value pages are a fixed 16 lines, a
+# sub-category page is 7 + <sub-category count>. The golden records the
+# declared height, the measured line count, and the erase sequence derived
 # from the declared height -- so flattening the fixed/dynamic divergence, or
 # changing a page's height at all, breaks the compare three ways.
 function _cs_render_case --argument-names label panel_h

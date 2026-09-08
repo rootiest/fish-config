@@ -147,7 +147,6 @@ function config-settings --description 'Interactive TUI for managing fish config
     set -l cur_row   0
     set -l panel_h   0            # real value set by the first dispatch call below
     set -l new_frame              # captured by __cs_dispatch_draw
-    set -l prev_frame             # frame currently on screen; empty until first paint
     set -l last_cols $COLUMNS
 
     # ── Terminal setup ────────────────────────────────────
@@ -344,6 +343,7 @@ function config-settings --description 'Interactive TUI for managing fish config
                         # Full erase once to enter edit mode; per-keystroke
                         # redraws below diff against the previous edit frame.
                         set -l edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
+                        set -l prev_edit_frame
                         set -l pml (math --scale=0 "($last_cols + 78) / 2")
                         set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
                         printf '\e[%dA\e[J' $eh
@@ -370,15 +370,16 @@ function config-settings --description 'Interactive TUI for managing fish config
 
                             set prev_edit_frame $edit_frame
                             set edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
-                            if test (count $edit_frame) -eq (count $prev_edit_frame) -a "$COLUMNS" = "$last_cols"
+                            if test (count $edit_frame) -eq (count $prev_edit_frame) -a "$COLUMNS" = "$last_cols" -a $COLUMNS -ge 52
                                 # `| string collect` is required on each join --
                                 # see the identical note in the main loop's
                                 # diff-path call.
                                 printf '\e[%dA' (count $edit_frame)
                                 __config_settings_diff_redraw (string join \n -- $prev_edit_frame | string collect) (string join \n -- $edit_frame | string collect)
                             else
+                                set -l ph (count $prev_edit_frame)
                                 set -l pml (math --scale=0 "($last_cols + 78) / 2")
-                                set -l eh (math --scale=0 "(count $prev_edit_frame) * max(1, ceil($pml / $COLUMNS))")
+                                set -l eh (math --scale=0 "$ph * max(1, ceil($pml / $COLUMNS))")
                                 printf '\e[%dA\e[J' $eh
                                 printf '%s\n' $edit_frame
                             end
@@ -399,6 +400,7 @@ function config-settings --description 'Interactive TUI for managing fish config
                         printf '\e[%dA\e[J' $eh
                         set last_cols $COLUMNS
                         __cs_dispatch_draw
+                        printf '%s\n' $new_frame
                         set did_redraw 1
                     end
                 end
@@ -423,10 +425,10 @@ function config-settings --description 'Interactive TUI for managing fish config
         end
 
         set -l old_h $panel_h
-        set prev_frame $new_frame
+        set -l prev_frame $new_frame
         __cs_dispatch_draw
 
-        if test $panel_h -eq $old_h -a "$COLUMNS" = "$last_cols"
+        if test $panel_h -eq $old_h -a "$COLUMNS" = "$last_cols" -a $COLUMNS -ge 52
             # Diff path: geometry and width unchanged since the last frame --
             # move up without erasing, rewrite only the lines that changed.
             # `| string collect` is required on each join: command
