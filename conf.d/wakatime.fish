@@ -9,6 +9,10 @@
 #   site wakatime-autoexec: autoexec/telemetry
 #   site wakatime-hook: integrations/notifications
 
+# Registers a fish_postexec handler; that event is emitted only by the
+# interactive reader, so the handler is dead weight in a script.
+status is-interactive; or return
+
 # Local modification: opinionated guard (AGENTS.md Task #3). WakaTime
 # reporting is classified under both C2 auto-execution and C4 integrations;
 # disabling either category skips registering the hook.

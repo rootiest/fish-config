@@ -13,6 +13,12 @@
 # solely in functions/ are never registered and their --on-variable triggers
 # never fire.
 
+# Calls __fish_config_sync_logging at every shell start, which mkdir+touches
+# the C5 sentinel on disk. Its only consumers — the Kitty watcher and the
+# paru/yay wrappers — are interactive-context; every interactive shell still
+# refreshes it.
+status is-interactive; or return
+
 function __fish_config_logging_changed --on-variable __fish_config_op_logging \
     --description 'C5 event handler: sync logging state when __fish_config_op_logging changes'
     __fish_config_sync_logging

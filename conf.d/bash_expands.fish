@@ -7,6 +7,10 @@
 # Provides bash-style history expansion functions for abbreviations.
 # These functions are gated by the C3 overrides switch.
 
+# The six expand_* functions are reachable only through abbr --function
+# (conf.d/abbr.fish:677-697), i.e. only during interactive expansion.
+status is-interactive; or return
+
 # Execute expand_bang_all
 function expand_bang_all --description 'Execute expand_bang_all'
     # Opinionated guard (C3): no expansion when overrides are disabled.
