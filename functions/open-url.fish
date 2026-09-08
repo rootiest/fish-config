@@ -41,11 +41,7 @@
 # NOTES
 #   Typo abbreviation: url-open (expands to open-url on space/enter).
 function open-url --description 'Open a URL in the best available web browser'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_flag (set_color yellow)
-    set -l c_arg (set_color cyan)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     argparse h/help s/silent v/verbose -- $argv
     or return 1

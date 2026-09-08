@@ -25,11 +25,7 @@
 # EXAMPLE
 #   detach rsync -a ./data remote:/backup/
 function detach --description 'Execute detach'
-    set -l c_head (set_color --bold cyan)
-    set -l c_cmd (set_color --bold)
-    set -l c_flag (set_color yellow)
-    set -l c_arg (set_color cyan)
-    set -l c_reset (set_color normal)
+    __fish_palette
 
     set -l show_help 0
     set -l args

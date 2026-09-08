@@ -28,11 +28,7 @@
 function p --description 'Put from clipboard'
     # Check for help flag
     if contains -- -h $argv; or contains -- --help $argv
-        set -l c_head (set_color --bold cyan)
-        set -l c_cmd (set_color --bold)
-        set -l c_flag (set_color yellow)
-        set -l c_dim (set_color brblack)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""p$c_reset $c_flag""[OPTIONS]$c_reset"
         echo ""
         echo "  Pastes content from the system clipboard to stdout."

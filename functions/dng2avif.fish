@@ -38,11 +38,7 @@ function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
 
     # Help Screen
     if set -q _flag_help; or test (count $argv) -eq 0 -a -z "$_flag_input"
-        set -l c_head (set_color --bold cyan)
-        set -l c_cmd (set_color --bold)
-        set -l c_flag (set_color yellow)
-        set -l c_dim (set_color brblack)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""dng2avif$c_reset $c_flag""[options]$c_reset $c_dim""[input.dng]$c_reset"
         echo ""
         echo "$c_head""Options:$c_reset"
