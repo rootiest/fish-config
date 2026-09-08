@@ -231,4 +231,101 @@ set -e __fish_config_op_aliases __fish_config_op_aliases_filesystem
 __fish_config_op_enabled __totally_unregistered somesite
 check "no registry entry -> fail open" 0 $status
 
+section "op_enabled: always/* and AND, via a synthetic registry"
+
+# Why this fixture exists, so nobody deletes it as redundant:
+#
+# The generated registry has 65 entries, EVERY ONE carrying exactly one tag,
+# and contains no always/on or always/off anywhere (measured 2026-09-07
+# against conf.d/__fish_config_op_registry.fish). So three documented
+# semantics -- always/off, always/on, and AND-across-tags -- have no reachable
+# case in production data and would otherwise go completely untested.
+#
+# The registry is just two global lists, and in isolated mode nothing else in
+# this process reads them, so overriding them is free.
+set -g __fish_config_op_registry_keys "syn_on:" "syn_off:" "syn_and:" "syn_bare:" "syn_multi:"
+set -g __fish_config_op_registry_values \
+    "always/on" \
+    "always/off" \
+    "aliases/filesystem integrations/notifications" \
+    "aliases" \
+    "always/off always/on"
+
+set -e __fish_config_op_aliases __fish_config_op_integrations __fish_config_opinionated
+
+__fish_config_op_enabled syn_off
+check "always/off -> disabled" 1 $status
+
+set -g __fish_config_op_aliases 1
+__fish_config_op_enabled syn_off
+check "always/off ignores an enabled category" 1 $status
+set -e __fish_config_op_aliases
+
+__fish_config_op_enabled syn_on
+check "always/on -> enabled" 0 $status
+
+set -g __fish_config_op_aliases 0
+__fish_config_op_enabled syn_on
+check "always/on short-circuits a disabled category" 0 $status
+set -e __fish_config_op_aliases
+
+__fish_config_op_enabled syn_multi
+check "always/off beats always/on" 1 $status
+
+section "op_enabled: AND across tagged sub-categories"
+
+__fish_config_op_enabled syn_and
+check "both categories default -> enabled" 0 $status
+
+set -g __fish_config_op_aliases 0
+__fish_config_op_enabled syn_and
+check "first tag's category off -> disabled" 1 $status
+set -e __fish_config_op_aliases
+
+set -g __fish_config_op_integrations 0
+__fish_config_op_enabled syn_and
+check "second tag's category off -> disabled" 1 $status
+set -e __fish_config_op_integrations
+
+set -g __fish_config_op_aliases 1
+set -g __fish_config_op_integrations 1
+__fish_config_op_enabled syn_and
+check "both explicitly on -> enabled" 0 $status
+set -e __fish_config_op_aliases __fish_config_op_integrations
+
+section "op_enabled: a tag with no slash"
+
+# Degenerate but harmless: with no '/', $parts[2] is empty and the derived
+# subcategory name gets a trailing underscore. That name is simply always
+# unset, so the chain falls through to the category. Pinned so a future reader
+# does not mistake it for a bug.
+__fish_config_op_enabled syn_bare
+check "bare tag 'aliases' -> enabled by default" 0 $status
+
+set -g __fish_config_op_aliases 0
+__fish_config_op_enabled syn_bare
+check "bare tag honors its category" 1 $status
+set -e __fish_config_op_aliases
+
+section "op_enabled: C5 through the guard"
+
+# The path production code actually takes, as opposed to calling the cascade
+# directly. Same rule: unset means off and the master cannot enable it.
+set -g __fish_config_op_registry_keys "syn_log:"
+set -g __fish_config_op_registry_values "logging/terminal-capture"
+set -e __fish_config_op_logging __fish_config_op_logging_terminal_capture
+
+__fish_config_op_enabled syn_log
+check "C5-tagged component, nothing set -> disabled" 1 $status
+
+set -g __fish_config_opinionated 1
+__fish_config_op_enabled syn_log
+check "C5-tagged component + master truthy -> still disabled" 1 $status
+set -e __fish_config_opinionated
+
+set -g __fish_config_op_logging 1
+__fish_config_op_enabled syn_log
+check "C5-tagged component + explicit C5 on -> enabled" 0 $status
+set -e __fish_config_op_logging
+
 report
