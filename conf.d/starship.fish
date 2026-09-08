@@ -9,6 +9,10 @@
 # Without starship, fish's built-in prompt already emits OSC 133;A
 # on the prompt line itself, so no wrapper is needed.
 
+# Defines fish_prompt; no script renders a prompt. Checked before the
+# op-guard so the builtin short-circuits ahead of three function autoloads.
+status is-interactive; or return
+
 # Replacing the prompt is opinionated (C3 overrides)
 __fish_config_op_enabled (status basename); or return
 

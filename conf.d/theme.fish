@@ -20,6 +20,11 @@ if not __fish_config_op_enabled (status basename)
     return
 end
 
+# Below the cleanup block on purpose: that branch erases a stale universal
+# FZF_DEFAULT_OPTS and must keep running wherever it runs today. Everything
+# past here is fish_color_* for the syntax highlighter, interactive-only.
+status is-interactive; or return
+
 #   ────────────────────── Syntax highlighting colors ──────────────────────
 set --global fish_color_autosuggestion 6c7086
 set --global fish_color_cancel f38ba8

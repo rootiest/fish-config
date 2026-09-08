@@ -47,6 +47,10 @@
 # This allows for rapid-fire math without leaving the current shell.
 # ──────────────────────────────────────────────────────────────────────
 
+# Defines only fish_user_key_bindings, which fish calls from the interactive
+# reader and nowhere else.
+status is-interactive; or return
+
 function fish_user_key_bindings
 
     # Custom key chords are opinionated (C3 overrides); skip them entirely

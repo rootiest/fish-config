@@ -12,6 +12,9 @@
 #   site abbr-integrations: integrations/terminal-abbrs
 #   site abbr-overrides: overrides/key-bindings
 
+# Abbreviations only expand in the line editor; a script can never use one.
+status is-interactive; or return
+
 # Neovim
 # @category Editors
 # @desc nvim
