@@ -1,6 +1,6 @@
 # GitIgnore for Fish-config
 
-# id: gitig-boilerplate-7f0528027e23f210196ae4583c408e5b
+# id: gitig-boilerplate-a27b89403ff9f0bb3340ede87b42f93e
 #   ╭──────────────────────────────────────────────────────────╮
 #   │              GitIgnore Boilerplate Template              │
 #   ╰──────────────────────────────────────────────────────────╯
@@ -93,8 +93,9 @@ functions/sponge_*.fish
 [Aa][nN][Tt][Ii][Gg][Rr][Aa][Vv][Ii][Tt][Yy].[Mm][Dd]
 .[Aa][Nn][Tt][Ii][Gg][Rr][Aa][Vv]*
 
-# Matches AGENTS.md, .remember, etc.
+# Matches AGENTS.md, .agents/ (agy), .remember, etc.
 [Aa][Gg][Ee][Nn][Tt][Ss].[Mm][Dd]
+.[Aa][Gg][Ee][Nn][Tt][Ss]*
 .[Rr][Ee][Mm][Ee][Mm][Bb][Ee][Rr]
 
 # ──────────────────────────────────────────────────────────────
