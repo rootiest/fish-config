@@ -78,7 +78,6 @@ The configuration uses a structured file tree:
 ├── conf.d/
 │   ├── abbr.fish               All abbreviations
 │   ├── autopair.fish           Auto-pair brackets and quotes
-│   ├── cheat.fish              cheat.sh tab completions
 │   ├── done.fish               Desktop notifications for long commands
 │   ├── first_run.fish          One-time init: Fisher bootstrap, theme
 │   ├── key_bindings.fish       Custom key bindings and Vi mode
@@ -90,14 +89,13 @@ The configuration uses a structured file tree:
 │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
 │   ├── sponge_privacy.fish     Sponge privacy patterns
 │   ├── starship.fish           fish_prompt shell-integration markers
-│   ├── tailscale.fish          Tailscale CLI tab completions
 │   ├── theme.fish              Catppuccin syntax highlight colors
 │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
 │   ├── wakatime.fish           WakaTime shell hook
 │   ├── yay-wrapper.fish        Auto-generates yay logging wrapper
 │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
 ├── functions/                  Custom functions, one per file
-├── completions/                Tab completion scripts
+├── completions/                Tab completion scripts, autoloaded on demand
 ├── integrations/
 │   └── fzf.fish                FZF Catppuccin theme and key bindings
 ├── scripts/
@@ -439,7 +437,8 @@ plugin.
 .SS Tailscale
 .PP
 Full tab completion for the \f[V]tailscale\f[R] CLI is provided via
-\f[V]conf.d/tailscale.fish\f[R].
+\f[V]completions/tailscale.fish\f[R], autoloaded on the first
+\f[V]tailscale<TAB>\f[R].
 .SS Done Notifications
 .PP
 Desktop notifications fire when a command takes longer than 10 seconds
@@ -978,6 +977,9 @@ falls back to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Exit Status:
+  Exit status of eza, lsd, or ls, whichever ran
+
 Example:
 lD \[ti]/projects
 \f[R]
@@ -1012,6 +1014,9 @@ per line with icons. Uses eza, falls back to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Exit Status:
+  Exit status of eza, lsd, or ls, whichever ran
+
 Example:
 lsr \[ti]/projects
 \f[R]
@@ -1027,6 +1032,9 @@ Uses eza, falls back to lsd, then to system ls.
 
 Arguments:
   args...  Arguments forwarded to the listing command
+
+Exit Status:
+  Exit status of eza, lsd, or ls, whichever ran
 
 Example:
 lss \[ti]/downloads
@@ -1044,6 +1052,9 @@ Uses eza, falls back to lsd, then to system ls -R.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Exit Status:
+  Exit status of eza, lsd, or ls, whichever ran
+
 Example:
 lstree \[ti]/projects/myapp
 \f[R]
@@ -1059,6 +1070,9 @@ falls back to lsd, then to system ls -R.
 
 Arguments:
   args...  Arguments forwarded to the listing command
+
+Exit Status:
+  Exit status of eza, lsd, or ls, whichever ran
 
 Example:
 lt \[ti]/projects
@@ -1077,6 +1091,9 @@ to lsd, then to system ls.
 Arguments:
   args...  Arguments forwarded to the listing command
 
+Exit Status:
+  Exit status of eza, lsd, or ls, whichever ran
+
 Example:
 ltr \[ti]/projects
 \f[R]
@@ -1092,6 +1109,9 @@ eza, falls back to lsd, then to system ls -lX.
 
 Arguments:
   args...  Arguments forwarded to the listing command
+
+Exit Status:
+  Exit status of eza, lsd, or ls, whichever ran
 
 Example:
 lx \[ti]/projects
@@ -1599,6 +1619,10 @@ Synopsis:  hist
 Searches fish history interactively using fzf, inserts the selected command
 into the command line, and copies it to the clipboard via wl-copy.
 
+Exit Status:
+  0  Command selected and inserted, or fzf was cancelled
+  1  Disabled by __fish_config_op_integrations
+
 Example:
 hist
 \f[R]
@@ -1612,6 +1636,10 @@ Synopsis:  cleanup
 
 Identifies and removes Arch Linux orphan packages using pacman. Logs
 package names and versions to \[ti]/.removed_orphans before removal.
+
+Exit Status:
+  0        No orphans found, or orphans removed successfully
+  Nonzero  sudo pacman -Rns failed
 
 Example:
 cleanup
@@ -1717,6 +1745,9 @@ Synopsis:  check_fish_deps
 Backwards-compatibility wrapper that delegates to fish-deps status to
 report which fish shell dependencies are installed or missing.
 
+Exit Status:
+  Exit status of fish-deps status
+
 Example:
 check_fish_deps
 \f[R]
@@ -1787,6 +1818,10 @@ Synopsis:  fzf-update
 Installs or upgrades fzf from git HEAD into \[ti]/.fzf. Pulls the latest
 changes if \[ti]/.fzf already exists, or clones the repository if not.
 
+Exit Status:
+  0        fzf installed or updated successfully
+  Nonzero  git or the fzf install script failed
+
 Example:
 fzf-update
 \f[R]
@@ -1803,6 +1838,9 @@ runs CachyOS boot hooks (limine-mkinitcpio), and re-signs all Secure Boot
 files tracked by sbctl. Combines the edit and sign steps into a single
 command.
 
+Exit Status:
+  0  Always (individual step failures are not propagated)
+
 Example:
 limine-edit
 \f[R]
@@ -1814,6 +1852,9 @@ limine-edit
 Synopsis:  lock
 
 Locks the current desktop session using loginctl lock-session.
+
+Exit Status:
+  Exit status of loginctl lock-session
 
 Example:
 lock
@@ -1827,6 +1868,9 @@ Synopsis:  ports
 
 Lists all active TCP listeners on the system using lsof, showing
 port numbers and addresses without hostname resolution.
+
+Exit Status:
+  Exit status of lsof
 
 Example:
 ports
@@ -1864,6 +1908,9 @@ Synopsis:  screensleep
 Turns off the display after a 1-second delay by invoking the KDE
 PowerDevil \[dq]Turn Off Screen\[dq] global shortcut via busctl.
 
+Exit Status:
+  Exit status of busctl
+
 Example:
 screensleep
 \f[R]
@@ -1895,6 +1942,9 @@ Synopsis:  swapstat
 Displays a colorized memory report showing kernel swappiness,
 zRAM compression ratio, zRAM device details (via zramctl), and
 active swap priority (via swapon).
+
+Exit Status:
+  0  Always
 
 Example:
 swapstat
@@ -2250,6 +2300,9 @@ Synopsis:  fast
 Displays a styled message indicating that the fast command is unavailable
 and suggests using fast-cli instead.
 
+Exit Status:
+  0  Always
+
 Example:
 fast
 \f[R]
@@ -2278,6 +2331,9 @@ Synopsis:  gip
 Fetches and prints both the public IPv4 and IPv6 addresses using
 icanhazip.com. Shows \[dq]Not detected\[dq] for any address that times out.
 
+Exit Status:
+  0  Always (network failures print \[dq]Not detected\[dq] instead of failing)
+
 Example:
 gip
 \f[R]
@@ -2289,6 +2345,9 @@ gip
 Synopsis:  gip4
 
 Fetches and prints the machine\[aq]s public IPv4 address using icanhazip.com.
+
+Exit Status:
+  Exit status of curl
 
 Example:
 gip4
@@ -2345,6 +2404,9 @@ falls back to the qrenco.de API via curl.
 
 Arguments:
   text...  Text to encode; reads from stdin if omitted
+
+Exit Status:
+  Exit status of qrencode, or curl if qrencode is unavailable
 
 Example:
 qr \[dq]https://example.com\[dq]
@@ -2819,6 +2881,9 @@ Invokes Claude Code to analyze recent repository changes and update
 README.md, ensuring all features and examples are accurate and pruning
 obsolete content.
 
+Exit Status:
+  Exit status of the claude invocation
+
 Example:
 claude-docs
 \f[R]
@@ -2833,28 +2898,65 @@ Invokes Claude Code to perform a full PR workflow: create a kebab-case
 branch, write a Conventional Commit, run verification, push, and open a
 pull request with a manual verification checklist.
 
+Exit Status:
+  Exit status of the claude invocation
+
 Example:
 claude-pr
 \f[R]
 .fi
-.SS dops
+.SS docker
 .IP
 .nf
 \f[C]
 Synopsis:  docker [subcommand] [args...]
 
 Wrapper for docker that intercepts the ps subcommand and redirects it to
-the dops function for enhanced container listing. All other subcommands are
-passed through to the real docker binary.
+the dops function for enhanced container listing. All other subcommands,
+and a bare invocation with no subcommand, are passed through to the real
+docker binary.
 
 Arguments:
   subcommand  Docker subcommand (ps is redirected to dops)
   args...     Arguments forwarded to docker or dops
 
+Exit Status:
+  Exit status of dops (for ps), or of the real docker binary otherwise
+
 Example:
 docker ps
+docker
 \f[R]
 .fi
+.PP
+\f[B]Dependencies:\f[R] \f[V]dops\f[R]
+.PP
+\f[B]Used by:\f[R] \f[V]dops\f[R]
+.SS dops
+.IP
+.nf
+\f[C]
+Synopsis:  dops [args...]
+
+Enhanced container listing: runs docker ps with a clean custom table
+(Names, Image, Status, Ports) instead of docker\[aq]s noisier default
+columns. Extra arguments (e.g. -a) are forwarded to docker ps.
+
+Arguments:
+  args...  Arguments forwarded to docker ps
+
+Exit Status:
+  Exit status of docker ps
+
+Example:
+dops
+dops -a
+\f[R]
+.fi
+.PP
+\f[B]Dependencies:\f[R] \f[V]docker\f[R]
+.PP
+\f[B]Used by:\f[R] \f[V]docker\f[R]
 .SS qc
 .IP
 .nf
@@ -3002,6 +3104,9 @@ Synopsis:  steam-dl
 
 Launches Steam with systemd-inhibit to prevent the system from idling
 or sleeping during active downloads.
+
+Exit Status:
+  Exit status of steam (via systemd-inhibit)
 
 Example:
 steam-dl
@@ -3573,6 +3678,9 @@ Synopsis:  tmux-clean
 
 Kills all detached (unattached) tmux sessions, leaving any currently
 attached sessions running.
+
+Exit Status:
+  0  Always
 
 Example:
 tmux-clean

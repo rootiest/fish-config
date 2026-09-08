@@ -661,6 +661,9 @@ functions). They are active in all interactive sessions.
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Exit Status:
+      Exit status of eza, lsd, or ls, whichever ran
+
     Example:
     lD ~/projects
 
@@ -689,6 +692,9 @@ functions). They are active in all interactive sessions.
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Exit Status:
+      Exit status of eza, lsd, or ls, whichever ran
+
     Example:
     lsr ~/projects
 
@@ -701,6 +707,9 @@ functions). They are active in all interactive sessions.
 
     Arguments:
       args...  Arguments forwarded to the listing command
+
+    Exit Status:
+      Exit status of eza, lsd, or ls, whichever ran
 
     Example:
     lss ~/downloads
@@ -715,6 +724,9 @@ functions). They are active in all interactive sessions.
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Exit Status:
+      Exit status of eza, lsd, or ls, whichever ran
+
     Example:
     lstree ~/projects/myapp
 
@@ -727,6 +739,9 @@ functions). They are active in all interactive sessions.
 
     Arguments:
       args...  Arguments forwarded to the listing command
+
+    Exit Status:
+      Exit status of eza, lsd, or ls, whichever ran
 
     Example:
     lt ~/projects
@@ -742,6 +757,9 @@ functions). They are active in all interactive sessions.
     Arguments:
       args...  Arguments forwarded to the listing command
 
+    Exit Status:
+      Exit status of eza, lsd, or ls, whichever ran
+
     Example:
     ltr ~/projects
 
@@ -754,6 +772,9 @@ functions). They are active in all interactive sessions.
 
     Arguments:
       args...  Arguments forwarded to the listing command
+
+    Exit Status:
+      Exit status of eza, lsd, or ls, whichever ran
 
     Example:
     lx ~/projects
@@ -1198,6 +1219,10 @@ functions). They are active in all interactive sessions.
     Searches fish history interactively using fzf, inserts the selected command
     into the command line, and copies it to the clipboard via wl-copy.
 
+    Exit Status:
+      0  Command selected and inserted, or fzf was cancelled
+      1  Disabled by __fish_config_op_integrations
+
     Example:
     hist
 
@@ -1209,6 +1234,10 @@ functions). They are active in all interactive sessions.
 
     Identifies and removes Arch Linux orphan packages using pacman. Logs
     package names and versions to ~/.removed_orphans before removal.
+
+    Exit Status:
+      0        No orphans found, or orphans removed successfully
+      Nonzero  sudo pacman -Rns failed
 
     Example:
     cleanup
@@ -1300,6 +1329,9 @@ functions). They are active in all interactive sessions.
     Backwards-compatibility wrapper that delegates to fish-deps status to
     report which fish shell dependencies are installed or missing.
 
+    Exit Status:
+      Exit status of fish-deps status
+
     Example:
     check_fish_deps
 
@@ -1364,6 +1396,10 @@ functions). They are active in all interactive sessions.
     Installs or upgrades fzf from git HEAD into ~/.fzf. Pulls the latest
     changes if ~/.fzf already exists, or clones the repository if not.
 
+    Exit Status:
+      0        fzf installed or updated successfully
+      Nonzero  git or the fzf install script failed
+
     Example:
     fzf-update
 
@@ -1378,6 +1414,9 @@ functions). They are active in all interactive sessions.
     files tracked by sbctl. Combines the edit and sign steps into a single
     command.
 
+    Exit Status:
+      0  Always (individual step failures are not propagated)
+
     Example:
     limine-edit
 
@@ -1386,6 +1425,9 @@ functions). They are active in all interactive sessions.
     Synopsis:  lock
 
     Locks the current desktop session using loginctl lock-session.
+
+    Exit Status:
+      Exit status of loginctl lock-session
 
     Example:
     lock
@@ -1396,6 +1438,9 @@ functions). They are active in all interactive sessions.
 
     Lists all active TCP listeners on the system using lsof, showing
     port numbers and addresses without hostname resolution.
+
+    Exit Status:
+      Exit status of lsof
 
     Example:
     ports
@@ -1427,6 +1472,9 @@ functions). They are active in all interactive sessions.
     Turns off the display after a 1-second delay by invoking the KDE
     PowerDevil "Turn Off Screen" global shortcut via busctl.
 
+    Exit Status:
+      Exit status of busctl
+
     Example:
     screensleep
 
@@ -1452,6 +1500,9 @@ functions). They are active in all interactive sessions.
     Displays a colorized memory report showing kernel swappiness,
     zRAM compression ratio, zRAM device details (via zramctl), and
     active swap priority (via swapon).
+
+    Exit Status:
+      0  Always
 
     Example:
     swapstat
@@ -1761,6 +1812,9 @@ functions). They are active in all interactive sessions.
     Displays a styled message indicating that the fast command is unavailable
     and suggests using fast-cli instead.
 
+    Exit Status:
+      0  Always
+
     Example:
     fast
 
@@ -1783,6 +1837,9 @@ functions). They are active in all interactive sessions.
     Fetches and prints both the public IPv4 and IPv6 addresses using
     icanhazip.com. Shows "Not detected" for any address that times out.
 
+    Exit Status:
+      0  Always (network failures print "Not detected" instead of failing)
+
     Example:
     gip
 
@@ -1791,6 +1848,9 @@ functions). They are active in all interactive sessions.
     Synopsis:  gip4
 
     Fetches and prints the machine's public IPv4 address using icanhazip.com.
+
+    Exit Status:
+      Exit status of curl
 
     Example:
     gip4
@@ -1838,6 +1898,9 @@ functions). They are active in all interactive sessions.
 
     Arguments:
       text...  Text to encode; reads from stdin if omitted
+
+    Exit Status:
+      Exit status of qrencode, or curl if qrencode is unavailable
 
     Example:
     qr "https://example.com"
@@ -2283,6 +2346,9 @@ functions). They are active in all interactive sessions.
     README.md, ensuring all features and examples are accurate and pruning
     obsolete content.
 
+    Exit Status:
+      Exit status of the claude invocation
+
     Example:
     claude-docs
 
@@ -2294,23 +2360,57 @@ functions). They are active in all interactive sessions.
     branch, write a Conventional Commit, run verification, push, and open a
     pull request with a manual verification checklist.
 
+    Exit Status:
+      Exit status of the claude invocation
+
     Example:
     claude-pr
 
-### dops
+### docker
 
     Synopsis:  docker [subcommand] [args...]
 
     Wrapper for docker that intercepts the ps subcommand and redirects it to
-    the dops function for enhanced container listing. All other subcommands are
-    passed through to the real docker binary.
+    the dops function for enhanced container listing. All other subcommands,
+    and a bare invocation with no subcommand, are passed through to the real
+    docker binary.
 
     Arguments:
       subcommand  Docker subcommand (ps is redirected to dops)
       args...     Arguments forwarded to docker or dops
 
+    Exit Status:
+      Exit status of dops (for ps), or of the real docker binary otherwise
+
     Example:
     docker ps
+    docker
+
+**Dependencies:** `dops`
+
+**Used by:** `dops`
+
+### dops
+
+    Synopsis:  dops [args...]
+
+    Enhanced container listing: runs docker ps with a clean custom table
+    (Names, Image, Status, Ports) instead of docker's noisier default
+    columns. Extra arguments (e.g. -a) are forwarded to docker ps.
+
+    Arguments:
+      args...  Arguments forwarded to docker ps
+
+    Exit Status:
+      Exit status of docker ps
+
+    Example:
+    dops
+    dops -a
+
+**Dependencies:** `docker`
+
+**Used by:** `docker`
 
 ### qc
 
@@ -2443,6 +2543,9 @@ functions). They are active in all interactive sessions.
 
     Launches Steam with systemd-inhibit to prevent the system from idling
     or sleeping during active downloads.
+
+    Exit Status:
+      Exit status of steam (via systemd-inhibit)
 
     Example:
     steam-dl
@@ -2955,6 +3058,9 @@ functions). They are active in all interactive sessions.
 
     Kills all detached (unattached) tmux sessions, leaving any currently
     attached sessions running.
+
+    Exit Status:
+      0  Always
 
     Example:
     tmux-clean
