@@ -100,4 +100,15 @@ if test $status -ne 0
     set overall_failed 1
 end
 
+# ---- Phase 4: config-settings render golden ------------------------------
+# Byte-identity gate for the TUI's three draw functions. Runs as its own
+# process: like the vault suite it builds its own throwaway
+# HOME/XDG_CONFIG_HOME sandbox and needs no loaded config.
+echo ""
+echo "== config-settings render golden =="
+fish $repo_root/tests/config-settings-render.fish
+if test $status -ne 0
+    set overall_failed 1
+end
+
 exit $overall_failed
