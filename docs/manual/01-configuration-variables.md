@@ -118,7 +118,8 @@ Every shell command is reported to WakaTime for time-tracking. Set
 
 ### Tailscale
 
-Full tab completion for the `tailscale` CLI is provided via `conf.d/tailscale.fish`.
+Full tab completion for the `tailscale` CLI is provided via
+`completions/tailscale.fish`, autoloaded on the first `tailscale<TAB>`.
 
 ### Done Notifications
 

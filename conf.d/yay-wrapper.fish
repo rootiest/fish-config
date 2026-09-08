@@ -10,6 +10,10 @@
 #   site yay-autoexec: autoexec/pkg-wrappers
 #   site yay-logging: logging/pkg-logs
 
+# Defines nothing; its only effect is generating ~/.local/bin/yay, an
+# idempotent write every interactive session already performs.
+status is-interactive; or return
+
 # Auto-generating a wrapper in ~/.local/bin is opinionated (C2 auto-exec).
 # Wrapper generation is also gated by C5 (Logging & Capture).
 __fish_config_op_enabled (status basename) yay-autoexec; or return
