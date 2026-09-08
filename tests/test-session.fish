@@ -60,3 +60,28 @@ set -l got (_agents_vault_dir)
 set -e __fish_agent_vault_dir
 test (count $saved) -gt 0; and set -g __fish_agent_vault_dir $saved
 check "vault dir honors the override" /tmp/vault-override-check "$got"
+
+section "session: conf.d guards are lazy in non-interactive scripts"
+
+# A non-interactive shell must not load interactive-only conf.d work. The
+# child inherits XDG_CONFIG_HOME from this sandboxed session, so it loads
+# the same config under test. Each exit code names one regression.
+#
+# Assertion 5 (tailscale) is vacuously true where tailscale is not
+# installed: conf.d/tailscale.fish returned early on `type -q tailscale`
+# before this change, and completions/tailscale.fish does the same, so the
+# function is absent either way. The test still cannot fail wrongly there
+# -- it just stops proving anything about that one file. A positive
+# "completions still work" check would need the binary present and would
+# make the suite machine-dependent, so it stays out.
+fish -c '
+    abbr -q n; and exit 1
+    functions -q fish_user_key_bindings; and exit 2
+    functions -q expand_bang_all; and exit 3
+    functions -q __fish_config_logging_changed; and exit 4
+    functions -q __tailscale_perform_completion; and exit 5
+    exit 0'
+check "conf.d guards stay out of non-interactive scripts" 0 $status
+
+# Positive counterpart to the assertion above: the guard must not over-fire.
+check "fish_user_key_bindings still defined in-session" true (functions -q fish_user_key_bindings; and echo true; or echo false)

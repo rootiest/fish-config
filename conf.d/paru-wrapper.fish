@@ -10,6 +10,10 @@
 #   site paru-autoexec: autoexec/pkg-wrappers
 #   site paru-logging: logging/pkg-logs
 
+# Defines nothing; its only effect is generating ~/.local/bin/paru, an
+# idempotent write every interactive session already performs.
+status is-interactive; or return
+
 # Auto-generating a wrapper in ~/.local/bin is opinionated (C2 auto-exec).
 # Wrapper generation is also gated by C5 (Logging & Capture).
 __fish_config_op_enabled (status basename) paru-autoexec; or return
