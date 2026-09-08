@@ -97,6 +97,34 @@ function test_vault_dir_honors_override
     test "$got" = /tmp/vault-override-check
 end
 
+function test_draw_line_count_matches_panel_h
+    set -l toggle_vars \
+        __fish_config_op_aliases __fish_config_op_autoexec \
+        __fish_config_op_overrides __fish_config_op_integrations \
+        __fish_config_op_logging __fish_config_op_greeting \
+        __fish_config_opinionated
+
+    set -l lines (__config_settings_draw 0 universal $toggle_vars)
+    if test (count $lines) -ne 16
+        echo "    __config_settings_draw: expected 16 lines, got "(count $lines)
+        return 1
+    end
+
+    set -l vlines (__config_settings_draw_value 0 sponge)
+    if test (count $vlines) -ne 16
+        echo "    __config_settings_draw_value: expected 16 lines, got "(count $vlines)
+        return 1
+    end
+
+    set -l n (count (__config_settings_subcats __fish_config_op_aliases))
+    set -l slines (__config_settings_draw_subcat 0 universal __fish_config_op_aliases)
+    set -l want (math 7 + $n)
+    if test (count $slines) -ne $want
+        echo "    __config_settings_draw_subcat: expected $want lines, got "(count $slines)
+        return 1
+    end
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0
