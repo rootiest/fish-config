@@ -237,6 +237,58 @@ function test_help_renderer_degrades_safely
     test $failed -eq 0
 end
 
+function test_help_never_executes_destructive_path
+    # These eight ignore $argv entirely, so before the header-driven help
+    # landed, `upgrade --help` ran `paru -Syu --noconfirm`. The check has
+    # to prove --help does NOT reach the destructive path *without* ever
+    # running it: every external binary the eight can reach is shadowed by
+    # a recording stub on PATH, and the recorder must stay empty.
+    #
+    # WARNING: a silent pass here means a MISSING STUB, not success. If a
+    # function shows neither an EXECUTED line nor its own help, its
+    # command is absent from the stub list below -- add it. A test that
+    # cannot fail proves nothing about a body that runs sudo pacman -Rns.
+    set -l root (realpath (dirname (status filename))/..)
+    set -l tmp (mktemp -d)
+    mkdir -p $tmp/bin
+    set -l log $tmp/invoked.log
+    touch $log
+
+    for b in sudo pacman paru yay loginctl busctl tmux systemd-inhibit \
+        sudoedit limine-enroll-config limine-mkinitcpio sbctl git fzf steam
+        printf '#!/bin/sh\necho "$(basename "$0") $*" >> %s\n' $log >$tmp/bin/$b
+        chmod +x $tmp/bin/$b
+    end
+
+    set -l failed 0
+    for fn in cleanup fzf-update limine-edit lock screensleep sudo-toggle \
+        tmux-clean upgrade
+        set -l out (env TERM=dumb PATH="$tmp/bin:$PATH" HOME=$tmp \
+            fish --no-config -c \
+            "set -g fish_function_path $root/functions $fish_function_path
+             $fn --help" 2>/dev/null)
+        set -l code $status
+
+        if test $code -ne 0
+            echo "    $fn --help exited $code, expected 0"
+            set failed 1
+        end
+        if not contains -- $fn $out
+            echo "    $fn --help did not print its own help"
+            set failed 1
+        end
+        set -l ran (string trim -- (command cat $log))
+        if test -n "$ran"
+            echo "    $fn --help EXECUTED: $ran"
+            set failed 1
+        end
+        echo -n "" >$log
+    end
+
+    rm -rf $tmp
+    test $failed -eq 0
+end
+
 function functional_test_main
     set -l names (functions -a | string match 'test_*' | sort)
     set -l failed 0

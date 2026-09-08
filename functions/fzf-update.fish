@@ -14,6 +14,8 @@
 # EXAMPLE
 #   fzf-update
 function fzf-update --description 'Install or upgrade fzf from git HEAD'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if test -d ~/.fzf
         echo "Updating fzf..."
         git -C ~/.fzf pull --ff-only

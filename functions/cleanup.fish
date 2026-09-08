@@ -14,6 +14,8 @@
 # EXAMPLE
 #   cleanup
 function cleanup --description 'Log orphans to ~/.removed_orphans and remove them'
+    __fish_help_header (status current-function) $argv; and return 0
+
     set -l orphans (pacman -Qtdq)
     if test -n "$orphans"
         echo "📝 Logging orphans to ~/.removed_orphans..."
