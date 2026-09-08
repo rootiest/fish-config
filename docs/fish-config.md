@@ -46,7 +46,6 @@ The configuration uses a structured file tree:
     ├── conf.d/
     │   ├── abbr.fish               All abbreviations
     │   ├── autopair.fish           Auto-pair brackets and quotes
-    │   ├── cheat.fish              cheat.sh tab completions
     │   ├── done.fish               Desktop notifications for long commands
     │   ├── first_run.fish          One-time init: Fisher bootstrap, theme
     │   ├── key_bindings.fish       Custom key bindings and Vi mode
@@ -58,14 +57,13 @@ The configuration uses a structured file tree:
     │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
     │   ├── sponge_privacy.fish     Sponge privacy patterns
     │   ├── starship.fish           fish_prompt shell-integration markers
-    │   ├── tailscale.fish          Tailscale CLI tab completions
     │   ├── theme.fish              Catppuccin syntax highlight colors
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
     │   ├── wakatime.fish           WakaTime shell hook
     │   ├── yay-wrapper.fish        Auto-generates yay logging wrapper
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
     ├── functions/                  Custom functions, one per file
-    ├── completions/                Tab completion scripts
+    ├── completions/                Tab completion scripts, autoloaded on demand
     ├── integrations/
     │   └── fzf.fish                FZF Catppuccin theme and key bindings
     ├── scripts/
@@ -245,7 +243,8 @@ Every shell command is reported to WakaTime for time-tracking. Set
 
 ### Tailscale
 
-Full tab completion for the `tailscale` CLI is provided via `conf.d/tailscale.fish`.
+Full tab completion for the `tailscale` CLI is provided via
+`completions/tailscale.fish`, autoloaded on the first `tailscale<TAB>`.
 
 ### Done Notifications
 
