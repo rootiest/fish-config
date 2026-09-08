@@ -54,7 +54,7 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     # function carried its own inferior copy (tee instead of a PTY, no
     # progress-bar rendering, hard-coded /usr/bin/paru|yay), which fought
     # the canonical generator for the wrapper file on every version-marker
-    # mismatch. See startup-latency-JOB-BRIEF-FINDINGS.md §2.
+    # mismatch.
     #
     # Routed through _fish_source_scoped: both files `return` early on
     # several guard checks, and a sourced `return` exits the *calling*

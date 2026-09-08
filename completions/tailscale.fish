@@ -236,7 +236,7 @@ end
 # $__fish_config_dir/completions precedes /usr/share/fish/vendor_completions.d,
 # so the vendor file is never sourced and there is nothing to erase. It also
 # executed the tailscale binary at startup. Verified: completion output is
-# byte-identical with and without it. See AGENTS/specs/2026-09-07-startup-latency-design.md D2.
+# byte-identical with and without it.
 
 # Remove any pre-existing completions for the program since we will be handling all of them.
 complete -c tailscale -e

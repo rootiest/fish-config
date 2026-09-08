@@ -141,10 +141,10 @@ set -e __fish_config_opinionated
 section "cascade: C5 logging is opt-in"
 
 # Uses the REAL __fish_config_op_logging name because the opt-in list lives
-# inside the cascade keyed on it. AGENTS.md: "C5 is opt-in (do not 'fix' this)"
-# -- unset or unrecognized means off, and the master switch cannot enable it.
-# If any of these three fail, that is a real defect: record it in
-# JOB-BRIEF-FINDINGS.md, do not repair the guard.
+# inside the cascade keyed on it. C5 logging is opt-in by design (see
+# docs/fish-config.md's "C5 -- Logging and Capture" section): unset or
+# unrecognized means off, and the master switch cannot enable it. If any of
+# these three fail, that is a regression in the guard itself, not the test.
 set -e __fish_config_op_logging __fish_config_opinionated
 
 __fish_config_op_cascade __fish_config_op_logging
