@@ -31,8 +31,7 @@
 function split --description 'Run a command in a new terminal split'
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
-        set -l c_err (set_color red)
-        set -l c_reset (set_color normal)
+        __fish_palette
         echo "$c_err"'split: disabled by __fish_config_op_integrations'"$c_reset" >&2
         return 1
     end

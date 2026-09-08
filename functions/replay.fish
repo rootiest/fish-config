@@ -27,11 +27,7 @@ function replay --description 'Run Bash commands replaying changes in Fish'
         case -v --version
             echo "replay, version 1.2.1"
         case "" -h --help
-            set -l c_head (set_color --bold cyan)
-            set -l c_cmd (set_color --bold)
-            set -l c_flag (set_color yellow)
-            set -l c_arg (set_color cyan)
-            set -l c_reset (set_color normal)
+            __fish_palette
             echo "$c_head""Usage:$c_reset $c_cmd""replay$c_reset $c_arg""<commands>$c_reset  Run Bash commands replaying changes in Fish"
             echo "$c_head""Options:$c_reset"
             echo "       $c_flag-v$c_reset or $c_flag--version$c_reset  Print version"
