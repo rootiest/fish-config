@@ -178,6 +178,17 @@ function _cs_render_case --argument-names label panel_h
     command rm -f $t
 end
 
+# ── Frame-verb fragments ──────────────────────────────────────────────────
+# The shared computations pinned directly, not only through the pages that use
+# them. <END> marks the end of each fragment so trailing padding -- which is
+# the entire point of a 7-column badge or a 2-column cursor cell -- shows up in
+# a diff instead of being invisible whitespace.
+function _cs_frame_case --argument-names label
+    printf '### frame %s\n' $label
+    $argv[2..]
+    printf '<END>\n'
+end
+
 # ── Cases ─────────────────────────────────────────────────────────────────
 # 100 -> IW 76, 88 -> IW 72, 84 -> IW 68, 70 -> IW 50: one COLUMNS value per
 # width tier, each a few columns above its threshold.
@@ -222,4 +233,47 @@ begin
         _cs_render_case "edit page=paths row=2 buf=empty" 16 \
             __config_settings_draw_value 2 paths edit ""
     end
+
+    # Emitted last on purpose: everything above is page output, so the page
+    # section's byte offsets never move when this section grows.
+    for cols in 100 88 84 70
+        set -g COLUMNS $cols
+        _cs_frame_case "width cols=$cols" __config_settings_frame width
+    end
+    set -g COLUMNS 100
+
+    set -l head (set_color --bold cyan)
+    set -l rst (set_color normal)
+    set -l p_test (string repeat -n 11 ' ')
+
+    for v in on off DEFAULT ''
+        _cs_frame_case "badge onoff val=$v" __config_settings_frame badge $v
+    end
+    for v in true false DEFAULT
+        _cs_frame_case "badge boolean val=$v" __config_settings_frame badge $v true false
+    end
+
+    _cs_frame_case "cursor hit" __config_settings_frame cursor 3 3
+    _cs_frame_case "cursor miss" __config_settings_frame cursor 3 4
+
+    _cs_frame_case "title toggle-page" __config_settings_frame title 76 $p_test \
+        "$head Opinionated Settings $rst"
+    _cs_frame_case "title subcat-page" __config_settings_frame title 76 $p_test \
+        "$head Sub-categories: aliases (Universal)$rst "
+    _cs_frame_case "title value-page" __config_settings_frame title 76 $p_test \
+        "$head Sponge Settings$rst "
+
+    set -l badge_on (__config_settings_frame badge on)
+    _cs_frame_case "row pad lw=12" __config_settings_frame row 76 $p_test \
+        (__config_settings_frame cursor 0 0) Aliases 12 $badge_on "cmd shadows" pad
+    _cs_frame_case "row cut lw=13" __config_settings_frame row 76 $p_test \
+        (__config_settings_frame cursor 0 1) Notifications 13 $badge_on "done, WakaTime hook" cut
+    _cs_frame_case "row cut lw=13 overlong" __config_settings_frame row 50 $p_test \
+        (__config_settings_frame cursor 0 0) Notifications 13 $badge_on \
+        "ls, cat, cd, du, mkdir, rm, mv, zoxide" cut
+    _cs_frame_case "row shorten lw=12" __config_settings_frame row 76 $p_test \
+        (__config_settings_frame cursor 0 0) "Log dir" 12 $badge_on \
+        /home/tester/very/long/scrollback/history/directory shorten
+    _cs_frame_case "row shorten lw=12 empty" __config_settings_frame row 50 $p_test \
+        (__config_settings_frame cursor 1 0) "Log max" 12 $badge_on "" shorten
 end >$CS_RENDER_OUT

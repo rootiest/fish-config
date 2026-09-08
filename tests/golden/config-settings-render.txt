@@ -4938,3 +4938,57 @@
          │──────────────────────────────────────────────────│
          │[90m type value   Enter save   Esc cancel   ⌫ delete  [m│
          └──────────────────────────────────────────────────┘
+### frame width cols=100
+76
+<END>
+### frame width cols=88
+72
+<END>
+### frame width cols=84
+68
+<END>
+### frame width cols=70
+50
+<END>
+### frame badge onoff val=on
+[32m     ON[m<END>
+### frame badge onoff val=off
+[31mOFF    [m<END>
+### frame badge onoff val=DEFAULT
+[90mDEFAULT[m<END>
+### frame badge onoff val=
+[90mDEFAULT[m<END>
+### frame badge boolean val=true
+[32m     ON[m<END>
+### frame badge boolean val=false
+[31mOFF    [m<END>
+### frame badge boolean val=DEFAULT
+[90mDEFAULT[m<END>
+### frame cursor hit
+[35;1m▶[m <END>
+### frame cursor miss
+  <END>
+### frame title toggle-page
+           ┌─[36;1m Opinionated Settings [m─────────────────────────────────────────────────────┐
+<END>
+### frame title subcat-page
+           ┌─[36;1m Sub-categories: aliases (Universal)[m ──────────────────────────────────────┐
+<END>
+### frame title value-page
+           ┌─[36;1m Sponge Settings[m ──────────────────────────────────────────────────────────┐
+<END>
+### frame row pad lw=12
+           │  [35;1m▶[m Aliases      [ [32m     ON[m ]  cmd shadows                                   │
+<END>
+### frame row cut lw=13
+           │    Notifications [ [32m     ON[m ]  done, WakaTime hook                          │
+<END>
+### frame row cut lw=13 overlong
+           │  [35;1m▶[m Notifications [ [32m     ON[m ]  ls, cat, cd, du,   │
+<END>
+### frame row shorten lw=12
+           │  [35;1m▶[m Log dir      [ [32m     ON[m ]  /home/tester/very/long/scrollback/history/…   │
+<END>
+### frame row shorten lw=12 empty
+           │    Log max      [ [32m     ON[m ]                      │
+<END>
