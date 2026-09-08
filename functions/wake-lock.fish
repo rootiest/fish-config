@@ -22,6 +22,8 @@
 # EXAMPLE
 #   wake-lock rsync -avz src/ dest/
 function wake-lock --description 'Run a command while inhibiting system sleep'
+    __fish_help_header (status current-function) $argv; and return 0
+
     if test (count $argv) -eq 0
         set -l c_head (set_color --bold cyan)
         set -l c_cmd (set_color --bold)

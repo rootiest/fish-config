@@ -17,6 +17,8 @@
 # EXAMPLE
 #   hist
 function hist --description 'Search fish history and put it in the prompt'
+    __fish_help_header (status current-function) $argv; and return 0
+
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)
         set -l c_err (set_color red)
