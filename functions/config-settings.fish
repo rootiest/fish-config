@@ -33,7 +33,7 @@
 #   by commas and/or whitespace — "A, B", "A,B" and "A B" all yield the same
 #   two entries. Tab / Shift-Tab cycle through pages.
 #
-#   `/` filters the current page on label and description. On the Universal and
+#   / filters the current page on label and description. On the Universal and
 #   Session pages the filter also reaches into every category's sub-categories,
 #   listing hits as "Category › Sub", so a sub-category can be toggled without
 #   drilling into its parent first.
@@ -42,7 +42,7 @@
 #   exits, via __config_settings_apply and __config_settings_set_value. The
 #   status bar shows a pending count. This is a deliberate consequence of the
 #   renderer being a child process: a child cannot reach into its parent shell
-#   to `set -g`, so the Session page's edits come back as a fish script the
+#   to set a global, so the Session page's edits come back as a fish script the
 #   function sources on exit, and the Universal page rides the same path for
 #   consistency. Always available regardless of __fish_config_opinionated state.
 #
@@ -54,7 +54,7 @@
 #   running session. Editing Dots link re-runs __fish_user_dots_link.
 #
 #   The panel is drawn by scripts/config-settings-tui.py using Python's stdlib
-#   `curses`, which owns the cell arithmetic, the alternate screen and the
+#   curses module, which owns the cell arithmetic, the alternate screen and the
 #   redraw diffing. It resizes with the terminal and needs no width tiers.
 #
 #   Navigation:
