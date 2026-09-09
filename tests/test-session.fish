@@ -164,56 +164,108 @@ function test_functions_keep_their_palette
 end
 check "colored --help output keeps its escape sequences" true (test_functions_keep_their_palette; and echo true; or echo false)
 
-section "session: config-settings diff redraw"
+section "session: config-settings state dump"
 
-# Locks in the invariant the diff-redraw renderer depends on: each draw
-# function's real line count must match the height config-settings.fish's
-# dispatch derives from it (count $new_frame) -- see
-# __cs_dispatch_draw in functions/config-settings.fish.
-function test_draw_line_count_matches_panel_h
-    set -l toggle_vars \
-        __fish_config_op_aliases __fish_config_op_autoexec \
+# The curses TUI is a child process: it can neither read the session's global
+# variables nor write them, so everything it knows arrives through
+# __config_settings_state. These cases run here, in a real loaded session,
+# because session scope is exactly what an isolated suite cannot produce.
+
+# Every sub-category __config_settings_subcats knows must reach the dump --
+# the TUI does not carry a second copy of the taxonomy, so a category missing
+# here is a category the TUI silently cannot show.
+function test_state_dump_carries_the_whole_taxonomy
+    # US/RS have to come from printf: fish does not expand \x escapes inside
+    # double quotes, so a literal "\x1f" in a pattern matches backslash-x-1-f.
+    set -l US (printf '\x1f')
+    set -l dump (__config_settings_state | string split (printf '\x1e'))
+    set -l want 0
+    for cvar in __fish_config_op_aliases __fish_config_op_autoexec \
         __fish_config_op_overrides __fish_config_op_integrations \
-        __fish_config_op_logging __fish_config_op_greeting \
-        __fish_config_opinionated
-
-    set -l lines (__config_settings_draw 0 universal $toggle_vars)
-    if test (count $lines) -ne 16
-        echo "    __config_settings_draw: expected 16 lines, got "(count $lines)
-        return 1
+        __fish_config_op_logging __fish_config_op_greeting
+        set -l n (count (__config_settings_subcats $cvar))
+        set want (math $want + $n)
+        set -l got (count (string match -- "sub$US$cvar$US*" $dump))
+        if test $got -ne $n
+            echo "    $cvar: expected $n sub records, got $got"
+            return 1
+        end
     end
-
-    set -l vlines (__config_settings_draw_value 0 sponge)
-    if test (count $vlines) -ne 16
-        echo "    __config_settings_draw_value: expected 16 lines, got "(count $vlines)
-        return 1
-    end
-
-    set -l n (count (__config_settings_subcats __fish_config_op_aliases))
-    set -l slines (__config_settings_draw_subcat 0 universal __fish_config_op_aliases)
-    set -l want (math 7 + $n)
-    if test (count $slines) -ne $want
-        echo "    __config_settings_draw_subcat: expected $want lines, got "(count $slines)
+    set -l subs (count (string match -- "sub$US*" $dump))
+    if test $subs -ne $want
+        echo "    expected $want sub records in total, got $subs"
         return 1
     end
     return 0
 end
-check "draw functions' line counts match their panel heights" true (test_draw_line_count_matches_panel_h; and echo true; or echo false)
+check "state dump carries every sub-category" true (test_state_dump_carries_the_whole_taxonomy; and echo true; or echo false)
 
-function test_diff_redraw_unchanged_lines_are_bare_newlines
-    functions -q __config_settings_diff_redraw; or return 1
-    set -l old (string join \n -- AAA BBB CCC | string collect)
-    set -l new (string join \n -- AAA BBB CCC | string collect)
-    set -l out (__config_settings_diff_redraw "$old" "$new" | string collect -N)
-    test "$out" = \n\n\n
-end
-check "diff_redraw: unchanged lines are bare newlines" true (test_diff_redraw_unchanged_lines_are_bare_newlines; and echo true; or echo false)
+# Toggles are dumped per scope; value rows are universal-only. A variable that
+# is unset must not appear at all -- absence is how the TUI renders DEFAULT.
+function test_state_dump_records_both_scopes
+    set -l US (printf '\x1f')
+    set -g __fish_config_op_overrides off
+    set -g sponge_delay 7
+    set -l dump (__config_settings_state | string split (printf '\x1e'))
+    set -e __fish_config_op_overrides
+    set -e sponge_delay
 
-function test_diff_redraw_changed_line_is_cleared_and_rewritten
-    functions -q __config_settings_diff_redraw; or return 1
-    set -l old (string join \n -- AAA BBB CCC | string collect)
-    set -l new (string join \n -- AAA XYZ CCC | string collect)
-    set -l out (__config_settings_diff_redraw "$old" "$new" | string collect -N)
-    test "$out" = \n\e\[2K\rXYZ\n\n
+    set -l failed 0
+    if test (count (string match -- "var$US""session$US""__fish_config_op_overrides$US""off" $dump)) -ne 1
+        echo "    session toggle missing from the dump"
+        set failed 1
+    end
+    if test (count (string match -- "var$US""universal$US""sponge_delay$US""7" $dump)) -ne 1
+        echo "    value row missing from the dump"
+        set failed 1
+    end
+    if test (count (string match -- "var$US*$US""__fish_config_op_greeting$US*" $dump)) -ne 0
+        echo "    an unset toggle was emitted; absence is what renders DEFAULT"
+        set failed 1
+    end
+    # The conf.d registry data table shares the op_ prefix and is not a setting.
+    if test (count (string match -- "var$US*$US""__fish_config_op_registry_*" $dump)) -ne 0
+        echo "    the registry data table leaked into the dump"
+        set failed 1
+    end
+    test $failed -eq 0
 end
-check "diff_redraw: a changed line is cleared and rewritten" true (test_diff_redraw_changed_line_is_cleared_and_rewritten; and echo true; or echo false)
+check "state dump records both scopes and omits unset variables" true (test_state_dump_records_both_scopes; and echo true; or echo false)
+
+# The other half of the seam: what the TUI emits has to be runnable fish that
+# actually moves the variable. Emitting is Python's job, applying is fish's.
+function test_emitted_script_applies
+    set -l tui $repo_root/scripts/config-settings-tui.py
+    type -q python3; or return 1
+    set -l script (python3 $tui --self-test >/dev/null 2>&1; and python3 -c '
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("cst", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+st = m.State("")
+st.set("session", "__fish_config_op_greeting", "off")
+st.set("universal", "sponge_delay", "11")
+sys.stdout.write(m.emit(st, m.rows_by_var()))
+' $tui)
+    or return 1
+
+    set -l tmp (command mktemp)
+    printf '%s\n' $script >$tmp
+    source $tmp
+    command rm -f $tmp
+
+    set -l failed 0
+    test "$__fish_config_op_greeting" = off
+    or begin
+        echo "    sourcing the emitted script did not set the session toggle"
+        set failed 1
+    end
+    test "$sponge_delay" = 11
+    or begin
+        echo "    sourcing the emitted script did not set the value row"
+        set failed 1
+    end
+    set -e __fish_config_op_greeting
+    set -Ue sponge_delay 2>/dev/null
+    test $failed -eq 0
+end
+check "an emitted script applies when sourced" true (test_emitted_script_applies; and echo true; or echo false)
