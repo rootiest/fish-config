@@ -4,6 +4,10 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   __fish_palette, __config_settings_state, __config_settings_apply,
+#   __config_settings_set_value, python3
+#
 # SYNOPSIS
 #   config-settings [-h | --help]
 #
@@ -22,49 +26,55 @@
 #   Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON; DEFAULT erases
 #   the variable so the master switch / built-in default applies. On the
 #   Universal/Session pages, Enter on a category row (C1–C6) opens that
-#   category's sub-category drill-down page for finer-grained toggles;
-#   Escape backs out to the category list. Value rows
-#   (Sponge, Paths) use Enter to edit inline; ← / h clears to default. List rows
-#   (e.g. Extra secret, OK codes) accept values separated by commas and/or
-#   whitespace — "A, B", "A,B" and "A B" all yield the same two entries.
-#   Tab / Shift-Tab cycle forward / backward through pages.
-#   Changes apply immediately — no confirm step. Always available regardless of
-#   __fish_config_opinionated state.
+#   category's sub-category drill-down page, which leads with the category's
+#   own toggle; Escape backs out. Value rows (Sponge, Paths) use Enter to edit
+#   inline and ← / h to reset to the row default; committing a blank edit does
+#   the same. List rows (e.g. Extra secret, OK codes) accept values separated
+#   by commas and/or whitespace — "A, B", "A,B" and "A B" all yield the same
+#   two entries. Tab / Shift-Tab cycle through pages.
+#
+#   / filters the current page on label and description. On the Universal and
+#   Session pages the filter also reaches into every category's sub-categories,
+#   listing hits as "Category › Sub", so a sub-category can be toggled without
+#   drilling into its parent first.
+#
+#   Edits are collected while the TUI runs and applied in one batch when it
+#   exits, via __config_settings_apply and __config_settings_set_value. The
+#   status bar shows a pending count. This is a deliberate consequence of the
+#   renderer being a child process: a child cannot reach into its parent shell
+#   to set a global, so the Session page's edits come back as a fish script the
+#   function sources on exit, and the Universal page rides the same path for
+#   consistency. Always available regardless of __fish_config_opinionated state.
 #
 #   The Sponge and Paths pages always write universal variables — these are
 #   persistent, set-and-forget settings with no per-session scope. Editing a
 #   scrollback row updates both the __fish_scrollback_history_* source-of-truth
 #   variables and the exported SCROLLBACK_HISTORY_* mirrors, so the AUR/tmux/
 #   zellij log wrappers (which read the exported names) see the change in the
-#   running session.
+#   running session. Editing Dots link re-runs __fish_user_dots_link.
 #
-#   The panel adapts to the terminal width automatically, selecting from four
-#   layout tiers (with a 6-column buffer on each side before stepping up to the
-#   next tier) and horizontally centering the box. The panel redraws within
-#   ~0.3 s of a terminal resize with no keypress required.
-#
-#     COLUMNS >= 90  →  78-wide panel (most detail)
-#     COLUMNS >= 86  →  74-wide panel
-#     COLUMNS >= 82  →  70-wide panel
-#     COLUMNS  < 82  →  52-wide panel (default)
+#   The panel is drawn by scripts/config-settings-tui.py using Python's stdlib
+#   curses module, which owns the cell arithmetic, the alternate screen and the
+#   redraw diffing. It resizes with the terminal and needs no width tiers.
 #
 #   Navigation:
 #     ↑ ↓ / k j     Move cursor
 #     ← → / h l     Toggle rows: OFF ← DEFAULT → ON
-#     ←  / h        Value rows: clear to default
-#     Enter         Category rows (Universal/Session): open sub-category
-#                   drill-down page. Value rows: edit inline (Sponge /
-#                   Paths pages)
-#     Escape        Sub-category page: back out to the category list
+#     ←  / h        Value rows: reset to default
+#     Enter         Category rows: open the sub-category page.
+#                   Value rows: edit inline
+#     /             Filter, sub-categories included
+#     Escape        Back out of a sub-category page, or clear the filter
 #     Tab / S-Tab   Next / previous page
-#     q / Escape    Exit
+#     ?             Help overlay
+#     q             Apply pending edits and exit
 #
 # ARGUMENTS
 #   -h, --help  Print usage and exit
 #
 # EXIT STATUS
-#   0  Exited normally (q or Escape pressed)
-#   1  Unknown flag passed
+#   0  Exited normally
+#   1  Unknown flag, no TTY, or python3/curses unavailable
 #
 # EXAMPLE
 #   config-settings
@@ -78,16 +88,19 @@ function config-settings --description 'Interactive TUI for managing fish config
                 echo "$c_head""Usage:$c_reset $c_cmd""config-settings$c_reset $c_flag""[-h]$c_reset"
                 echo
                 echo "  Interactive TUI for managing fish config settings."
-                echo "  Changes apply immediately — no confirm step required."
+                echo "  Edits are applied in one batch when the TUI exits."
                 echo
                 echo "$c_head""Navigation:$c_reset"
                 echo "  $c_flag↑ ↓$c_reset or $c_flag""k j$c_reset    Move cursor up / down"
-                echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Toggle pages: OFF ← DEFAULT → ON"
+                echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Toggle rows: OFF ← DEFAULT → ON"
                 echo "  $c_flag""Enter$c_reset         Open sub-category page (Universal / Session);"
                 echo "                edit value (Sponge / Paths pages)"
-                echo "  $c_flag← / h$c_reset         Clear value to default (value rows)"
+                echo "  $c_flag← / h$c_reset         Reset value to default (value rows)"
+                echo "  $c_flag/$c_reset             Filter rows, sub-categories included"
                 echo "  $c_flag""Tab / S-Tab$c_reset   Next / previous page"
-                echo "  $c_flag""q$c_reset / $c_flag""Esc$c_reset       Exit"
+                echo "  $c_flag""Esc$c_reset           Leave sub-category page / clear filter"
+                echo "  $c_flag?$c_reset             Help overlay"
+                echo "  $c_flag""q$c_reset             Apply pending edits and exit"
                 echo
                 echo "$c_head""Pages:$c_reset"
                 echo "  $c_flag""Universal$c_reset   Toggles, persistent ($c_dim""set -U$c_reset)"
@@ -102,354 +115,60 @@ function config-settings --description 'Interactive TUI for managing fish config
         end
     end
 
-    # ── Toggle-page variables (rows 0–6: 6 categories + master) ───────────
-    set -l toggle_vars \
-        __fish_config_op_aliases \
-        __fish_config_op_autoexec \
-        __fish_config_op_overrides \
-        __fish_config_op_integrations \
-        __fish_config_op_logging \
-        __fish_config_op_greeting \
-        __fish_config_opinionated
-
-    # ── Drill-down navigation state (Universal/Session pages only) ────────
-    # in_subcat: 1 while viewing a category's sub-category page (Enter to
-    # open, Escape to back out). subcat_row: cursor row within that page.
-    set -l in_subcat 0
-    set -l subcat_row 0
-
-    # ── Value-page row metadata (parallel: var / type) ────────────────────
-    set -l sponge_vars sponge_delay sponge_purge_only_on_exit sponge_allow_previously_successful sponge_successful_exit_codes __fish_sponge_extra_sensitive
-    set -l sponge_types int bool bool list list
-    set -l sponge_labels Delay "Purge@exit" "Allow prev" "OK codes" "Extra secret"
-    set -l paths_vars __fish_scrollback_history_dir __fish_scrollback_history_max_files __fish_user_dots_path __fish_user_dots_symlink
-    set -l paths_types path int path bool
-    set -l paths_labels "Log dir" "Log max" "Dots path" "Dots link"
-
-    # Reset/blank-edit target for each value row. A non-empty entry is written
-    # verbatim (sponge reads sponge_delay / sponge_successful_exit_codes with no
-    # fallback, so they must never be left unset); an empty entry erases the var
-    # so its own built-in default applies (scrollback/dots paths and the
-    # extra-sensitive list all tolerate being unset). Bool rows are not reset
-    # through this path — they are a 2-state true/false with no unset state.
-    set -l sponge_defaults 2 '' '' 0 ''
-    set -l paths_defaults '' '' '' ''
-
-    # Rows per page index 0..3
-    set -l page_rows 7 7 5 4
-
-    set -l cur_page  0           # 0=Universal 1=Session 2=Sponge 3=Paths
-    set -l cur_row   0
-    set -l panel_h   0            # real value set by the first dispatch call below
-    set -l new_frame              # captured by __cs_dispatch_draw
-    set -l last_cols $COLUMNS
-
-    # ── Terminal setup ────────────────────────────────────
-    printf '\e[?25l'             # hide cursor
-    trap 'printf "\e[?25h"; set -g __config_settings_exit 1' INT
-
-    # ── Draw dispatch (page 0/1 = toggle table; 2/3 = value page) ─────────
-    # Captures the page's rendered lines into new_frame and derives panel_h
-    # from their count. panel_h is never hand-set again: the sub-category
-    # page is n+7 lines (2-6 sub-categories: 9-13 lines), never the
-    # category list's fixed 16, and deriving it from the real output means
-    # that fact can no longer drift out of sync with what got drawn.
-    function __cs_dispatch_draw --no-scope-shadowing
-        switch $cur_page
-            case 0
-                if test $in_subcat -eq 1
-                    set new_frame (__config_settings_draw_subcat $subcat_row universal $toggle_vars[(math $cur_row + 1)])
-                else
-                    set new_frame (__config_settings_draw $cur_row universal $toggle_vars)
-                end
-            case 1
-                if test $in_subcat -eq 1
-                    set new_frame (__config_settings_draw_subcat $subcat_row session $toggle_vars[(math $cur_row + 1)])
-                else
-                    set new_frame (__config_settings_draw $cur_row session $toggle_vars)
-                end
-            case 2
-                set new_frame (__config_settings_draw_value $cur_row sponge)
-            case 3
-                set new_frame (__config_settings_draw_value $cur_row paths)
-        end
-        set panel_h (count $new_frame)
+    # ── Dependencies ──────────────────────────────────────
+    # python3 with the curses module. That is stdlib on Arch, Fedora and a
+    # full Debian/Ubuntu python3; python3-minimal alone does not carry
+    # _curses, so both are checked rather than assumed from `type -q`.
+    if not type -q python3
+        echo "$c_err""config-settings requires python3.$c_reset" >&2
+        return 1
     end
-    __cs_dispatch_draw
-    printf '%s\n' $new_frame
-
-    # ── Event loop ────────────────────────────────────────
-    # __config_settings_read_key reads a single keypress from /dev/tty in raw
-    # mode and returns a normalized token (up/down/tab/space/escape/quit or a
-    # literal char). It bypasses fish's `read`, whose line editor swallows Tab
-    # and arrow keys and prints a `read> ` prompt — unusable for a TUI.
-    while true
-        # Check for Ctrl-C signal (trap sets this flag during redraw, when the
-        # terminal is briefly back in cooked mode and SIGINT can fire).
-        if set -q __config_settings_exit
-            set -eg __config_settings_exit
-            break
-        end
-
-        set -l key (__config_settings_read_key)
-        or break   # not a TTY — exit instead of spinning
-
-        set -l did_redraw 0
-
-        switch $key
-            case up k
-                if test $in_subcat -eq 1
-                    set subcat_row (math "max(0, $subcat_row - 1)")
-                else
-                    set cur_row (math "max(0, $cur_row - 1)")
-                end
-            case down j
-                if test $in_subcat -eq 1
-                    set -l n (count (__config_settings_subcats $toggle_vars[(math $cur_row + 1)]))
-                    set subcat_row (math "min($n, $subcat_row + 1)")
-                else
-                    # Hoist the page index: fish cannot expand a command-substitution
-                    # index inside a quoted math string.
-                    set -l pidx (math $cur_page + 1)
-                    set cur_row (math "min($page_rows[$pidx] - 1, $cur_row + 1)")
-                end
-            case tab
-                set cur_page (math "($cur_page + 1) % 4")
-                set cur_row 0
-                set in_subcat 0
-            case backtab
-                set cur_page (math "($cur_page + 3) % 4")
-                set cur_row 0
-                set in_subcat 0
-            case right l
-                if test $cur_page -le 1
-                    # Toggle page: step toward ON
-                    set -l scope universal
-                    test $cur_page -eq 1; and set scope session
-                    # Default: the category variable itself -- correct both
-                    # when not in a sub-category page at all, and when in
-                    # one but sitting on its row 0 (the category's own
-                    # toggle). Only row >= 1 of a sub-category page
-                    # resolves to a different, sub-category variable.
-                    # Hoist the category variable into a plain local first --
-                    # fish cannot expand a command-substitution index
-                    # ("$toggle_vars[(math ...)]") inside a quoted string
-                    # (same reason the down/j case above hoists $pidx).
-                    set -l cvar $toggle_vars[(math $cur_row + 1)]
-                    set -l varname $cvar
-                    if test $in_subcat -eq 1 -a $subcat_row -ne 0
-                        set -l rows (__config_settings_subcats $cvar)
-                        set -l fields (string split -- \t $rows[$subcat_row])
-                        set varname "$cvar"_(string replace -a -- '-' '_' $fields[1])
-                    end
-                    set -l cur_val (__config_settings_get_val $varname $scope)
-                    set -l next_val on
-                    test "$cur_val" = off; and set next_val DEFAULT
-                    __config_settings_apply $varname $scope $next_val
-                else
-                    # Value pages: bool rows are 2-state (true/false). → sets
-                    # true. Sponge reads its bools with no fallback; the Paths
-                    # "Dots link" bool drives __fish_user_dots_link on change.
-                    set -l v_vars $sponge_vars
-                    set -l v_types $sponge_types
-                    if test $cur_page -eq 3
-                        set v_vars $paths_vars
-                        set v_types $paths_types
-                    end
-                    set -l ridx (math $cur_row + 1)
-                    if test "$v_types[$ridx]" = bool
-                        set -U $v_vars[$ridx] true 2>/dev/null
-                        test "$v_vars[$ridx]" = __fish_user_dots_symlink
-                            and __fish_user_dots_link
-                    end
-                end
-            case left h
-                if test $cur_page -le 1
-                    set -l scope universal
-                    test $cur_page -eq 1; and set scope session
-                    # Same varname resolution as the right/l case above
-                    # (hoisted local -- see the comment there for why the
-                    # command-substitution index can't be inlined into the
-                    # quoted string directly).
-                    set -l cvar $toggle_vars[(math $cur_row + 1)]
-                    set -l varname $cvar
-                    if test $in_subcat -eq 1 -a $subcat_row -ne 0
-                        set -l rows (__config_settings_subcats $cvar)
-                        set -l fields (string split -- \t $rows[$subcat_row])
-                        set varname "$cvar"_(string replace -a -- '-' '_' $fields[1])
-                    end
-                    set -l cur_val (__config_settings_get_val $varname $scope)
-                    set -l next_val off
-                    test "$cur_val" = on; and set next_val DEFAULT
-                    __config_settings_apply $varname $scope $next_val
-                else
-                    # Value pages: bool rows set false; other value rows reset to
-                    # their default (a literal value, or erase when the var
-                    # tolerates being unset — see sponge_defaults/paths_defaults).
-                    set -l v_vars $sponge_vars
-                    set -l v_types $sponge_types
-                    set -l v_defaults $sponge_defaults
-                    if test $cur_page -eq 3
-                        set v_vars $paths_vars
-                        set v_types $paths_types
-                        set v_defaults $paths_defaults
-                    end
-                    set -l ridx (math $cur_row + 1)
-                    set -l varname $v_vars[$ridx]
-                    set -l vtype $v_types[$ridx]
-                    if test "$vtype" = bool
-                        set -U $varname false 2>/dev/null
-                        test "$varname" = __fish_user_dots_symlink
-                            and __fish_user_dots_link
-                    else
-                        __config_settings_set_value $varname $vtype "$v_defaults[$ridx]"
-                    end
-                end
-            case enter
-                if test $cur_page -le 1
-                    if test $in_subcat -eq 0 -a $cur_row -le 5
-                        set in_subcat 1
-                        set subcat_row 0
-                    end
-                else if test $cur_page -ge 2
-                    set -l v_vars $sponge_vars
-                    set -l v_types $sponge_types
-                    set -l v_defaults $sponge_defaults
-                    if test $cur_page -eq 3
-                        set v_vars $paths_vars
-                        set v_types $paths_types
-                        set v_defaults $paths_defaults
-                    end
-                    set -l ridx (math $cur_row + 1)
-                    set -l varname $v_vars[$ridx]
-                    set -l vtype $v_types[$ridx]
-                    # Only path/int/list rows are editable; bool rows toggle with ←/→.
-                    if test "$vtype" != toggle -a "$vtype" != bool
-                        # Inline editor: edit in-place in the row's value field
-                        # using the raw key reader — no fish `read` / `read>`
-                        # prompt, and the panel cleans itself up on exit. The
-                        # buffer is pre-filled with the current value; clearing it
-                        # and pressing Enter reverts to the row's default.
-                        set -l page sponge
-                        test $cur_page -eq 3; and set page paths
-                        set -l buf (__config_settings_get_raw $varname)
-                        test "$buf" = DEFAULT; and set buf ""
-                        set -l committed 0
-                        # Full erase once to enter edit mode; per-keystroke
-                        # redraws below diff against the previous edit frame.
-                        set -l edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
-                        set -l prev_edit_frame
-                        set -l pml (math --scale=0 "($last_cols + 78) / 2")
-                        set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
-                        printf '\e[%dA\e[J' $eh
-                        printf '%s\n' $edit_frame
-                        set last_cols $COLUMNS
-                        while true
-                            set -l ek (__config_settings_read_key)
-                            or break
-                            switch $ek
-                                case enter
-                                    set committed 1
-                                    break
-                                case escape
-                                    break
-                                case backspace
-                                    set buf (string sub -s 1 -e -1 -- "$buf")
-                                case space
-                                    set buf "$buf "
-                                case up down left right tab backtab quit ''
-                                    # ignored while editing
-                                case '*'
-                                    set buf "$buf$ek"
-                            end
-
-                            set prev_edit_frame $edit_frame
-                            set edit_frame (__config_settings_draw_value $cur_row $page edit "$buf")
-                            if test (count $edit_frame) -eq (count $prev_edit_frame) -a "$COLUMNS" = "$last_cols" -a $COLUMNS -ge 52
-                                # `| string collect` is required on each join --
-                                # see the identical note in the main loop's
-                                # diff-path call.
-                                printf '\e[%dA' (count $edit_frame)
-                                __config_settings_diff_redraw (string join \n -- $prev_edit_frame | string collect) (string join \n -- $edit_frame | string collect)
-                            else
-                                set -l ph (count $prev_edit_frame)
-                                set -l pml (math --scale=0 "($last_cols + 78) / 2")
-                                set -l eh (math --scale=0 "$ph * max(1, ceil($pml / $COLUMNS))")
-                                printf '\e[%dA\e[J' $eh
-                                printf '%s\n' $edit_frame
-                            end
-                            set last_cols $COLUMNS
-                        end
-                        if test $committed -eq 1
-                            # Empty buffer reverts to the row default (a value, or
-                            # erase when the var tolerates being unset).
-                            if test -n "$buf"
-                                __config_settings_set_value $varname $vtype "$buf"
-                            else
-                                __config_settings_set_value $varname $vtype "$v_defaults[$ridx]"
-                            end
-                        end
-                        # Redraw the normal panel in place of the editor.
-                        set -l pml (math --scale=0 "($last_cols + 78) / 2")
-                        set -l eh (math --scale=0 "$panel_h * max(1, ceil($pml / $COLUMNS))")
-                        printf '\e[%dA\e[J' $eh
-                        set last_cols $COLUMNS
-                        __cs_dispatch_draw
-                        printf '%s\n' $new_frame
-                        set did_redraw 1
-                    end
-                end
-            case q Q quit
-                break
-            case escape
-                if test $in_subcat -eq 1
-                    set in_subcat 0
-                else
-                    break
-                end
-        end
-
-        # Skip redraw entirely when the key reader timed out with no resize
-        if test -z "$key" -a "$COLUMNS" = "$last_cols"
-            continue
-        end
-
-        # Skip redraw if the Enter handler already redrew (e.g. after path edit)
-        if test $did_redraw -eq 1
-            continue
-        end
-
-        set -l old_h $panel_h
-        set -l prev_frame $new_frame
-        __cs_dispatch_draw
-
-        if test $panel_h -eq $old_h -a "$COLUMNS" = "$last_cols" -a $COLUMNS -ge 52
-            # Diff path: geometry and width unchanged since the last frame --
-            # move up without erasing, rewrite only the lines that changed.
-            # `| string collect` is required on each join: command
-            # substitution always re-splits on newlines, so without it
-            # __config_settings_diff_redraw would receive many positional
-            # arguments instead of the two joined strings it expects.
-            printf '\e[%dA' $panel_h
-            __config_settings_diff_redraw (string join \n -- $prev_frame | string collect) (string join \n -- $new_frame | string collect)
-        else
-            # Full-redraw path: resize, page switch, or subcat enter/exit --
-            # same wrap-aware erase math as before, unchanged. 78 = widest
-            # box (IW=76+2); the formula gives the worst-case old line width
-            # for any tier drawn at last_cols.
-            set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
-            set -l erase_h (math --scale=0 "$old_h * max(1, ceil($prev_max_lw / $COLUMNS))")
-            printf '\e[%dA\e[J' $erase_h
-            printf '%s\n' $new_frame
-        end
-        set last_cols $COLUMNS
+    if not python3 -c 'import curses' 2>/dev/null
+        echo "$c_err""config-settings requires python3 with the curses module.$c_reset" >&2
+        echo "  Debian/Ubuntu: install the full $c_cmd""python3$c_reset package." >&2
+        return 1
+    end
+    if not isatty stdout
+        echo "$c_err""config-settings needs a terminal.$c_reset" >&2
+        return 1
     end
 
-    # ── Cleanup ───────────────────────────────────────────
-    trap - INT              # remove the signal handler
-    set -l prev_max_lw (math --scale=0 "($last_cols + 78) / 2")
-    set -l erase_h (math --scale=0 "$panel_h * max(1, ceil($prev_max_lw / $COLUMNS))")
-    printf '\e[%dA\e[J' $erase_h   # erase the panel (wrap-aware)
-    printf '\e[?25h'        # restore cursor
-    functions --erase __cs_dispatch_draw
+    set -l tui (dirname (status filename))/../scripts/config-settings-tui.py
+    if not test -f $tui
+        echo "$c_err""config-settings: missing $tui$c_reset" >&2
+        return 1
+    end
+
+    # ── Run the TUI ───────────────────────────────────────
+    # The TUI is a child process, so it can neither read the session's global
+    # variables nor write them. State goes in as a dump; the edits come back
+    # as a fish script this function sources, which is what lets the Session
+    # page's `set -g` land in the caller's shell instead of in a child that is
+    # about to exit. `command` throughout: this repo's own aliases shadow rm.
+    set -l work (command mktemp -d)
+    if test -z "$work" -o ! -d "$work"
+        echo "$c_err""config-settings: could not create a temporary directory.$c_reset" >&2
+        return 1
+    end
+
+    # An empty dump would not fail loudly -- the TUI would simply render every
+    # row as DEFAULT, which is indistinguishable from a config where nothing is
+    # set. That is a wrong answer, not a missing one, so refuse instead. The
+    # taxonomy alone guarantees a non-empty dump on any working checkout.
+    __config_settings_state >$work/state
+    if not test -s $work/state
+        echo "$c_err""config-settings: __config_settings_state produced no output.$c_reset" >&2
+        command rm -rf $work
+        return 1
+    end
+
+    python3 $tui --state $work/state --emit $work/edits
+    set -l rc $status
+
+    if test $rc -eq 0 -a -s $work/edits
+        source $work/edits
+    end
+
+    command rm -rf $work
+    return $rc
 end
