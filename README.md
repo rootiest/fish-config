@@ -331,8 +331,10 @@ Each category further sub-divides into two to six sub-categories with
 their own `__fish_config_op_<category>_<subcategory>` toggles (e.g.
 `__fish_config_op_aliases_filesystem`), following the exact same
 truthy/falsy/unset cascade one level deeper. Run `config-settings` and
-press Enter on a category row to browse and toggle its sub-categories, or
-see the [Components Reference](https://fish.rootiest.fyi/08-components-reference/)
+press Enter on a category row to browse and toggle its sub-categories —
+or press `/` and type, which searches sub-categories across every
+category at once and lists the hits as `Category › Sub`. Or see the
+[Components Reference](https://fish.rootiest.fyi/08-components-reference/)
 for the full sub-category list per category.
 
 ---

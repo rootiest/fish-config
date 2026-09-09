@@ -146,7 +146,21 @@ function config-settings --description 'Interactive TUI for managing fish config
     # page's `set -g` land in the caller's shell instead of in a child that is
     # about to exit. `command` throughout: this repo's own aliases shadow rm.
     set -l work (command mktemp -d)
+    if test -z "$work" -o ! -d "$work"
+        echo "$c_err""config-settings: could not create a temporary directory.$c_reset" >&2
+        return 1
+    end
+
+    # An empty dump would not fail loudly -- the TUI would simply render every
+    # row as DEFAULT, which is indistinguishable from a config where nothing is
+    # set. That is a wrong answer, not a missing one, so refuse instead. The
+    # taxonomy alone guarantees a non-empty dump on any working checkout.
     __config_settings_state >$work/state
+    if not test -s $work/state
+        echo "$c_err""config-settings: __config_settings_state produced no output.$c_reset" >&2
+        command rm -rf $work
+        return 1
+    end
 
     python3 $tui --state $work/state --emit $work/edits
     set -l rc $status
