@@ -2706,52 +2706,60 @@ functions). They are active in all interactive sessions.
     Toggle rows use ← / → (or h / l) to step OFF ← DEFAULT → ON; DEFAULT erases
     the variable so the master switch / built-in default applies. On the
     Universal/Session pages, Enter on a category row (C1–C6) opens that
-    category's sub-category drill-down page for finer-grained toggles;
-    Escape backs out to the category list. Value rows
-    (Sponge, Paths) use Enter to edit inline; ← / h clears to default. List rows
-    (e.g. Extra secret, OK codes) accept values separated by commas and/or
-    whitespace — "A, B", "A,B" and "A B" all yield the same two entries.
-    Tab / Shift-Tab cycle forward / backward through pages.
-    Changes apply immediately — no confirm step. Always available regardless of
-    __fish_config_opinionated state.
+    category's sub-category drill-down page, which leads with the category's
+    own toggle; Escape backs out. Value rows (Sponge, Paths) use Enter to edit
+    inline and ← / h to reset to the row default; committing a blank edit does
+    the same. List rows (e.g. Extra secret, OK codes) accept values separated
+    by commas and/or whitespace — "A, B", "A,B" and "A B" all yield the same
+    two entries. Tab / Shift-Tab cycle through pages.
+
+    / filters the current page on label and description. On the Universal and
+    Session pages the filter also reaches into every category's sub-categories,
+    listing hits as "Category › Sub", so a sub-category can be toggled without
+    drilling into its parent first.
+
+    Edits are collected while the TUI runs and applied in one batch when it
+    exits, via __config_settings_apply and __config_settings_set_value. The
+    status bar shows a pending count. This is a deliberate consequence of the
+    renderer being a child process: a child cannot reach into its parent shell
+    to set a global, so the Session page's edits come back as a fish script the
+    function sources on exit, and the Universal page rides the same path for
+    consistency. Always available regardless of __fish_config_opinionated state.
 
     The Sponge and Paths pages always write universal variables — these are
     persistent, set-and-forget settings with no per-session scope. Editing a
     scrollback row updates both the __fish_scrollback_history_* source-of-truth
     variables and the exported SCROLLBACK_HISTORY_* mirrors, so the AUR/tmux/
     zellij log wrappers (which read the exported names) see the change in the
-    running session.
+    running session. Editing Dots link re-runs __fish_user_dots_link.
 
-    The panel adapts to the terminal width automatically, selecting from four
-    layout tiers (with a 6-column buffer on each side before stepping up to the
-    next tier) and horizontally centering the box. The panel redraws within
-    ~0.3 s of a terminal resize with no keypress required.
-
-      COLUMNS >= 90  →  78-wide panel (most detail)
-      COLUMNS >= 86  →  74-wide panel
-      COLUMNS >= 82  →  70-wide panel
-      COLUMNS  < 82  →  52-wide panel (default)
+    The panel is drawn by scripts/config-settings-tui.py using Python's stdlib
+    curses module, which owns the cell arithmetic, the alternate screen and the
+    redraw diffing. It resizes with the terminal and needs no width tiers.
 
     Navigation:
       ↑ ↓ / k j     Move cursor
       ← → / h l     Toggle rows: OFF ← DEFAULT → ON
-      ←  / h        Value rows: clear to default
-      Enter         Category rows (Universal/Session): open sub-category
-                    drill-down page. Value rows: edit inline (Sponge /
-                    Paths pages)
-      Escape        Sub-category page: back out to the category list
+      ←  / h        Value rows: reset to default
+      Enter         Category rows: open the sub-category page.
+                    Value rows: edit inline
+      /             Filter, sub-categories included
+      Escape        Back out of a sub-category page, or clear the filter
       Tab / S-Tab   Next / previous page
-      q / Escape    Exit
+      ?             Help overlay
+      q             Apply pending edits and exit
 
     Arguments:
       -h, --help  Print usage and exit
 
     Exit Status:
-      0  Exited normally (q or Escape pressed)
-      1  Unknown flag passed
+      0  Exited normally
+      1  Unknown flag, no TTY, or python3/curses unavailable
 
     Example:
     config-settings
+
+**Dependencies:** `__fish_palette`, `__config_settings_state`, `__config_settings_apply`, `__config_settings_set_value`, `python3`
 
 **Used by:** `config-toggle`
 
