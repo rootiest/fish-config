@@ -4393,10 +4393,9 @@ C6         Greeting & First-Run UI \[em] Custom startup banner
 \f[R]
 .fi
 .PP
-Each category further sub-divides into two to six sub-categories (25 in
-total) with their own
-\f[V]__fish_config_op_<category>_<subcategory>\f[R] toggles \[en] see
-that category\[cq]s page for its sub-category list.
+Each category further sub-divides into several sub-categories, each with
+its own \f[V]__fish_config_op_<category>_<subcategory>\f[R] toggle \[en]
+see that category\[cq]s page for its sub-category list.
 .SS Per-function overrides: \f[V]C0\f[R]/\f[V]always\f[R]
 .PP
 Every guarded function or file can also carry a reserved
@@ -5497,7 +5496,7 @@ set -Ue __fish_config_opinionated
 \f[R]
 .fi
 .PP
-Each category also has two to six sub-categories (e.g.
+Each category can also have several sub-categories (e.g.
 \f[V]__fish_config_op_aliases_filesystem\f[R]) that can be checked,
 disabled, or reset the same way \[em]
 \f[V]set -U __fish_config_op_<category>_<subcategory> off\f[R] and
