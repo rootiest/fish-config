@@ -19,9 +19,9 @@ category variable.
     C5         [Logging and Capture](/08-components-reference/05-c5-logging-and-capture/) — Session logs, command duration
     C6         [Greeting & First-Run UI](/08-components-reference/06-c6-greeting-and-first-run-ui/) — Custom startup banner
 
-Each category further sub-divides into two to six sub-categories (25 in
-total) with their own `__fish_config_op_<category>_<subcategory>` toggles
--- see that category's page for its sub-category list.
+Each category further sub-divides into several sub-categories, each with
+its own `__fish_config_op_<category>_<subcategory>` toggle -- see that
+category's page for its sub-category list.
 
 ## Per-function overrides: `C0`/`always`
 

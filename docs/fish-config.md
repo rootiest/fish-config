@@ -3465,9 +3465,9 @@ category variable.
     C5         Logging and Capture — Session logs, command duration
     C6         Greeting & First-Run UI — Custom startup banner
 
-Each category further sub-divides into two to six sub-categories (25 in
-total) with their own `__fish_config_op_<category>_<subcategory>` toggles
--- see that category's page for its sub-category list.
+Each category further sub-divides into several sub-categories, each with
+its own `__fish_config_op_<category>_<subcategory>` toggle -- see that
+category's page for its sub-category list.
 
 ## Per-function overrides: `C0`/`always`
 
@@ -4317,7 +4317,7 @@ Re-enable everything:
 
     set -Ue __fish_config_opinionated
 
-Each category also has two to six sub-categories (e.g.
+Each category can also have several sub-categories (e.g.
 `__fish_config_op_aliases_filesystem`) that can be checked, disabled, or
 reset the same way — `set -U __fish_config_op_<category>_<subcategory> off`
 and `set -Ue __fish_config_op_<category>_<subcategory>` work identically to

@@ -681,6 +681,43 @@ def test_prettify_titles_paths_and_commented_examples():
     )
 
 
+def test_prettify_titles_label_comments_but_not_explanations():
+    """A short leading comment titles a shell block; a sentence stays a comment."""
+    import build_manual
+
+    distro = "\n".join(["    # Arch / AUR", "    pacman -S fish"])
+    out = build_manual.prettify(distro)
+    assert '```fish title="Arch / AUR"\npacman -S fish\n```' in out, (
+        f"a distro label comment was not promoted to the fence title:\n{out}"
+    )
+
+    explanation = "\n".join(
+        ["    # Turn it off:", "    set -U __fish_config_op_logging off"]
+    )
+    out = build_manual.prettify(explanation)
+    assert 'title=' not in out and "# Turn it off:" in out, (
+        f"a sentence-shaped comment was wrongly promoted to a title:\n{out}"
+    )
+
+
+def test_prettify_highlights_nested_shell_and_custom_commands():
+    """A for-loop's indented body and a repo-only command still get shell highlighting."""
+    import build_manual
+
+    loop = "\n".join(
+        ["    for v in (set -Un | string match 'x*')", "        set -Ue $v", "    end"]
+    )
+    out = build_manual.prettify(loop)
+    assert out.startswith("```fish\n") and "```text" not in out, (
+        f"a nested for-loop body lost shell highlighting:\n{out}"
+    )
+
+    out = build_manual.prettify("    fish-deps sync")
+    assert out == '```fish\nfish-deps sync\n```', (
+        f"a repo function name was not recognised as a shell command:\n{out}"
+    )
+
+
 def test_as_aside_converts_a_single_line_label():
     """A `LABEL: text` line becomes a titled <Aside> with the label's type."""
     import build_manual

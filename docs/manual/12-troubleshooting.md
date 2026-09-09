@@ -237,7 +237,7 @@ Re-enable everything:
 
     set -Ue __fish_config_opinionated
 
-Each category also has two to six sub-categories (e.g.
+Each category can also have several sub-categories (e.g.
 `__fish_config_op_aliases_filesystem`) that can be checked, disabled, or
 reset the same way — `set -U __fish_config_op_<category>_<subcategory> off`
 and `set -Ue __fish_config_op_<category>_<subcategory>` work identically to

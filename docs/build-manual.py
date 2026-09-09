@@ -334,7 +334,16 @@ def _is_prose(para: list[str]) -> bool:
 
 
 def _is_shell(para: list[str], entry_name: str | None) -> bool:
-    """True when every line of a paragraph looks like a shell command."""
+    """True when every line of a paragraph looks like a shell command.
+
+    Recognised command names are `SHELL_HEADS` plus the same code
+    vocabulary `codespans` wraps in backticks (repo function names and
+    `fish-deps` catalog entries included) — one shared list instead of a
+    second hand-maintained one that silently drifts, which is how
+    `fish-deps`/`config-settings`-style custom commands used to fall
+    through to an unhighlighted block.
+    """
+    vocab = SHELL_HEADS | _code_vocabulary().full
     name_re = (
         re.compile(rf"(?<![\w-]){re.escape(entry_name)}(?![\w-])")
         if entry_name
@@ -346,7 +355,7 @@ def _is_shell(para: list[str], entry_name: str | None) -> bool:
             continue
         if name_re and name_re.search(stripped):
             continue
-        if stripped.split()[0].lstrip("$").rstrip(";") not in SHELL_HEADS:
+        if stripped.split()[0].lstrip("$").rstrip(";") not in vocab:
             return False
     return True
 
@@ -360,6 +369,30 @@ PATH_LINE_RE = re.compile(r"^[~$][\w./{}-]*\.\w+$")
 # example belongs to; promote it to the fence title instead of leaving it
 # as a literal comment inside the code.
 FILENAME_COMMENT_RE = re.compile(r"^#\s*(?:in\s+)?([$~\w./-]+\.\w+)\s*$")
+
+# A leading comment that isn't a filename can still name what the block is
+# about (e.g. "# Arch / AUR" heading a distro's install command) rather
+# than explain a step ("# Turn it off:") — the trailing-punctuation and
+# length checks in `_label_title` are what tell the two apart.
+LABEL_COMMENT_RE = re.compile(r"^#\s*(.+)$")
+
+
+def _label_title(line: str) -> str | None:
+    """A short, label-shaped leading comment, promoted to a fence title.
+
+    Anything that reads as a sentence — trailing `.`/`!`/`?`/`;`/`:`/`,`,
+    or just long — is left as a literal comment instead: it's explaining a
+    step, not naming the block.
+    """
+    m = LABEL_COMMENT_RE.match(line)
+    if not m:
+        return None
+    text = m.group(1).strip()
+    if not text or text[-1] in ".!?;:,":
+        return None
+    if len(text) > 48 or len(text.split()) > 8:
+        return None
+    return text
 
 CELL_SPLIT = re.compile(r"\s{2,}")
 
@@ -505,14 +538,22 @@ def _render_para(para: list[str], entry_name: str | None, deeper: bool) -> str:
             path = para[0].strip()
             name = path.rsplit("/", 1)[-1]
             return f'```fish title="{name}"\n{path}\n```'
-        if _is_shell(para, entry_name):
-            body = para
-            title = None
-            m = FILENAME_COMMENT_RE.match(para[0].strip())
-            if m:
-                title, body = m.group(1), para[1:]
-            info = f'fish title="{title}"' if title else "fish"
-            return f"```{info}\n" + "\n".join(body) + "\n```"
+    # Checked even when `deeper`: a shell paragraph's own nested indentation
+    # (a for/if/while body) must not be mistaken for a table's alignment —
+    # `_is_shell` only looks at each line's first word, so it stays safe to
+    # try before falling through to the table/text fallbacks below.
+    if _is_shell(para, entry_name):
+        body = para
+        title = None
+        m = FILENAME_COMMENT_RE.match(para[0].strip())
+        if m:
+            title, body = m.group(1), para[1:]
+        else:
+            label = _label_title(para[0].strip())
+            if label:
+                title, body = label, para[1:]
+        info = f'fish title="{title}"' if title else "fish"
+        return f"```{info}\n" + "\n".join(body) + "\n```"
     table = _as_ruled_table(para) or _as_table(para) or _as_file_tree(para)
     if table is not None:
         return table
