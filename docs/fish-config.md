@@ -1226,6 +1226,81 @@ functions). They are active in all interactive sessions.
     Example:
     hist
 
+### mkrep
+
+    Synopsis:  mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
+                     [-c | --clean | --no-clean] [--strict] [-v | --verbose]
+                     [-s | --silent] [--template <path>] [--branch <name>]
+                     [--remote <url>] [--new-remote[=<cmd>]] [--name <name>]
+                     [-h | --help] <dir>
+
+    Creates a directory, cds into it, and git-inits it -- mkcd plus a git
+    repo in one step. All three actions are on by default and each has a
+    --no-* flag to skip it, plus a same-named flag to force it back on. If
+    both a flag and its --no- counterpart are given, --no- wins.
+
+    --clean removes an existing target directory before recreating it,
+    for a guaranteed-fresh start; --strict instead refuses to proceed if
+    the directory already exists. The two compose: --clean runs first, so
+    --clean --strict together is not a contradiction -- strict sees an
+    empty slot because clean just emptied it.
+
+    --remote links an already-existing remote (git remote add origin
+    <url>) -- it does not create anything. --new-remote creates one first
+    by running a shell command template in the new repo directory, then
+    nothing further is needed since the template itself does the linking
+    (e.g. gh repo create {name} --source=. --remote=origin --push).
+    Two placeholders are substituted in the template: {name} (--name, or
+    the target directory's basename) and {user} ($USER). Pass a command
+    after --new-remote to use it for this call only; with no value it
+    falls back to $MKREP_REMOTE_CMD. --remote and --new-remote are
+    mutually exclusive, and either requires --git.
+
+    Arguments:
+      <dir>            Directory to create and enter
+      --cd, --no-cd    Change into <dir> (default: --cd)
+      --mkdir, --no-mkdir
+                       Create <dir>, including missing parents (default: --mkdir)
+      --git, --no-git  Run git init in <dir> (default: --git)
+      -c, --clean      Remove <dir> first if it already exists
+      --no-clean       Leave an existing <dir> alone (default)
+      --strict         Fail if <dir> already exists (checked after --clean)
+      -v, --verbose    Print each step as it runs
+      -s, --silent     Suppress all output; overrides --verbose
+      --template <path>
+                       Passed through as git init --template=<path>
+      --branch <name>  Passed through as git init -b <name>
+      --remote <url>   Link an existing remote: git remote add origin <url>
+      --new-remote[=<cmd>]
+                       Create + link a remote by running <cmd> (or
+                       $MKREP_REMOTE_CMD) in the new repo directory
+      --name <name>    {name} substitution for --new-remote (default: <dir>'s
+                       basename)
+      -h, --help       Show this help message
+
+    Exit Status:
+      0  All requested steps completed
+      1  Bad arguments, or a step (mkdir, cd, git init, remote) failed
+
+    Example:
+    mkrep ~/projects/my-new-repo
+    mkrep --clean --strict ~/projects/scratch
+    mkrep --remote git@git.example.com:me/foo.git ~/projects/foo
+    set -Ux MKREP_REMOTE_CMD 'gh repo create {name} --private --source=. --remote=origin --push'
+    mkrep --new-remote ~/projects/foo
+
+    Starting points for $MKREP_REMOTE_CMD, one per host CLI -- each assumes
+    that tool is already installed and authenticated, creates a private
+    repo under the caller's own account, and pushes the initial commit.
+    gh and glab support a one-shot --source/--remote/--push; tea's create
+    does not, so it is chained with the git commands that do the linking
+    (adjust the host in the URL to your Gitea instance):
+      GitHub (gh):   gh repo create {name} --private --source=. --remote=origin --push
+      GitLab (glab): glab repo create {name} --private --source=. --remote=origin --push
+      Gitea (tea):   tea repo create --name {name} --private && git remote add origin https://YOUR-GITEA-HOST/{user}/{name}.git && git push -u origin HEAD
+
+**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_verbose`, `git`
+
 ## 5.5 Package Management
 
 ### cleanup
