@@ -25,14 +25,19 @@
 #   rather than at session end.
 #
 #   Arguments are forwarded verbatim to the real agy binary, except for
-#   -r/--resume which are translated to -c/--continue.
+#   -r/--resume which use different syntax in agy than claude: bare
+#   -r/--resume (no session id following) translate to -c/--continue
+#   (resume most-recent session); -r/--resume given a session id (via
+#   =id or a following bare word) translate to --conversation(=id)
+#   (open that specific session).
 #
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases
 #   (or the __fish_config_opinionated master), the command is passed through
 #   to the real agy binary unchanged.
 #
 # ARGUMENTS
-#   ARGS  Arguments forwarded to the underlying agy binary (-r translates to -c)
+#   ARGS  Arguments forwarded to the underlying agy binary (-r/--resume
+#         translate to -c/--continue or --conversation, see DESCRIPTION)
 #
 # EXIT STATUS
 #   Exit status of the underlying agy binary
@@ -40,6 +45,7 @@
 # EXAMPLE
 #   agy
 #   agy --resume
+#   agy --resume=5fffb251-2cd6-4cfe-8dac-b5e913a86db6
 #   agy -i "initial prompt"
 #   agy models
 function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ sub-repo before launch'
@@ -52,12 +58,22 @@ function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ su
     agents-vault --quiet
 
     for i in (seq (count $argv))
-        if test "$argv[$i]" = -r
-            set argv[$i] -c
-        else if test "$argv[$i]" = --resume
-            set argv[$i] --continue
-        else if string match -q -- "--resume=*" "$argv[$i]"
-            set argv[$i] (string replace -- "--resume=" "--continue=" "$argv[$i]")
+        switch "$argv[$i]"
+            case -r --resume
+                # Session id given as next bare word (not a flag) -> --conversation.
+                # Nothing follows, or next word is a flag -> resume most-recent (-c/--continue).
+                set -l next (math $i + 1)
+                if test $next -le (count $argv); and not string match -q -- '-*' "$argv[$next]"
+                    set argv[$i] --conversation
+                else if test "$argv[$i]" = -r
+                    set argv[$i] -c
+                else
+                    set argv[$i] --continue
+                end
+            case '-r=*'
+                set argv[$i] (string replace -- '-r=' '--conversation=' "$argv[$i]")
+            case '--resume=*'
+                set argv[$i] (string replace -- '--resume=' '--conversation=' "$argv[$i]")
         end
     end
 
