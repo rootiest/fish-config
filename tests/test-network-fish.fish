@@ -535,6 +535,31 @@ begin
     check "git-clean: detects and deletes orphaned branch" true (string match -q '*Deleting orphaned local branches*' -- $clean_del_out; and echo true; or echo false)
     check "git-clean: orphaned branch was deleted" false (git rev-parse --verify --quiet orphaned-feat >/dev/null 2>&1; and echo true; or echo false)
 
+    # Regression: git branch -vv marks a branch checked out in ANOTHER
+    # linked worktree with '+', not '*'. Only '*' used to be stripped, so
+    # a gone branch shown with '+' left a bogus "+" entry that then failed
+    # to delete ("branch '+' not found").
+    reset_mocks
+    git branch orphaned-worktree-feat
+    set -l clean_git_handler2 $MOCK_DIR/git_clean_shim2.sh
+    printf '%s\n' \
+        '#!/bin/sh' \
+        'for a in "$@"; do' \
+        '  if [ "$a" = "-vv" ]; then' \
+        '    echo "  main                     1234567 [origin/main] initial"' \
+        '    echo "+ orphaned-worktree-feat   abcdef0 [origin/orphaned-worktree-feat: gone] feature"' \
+        '    exit 0' \
+        '  fi' \
+        done \
+        "exec $real_git \"\$@\"" >$clean_git_handler2
+    chmod +x $clean_git_handler2
+
+    set -gx MOCK_GIT_HANDLER $clean_git_handler2
+    set -l plus_out (git-clean 2>&1)
+    check "git-clean: '+' worktree marker does not leak into a branch name" false (string match -q "*branch '+' not found*" -- $plus_out; and echo true; or echo false)
+    check "git-clean: '+'-marked gone branch is still deleted" false (git rev-parse --verify --quiet orphaned-worktree-feat >/dev/null 2>&1; and echo true; or echo false)
+
+    reset_mocks
     builtin cd $prev_pwd
 end
 
