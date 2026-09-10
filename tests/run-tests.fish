@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # CI test runner for this fish configuration.
-#   1. Syntax-lints every tracked .fish file (fish -n).
+#   1. Syntax-lints and indent-checks every tracked .fish file (fish -n, fish_indent --check).
 #   2. Discovers tests/test-*.fish and reads the mode each suite declares
 #      in its own header (`# MODE: isolated` or `# MODE: in-session`).
 #   3. Runs each isolated suite as its own --no-config fish process with
@@ -24,25 +24,32 @@ set -l script_dir (realpath (dirname (status filename)))
 set -l repo_root (realpath $script_dir/..)
 set -l overall_failed 0
 
-# ---- Phase 1: syntax lint ------------------------------------------------
-echo "== Syntax lint =="
+# ---- Phase 1: syntax & indent lint ---------------------------------------
+echo "== Syntax & indent lint =="
 set -l lint_files $repo_root/config.fish
-for dir in functions conf.d completions integrations
+for dir in functions conf.d completions integrations tests
     set -a lint_files (find $repo_root/$dir -name '*.fish' | sort)
 end
 
-set -l lint_failed 0
+set -l syntax_failed 0
+set -l indent_failed 0
 for f in $lint_files
     set -l out (fish -n $f 2>&1)
     if test $status -ne 0
-        echo "  FAIL  "(string replace $repo_root/ '' $f)
+        echo "  FAIL (syntax) "(string replace $repo_root/ '' $f)
         printf '%s\n' $out
-        set lint_failed (math $lint_failed + 1)
+        set syntax_failed (math $syntax_failed + 1)
+    end
+
+    if not fish_indent --check $f >/dev/null 2>&1
+        echo "  FAIL (indent) "(string replace $repo_root/ '' $f)
+        set indent_failed (math $indent_failed + 1)
     end
 end
 set -l lint_total (count $lint_files)
-echo (math $lint_total - $lint_failed)"/$lint_total files passed lint"
-if test $lint_failed -ne 0
+echo (math $lint_total - $syntax_failed)"/$lint_total files passed syntax check"
+echo (math $lint_total - $indent_failed)"/$lint_total files passed indent check"
+if test $syntax_failed -ne 0 -o $indent_failed -ne 0
     set overall_failed 1
 end
 
