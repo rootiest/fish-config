@@ -77,9 +77,9 @@ check "--case=upper produces uppercase" true (string match -qr '^[A-Z]+$' -- (ra
 check "--case=lower produces lowercase" true (string match -qr '^[a-z]+$' -- (rand_string --case=lower color); and echo true; or echo false)
 check "--case=title produces titlecase" true (string match -qr '^[A-Z][a-z]+$' -- (rand_string --case=title color); and echo true; or echo false)
 
-check "-c upper flag" true (string match -qr '^[A-Z]+$' -- (rand_string -c upper animal); and echo true; or echo false)
-check "-c lower flag" true (string match -qr '^[a-z]+$' -- (rand_string -c lower animal); and echo true; or echo false)
-check "-c title flag" true (string match -qr '^[A-Z][a-z]+$' -- (rand_string -c title animal); and echo true; or echo false)
+check "-c upper flag" true (string match -qr '^[A-Z]+$' -- (rand_string -c upper color); and echo true; or echo false)
+check "-c lower flag" true (string match -qr '^[a-z]+$' -- (rand_string -c lower color); and echo true; or echo false)
+check "-c title flag" true (string match -qr '^[A-Z][a-z]+$' -- (rand_string -c title color); and echo true; or echo false)
 
 check "literal preserves casing with --case=upper" foo (rand_string --case=upper literal=foo)
 check "literal preserves casing with --case=lower" FOO (rand_string --case=lower literal=FOO)
@@ -178,6 +178,8 @@ function commandline
     end
 end
 
+set -g _test_hist_files
+
 function set_test_history --argument-names cmd
     set -l session "test_hist_"(random)
     set -l hist_dir ""
@@ -191,12 +193,17 @@ function set_test_history --argument-names cmd
     echo "- cmd: $cmd" >"$hist_file"
     echo "  when: "(date +%s) >>"$hist_file"
     set -g fish_history "$session"
-    set -g _last_test_hist_file "$hist_file"
+    set -ga _test_hist_files "$hist_file"
 end
 
 function cleanup_test_history
-    if set -q _last_test_hist_file; and test -f "$_last_test_hist_file"
-        rm -f "$_last_test_hist_file"
+    if set -q _test_hist_files
+        for f in $_test_hist_files
+            if test -f "$f"
+                rm -f "$f"
+            end
+        end
+        set -e _test_hist_files
     end
 end
 
