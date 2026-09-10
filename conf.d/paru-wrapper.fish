@@ -60,7 +60,7 @@ printf '%s\n' \
     "cmd_str=\"$_paru_real\"" \
     'for arg in "$@"; do' \
     '    cmd_str+=" $(printf '"'"'%q'"'"' "$arg")"' \
-    'done' \
+    done \
     'script -q -e -c "$cmd_str" "$log_file"' \
     'exit_code=$?' \
     '' \
@@ -70,19 +70,18 @@ printf '%s\n' \
     'cleaner="${XDG_CONFIG_HOME:-$HOME/.config}/fish/scripts/clean_progress_log.py"' \
     'if command -v python3 >/dev/null 2>&1 && [[ -f "$cleaner" ]]; then' \
     '    python3 "$cleaner" < "$log_file" > "${log_file}.tmp" 2>/dev/null && mv "${log_file}.tmp" "$log_file" || rm -f "${log_file}.tmp"' \
-    'else' \
+    else \
     '    sed -i "/^Script \(started\|done\) on /d" "$log_file" 2>/dev/null || true' \
-    'fi' \
+    fi \
     '' \
     'max_files="${SCROLLBACK_HISTORY_MAX_FILES:-100}"' \
     'mapfile -t logs < <(ls -1t "$log_dir"/paru_*.log 2>/dev/null)' \
     'excess=$(( ${#logs[@]} - max_files ))' \
     'for (( i = ${#logs[@]} - 1; i >= ${#logs[@]} - excess && i >= 0; i-- )); do' \
     '    rm -f "${logs[$i]}"' \
-    'done' \
+    done \
     '' \
-    'exit $exit_code' \
-    > $_paru_wrapper
+    'exit $exit_code' >$_paru_wrapper
 
 chmod +x $_paru_wrapper
 

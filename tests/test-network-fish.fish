@@ -57,22 +57,22 @@ printf '%s\n' \
     '#!/bin/sh' \
     'if [ -n "$MOCK_CURL_LOG" ]; then' \
     '  printf "%s\n" "$*" >> "$MOCK_CURL_LOG"' \
-    'fi' \
+    fi \
     'if [ -n "$MOCK_CURL_HANDLER" ] && [ -x "$MOCK_CURL_HANDLER" ]; then' \
     '  exec "$MOCK_CURL_HANDLER" "$@"' \
-    'fi' \
+    fi \
     'if [ -n "$MOCK_CURL_DELAY" ]; then' \
     '  sleep "$MOCK_CURL_DELAY"' \
-    'fi' \
+    fi \
     'if [ -n "$MOCK_CURL_STDERR" ]; then' \
     '  printf "%s\n" "$MOCK_CURL_STDERR" >&2' \
-    'fi' \
+    fi \
     'if [ -f "$MOCK_CURL_BODY_FILE" ]; then' \
     '  cat "$MOCK_CURL_BODY_FILE"' \
     'elif [ -n "$MOCK_CURL_BODY" ]; then' \
     '  printf "%s\n" "$MOCK_CURL_BODY"' \
-    'fi' \
-    'exit "${MOCK_CURL_STATUS:-0}"' > $MOCK_DIR/curl
+    fi \
+    'exit "${MOCK_CURL_STATUS:-0}"' >$MOCK_DIR/curl
 chmod +x $MOCK_DIR/curl
 
 # 2. Mock git shim
@@ -80,10 +80,10 @@ printf '%s\n' \
     '#!/bin/sh' \
     'if [ -n "$MOCK_GIT_LOG" ]; then' \
     '  printf "%s\n" "$*" >> "$MOCK_GIT_LOG"' \
-    'fi' \
+    fi \
     'if [ -n "$MOCK_GIT_HANDLER" ] && [ -x "$MOCK_GIT_HANDLER" ]; then' \
     '  exec "$MOCK_GIT_HANDLER" "$@"' \
-    'fi' \
+    fi \
     'for a in "$@"; do' \
     '  if [ "$a" = "fetch" ] && [ -n "$MOCK_GIT_FAIL_FETCH" ]; then' \
     '    echo "fatal: unable to access: Could not resolve host" >&2' \
@@ -101,8 +101,8 @@ printf '%s\n' \
     '    echo "fatal: unable to access: Could not resolve host" >&2' \
     '    exit "${MOCK_GIT_LS_REMOTE_STATUS:-128}"' \
     '  fi' \
-    'done' \
-    "exec $real_git \"\$@\"" > $MOCK_DIR/git
+    done \
+    "exec $real_git \"\$@\"" >$MOCK_DIR/git
 chmod +x $MOCK_DIR/git
 
 # 3. Mock bd CLI
@@ -114,8 +114,8 @@ printf '%s\n' \
     '  exit 0' \
     'elif [ "$1" = "sync" ]; then' \
     '  exit 0' \
-    'fi' \
-    'exit 0' > $MOCK_DIR/bd
+    fi \
+    'exit 0' >$MOCK_DIR/bd
 chmod +x $MOCK_DIR/bd
 
 # 4. Mock qrencode
@@ -123,9 +123,9 @@ printf '%s\n' \
     '#!/bin/sh' \
     'if [ -n "$MOCK_QRENCODE_LOG" ]; then' \
     '  printf "%s\n" "$*" >> "$MOCK_QRENCODE_LOG"' \
-    'fi' \
+    fi \
     'echo "LOCAL_QRENCODE: $*"' \
-    'exit 0' > $MOCK_DIR/qrencode
+    'exit 0' >$MOCK_DIR/qrencode
 chmod +x $MOCK_DIR/qrencode
 
 # Prepend MOCK_DIR to PATH so mocks take precedence
@@ -157,7 +157,6 @@ function cleanup
         test -n "$d"; and command rm -rf $d
     end
 end
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. gi (gitignore generator)
@@ -227,7 +226,6 @@ begin
     builtin cd $prev_pwd
 end
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. gip, gip4, gip6 (IP resolution)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -248,8 +246,8 @@ printf '%s\n' \
     '    echo "2001:db8::1"' \
     '    exit 0' \
     '  fi' \
-    'done' \
-    'exit 0' > $gip_handler
+    done \
+    'exit 0' >$gip_handler
 chmod +x $gip_handler
 
 reset_mocks
@@ -304,7 +302,6 @@ set -l out_gip6_err (gip6 2>&1)
 check "gip6: failure exits 1" 1 $status
 check "gip6: failure prints notice" true (string match -q '*IPv6 is currently unavailable*' -- $out_gip6_err; and echo true; or echo false)
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. qr (QR code generator)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -320,30 +317,29 @@ check "qr: curl is never called when qrencode exists" 0 (test -f $MOCK_DIR/curl_
 
 # Case B: Local qrencode is missing, falling back to curl
 function type
-    if test "$argv[1]" = "-q" -a "$argv[2]" = "qrencode"
+    if test "$argv[1]" = -q -a "$argv[2]" = qrencode
         return 1
     end
     builtin type $argv
 end
 
-set -gx MOCK_CURL_BODY "UTF8_QR_BODY"
+set -gx MOCK_CURL_BODY UTF8_QR_BODY
 set -l qr_curl (qr "hello-curl")
-check "qr: fallback to curl when qrencode is missing" "UTF8_QR_BODY" "$qr_curl"
+check "qr: fallback to curl when qrencode is missing" UTF8_QR_BODY "$qr_curl"
 
 # Network drop during curl fallback
 set -gx MOCK_CURL_STATUS 7
 set -gx MOCK_CURL_BODY ""
-qr "fail" >/dev/null 2>&1
+qr fail >/dev/null 2>&1
 check "qr: curl network drop returns non-zero" 7 $status
 
 # Argument-based curl fallback
 set -gx MOCK_CURL_STATUS 0
-set -gx MOCK_CURL_BODY "TEXT_QR"
+set -gx MOCK_CURL_BODY TEXT_QR
 set -l qr_arg (qr "arg-text")
-check "qr: argument works via curl fallback" "TEXT_QR" "$qr_arg"
+check "qr: argument works via curl fallback" TEXT_QR "$qr_arg"
 
 functions -e type
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. bd-pull (Gitea issues sync)
@@ -361,13 +357,13 @@ begin
     bd-pull rootiest/test >/dev/null 2>&1
     check "bd-pull: missing GITEA_TOKEN exits 1" 1 $status
 
-    set -gx GITEA_TOKEN "test_token"
+    set -gx GITEA_TOKEN test_token
     bd-pull rootiest/test >/dev/null 2>&1
     check "bd-pull: missing GITEA_URL exits 1" 1 $status
 end
 
 # Complete network drop / empty response
-set -gx GITEA_TOKEN "dummy_token"
+set -gx GITEA_TOKEN dummy_token
 set -gx GITEA_URL "https://git.test"
 set -gx MOCK_CURL_STATUS 7
 set -gx MOCK_CURL_BODY ""
@@ -409,7 +405,6 @@ begin
     builtin cd $prev_pwd
 end
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. _auto_pull_sync (background fast-forward)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -422,9 +417,9 @@ check "_auto_pull_sync: non-git directory returns 1" 1 $status
 
 # Git repo without upstream branch
 set -l sync_repo (new_repo)
-echo "test" > $sync_repo/file.txt
+echo test >$sync_repo/file.txt
 git -C $sync_repo add file.txt
-git -C $sync_repo commit -q -m "initial"
+git -C $sync_repo commit -q -m initial
 _auto_pull_sync $sync_repo >/dev/null 2>&1
 check "_auto_pull_sync: missing upstream returns 1" 1 $status
 
@@ -435,13 +430,13 @@ git -C $sync_repo remote add origin $sync_upstream
 git -C $sync_repo push -q -u origin main >/dev/null 2>&1
 
 # Dirty working tree (unstaged modifications)
-echo "dirty" >> $sync_repo/file.txt
+echo dirty >>$sync_repo/file.txt
 _auto_pull_sync $sync_repo >/dev/null 2>&1
 check "_auto_pull_sync: dirty worktree returns 1" 1 $status
 git -C $sync_repo checkout -q -- file.txt
 
 # Dirty index (staged modifications)
-echo "staged" >> $sync_repo/staged.txt
+echo staged >>$sync_repo/staged.txt
 git -C $sync_repo add staged.txt
 _auto_pull_sync $sync_repo >/dev/null 2>&1
 check "_auto_pull_sync: dirty index returns 1" 1 $status
@@ -458,7 +453,7 @@ reset_mocks
 # Add commit to upstream
 set -l peer_clone (new_repo)
 git -C $peer_clone clone -q $sync_upstream $peer_clone/work
-echo "new commit" > $peer_clone/work/new.txt
+echo "new commit" >$peer_clone/work/new.txt
 git -C $peer_clone/work add new.txt
 git -C $peer_clone/work commit -q -m "upstream work"
 git -C $peer_clone/work push -q origin main
@@ -466,7 +461,6 @@ git -C $peer_clone/work push -q origin main
 _auto_pull_sync $sync_repo >/dev/null 2>&1
 check "_auto_pull_sync: clean fast-forward returns 0" 0 $status
 check "_auto_pull_sync: changes merged into working tree" true (test -f $sync_repo/new.txt; and echo true; or echo false)
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 6. gitup (fetch and status)
@@ -482,7 +476,7 @@ begin
 
     set -l r (new_repo)
     builtin cd $r
-    echo a > a && git add a && git commit -q -m a
+    echo a >a && git add a && git commit -q -m a
 
     # Network failure on git fetch
     set -gx MOCK_GIT_FAIL_FETCH 1
@@ -497,7 +491,6 @@ begin
     builtin cd $prev_pwd
 end
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 7. git-clean (fetch --prune and delete orphaned branches)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -511,7 +504,7 @@ begin
     set -l prev_pwd $PWD
     set -l r (new_repo)
     builtin cd $r
-    echo a > a && git add a && git commit -q -m a
+    echo a >a && git add a && git commit -q -m a
 
     # Network drop during git fetch --prune
     set -gx MOCK_GIT_FAIL_FETCH 1
@@ -533,8 +526,8 @@ begin
         '    echo "  orphaned-feat  abcdef0 [origin/orphaned-feat: gone] feature"' \
         '    exit 0' \
         '  fi' \
-        'done' \
-        "exec $real_git \"\$@\"" > $clean_git_handler
+        done \
+        "exec $real_git \"\$@\"" >$clean_git_handler
     chmod +x $clean_git_handler
 
     set -gx MOCK_GIT_HANDLER $clean_git_handler
@@ -544,7 +537,6 @@ begin
 
     builtin cd $prev_pwd
 end
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. config-update (configuration repository sync)
@@ -563,8 +555,8 @@ printf '%s\n' \
     '  if [ "$a" = "fetch" ] && [ -n "$MOCK_CFG_FAIL_FETCH" ]; then' \
     '    exit 1' \
     '  fi' \
-    'done' \
-    "exec $real_git \"\$@\"" > $cfg_update_handler
+    done \
+    "exec $real_git \"\$@\"" >$cfg_update_handler
 chmod +x $cfg_update_handler
 set -gx MOCK_GIT_HANDLER $cfg_update_handler
 
@@ -583,7 +575,6 @@ begin
     config-update >/dev/null 2>&1
     check "config-update: network fetch failure returns 1" 1 $status
 end
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 9. repo-open (origin URL normalization and browser deep-linking)
@@ -616,7 +607,7 @@ end
 # In git repo with GitHub origin remote
 set -l r_gh (new_repo)
 git -C $r_gh remote add origin "https://github.com/rootiest/fish-config.git"
-echo init > $r_gh/file && git -C $r_gh add file && git -C $r_gh commit -q -m init
+echo init >$r_gh/file && git -C $r_gh add file && git -C $r_gh commit -q -m init
 begin
     set -l prev_pwd $PWD
     builtin cd $r_gh
@@ -636,8 +627,8 @@ begin
         '    echo "abcdef01 refs/heads/main"' \
         '    exit 0' \
         '  fi' \
-        'done' \
-        "exec $real_git \"\$@\"" > $gh_ls_handler
+        done \
+        "exec $real_git \"\$@\"" >$gh_ls_handler
     chmod +x $gh_ls_handler
     set -gx MOCK_GIT_HANDLER $gh_ls_handler
 
@@ -655,7 +646,6 @@ begin
 
     builtin cd $prev_pwd
 end
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 10. fzf-update (fzf install / git pull)
@@ -685,7 +675,6 @@ begin
     fzf-update >/dev/null 2>&1
     check "fzf-update: git clone network drop returns non-zero" true (test $status -ne 0; and echo true; or echo false)
 end
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Teardown and Final Report

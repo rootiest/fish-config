@@ -33,9 +33,9 @@ function _fish_deps_update
             continue
         end
 
-        set -l cargo_crate  $_fdc_cargo[$i]
-        set -l pm_pkg       $_fdc_pm[$i]
-        set -l special      $_fdc_special[$i]
+        set -l cargo_crate $_fdc_cargo[$i]
+        set -l pm_pkg $_fdc_pm[$i]
+        set -l special $_fdc_special[$i]
 
         # yay: update via paru if available, else system PM
         if test "$special" = yay-build
@@ -101,10 +101,14 @@ function _fish_deps_update
             echo "Updating $bin..."
             set -l _arch (uname -m)
             switch $_arch
-                case x86_64;  set _arch amd64
-                case aarch64 arm64; set _arch arm64
-                case armv7l;  set _arch arm
-                case '*';     set _arch amd64
+                case x86_64
+                    set _arch amd64
+                case aarch64 arm64
+                    set _arch arm64
+                case armv7l
+                    set _arch arm
+                case '*'
+                    set _arch amd64
             end
             set -l _zip "wakatime-cli-linux-$_arch.zip"
             set -l _bin_src "wakatime-cli-linux-$_arch"

@@ -38,8 +38,8 @@ function _agents_init_ensure_gitignore
         return 1
     end
 
-    set -l root     $argv[1]
-    set -l label    $argv[2]
+    set -l root $argv[1]
+    set -l label $argv[2]
     set -l patterns $argv[3..]
     set -l gitignore "$root/.gitignore"
 

@@ -80,7 +80,7 @@ function config-update --description 'Pull latest fish config from upstream'
     end
 
     # ── compare local HEAD to upstream ───────────────────────────
-    set -l local_sha  (git -C "$CONFIG_DIR" rev-parse HEAD 2>/dev/null)
+    set -l local_sha (git -C "$CONFIG_DIR" rev-parse HEAD 2>/dev/null)
     set -l remote_sha (git -C "$CONFIG_DIR" rev-parse _config_update/main 2>/dev/null)
 
     if test "$local_sha" = "$remote_sha"

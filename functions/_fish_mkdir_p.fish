@@ -46,7 +46,7 @@ function _fish_mkdir_p --description 'mkdir -p with configurable verbose output'
     while not test -d $cursor
         set -p to_create $cursor
         set -l up (dirname $cursor)
-        test "$up" = "$cursor"; and break  # filesystem root guard
+        test "$up" = "$cursor"; and break # filesystem root guard
         set cursor $up
     end
 

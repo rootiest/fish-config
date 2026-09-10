@@ -25,7 +25,7 @@ function gip6 --description 'Get public IPv6 address'
 
     # Use -6 to force IPv6 and --fail to catch network errors
     set -l ip (curl -6 -s --fail https://icanhazip.com 2>/dev/null)
-    
+
     if test $status -eq 0
         echo $ip
     else

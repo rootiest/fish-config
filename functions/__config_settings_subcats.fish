@@ -28,9 +28,9 @@ function __config_settings_subcats --description 'List the sub-categories for on
         case __fish_config_op_aliases
             printf '%s\t%s\t%s\n' \
                 filesystem Filesystem "ls, cat, cd, du, mkdir, rm, mv, zoxide" \
-                search Search "rg" \
+                search Search rg \
                 network Network "ping, ssh, yt-dlp" \
-                monitor Monitor "top" \
+                monitor Monitor top \
                 shell-tools Shell-tools "bash, less, help" \
                 dev-tools Dev-tools "claude, edit, agy"
         case __fish_config_op_autoexec
@@ -52,7 +52,7 @@ function __config_settings_subcats --description 'List the sub-categories for on
                 window-mgmt Window-mgmt "spwin, tab, split" \
                 notifications Notifications "done, WakaTime hook" \
                 history-logs History-logs "hist, logs" \
-                pkg-upgrade Pkg-upgrade "upgrade"
+                pkg-upgrade Pkg-upgrade upgrade
         case __fish_config_op_logging
             printf '%s\t%s\t%s\n' \
                 terminal-capture Term-capture "Kitty watcher, smart_exit scrollback" \

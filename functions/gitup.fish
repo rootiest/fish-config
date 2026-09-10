@@ -27,12 +27,12 @@ function gitup --description 'Fetch updates and show git status'
         echo "Check your map! You aren't in a git repository."
         return 1
     end
-    
+
     if count $argv >/dev/null
         git fetch $argv
     else
         git fetch
     end
-    
+
     and git status
 end

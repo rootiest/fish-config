@@ -21,7 +21,7 @@ end
 function __tailscale_debug
     set -l file "$BASH_COMP_DEBUG_FILE"
     if test -n "$file"
-        echo "$argv" >> $file
+        echo "$argv" >>$file
     end
 end
 
@@ -124,7 +124,6 @@ function __tailscale_requires_order_preservation
     __tailscale_debug "This doesn't require order preservation"
     return 1
 end
-
 
 # This function does two things:
 # - Obtain the completions and store them in the global __tailscale_comp_results
@@ -242,7 +241,7 @@ end
 complete -c tailscale -e
 
 # this will get called after the two calls below and clear the $__tailscale_perform_completion_once_result global
-complete -c tailscale -n '__tailscale_clear_perform_completion_once_result'
+complete -c tailscale -n __tailscale_clear_perform_completion_once_result
 # The call to __tailscale_prepare_completions will setup __tailscale_comp_results
 # which provides the program's completion choices.
 # If this doesn't require order preservation, we don't use the -k flag

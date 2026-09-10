@@ -28,9 +28,9 @@ function _smart_execute --description 'Execute different functions based on the 
             # If it ends in =, run qalc; fall back to normal execute if qalc is absent
             _qalc_eval; or commandline -f execute
 
-#       case 'g *'
-#           # EXAMPLE FUTURE EXTENSION
-#           _some_git_helper
+            #       case 'g *'
+            #           # EXAMPLE FUTURE EXTENSION
+            #           _some_git_helper
 
         case '*'
             # Default: execute the command line as-is

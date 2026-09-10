@@ -160,8 +160,7 @@ if test (count $session_suites) -gt 0
         __fish_config_op_autoexec=off \
         FISH_CONFIG_TEST_ROOT=$repo_root \
         FISH_CONFIG_TEST_COUNTS=$counts \
-        fish -i -c "source $repo_root/tests/lib.fish; $srcs report" \
-        2>$err_file
+        fish -i -c "source $repo_root/tests/lib.fish; $srcs report" 2>$err_file
     set -l session_status $status
 
     set -l stderr_out (command cat $err_file)

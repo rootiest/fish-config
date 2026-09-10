@@ -135,11 +135,11 @@ function logs --description 'Browse terminal log files interactively with fzf'
     set -l togglescript (mktemp)
     set -l deletescript (mktemp)
     set -l helpflag "$tmpfile.help"
-    printf '%s\n' $fzf_lines > $tmpfile
-    printf 'Terminal Logs — Key Bindings\n\n  Enter     View selected log in pager\n  Ctrl-E    Edit selected log in editor\n  Ctrl-D    Delete selected log\n  Ctrl-C    Quit\n  ?         Toggle this help\n\nFiltering:\n  Type to fuzzy-filter by date or category\n  Use -c flag to limit: scrollback, paru, yay' > $helpfile
+    printf '%s\n' $fzf_lines >$tmpfile
+    printf 'Terminal Logs — Key Bindings\n\n  Enter     View selected log in pager\n  Ctrl-E    Edit selected log in editor\n  Ctrl-D    Delete selected log\n  Ctrl-C    Quit\n  ?         Toggle this help\n\nFiltering:\n  Type to fuzzy-filter by date or category\n  Use -c flag to limit: scrollback, paru, yay' >$helpfile
     # Help toggle script — avoids nested parens inside transform()
     printf '#!/bin/sh\nif test -f %s; then\n  rm -f %s\n  printf "change-preview(command cat {1})"\nelse\n  touch %s\n  printf "change-preview(command cat %s)"\nfi\n' \
-        $helpflag $helpflag $helpflag $helpfile > $togglescript
+        $helpflag $helpflag $helpflag $helpfile >$togglescript
     chmod +x $togglescript
     # Delete confirmation script — avoids nested parens inside execute(), and ensures
     # tmpfile is updated before +reload fires (execute is synchronous, execute-silent is not)
@@ -151,8 +151,7 @@ function logs --description 'Browse terminal log files interactively with fzf'
         'case "$confirm" in [nN]) exit 0 ;; esac' \
         "fish -c \"rm \$FILE\"" \
         "grep -vF \"\$FILE\" $tmpfile > $tmpfile.new" \
-        "mv $tmpfile.new $tmpfile" \
-        > $deletescript
+        "mv $tmpfile.new $tmpfile" >$deletescript
     chmod +x $deletescript
 
     set -l selected (command cat $tmpfile | fzf \
@@ -196,7 +195,7 @@ function logs --description 'Browse terminal log files interactively with fzf'
             # is displayed without ov's default slateblue background, preserving
             # the original ANSI colors of the starship prompt.
             set -l ov_cfg (mktemp --suffix .yaml)
-            printf 'Mode:\n  scrollback:\n    Style:\n      SectionLine:\n        Background: ""\n        Foreground: ""\n' > $ov_cfg
+            printf 'Mode:\n  scrollback:\n    Style:\n      SectionLine:\n        Background: ""\n        Foreground: ""\n' >$ov_cfg
             command ov --config $ov_cfg --view-mode scrollback \
                 --section-delimiter '\x1b\]133;A' --section-header --section-header-num 1 $file
             rm -f $ov_cfg

@@ -24,9 +24,12 @@ set -l mode bytes
 set -l baseline main
 for i in (seq (count $argv))
     switch $argv[$i]
-        case --structural; set mode structural
-        case --startup; set mode startup
-        case --baseline; set baseline $argv[(math $i + 1)]
+        case --structural
+            set mode structural
+        case --startup
+            set mode startup
+        case --baseline
+            set baseline $argv[(math $i + 1)]
     end
 end
 
@@ -36,8 +39,8 @@ function __pb_cleanup --on-event fish_exit --inherit-variable tmp
 end
 
 # ── Build the two sandboxes ────────────────────────────────────────────
-set -l A $tmp/base/fish   # pristine baseline ref
-set -l B $tmp/work/fish   # current working tree
+set -l A $tmp/base/fish # pristine baseline ref
+set -l B $tmp/work/fish # current working tree
 mkdir -p $A $B
 git -C $repo archive $baseline | tar -x -C $A
 or begin
@@ -71,7 +74,7 @@ set -l cases \
     "p --help" "pkg --help" "play-media --help" "qc --help" \
     "rand_string --help" "replay --help" "repo-open --help" "scrub --help" \
     "smart_exit --help" "spark --help" "y --help" \
-    "mkcd" "auto-pull remove __no_such_repo__" \
+    mkcd "auto-pull remove __no_such_repo__" \
     "agents-init --no-such-flag" "pkg __no_such_subcommand__"
 
 function __pb_run --argument-names cfg stub cmd out

@@ -25,19 +25,19 @@ function __auto_source_fallback_venv --on-variable PWD
     if set -q DIRENV_DIR; or test -e ".envrc"
         return
     end
-    
+
     # 2. If we are already in a venv, check if we've left its tree
-        if set -q VIRTUAL_ENV
-                # Check if the current PWD is still within the directory that owns the venv
-                # (Assuming the venv is at the root of the project)
-                set -l venv_root (string replace -r '/.venv$' '' $VIRTUAL_ENV)
-                if not string match -q "$venv_root*" "$PWD"
-                        type -q deactivate; and deactivate
-                end
-                return
+    if set -q VIRTUAL_ENV
+        # Check if the current PWD is still within the directory that owns the venv
+        # (Assuming the venv is at the root of the project)
+        set -l venv_root (string replace -r '/.venv$' '' $VIRTUAL_ENV)
+        if not string match -q "$venv_root*" "$PWD"
+            type -q deactivate; and deactivate
         end
-    
-        # 3. Only source the venv if we aren't already in one
+        return
+    end
+
+    # 3. Only source the venv if we aren't already in one
     if test -e ".venv/bin/activate.fish"
         source .venv/bin/activate.fish
     end

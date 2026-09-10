@@ -7,4 +7,3 @@ function _puffer_fish_expand_bang
         commandline --insert '!'
     end
 end
-
