@@ -135,15 +135,21 @@ jobs:
           # of server config. fishconfig-bot is a dedicated Gitea account
           # (verified email, no login) that owns this key; the private
           # key lives only in the CI_GPG_PRIVATE_KEY repo secret.
+          #
+          # Secret is base64-encoded: a raw multi-line armored key piped
+          # through `echo "$VAR" | gpg --import` came out CRC-corrupted
+          # ("Invalid keyring") the first time this ran -- something in
+          # the secret/env round-trip mangles embedded newlines. Base64
+          # collapses it to one line immune to that.
           export GNUPGHOME="$(mktemp -d)"
           chmod 700 "$GNUPGHOME"
           echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
           echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
           command -v gpg >/dev/null || sudo apt-get install -y --no-install-recommends gnupg
-          echo "$BOT_GPG_KEY" | gpg --batch --import
+          echo "$BOT_GPG_KEY" | base64 -d | gpg --batch --import
           git config user.name  "Gitea Actions Bot"
           git config user.email "fishconfig-bot@git.rootiest.dev"
-          git config user.signingkey 0603CD87750C18FB3604147EFD08763FA41E5534
+          git config user.signingkey CAA082C2F3467E1F7217AD492075C120312D23F4
           git config commit.gpgsign true
           git add docs/fish-config.md docs/fish-config.1 conf.d/__fish_config_op_registry.fish
           git diff --cached --quiet && echo "No changes to commit" && exit 0
