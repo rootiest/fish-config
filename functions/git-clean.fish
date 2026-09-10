@@ -44,7 +44,12 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
     git fetch --prune --quiet
 
     # 2. Identify orphaned branches and current branch
-    set -l gone_branches (git branch -vv | awk '/: gone\]/ {gsub(/\*/, ""); print $1}')
+    # git branch -vv marks column 1 with '*' for the current worktree's
+    # branch or '+' for a branch checked out in another linked worktree.
+    # Only '*' was stripped here, so a gone branch checked out elsewhere
+    # left its '+' glued onto $1, producing a bogus "+" entry that later
+    # failed to delete ("branch '+' not found").
+    set -l gone_branches (git branch -vv | awk '/: gone\]/ {sub(/^[*+]/, ""); print $1}')
     set -l current_branch (git branch --show-current)
 
     if test -n "$gone_branches"
