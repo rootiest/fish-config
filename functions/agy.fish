@@ -52,10 +52,10 @@ function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ su
     agents-vault --quiet
 
     for i in (seq (count $argv))
-        if test "$argv[$i]" = "-r"
-            set argv[$i] "-c"
-        else if test "$argv[$i]" = "--resume"
-            set argv[$i] "--continue"
+        if test "$argv[$i]" = -r
+            set argv[$i] -c
+        else if test "$argv[$i]" = --resume
+            set argv[$i] --continue
         else if string match -q -- "--resume=*" "$argv[$i]"
             set argv[$i] (string replace -- "--resume=" "--continue=" "$argv[$i]")
         end

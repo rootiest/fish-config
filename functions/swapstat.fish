@@ -22,9 +22,9 @@ function swapstat --description 'View colorized zRAM and swappiness status'
 
     set -l swappiness (sysctl -n vm.swappiness)
     set -l zdata (zramctl --bytes --noheadings --output DATA,TOTAL /dev/zram0 2>/dev/null)
-    
+
     echo (set_color --bold blue)"── Memory & zRAM Report ──"(set_color normal)
-    
+
     # Kernel & Compression Stats
     if test -n "$zdata"
         set -l raw (echo $zdata | awk '{print $1}')

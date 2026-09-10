@@ -17,8 +17,10 @@ function expand_bang_all --description 'Execute expand_bang_all'
     __fish_config_op_enabled (status basename); or return 1
 
     set -l token $argv[1]
-    if test -z "$token"; set token (commandline -t); end
-    
+    if test -z "$token"
+        set token (commandline -t)
+    end
+
     set -l tokens (string split -n " " -- $history[1])
     if test (count $tokens) -gt 1
         echo -- (string join " " -- $tokens[2..-1])
@@ -46,12 +48,14 @@ function expand_bang_minus_n --description 'Execute expand_bang_minus_n'
     __fish_config_op_enabled (status basename); or return 1
 
     set -l token $argv[1]
-    if test -z "$token"; set token (commandline -t); end
-    
+    if test -z "$token"
+        set token (commandline -t)
+    end
+
     # Extract the number from the regex match
     if string match -qr '!-(\d+)' -- "$token"
         set -l n (string match -r '!-(\d+)' -- "$token")[2]
-        
+
         if test (count $history) -ge $n
             echo -- $history[$n]
         else
@@ -71,20 +75,20 @@ function expand_bang_search --description 'Execute expand_bang_search'
     if test -z "$token"
         set token (commandline -t)
     end
-    
+
     # Extract query: looks for text after !? and before an optional ?
     set -l query (string match -r '!\?([^?]+)' -- $token)[2]
-    
+
     if test -n "$query"
         # Search history for a match anywhere in the command
         set -l match (builtin history search --contains --max=1 -- $query)
-        
+
         if test -n "$match"
             echo -- $match
             return
         end
     end
-    
+
     echo -- $token
 end
 
@@ -98,20 +102,20 @@ function expand_bang_string --description 'Execute expand_bang_string'
     if test -z "$token"
         set token (commandline -t)
     end
-    
+
     # Remove the '!' to get the search query
     set -l query (string sub -s 2 -- $token)
-    
+
     if test -n "$query"
         # Search history for a prefix match
         set -l match (builtin history search --prefix --max=1 -- $query)
-        
+
         if test -n "$match"
             echo -- $match
             return
         end
     end
-    
+
     # If no match or empty query, return the token so it doesn't vanish
     echo -- $token
 end
@@ -128,12 +132,12 @@ function expand_typo_sub --description 'Execute expand_typo_sub'
     if test -z "$current_token"
         set current_token (commandline -t)
     end
-    
+
     if string match -qr '\^([^^]+)\^([^^]*)' -- "$current_token"
         set -l captured (string match -r '\^([^^]+)\^([^^]*)' -- "$current_token")
         set -l old $captured[2]
         set -l new $captured[3]
-        
+
         if test -n "$old"
             # Using -- to ensure strings starting with '-' aren't treated as flags
             echo -- (string replace -a -- "$old" "$new" "$last_cmd")

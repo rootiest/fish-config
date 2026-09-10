@@ -187,28 +187,52 @@ function pkg --description 'Install or remove packages via the system package ma
                 switch $pm
                     case paru yay
                         $pm -S $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case pacman
                         sudo pacman -S $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case apt
                         sudo apt install -y $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case dnf
                         sudo dnf install -y $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case zypper
                         sudo zypper install -y $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case brew
                         brew install $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case pkg
                         sudo pkg install -y $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case yum
                         sudo yum install -y $to_install
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                 end
             end
 
@@ -217,28 +241,52 @@ function pkg --description 'Install or remove packages via the system package ma
                 switch $pm
                     case paru yay
                         $pm -Rns $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case pacman
                         sudo pacman -Rns $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case apt
                         sudo apt remove -y $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case dnf
                         sudo dnf remove -y $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case zypper
                         sudo zypper remove -y $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case brew
                         brew uninstall $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case pkg
                         sudo pkg delete -y $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                     case yum
                         sudo yum remove -y $to_remove
-                        or begin; functions -e __pkg_is_installed; return $status; end
+                        or begin
+                            functions -e __pkg_is_installed
+                            return $status
+                        end
                 end
             end
     end

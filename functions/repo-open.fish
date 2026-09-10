@@ -90,12 +90,12 @@ function repo-open --description 'Open the origin remote of the current repo in 
         set had_scheme 1
     end
     set -l u (string replace -r '^[a-z0-9]+://' '' -- $remote) # strip scheme
-    set u (string replace -r '^[^@/]+@' '' -- $u)             # strip user@
-    set u (string replace -r '\.git$' '' -- $u)               # strip .git
+    set u (string replace -r '^[^@/]+@' '' -- $u) # strip user@
+    set u (string replace -r '\.git$' '' -- $u) # strip .git
     if test $had_scheme -eq 0
-        set u (string replace ':' '/' -- $u)      # scp: first colon → path sep
+        set u (string replace ':' '/' -- $u) # scp: first colon → path sep
     else
-        set u (string replace -r ':[0-9]+/' '/' -- $u)  # url: drop :port
+        set u (string replace -r ':[0-9]+/' '/' -- $u) # url: drop :port
     end
 
     set -l parts (string split -m1 '/' -- $u)

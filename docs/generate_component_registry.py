@@ -99,10 +99,16 @@ def render(registry: dict[str, list[str]]) -> str:
     lines += [f"    {k} \\" for k in quoted_keys[:-1]] + [f"    {quoted_keys[-1]}"]
     lines.append("")
 
-    values = ['"' + " ".join(registry[k]) + '"' for k in keys]
+    values = [
+        (
+            '"' + " ".join(registry[k]) + '"'
+            if any(c in " ".join(registry[k]) for c in ' \t*?[]"\'\\$')
+            else " ".join(registry[k])
+        )
+        for k in keys
+    ]
     lines.append("set -g __fish_config_op_registry_values \\")
     lines += [f"    {v} \\" for v in values[:-1]] + [f"    {values[-1]}"]
-    lines.append("")
     return "\n".join(lines) + "\n"
 
 

@@ -27,8 +27,8 @@
 #   __config_settings_set_value __fish_user_dots_path path ''   # reset
 function __config_settings_set_value
     set -l varname $argv[1]
-    set -l type    $argv[2]
-    set -l value   $argv[3]
+    set -l type $argv[2]
+    set -l value $argv[3]
 
     # stderr suppressed: editing a universal while a global of the same name
     # shadows it makes interactive fish emit a shadow warning that would

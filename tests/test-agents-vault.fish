@@ -70,7 +70,7 @@ function failing_shim --argument-names name match
         '#!/bin/sh' \
         'for a in "$@"; do' \
         "  case \"\$a\" in *$match*) exit 1 ;; esac" \
-        'done' \
+        done \
         "exec $real \"\$@\"" >$d/$name
     chmod +x $d/$name
     printf '%s\n' $d
@@ -166,7 +166,8 @@ git -C $r3 remote add upstream https://git.rootiest.dev/rootiest/fish-config.git
 check "falls back to first remote" $want (_agents_repo_slug $r3)
 
 # Slug sanitization test: special chars in fallback (local-) branch.
-set -l dirt (mktemp -d); set -ga TMPDIRS $dirt
+set -l dirt (mktemp -d)
+set -ga TMPDIRS $dirt
 mkdir -p "$dirt/projects/My Project!"
 git -C "$dirt/projects/My Project!" init -q
 git -C "$dirt/projects/My Project!" config user.email t@t
@@ -179,7 +180,8 @@ check "sanitizes special chars in local slug" false "$has_bad_chars"
 echo ""
 echo "== _agents_repo_ensure_symlink =="
 
-set -l w (mktemp -d); set -ga TMPDIRS $w
+set -l w (mktemp -d)
+set -ga TMPDIRS $w
 mkdir -p $w/target $w/live
 
 # Fresh link onto an empty live parent.
@@ -200,7 +202,8 @@ check "refuses missing target" 1 (_agents_repo_ensure_symlink $w/live/f3 $w/nope
 check "no dangling link left" false (test -L $w/live/f3; and echo true; or echo false)
 
 # Non-destructive adoption: content on both sides, nothing overwritten.
-set -l a (mktemp -d); set -ga TMPDIRS $a
+set -l a (mktemp -d)
+set -ga TMPDIRS $a
 mkdir -p $a/vault $a/live/memory
 echo vault-version >$a/vault/shared.md
 echo vault-only >$a/vault/vaultonly.md
@@ -213,7 +216,8 @@ check "adoption keeps vault-only file" vault-only (cat $a/vault/vaultonly.md)
 check "adoption replaced dir with link" true (test -L $a/live/memory; and echo true; or echo false)
 
 # Repins a link that points somewhere else.
-set -l p (mktemp -d); set -ga TMPDIRS $p
+set -l p (mktemp -d)
+set -ga TMPDIRS $p
 mkdir -p $p/one $p/two
 ln -s $p/one $p/link
 _agents_repo_ensure_symlink $p/link $p/two >/dev/null
@@ -239,12 +243,14 @@ check "idempotent, silent" "" "$out"
 # guarantee, and the old pull-first shape broke it: a failed fetch took
 # the local commit down with it. The divergence is still built here so
 # that guarantee is tested against the case that used to fail.
-set -l origin (mktemp -d); set -ga TMPDIRS $origin
+set -l origin (mktemp -d)
+set -ga TMPDIRS $origin
 git -C $origin init -q --bare
 git -C $s remote add origin $origin
 git -C $s push -q -u origin HEAD:refs/heads/main 2>/dev/null
 
-set -l clone (mktemp -d); set -ga TMPDIRS $clone
+set -l clone (mktemp -d)
+set -ga TMPDIRS $clone
 git clone -q $origin $clone
 git -C $clone config user.email t@t
 git -C $clone config user.name t
@@ -297,7 +303,8 @@ set -l h (new_repo)
 echo first >$h/a.md
 _agents_repo_sync $h "chore: init" >/dev/null
 
-set -l hooks (mktemp -d); set -ga TMPDIRS $hooks
+set -l hooks (mktemp -d)
+set -ga TMPDIRS $hooks
 printf '#!/bin/sh\nexit 1\n' >$hooks/pre-commit
 chmod +x $hooks/pre-commit
 git -C $h config core.hooksPath $hooks
@@ -312,8 +319,10 @@ check "commit hook rejection commits nothing" $before_hook_count (git -C $h rev-
 echo ""
 echo "== agents-vault (scaffold + link) =="
 
-set -l vroot (mktemp -d); set -ga TMPDIRS $vroot
-set -l croot (mktemp -d); set -ga TMPDIRS $croot
+set -l vroot (mktemp -d)
+set -ga TMPDIRS $vroot
+set -l croot (mktemp -d)
+set -ga TMPDIRS $croot
 set -g __fish_agent_vault_dir $vroot/agent-vault
 set -g __fish_agent_vault_claude_root $croot
 
@@ -359,8 +368,10 @@ set -e __fish_agent_vault_claude_root
 echo ""
 echo "== agents-vault (emergent restore) =="
 
-set -l vroot2 (mktemp -d); set -ga TMPDIRS $vroot2
-set -l croot2 (mktemp -d); set -ga TMPDIRS $croot2
+set -l vroot2 (mktemp -d)
+set -ga TMPDIRS $vroot2
+set -l croot2 (mktemp -d)
+set -ga TMPDIRS $croot2
 set -g __fish_agent_vault_dir $vroot2/agent-vault
 set -g __fish_agent_vault_claude_root $croot2
 
@@ -393,8 +404,10 @@ set -e __fish_agent_vault_claude_root
 echo ""
 echo "== agents-vault (link failure surfaces as exit 1) =="
 
-set -l vroot3 (mktemp -d); set -ga TMPDIRS $vroot3
-set -l croot3 (mktemp -d); set -ga TMPDIRS $croot3
+set -l vroot3 (mktemp -d)
+set -ga TMPDIRS $vroot3
+set -l croot3 (mktemp -d)
+set -ga TMPDIRS $croot3
 set -g __fish_agent_vault_dir $vroot3/agent-vault
 set -g __fish_agent_vault_claude_root $croot3
 
@@ -420,8 +433,10 @@ set -e __fish_agent_vault_claude_root
 echo ""
 echo "== agents-vault (slug migration) =="
 
-set -l vroot2 (mktemp -d); set -ga TMPDIRS $vroot2
-set -l croot2 (mktemp -d); set -ga TMPDIRS $croot2
+set -l vroot2 (mktemp -d)
+set -ga TMPDIRS $vroot2
+set -l croot2 (mktemp -d)
+set -ga TMPDIRS $croot2
 set -g __fish_agent_vault_dir $vroot2/agent-vault
 set -g __fish_agent_vault_claude_root $croot2
 
@@ -429,7 +444,7 @@ set -g __fish_agent_vault_claude_root $croot2
 set -l mp (new_repo)
 set -l mmangled (string replace -a '/' '-' -- $mp | string replace -a '.' '-')
 mkdir -p $croot2/$mmangled/memory
-echo "precious" >$croot2/$mmangled/memory/keep.md
+echo precious >$croot2/$mmangled/memory/keep.md
 
 pushd $mp >/dev/null
 agents-vault --silent
@@ -495,8 +510,7 @@ set -l enew_slug git.rootiest.dev-rootiest-emptycase
 # hand-built shape is covered separately just below.
 mkdir -p $vroot2/agent-vault/projects/$enew_slug
 printf 'remote: %s\npath:   %s\nhost:   %s\n' \
-    https://git.rootiest.dev/rootiest/emptycase.git /gone/elsewhere othermachine \
-    >$vroot2/agent-vault/projects/$enew_slug/origin
+    https://git.rootiest.dev/rootiest/emptycase.git /gone/elsewhere othermachine >$vroot2/agent-vault/projects/$enew_slug/origin
 
 pushd $emp >/dev/null
 set -l erc (agents-vault --silent 2>/dev/null; echo $status)
@@ -579,7 +593,8 @@ check "removal: old remote entry removed" false (test -d $vroot2/agent-vault/pro
 # still find and adopt it. Before the fix, the fallback only lowercased
 # the basename instead of sanitizing it like _agents_repo_slug does, so it
 # could never match the real entry directory for a name like this.
-set -l dirty_root (mktemp -d); set -ga TMPDIRS $dirty_root
+set -l dirty_root (mktemp -d)
+set -ga TMPDIRS $dirty_root
 set -l dp "$dirty_root/My Project!"
 mkdir -p "$dp"
 git -C "$dp" init -q
@@ -590,7 +605,7 @@ git -C "$dp" config core.hooksPath /dev/null
 
 set -l dmangled (string replace -a '/' '-' -- $dp | string replace -a '.' '-')
 mkdir -p $croot2/$dmangled/memory
-echo "dirty-precious" >$croot2/$dmangled/memory/keep.md
+echo dirty-precious >$croot2/$dmangled/memory/keep.md
 
 pushd $dp >/dev/null
 agents-vault --silent
@@ -621,7 +636,8 @@ check "fallback old entry removed" false (test -d $vroot2/agent-vault/projects/$
 # is not: a --silent run that did the right thing and returned 0 still
 # printed "rm: cannot remove ...: Is a directory", which is the only
 # thing the user sees and reads as a failure.
-set -l real_root (mktemp -d); set -ga TMPDIRS $real_root
+set -l real_root (mktemp -d)
+set -ga TMPDIRS $real_root
 set -l rp "$real_root/proj"
 mkdir -p "$rp"
 git -C "$rp" init -q
@@ -632,7 +648,7 @@ git -C "$rp" config core.hooksPath /dev/null
 
 set -l rmangled (string replace -a '/' '-' -- $rp | string replace -a '.' '-')
 mkdir -p $croot2/$rmangled/memory
-echo "banked" >$croot2/$rmangled/memory/old.md
+echo banked >$croot2/$rmangled/memory/old.md
 
 pushd $rp >/dev/null
 agents-vault --silent
@@ -643,10 +659,11 @@ popd >/dev/null
 # never seen, then change the slug so the migration runs.
 rm -f $croot2/$rmangled/memory
 mkdir -p $croot2/$rmangled/memory
-echo "written-live" >$croot2/$rmangled/memory/fresh.md
+echo written-live >$croot2/$rmangled/memory/fresh.md
 git -C $rp remote add origin https://git.rootiest.dev/rootiest/realdir.git
 
-set -l rerr (mktemp); set -ga TMPDIRS $rerr
+set -l rerr (mktemp)
+set -ga TMPDIRS $rerr
 pushd $rp >/dev/null
 set -l real_rc (agents-vault --silent 2>$rerr; echo $status)
 popd >/dev/null
@@ -673,8 +690,10 @@ echo ""
 echo "== agents-vault (a real git clone) =="
 
 #  Machine A: populate a vault and let agents-vault commit it.
-set -l cl_vroot (mktemp -d); set -ga TMPDIRS $cl_vroot
-set -l cl_croot (mktemp -d); set -ga TMPDIRS $cl_croot
+set -l cl_vroot (mktemp -d)
+set -ga TMPDIRS $cl_vroot
+set -l cl_croot (mktemp -d)
+set -ga TMPDIRS $cl_croot
 set -g __fish_agent_vault_dir $cl_vroot/agent-vault
 set -g __fish_agent_vault_claude_root $cl_croot
 
@@ -698,7 +717,8 @@ agents-vault --silent
 popd >/dev/null
 
 #  The clone, exactly as the README tells a user to make it.
-set -l cl_new (mktemp -d); set -ga TMPDIRS $cl_new
+set -l cl_new (mktemp -d)
+set -ga TMPDIRS $cl_new
 git clone -q $cl_vroot/agent-vault $cl_new/agent-vault
 git -C $cl_new/agent-vault config user.email t@t
 git -C $cl_new/agent-vault config user.name t
@@ -709,7 +729,8 @@ check "clone: the empty entry has no claude/ subtree" false (test -d $cl_new/age
 check "clone: the empty entry is its origin file alone" true (test -f $cl_new/agent-vault/projects/$cl_empty_slug/origin; and echo true; or echo false)
 
 #  Machine B, case 1: an ordinary run against the clone restores memory.
-set -l cl_croot2 (mktemp -d); set -ga TMPDIRS $cl_croot2
+set -l cl_croot2 (mktemp -d)
+set -ga TMPDIRS $cl_croot2
 set -g __fish_agent_vault_dir $cl_new/agent-vault
 set -g __fish_agent_vault_claude_root $cl_croot2
 
@@ -762,10 +783,14 @@ set -e __fish_agent_vault_claude_root
 echo ""
 echo "== agents-vault (global state) =="
 
-set -l vroot5 (mktemp -d); set -ga TMPDIRS $vroot5
-set -l croot5 (mktemp -d); set -ga TMPDIRS $croot5
-set -l chome5 (mktemp -d); set -ga TMPDIRS $chome5
-set -l agy5 (mktemp -d); set -ga TMPDIRS $agy5
+set -l vroot5 (mktemp -d)
+set -ga TMPDIRS $vroot5
+set -l croot5 (mktemp -d)
+set -ga TMPDIRS $croot5
+set -l chome5 (mktemp -d)
+set -ga TMPDIRS $chome5
+set -l agy5 (mktemp -d)
+set -ga TMPDIRS $agy5
 set -g __fish_agent_vault_dir $vroot5/agent-vault
 set -g __fish_agent_vault_claude_root $croot5
 set -g __fish_agent_vault_claude_home $chome5
@@ -802,7 +827,8 @@ printf 'transcript\n' >$agy5/knowledge/session.jsonl
 # the store boundary has to hold on its own. $outside5 stands in for that
 # home: a directory the store has no business reaching into, planted with
 # exactly the shapes that qualify.
-set -l outside5 (mktemp -d); set -ga TMPDIRS $outside5
+set -l outside5 (mktemp -d)
+set -ga TMPDIRS $outside5
 mkdir -p $outside5/nested
 echo SECRET-OUTSIDE-KNOWLEDGE >$outside5/leaked.json
 echo SECRET-OUTSIDE-KNOWLEDGE >$outside5/target.md
@@ -905,10 +931,14 @@ set -e __fish_agent_vault_claude_root
 echo ""
 echo "== agents-vault (global emergent restore) =="
 
-set -l vroot6 (mktemp -d); set -ga TMPDIRS $vroot6
-set -l croot6 (mktemp -d); set -ga TMPDIRS $croot6
-set -l chome6 (mktemp -d); set -ga TMPDIRS $chome6
-set -l agy6 (mktemp -d); set -ga TMPDIRS $agy6
+set -l vroot6 (mktemp -d)
+set -ga TMPDIRS $vroot6
+set -l croot6 (mktemp -d)
+set -ga TMPDIRS $croot6
+set -l chome6 (mktemp -d)
+set -ga TMPDIRS $chome6
+set -l agy6 (mktemp -d)
+set -ga TMPDIRS $agy6
 set -g __fish_agent_vault_dir $vroot6/agent-vault
 set -g __fish_agent_vault_claude_root $croot6
 set -g __fish_agent_vault_claude_home $chome6
@@ -927,8 +957,10 @@ check "global restore: vault content readable through the link" restored-global 
 
 # A home with neither side populated must not have a memory/ invented for
 # it: ~/.claude/memory does not exist by default.
-set -l chome7 (mktemp -d); set -ga TMPDIRS $chome7
-set -l vroot7 (mktemp -d); set -ga TMPDIRS $vroot7
+set -l chome7 (mktemp -d)
+set -ga TMPDIRS $chome7
+set -l vroot7 (mktemp -d)
+set -ga TMPDIRS $vroot7
 set -g __fish_agent_vault_dir $vroot7/agent-vault
 set -g __fish_agent_vault_claude_home $chome7
 set -l gp7 (new_repo https://git.rootiest.dev/rootiest/globals-absent.git)
@@ -951,10 +983,14 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (global link failure is non-fatal) =="
 
-set -l vroot8 (mktemp -d); set -ga TMPDIRS $vroot8
-set -l croot8 (mktemp -d); set -ga TMPDIRS $croot8
-set -l chome8 (mktemp -d); set -ga TMPDIRS $chome8
-set -l agy8 (mktemp -d); set -ga TMPDIRS $agy8
+set -l vroot8 (mktemp -d)
+set -ga TMPDIRS $vroot8
+set -l croot8 (mktemp -d)
+set -ga TMPDIRS $croot8
+set -l chome8 (mktemp -d)
+set -ga TMPDIRS $chome8
+set -l agy8 (mktemp -d)
+set -ga TMPDIRS $agy8
 set -g __fish_agent_vault_dir $vroot8/agent-vault
 set -g __fish_agent_vault_claude_root $croot8
 set -g __fish_agent_vault_claude_home $chome8
@@ -972,7 +1008,8 @@ set -l fmangled (string replace -a '/' '-' -- $fp | string replace -a '.' '-')
 mkdir -p $croot8/$fmangled/memory
 echo project-memory >$croot8/$fmangled/memory/p.md
 
-set -l ferr (mktemp); set -ga TMPDIRS $ferr
+set -l ferr (mktemp)
+set -ga TMPDIRS $ferr
 pushd $fp >/dev/null
 set -l frc (agents-vault --silent 2>$ferr; echo $status)
 popd >/dev/null
@@ -991,7 +1028,8 @@ check "global link failure: per-project memory is committed" true (git -C $vroot
 # A failed global link must not be recorded as done: the next run has to
 # re-enter the block and warn again, not treat the vault as correct.
 pushd $fp >/dev/null
-set -l ferr2 (mktemp); set -ga TMPDIRS $ferr2
+set -l ferr2 (mktemp)
+set -ga TMPDIRS $ferr2
 agents-vault --silent 2>$ferr2
 popd >/dev/null
 check "global link failure: retried on the next run" true (string match -q "*$chome8/memory*" -- (cat $ferr2); and echo true; or echo false)
@@ -1008,17 +1046,22 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (status, remote, adopt) =="
 
-set -l vroot9 (mktemp -d); set -ga TMPDIRS $vroot9
-set -l croot9 (mktemp -d); set -ga TMPDIRS $croot9
-set -l chome9 (mktemp -d); set -ga TMPDIRS $chome9
-set -l agy9 (mktemp -d); set -ga TMPDIRS $agy9
+set -l vroot9 (mktemp -d)
+set -ga TMPDIRS $vroot9
+set -l croot9 (mktemp -d)
+set -ga TMPDIRS $croot9
+set -l chome9 (mktemp -d)
+set -ga TMPDIRS $chome9
+set -l agy9 (mktemp -d)
+set -ga TMPDIRS $agy9
 set -g __fish_agent_vault_dir $vroot9/agent-vault
 set -g __fish_agent_vault_claude_root $croot9
 set -g __fish_agent_vault_claude_home $chome9
 set -g __fish_agent_vault_agy_root $agy9
 
 # A report asked for before the vault exists must say so, not scaffold one.
-set -l s0out (mktemp); set -ga TMPDIRS $s0out
+set -l s0out (mktemp)
+set -ga TMPDIRS $s0out
 set -l s0rc (agents-vault --status >$s0out; echo $status)
 check "status without a vault exits 0" 0 "$s0rc"
 check "status without a vault says so" true (string match -q '*no vault*' -- (cat $s0out); and echo true; or echo false)
@@ -1068,7 +1111,8 @@ check "status reports the remote" true (string match -q '*rootiest/agent-vault.g
 # A *failed* remote update must return non-zero. Reporting success after a
 # git command that did not run is the same silent-false-success shape that
 # a hook-rejected commit produced earlier in this project.
-set -l rerr (mktemp); set -ga TMPDIRS $rerr
+set -l rerr (mktemp)
+set -ga TMPDIRS $rerr
 set -l rshim (failing_shim git set-url)
 set -l rpath $PATH
 set PATH $rshim $PATH
@@ -1106,10 +1150,11 @@ agents-vault --silent
 popd >/dev/null
 set -l projects_before (command ls -A $vroot9/agent-vault/projects | sort | string join ',')
 
-set -l bad_slugs ../escape has/slash . .. 'UPPER' 'sp ace' ''
+set -l bad_slugs ../escape has/slash . .. UPPER 'sp ace' ''
 pushd $bp >/dev/null
 for bad in $bad_slugs
-    set -l berr (mktemp); set -ga TMPDIRS $berr
+    set -l berr (mktemp)
+    set -ga TMPDIRS $berr
     set -l brc (agents-vault --adopt=$bad --silent 2>$berr; echo $status)
     check "adopt refuses '$bad'" 1 "$brc"
     check "adopt refuses '$bad' out loud" true (string match -q '*invalid*' -- (cat $berr); and echo true; or echo false)
@@ -1150,7 +1195,8 @@ set -l pre_head (git -C $vroot9/agent-vault rev-list --count HEAD)
 set -l pre_porcelain (git -C $vroot9/agent-vault status --porcelain | string join ',')
 set -l pre_link (path resolve $croot9/$tmang/memory)
 
-set -l terr (mktemp); set -ga TMPDIRS $terr
+set -l terr (mktemp)
+set -ga TMPDIRS $terr
 set -l tshim (failing_shim rm $tmang)
 set -l tpath $PATH
 set PATH $tshim $PATH
@@ -1203,8 +1249,7 @@ popd >/dev/null
 # The target must be *tracked* for this to bite: stashing it takes files
 # git knows about out from under the index, which is the whole hazard.
 mkdir -p $vroot9/agent-vault/projects/stash-target/claude/memory
-printf 'remote: (none)\npath:   %s\nhost:   t\n' /nowhere \
-    >$vroot9/agent-vault/projects/stash-target/origin
+printf 'remote: (none)\npath:   %s\nhost:   t\n' /nowhere >$vroot9/agent-vault/projects/stash-target/origin
 pushd $sa >/dev/null
 agents-vault --silent
 popd >/dev/null
@@ -1245,8 +1290,7 @@ agents-vault --silent
 popd >/dev/null
 
 mkdir -p $vroot9/agent-vault/projects/stashfail-target/claude/memory
-printf 'remote: (none)\npath:   %s\nhost:   t\n' /nowhere-else \
-    >$vroot9/agent-vault/projects/stashfail-target/origin
+printf 'remote: (none)\npath:   %s\nhost:   t\n' /nowhere-else >$vroot9/agent-vault/projects/stashfail-target/origin
 pushd $sf >/dev/null
 agents-vault --silent
 popd >/dev/null
@@ -1257,7 +1301,8 @@ set -l sf_porcelain (git -C $vroot9/agent-vault status --porcelain | string join
 set -l sf_link (path resolve $croot9/$sfmang/memory)
 check "stash adopt rollback: vault clean before the adopt" "" "$sf_porcelain"
 
-set -l sferr (mktemp); set -ga TMPDIRS $sferr
+set -l sferr (mktemp)
+set -ga TMPDIRS $sferr
 set -l sfshim (failing_shim rm $sfmang)
 set -l sfpath $PATH
 set PATH $sfshim $PATH
@@ -1359,10 +1404,14 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (restore) =="
 
-set -l vroot10 (mktemp -d); set -ga TMPDIRS $vroot10
-set -l croot10 (mktemp -d); set -ga TMPDIRS $croot10
-set -l chome10 (mktemp -d); set -ga TMPDIRS $chome10
-set -l agy10 (mktemp -d); set -ga TMPDIRS $agy10
+set -l vroot10 (mktemp -d)
+set -ga TMPDIRS $vroot10
+set -l croot10 (mktemp -d)
+set -ga TMPDIRS $croot10
+set -l chome10 (mktemp -d)
+set -ga TMPDIRS $chome10
+set -l agy10 (mktemp -d)
+set -ga TMPDIRS $agy10
 set -g __fish_agent_vault_dir $vroot10/agent-vault
 set -g __fish_agent_vault_claude_root $croot10
 set -g __fish_agent_vault_claude_home $chome10
@@ -1389,9 +1438,9 @@ check "restore: names what it restored" true (string match -q '*restoreme*' -- "
 # succeeds and says which entry needs --adopt.
 mkdir -p $vroot10/agent-vault/projects/ghost-entry/claude/memory
 echo x >$vroot10/agent-vault/projects/ghost-entry/claude/memory/x.md
-printf 'remote: (none)\npath:   %s\nhost:   t\n' $vroot10/gone-forever \
-    >$vroot10/agent-vault/projects/ghost-entry/origin
-set -l r2out (mktemp); set -ga TMPDIRS $r2out
+printf 'remote: (none)\npath:   %s\nhost:   t\n' $vroot10/gone-forever >$vroot10/agent-vault/projects/ghost-entry/origin
+set -l r2out (mktemp)
+set -ga TMPDIRS $r2out
 set -l r2rc (agents-vault --restore >$r2out; echo $status)
 check "restore: exits 0 with an unplaceable entry" 0 "$r2rc"
 check "restore: reports the unplaceable entry" true (string match -q '*ghost-entry*' -- (cat $r2out); and echo true; or echo false)
@@ -1406,8 +1455,7 @@ set -l dotp (new_repo https://git.rootiest.dev/rootiest/dotted.git)
 set -l dotmang (string replace -a '/' '-' -- $dotp | string replace -a '.' '-')
 mkdir -p $vroot10/agent-vault/projects/.dot-entry/claude/memory
 echo dot-precious >$vroot10/agent-vault/projects/.dot-entry/claude/memory/keep.md
-printf 'remote: (none)\npath:   %s\nhost:   t\n' $dotp \
-    >$vroot10/agent-vault/projects/.dot-entry/origin
+printf 'remote: (none)\npath:   %s\nhost:   t\n' $dotp >$vroot10/agent-vault/projects/.dot-entry/origin
 check "dot-led entry: a glob really does skip it" false (string match -q '*.dot-entry*' -- (echo $vroot10/agent-vault/projects/*); and echo true; or echo false)
 
 set -l dotreport (agents-vault --status)
@@ -1425,7 +1473,8 @@ rm -f $croot10/$rmang/memory
 set -l r3shim (failing_shim ln $rmang)
 set -l r3path $PATH
 set PATH $r3shim $PATH
-set -l r3err (mktemp); set -ga TMPDIRS $r3err
+set -l r3err (mktemp)
+set -ga TMPDIRS $r3err
 set -l r3rc (agents-vault --restore >/dev/null 2>$r3err; echo $status)
 set PATH $r3path
 check "restore: a failed relink returns non-zero" 1 "$r3rc"
@@ -1440,11 +1489,16 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (push) =="
 
-set -l vroot11 (mktemp -d); set -ga TMPDIRS $vroot11
-set -l croot11 (mktemp -d); set -ga TMPDIRS $croot11
-set -l chome11 (mktemp -d); set -ga TMPDIRS $chome11
-set -l agy11 (mktemp -d); set -ga TMPDIRS $agy11
-set -l bare (mktemp -d); set -ga TMPDIRS $bare
+set -l vroot11 (mktemp -d)
+set -ga TMPDIRS $vroot11
+set -l croot11 (mktemp -d)
+set -ga TMPDIRS $croot11
+set -l chome11 (mktemp -d)
+set -ga TMPDIRS $chome11
+set -l agy11 (mktemp -d)
+set -ga TMPDIRS $agy11
+set -l bare (mktemp -d)
+set -ga TMPDIRS $bare
 git init -q --bare $bare
 set -g __fish_agent_vault_dir $vroot11/agent-vault
 set -g __fish_agent_vault_claude_root $croot11
@@ -1459,7 +1513,8 @@ echo pushed >$croot11/$pmang/memory/p.md
 
 # --push with no remote must fail loudly. The commit still happened, so
 # silently returning 0 would read as "backed up off this machine".
-set -l perr (mktemp); set -ga TMPDIRS $perr
+set -l perr (mktemp)
+set -ga TMPDIRS $perr
 pushd $pp >/dev/null
 set -l prc0 (agents-vault --push --silent 2>$perr; echo $status)
 popd >/dev/null
@@ -1498,7 +1553,8 @@ check "autopush pushes when enabled" pushed-auto (git -C $bare show $vbranch:pro
 set -l deadremote $vroot11/not-a-repo.git
 agents-vault --remote=$deadremote --silent
 echo pushed-never >$croot11/$pmang/memory/p4.md
-set -l fperr (mktemp); set -ga TMPDIRS $fperr
+set -l fperr (mktemp)
+set -ga TMPDIRS $fperr
 pushd $pp >/dev/null
 set -l fprc (agents-vault --push --silent 2>$fperr; echo $status)
 popd >/dev/null
@@ -1510,7 +1566,8 @@ check "failing push still committed locally" true (git -C $vroot11/agent-vault l
 # saying "Synced" must not come with a zero exit when the push failed.
 echo pushed-never-2 >$croot11/$pmang/memory/p5.md
 set -g __fish_agent_vault_autopush 1
-set -l fp2err (mktemp); set -ga TMPDIRS $fp2err
+set -l fp2err (mktemp)
+set -ga TMPDIRS $fp2err
 pushd $pp >/dev/null
 set -l fp2rc (agents-vault --quiet 2>$fp2err >/dev/null; echo $status)
 popd >/dev/null
@@ -1561,10 +1618,14 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (the user's ssh command wins) =="
 
-set -l vroot14 (mktemp -d); set -ga TMPDIRS $vroot14
-set -l croot14 (mktemp -d); set -ga TMPDIRS $croot14
-set -l chome14 (mktemp -d); set -ga TMPDIRS $chome14
-set -l agy14 (mktemp -d); set -ga TMPDIRS $agy14
+set -l vroot14 (mktemp -d)
+set -ga TMPDIRS $vroot14
+set -l croot14 (mktemp -d)
+set -ga TMPDIRS $croot14
+set -l chome14 (mktemp -d)
+set -ga TMPDIRS $chome14
+set -l agy14 (mktemp -d)
+set -ga TMPDIRS $agy14
 set -g __fish_agent_vault_dir $vroot14/agent-vault
 set -g __fish_agent_vault_claude_root $croot14
 set -g __fish_agent_vault_claude_home $chome14
@@ -1574,7 +1635,8 @@ set -g __fish_agent_vault_agy_root $agy14
 # plain `ssh` (what the injected default resolves to) and one named
 # explicitly by the user. Both refuse the connection, so nothing leaves
 # the machine and no test waits on a network.
-set -l sbin (mktemp -d); set -ga TMPDIRS $sbin
+set -l sbin (mktemp -d)
+set -ga TMPDIRS $sbin
 set -l pathssh_log $sbin/path-ssh.log
 set -l usessh $sbin/user-ssh
 set -l usessh_log $sbin/user-ssh.log
@@ -1655,11 +1717,16 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (autopush without timeout) =="
 
-set -l vroot15 (mktemp -d); set -ga TMPDIRS $vroot15
-set -l croot15 (mktemp -d); set -ga TMPDIRS $croot15
-set -l chome15 (mktemp -d); set -ga TMPDIRS $chome15
-set -l agy15 (mktemp -d); set -ga TMPDIRS $agy15
-set -l bare15 (mktemp -d); set -ga TMPDIRS $bare15
+set -l vroot15 (mktemp -d)
+set -ga TMPDIRS $vroot15
+set -l croot15 (mktemp -d)
+set -ga TMPDIRS $croot15
+set -l chome15 (mktemp -d)
+set -ga TMPDIRS $chome15
+set -l agy15 (mktemp -d)
+set -ga TMPDIRS $agy15
+set -l bare15 (mktemp -d)
+set -ga TMPDIRS $bare15
 git init -q --bare $bare15
 set -g __fish_agent_vault_dir $vroot15/agent-vault
 set -g __fish_agent_vault_claude_root $croot15
@@ -1678,7 +1745,8 @@ popd >/dev/null
 # rev-parse would report the literal string HEAD with a fatal on stderr.
 set -l vb15 (git -C $vroot15/agent-vault symbolic-ref --short HEAD)
 
-set -l shimroot (mktemp -d); set -ga TMPDIRS $shimroot
+set -l shimroot (mktemp -d)
+set -ga TMPDIRS $shimroot
 set -l nopath
 set -l shimn 0
 for d in $PATH
@@ -1696,7 +1764,8 @@ end
 set -l realpath15 $PATH
 
 echo t2 >$croot15/$tmang15/memory/t2.md
-set -l terr (mktemp); set -ga TMPDIRS $terr
+set -l terr (mktemp)
+set -ga TMPDIRS $terr
 set -g __fish_agent_vault_autopush 1
 set -g PATH $nopath
 check "the shimmed PATH really has no timeout" false (type -q timeout; and echo true; or echo false)
@@ -1737,10 +1806,14 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (a failed vault commit is fatal) =="
 
-set -l vroot13 (mktemp -d); set -ga TMPDIRS $vroot13
-set -l croot13 (mktemp -d); set -ga TMPDIRS $croot13
-set -l chome13 (mktemp -d); set -ga TMPDIRS $chome13
-set -l agy13 (mktemp -d); set -ga TMPDIRS $agy13
+set -l vroot13 (mktemp -d)
+set -ga TMPDIRS $vroot13
+set -l croot13 (mktemp -d)
+set -ga TMPDIRS $croot13
+set -l chome13 (mktemp -d)
+set -ga TMPDIRS $chome13
+set -l agy13 (mktemp -d)
+set -ga TMPDIRS $agy13
 set -g __fish_agent_vault_dir $vroot13/agent-vault
 set -g __fish_agent_vault_claude_root $croot13
 set -g __fish_agent_vault_claude_home $chome13
@@ -1763,7 +1836,8 @@ printf '#!/bin/sh\nexit 1\n' >$vroot13/agent-vault/.agents-tools/hooks/pre-commi
 chmod +x $vroot13/agent-vault/.agents-tools/hooks/pre-commit
 echo hook-more >$croot13/$hmang13/memory/keep2.md
 set -l hhead13 (git -C $vroot13/agent-vault rev-list --count HEAD)
-set -l herr13 (mktemp); set -ga TMPDIRS $herr13
+set -l herr13 (mktemp)
+set -ga TMPDIRS $herr13
 pushd $hp13 >/dev/null
 set -l hrc13 (agents-vault --silent 2>$herr13; echo $status)
 popd >/dev/null
@@ -1782,16 +1856,21 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 # moves ahead (or goes out of reach) is not a backup; --push is where the
 # divergence has to be reckoned with, and where the two ways it can fail
 # have to be told apart.
-set -l vroot14 (mktemp -d); set -ga TMPDIRS $vroot14
-set -l croot14 (mktemp -d); set -ga TMPDIRS $croot14
-set -l chome14 (mktemp -d); set -ga TMPDIRS $chome14
-set -l agy14 (mktemp -d); set -ga TMPDIRS $agy14
+set -l vroot14 (mktemp -d)
+set -ga TMPDIRS $vroot14
+set -l croot14 (mktemp -d)
+set -ga TMPDIRS $croot14
+set -l chome14 (mktemp -d)
+set -ga TMPDIRS $chome14
+set -l agy14 (mktemp -d)
+set -ga TMPDIRS $agy14
 set -g __fish_agent_vault_dir $vroot14/agent-vault
 set -g __fish_agent_vault_claude_root $croot14
 set -g __fish_agent_vault_claude_home $chome14
 set -g __fish_agent_vault_agy_root $agy14
 
-set -l bare14 (mktemp -d); set -ga TMPDIRS $bare14
+set -l bare14 (mktemp -d)
+set -ga TMPDIRS $bare14
 git init -q --bare $bare14
 
 set -l cp14 (new_repo https://git.rootiest.dev/rootiest/conflict.git)
@@ -1806,7 +1885,8 @@ agents-vault --remote=$bare14 --silent
 git -C $vroot14/agent-vault push -q -u origin HEAD:refs/heads/main
 
 # Another machine records a conflicting change to the same line...
-set -l cclone14 (mktemp -d); set -ga TMPDIRS $cclone14
+set -l cclone14 (mktemp -d)
+set -ga TMPDIRS $cclone14
 git clone -q $bare14 $cclone14
 git -C $cclone14 config user.email t@t
 git -C $cclone14 config user.name t
@@ -1819,7 +1899,8 @@ git -C $cclone14 push -q origin HEAD:main
 # ... while this one writes conflicting memory of its own on the same
 # line. The ordinary run has to commit it: it never fetches, so the
 # divergence is invisible to it and irrelevant.
-set -l cerr14 (mktemp); set -ga TMPDIRS $cerr14
+set -l cerr14 (mktemp)
+set -ga TMPDIRS $cerr14
 echo ours >$croot14/$cmang14/memory/keep.md
 set -l chead14 (git -C $vroot14/agent-vault rev-list --count HEAD)
 pushd $cp14 >/dev/null
@@ -1885,10 +1966,14 @@ set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 echo ""
 echo "== agents-vault (dangling global memory link) =="
 
-set -l vroot12 (mktemp -d); set -ga TMPDIRS $vroot12
-set -l croot12 (mktemp -d); set -ga TMPDIRS $croot12
-set -l chome12 (mktemp -d); set -ga TMPDIRS $chome12
-set -l agy12 (mktemp -d); set -ga TMPDIRS $agy12
+set -l vroot12 (mktemp -d)
+set -ga TMPDIRS $vroot12
+set -l croot12 (mktemp -d)
+set -ga TMPDIRS $croot12
+set -l chome12 (mktemp -d)
+set -ga TMPDIRS $chome12
+set -l agy12 (mktemp -d)
+set -ga TMPDIRS $agy12
 set -g __fish_agent_vault_dir $vroot12/agent-vault
 set -g __fish_agent_vault_claude_root $croot12
 set -g __fish_agent_vault_claude_home $chome12
@@ -1900,7 +1985,8 @@ check "dangling: -L is the only signal" true (test -L $chome12/memory; and echo 
 check "dangling: the vault side is empty" false (test -e $vroot12/agent-vault/global/claude/memory; and echo true; or echo false)
 
 set -l dp (new_repo https://git.rootiest.dev/rootiest/dangling.git)
-set -l derr (mktemp); set -ga TMPDIRS $derr
+set -l derr (mktemp)
+set -ga TMPDIRS $derr
 pushd $dp >/dev/null
 set -l drc (agents-vault --silent 2>$derr; echo $status)
 popd >/dev/null
@@ -1934,7 +2020,8 @@ check "agents-init: committed the AGENTS repo" true (test (git -C $ip/AGENTS rev
 # Offline. The pull that used to run here blocked the launch until the
 # remote timed out and then took the commit down with it, so an agent's
 # edits went unrecorded on every launch away from the network.
-set -l ibare (mktemp -d); set -ga TMPDIRS $ibare
+set -l ibare (mktemp -d)
+set -ga TMPDIRS $ibare
 git init -q --bare $ibare
 git -C $ip/AGENTS remote add origin $ibare
 git -C $ip/AGENTS push -q -u origin HEAD 2>/dev/null
@@ -1957,7 +2044,8 @@ printf '#!/bin/sh\nexit 1\n' >$ip/AGENTS/.agents-tools/hooks/pre-commit
 chmod +x $ip/AGENTS/.agents-tools/hooks/pre-commit
 echo blocked >$ip/AGENTS/devlogs/blocked.md
 set -l ibhead (git -C $ip/AGENTS rev-list --count HEAD)
-set -l ierr (mktemp); set -ga TMPDIRS $ierr
+set -l ierr (mktemp)
+set -ga TMPDIRS $ierr
 pushd $ip >/dev/null
 set -l ibrc (agents-init --silent 2>$ierr; echo $status)
 popd >/dev/null

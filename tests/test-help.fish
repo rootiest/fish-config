@@ -45,7 +45,7 @@ function test_help_renderer
         'function fixturefn' \
         '    __fish_help_header (status current-function) $argv; and return 0' \
         '    echo RAN-BODY' \
-        'end' >$tmp/fixturefn.fish
+        end >$tmp/fixturefn.fish
 
     set -l out (_help_probe $tmp 'fixturefn --help')
     set -l code $status
@@ -106,14 +106,14 @@ function test_help_renderer_degrades_safely
         'function headerless' \
         '    __fish_help_header (status current-function) $argv; and return 0' \
         "    touch $tmp/BODY-RAN" \
-        'end' >$tmp/headerless.fish
+        end >$tmp/headerless.fish
     # A comment run carrying no `# LABEL` line at all.
     printf '%s\n' \
         '# just an ordinary comment, no labels here' \
         'function malformed' \
         '    __fish_help_header (status current-function) $argv; and return 0' \
         "    touch $tmp/BODY-RAN" \
-        'end' >$tmp/malformed.fish
+        end >$tmp/malformed.fish
 
     set -l failed 0
     for fn in headerless malformed

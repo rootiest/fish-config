@@ -35,7 +35,7 @@ function hist --description 'Search fish history and put it in the prompt'
     if test -n "$selected"
         # Strip the timestamp for the final output
         set -l command (echo $selected | string replace -r '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ' '')
-        
+
         echo $command | wl-copy 2>/dev/null
         commandline -r $command
     end

@@ -62,9 +62,9 @@ function rand_string --description 'Generate random, memorable strings from cura
         return 0
     end
 
-    set -l sep "dash"
-    set -l casing "lower"
-    
+    set -l sep dash
+    set -l casing lower
+
     # Locate the words directory relative to this function
     set -l words_dir ""
     if set -q __fish_config_dir
@@ -114,9 +114,9 @@ function rand_string --description 'Generate random, memorable strings from cura
         set -l actual_sep $sep
         switch $sep
             case dash
-                set actual_sep "-"
+                set actual_sep -
             case underscore
-                set actual_sep "_"
+                set actual_sep _
             case dot
                 set actual_sep "."
             case none empty
@@ -144,7 +144,7 @@ function rand_string --description 'Generate random, memorable strings from cura
                     echo "rand_string: unknown category or file missing for '$arg'" >&2
                     return 1
                 end
-                
+
                 # Fetch random line (shuf is fastest, random choice is portable fallback)
                 if command -q shuf
                     set part (command shuf -n 1 "$db")

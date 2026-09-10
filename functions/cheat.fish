@@ -26,5 +26,5 @@ function cheat --wraps='cheat' --description 'alias cheat=cheat -c'
     else
         man $argv
     end
-        
+
 end

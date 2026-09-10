@@ -62,7 +62,7 @@ function yt-dlp --description 'yt-dlp with embedding + SponsorBlock defaults'
     # --sponsorblock-remove all
     # Skip if the user set their own remove (bare or --opt=value form), or
     # disabled SponsorBlock entirely with --no-sponsorblock.
-    if not string match -q -- '--sponsorblock-remove' $argv
+    if not string match -q -- --sponsorblock-remove $argv
         and not string match -q -- '--sponsorblock-remove=*' $argv
         and not contains -- --no-sponsorblock $argv
         set -a extra --sponsorblock-remove all

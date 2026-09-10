@@ -17,6 +17,6 @@
 # EXAMPLE
 #   rawfish
 function rawfish --wraps='env NO_TMUX=1 fish' --description 'alias rawfish=env NO_TMUX=1 fish'
-  env NO_TMUX=1 fish $argv
-        
+    env NO_TMUX=1 fish $argv
+
 end

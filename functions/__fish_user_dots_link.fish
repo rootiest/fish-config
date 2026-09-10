@@ -34,7 +34,7 @@
 function __fish_user_dots_link --description 'Manage the user-dots convenience symlink'
     set -l link "$__fish_config_dir/user-dots"
     set -q __fish_user_dots_path
-        or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
+    or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
 
     # Explicit opt-out: remove our symlink (never a real file/dir) and stop.
     __fish_variable_check __fish_user_dots_symlink
@@ -49,7 +49,7 @@ function __fish_user_dots_link --description 'Manage the user-dots convenience s
     test -d "$__fish_user_dots_path"; or return 0
     if test -L "$link"
         test (readlink "$link") != "$__fish_user_dots_path"
-            and ln -sfn "$__fish_user_dots_path" "$link"
+        and ln -sfn "$__fish_user_dots_path" "$link"
     else if not test -e "$link"
         ln -s "$__fish_user_dots_path" "$link"
     end

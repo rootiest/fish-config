@@ -245,10 +245,10 @@ section "op_enabled: always/* and AND, via a synthetic registry"
 # this process reads them, so overriding them is free.
 set -g __fish_config_op_registry_keys "syn_on:" "syn_off:" "syn_and:" "syn_bare:" "syn_multi:"
 set -g __fish_config_op_registry_values \
-    "always/on" \
-    "always/off" \
+    always/on \
+    always/off \
     "aliases/filesystem integrations/notifications" \
-    "aliases" \
+    aliases \
     "always/off always/on"
 
 set -e __fish_config_op_aliases __fish_config_op_integrations __fish_config_opinionated
@@ -312,7 +312,7 @@ section "op_enabled: C5 through the guard"
 # The path production code actually takes, as opposed to calling the cascade
 # directly. Same rule: unset means off and the master cannot enable it.
 set -g __fish_config_op_registry_keys "syn_log:"
-set -g __fish_config_op_registry_values "logging/terminal-capture"
+set -g __fish_config_op_registry_values logging/terminal-capture
 set -e __fish_config_op_logging __fish_config_op_logging_terminal_capture
 
 __fish_config_op_enabled syn_log

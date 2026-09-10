@@ -25,11 +25,20 @@
 function bd-pull --description 'Pull new Gitea issues into local Beads and link them'
     __fish_help_header (status current-function) $argv; and return 0
 
-    if not set -q argv[1]; echo "Need repo owner/name"; return 1; end
-    if not set -q GITEA_TOKEN; echo "\$GITEA_TOKEN not set"; return 1; end
+    if not set -q argv[1]
+        echo "Need repo owner/name"
+        return 1
+    end
+    if not set -q GITEA_TOKEN
+        echo "\$GITEA_TOKEN not set"
+        return 1
+    end
 
     set -l REPO $argv[1]
-    if not set -q GITEA_URL; echo "\$GITEA_URL not set"; return 1; end
+    if not set -q GITEA_URL
+        echo "\$GITEA_URL not set"
+        return 1
+    end
     set -l IMPORT_COUNT 0
 
     echo (set_color blue)"📡 Checking Gitea: $REPO..."(set_color normal)
@@ -46,12 +55,12 @@ function bd-pull --description 'Pull new Gitea issues into local Beads and link 
         # If it doesn't have [ID] brackets, it's a "Web-Original" issue
         if not string match -qr "^\[.*\]" "$title"
             echo (set_color yellow)"➕ Linking Web Issue #$number: $title"(set_color normal)
-            
+
             # A. Create local Bead and capture the new ID
             # This captures the output of bd create to find the ID it generated
             set -l bd_output (bd create --title "$title")
             set -l bid (echo $bd_output | string match -r "bd-[a-z0-9]+" | head -n 1)
-            
+
             if test -z "$bid"
                 # Fallback: find the latest ID in the jsonl if regex fails
                 set bid (tail -n 1 .beads/issues.jsonl | jq -r '.id')
@@ -61,9 +70,9 @@ function bd-pull --description 'Pull new Gitea issues into local Beads and link 
             # This prevents the Gitea Action from creating a duplicate
             set -l new_title "[$bid] $title"
             curl -s -X PATCH -H "Authorization: token $GITEA_TOKEN" \
-                 -H "Content-Type: application/json" \
-                 -d "{\"title\":\"$new_title\"}" \
-                 "$GITEA_URL/api/v1/repos/$REPO/issues/$number" > /dev/null
+                -H "Content-Type: application/json" \
+                -d "{\"title\":\"$new_title\"}" \
+                "$GITEA_URL/api/v1/repos/$REPO/issues/$number" >/dev/null
 
             set IMPORT_COUNT (math $IMPORT_COUNT + 1)
         end

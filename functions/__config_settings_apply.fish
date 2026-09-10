@@ -27,8 +27,8 @@
 #   __config_settings_apply __fish_config_op_greeting session DEFAULT
 function __config_settings_apply
     set -l varname $argv[1]
-    set -l scope   $argv[2]
-    set -l value   $argv[3]
+    set -l scope $argv[2]
+    set -l value $argv[3]
 
     # stderr is suppressed because setting a value in one scope while the
     # other scope already holds the same variable makes interactive fish

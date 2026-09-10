@@ -893,8 +893,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
                 command cp -rn "$stash/." "$entry/" 2>/dev/null
                 rm -rf "$stash"
             end
-            printf 'renamed: %s → %s (%s)\n' "$prev_slug" "$slug" (date -I) \
-                >>"$entry/origin"
+            printf 'renamed: %s → %s (%s)\n' "$prev_slug" "$slug" (date -I) >>"$entry/origin"
             # Only a link is dropped here, and only so the relink below has
             # somewhere to put the new one. Usually $live is exactly that: a
             # symlink at the old entry, now dangling. But the migration is
@@ -1078,8 +1077,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             end
             set -l reached 1
             if git -C "$vault" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
-                if not $gitnet git -C "$vault" pull --rebase --autostash -q \
-                        >/dev/null 2>/dev/null
+                if not $gitnet git -C "$vault" pull --rebase --autostash -q >/dev/null 2>/dev/null
                     # Two unrelated failures land here and reporting them as
                     # one sends the user hunting for a conflict that never
                     # existed. A rebase that genuinely started and stopped
