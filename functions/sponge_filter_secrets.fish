@@ -33,7 +33,7 @@
 #   set -U -a sponge_filters sponge_filter_secrets
 function sponge_filter_secrets --argument-names command
     # Find all exported variables with security-sensitive names
-    set -l sensitive_vars (set --names --export | string match --regex -- \
+    set -l sensitive_vars (set --names --export | string match --entire --regex -- \
         '(?i)(?:TOKEN|PASSWORD|PASSWD|SECRET|API[_-]KEY|PRIVATE[_-]KEY|ACCESS[_-]KEY|AUTH[_-]KEY|CREDENTIAL|KOPIA_PASSWORD)')
 
     for var in $sensitive_vars
