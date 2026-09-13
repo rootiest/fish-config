@@ -36,6 +36,21 @@ If you're touching anything under `docs/manual/`, you'll also want `pandoc`,
 (see [Documentation Pipeline](#documentation-pipeline)) — otherwise CI will
 catch problems on push.
 
+**Point your clone at the tracked git hooks.** `.githooks/pre-push` rejects a
+push carrying an unsigned or bad-signature commit — GUI git clients (Gittyup
+included) commonly commit via libgit2 and skip `commit.gpgsign` silently.
+This isn't wired up automatically (most users of this config never push to
+this repo), so opt in once per clone:
+
+```fish
+git config core.hooksPath .githooks
+```
+
+Bypass a specific push with `git push --no-verify` if you have a genuine
+reason to. See [Secrets & Machine-Specific
+Config](#secrets--machine-specific-config) if you'd rather set this from
+your own `local.fish` than type it by hand.
+
 ## Issues
 
 Issues live on the Gitea repo. Three templates cover the common cases, each

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Rejects a push that would put an unsigned or bad-signature commit onto a
+# branch. Root cause this guards against: GUI git clients (e.g. Gittyup)
+# commit via libgit2 directly and never invoke gpg, silently ignoring
+# commit.gpgsign. Bypass intentionally with `git push --no-verify`.
+zero=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref _remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue # branch deletion
+    case "$remote_ref" in refs/heads/*) ;; *) continue ;; esac
+
+    if [ "$_remote_sha" = "$zero" ]; then
+        range="$local_sha --not --remotes"
+    else
+        range="$_remote_sha..$local_sha"
+    fi
+
+    bad=""
+    for sha in $(git rev-list $range --); do
+        sig="$(git log -1 --pretty=%G? "$sha")"
+        case "$sig" in
+        N | B) bad="$bad $sha" ;;
+        esac
+    done
+
+    if [ -n "$bad" ]; then
+        echo "pre-push: unsigned or bad-signature commit(s) pushing to $remote_ref, refusing:" >&2
+        for sha in $bad; do
+            git log -1 --pretty='  %h %G? %s' "$sha" >&2
+        done
+        echo "Fix: git commit --amend -S (or rebase -i + amend), then push again." >&2
+        echo "Bypass: git push --no-verify" >&2
+        exit 1
+    fi
+done
+
+# Chain to the global/system hook this local override is shadowing.
+global_hooks="$(git config --global core.hooksPath 2>/dev/null)"
+[ -z "$global_hooks" ] && global_hooks="$(git config --system core.hooksPath 2>/dev/null)"
+if [ -n "$global_hooks" ]; then
+    global_hooks="${global_hooks/#\~/$HOME}" # git stores ~ verbatim
+    [ -x "$global_hooks/pre-push" ] && exec "$global_hooks/pre-push" "$@"
+fi
+exit 0
