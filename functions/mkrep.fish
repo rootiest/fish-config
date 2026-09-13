@@ -11,7 +11,7 @@
 #   mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
 #         [-c | --clean | --no-clean] [--strict] [-v | --verbose]
 #         [-s | --silent] [--template <path>] [--branch <name>]
-#         [--remote <url>] [--new-remote[=<cmd>]] [--name <name>]
+#         [--remote <url>] [--new-remote [<cmd>]] [--name <name>]
 #         [-h | --help] <dir>
 #
 # DESCRIPTION
@@ -52,10 +52,10 @@
 #                    Passed through as git init --template=<path>
 #   --branch <name>  Passed through as git init -b <name>
 #   --remote <url>   Link an existing remote: git remote add origin <url>
-#   --new-remote[=<cmd>]
+#   --new-remote [<cmd>]
 #                    Create + link a remote by running <cmd> (or
 #                    $MKREP_REMOTE_CMD) in the new repo directory
-#   --name <name>    {name} substitution for --new-remote (default: <dir>'s
+#   --name <name>    {name} substitution when --new-remote (default: <dir>'s
 #                    basename)
 #   -h, --help       Show this help message
 #
@@ -104,7 +104,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         echo "  $c_flag--template$c_reset $c_arg<path>$c_reset       git init --template=<path>"
         echo "  $c_flag--branch$c_reset $c_arg<name>$c_reset         git init -b <name>"
         echo "  $c_flag--remote$c_reset $c_arg<url>$c_reset          Link an existing remote"
-        echo "  $c_flag--new-remote$c_reset ""=""$c_arg<cmd>$c_reset (optional)  Create + link a remote"
+        echo "  $c_flag--new-remote$c_reset $c_arg<cmd>$c_reset (optional)  Create + link a remote"
         echo "  $c_flag--name$c_reset $c_arg<name>$c_reset           {name} substitution for --new-remote"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset             Show this help message"
         echo
