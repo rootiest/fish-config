@@ -749,12 +749,161 @@ def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str
     return block
 
 
-def build_entries(functions: dict[str, dict], link=None) -> dict[str, list[tuple[str, str]]]:
+def _kv_cell(text: str, code: bool) -> str:
+    """Render one Arguments/Exit-Status table cell, code-protecting live MDX chars."""
+    needs_protection = ("<" in text or "{" in text) and "`" not in text
+    return _cell(text, code or needs_protection)
+
+
+def _kv_rows(lines: list[str]) -> list[list[str]] | None:
+    """Parse a structurally two-column section (ARGUMENTS, EXIT STATUS) into rows.
+
+    Source rows are authored `term<padding>description`, padded to a shared
+    column so terms line up. A term too wide for that column instead sits
+    alone on its own line, with the description wrapped onto the next,
+    deeper-indented line(s) (see `mkrep`'s `--new-remote [<cmd>]`). A plain
+    `\\s{2,}` split recovers most rows, but a term that exactly fills the
+    column can leave only one space before its description -- so the
+    shared column (the widest successful split) is reused to split those.
+
+    Returns None when the lines don't fit this shape at all -- a blank line
+    inside the section, or a name-only line with no continuation to supply
+    its description -- which means it's prose, not a table (e.g. "Exit
+    status of eza, lsd, or ls, whichever ran").
+    """
+    if not lines or any(not line.strip() for line in lines):
+        return None
+    cols: list[int] = []
+    parsed: list[tuple] = []
+    for line in lines:
+        if len(line) - len(line.lstrip()) > 0:
+            parsed.append(("cont", line.strip()))
+            continue
+        m = CELL_SPLIT.search(line)
+        if m:
+            cols.append(m.end())
+            parsed.append(("row", line[: m.start()].strip(), line[m.end() :].strip()))
+        else:
+            parsed.append(("maybe", line))
+    if not cols:
+        return None
+    col = max(cols)
+    rows: list[list[str]] = []
+    for item in parsed:
+        if item[0] == "cont":
+            if not rows:
+                return None
+            rows[-1][1] = (rows[-1][1] + " " + item[1]).strip()
+        elif item[0] == "row":
+            rows.append([item[1], item[2]])
+        else:
+            line = item[1]
+            if col - 1 < len(line) and line[col - 1] == " " and line[col:].strip():
+                rows.append([line[:col].strip(), line[col:].strip()])
+            else:
+                rows.append([line.strip(), ""])
+    if any(not desc for _, desc in rows):
+        return None
+    return rows
+
+
+def _unwrap_prose(lines: list[str]) -> str:
+    """Rejoin hard-wrapped comment lines into flowing paragraphs.
+
+    Function-header prose is authored wrapped to a fixed column; a blank
+    `#` line (rare, but legal) separates paragraphs.
+    """
+    paragraphs: list[str] = []
+    para: list[str] = []
+    for line in lines + [""]:
+        if line.strip():
+            para.append(line.strip())
+        elif para:
+            paragraphs.append(" ".join(para))
+            para = []
+    return "\n\n".join(paragraphs)
+
+
+def _section_body(lines: list[str]) -> str:
+    """Render one section's raw comment lines for the site.
+
+    A structurally two-column section (Arguments, Exit Status) becomes a
+    table; everything else (a single sentence, a "See X --help" pointer)
+    is prose, unwrapped back into flowing paragraphs.
+    """
+    rows = _kv_rows(lines)
+    if rows is None:
+        return _unwrap_prose(lines)
+    out = ["| | |", "|---|---|"]
+    out += [f"| {_kv_cell(k, True)} | {_kv_cell(v, False)} |" for k, v in rows]
+    return "\n".join(out)
+
+
+SITE_SECTIONS = (
+    ("ARGUMENTS", "Arguments"),
+    ("EXIT STATUS", "Exit Status"),
+    ("RETURNS", "Returns"),
+    ("NOTES", "Notes"),
+)
+
+
+def render_entry_site(fn: dict[str, list[str]], used_by: list[str], link=None) -> str:
+    """Render one parsed function header as a manual entry body for the site.
+
+    Unlike `render_entry` (the single indented man-page block pandoc wants,
+    which the site then has to reverse-engineer paragraph shape out of),
+    this renders each section straight from the parsed header: a heading
+    per section, Arguments/Exit Status as a table, everything else as
+    prose. Every entry page reads the same way regardless of how many rows
+    or lines any one section happens to carry, and each section is its own
+    jump-to-able heading.
+    """
+    parts: list[str] = []
+
+    syn = fn.get("SYNOPSIS", [])
+    if syn:
+        parts.append('### Synopsis\n\n```fish title="Usage"\n' + "\n".join(syn) + "\n```")
+
+    desc = fn.get("DESCRIPTION", [])
+    if desc:
+        parts.append("### Description\n\n" + _unwrap_prose(desc))
+
+    for label, title in SITE_SECTIONS:
+        body = fn.get(label)
+        if not body:
+            continue
+        parts.append(f"### {title}\n\n" + _section_body(body))
+
+    example = fn.get("EXAMPLE")
+    if example:
+        parts.append('### Example\n\n```fish\n' + "\n".join(example) + "\n```")
+
+    def names(raw: list[str]) -> list[str]:
+        return [n for n in re.split(r"[,\s]+", " ".join(raw)) if n]
+
+    refs = []
+    for label, values in (
+        ("Dependencies", names(fn.get("DEPENDENCIES", []))),
+        ("Used by", sorted(used_by)),
+    ):
+        if values:
+            rendered = ", ".join(link(v) if link else f"`{v}`" for v in values)
+            refs.append(f"**{label}:** {rendered}")
+    if refs:
+        parts.append("\n\n".join(refs))
+
+    return "\n\n".join(parts)
+
+
+def build_entries(
+    functions: dict[str, dict], link=None, site: bool = False
+) -> dict[str, list[tuple[str, str]]]:
     """Group rendered entries by category stem, ordered by function name.
 
     The `Used by` reverse index is computed here in one pass rather than
     authored: a bidirectional link maintained by hand drifts the moment one
-    side is edited.
+    side is edited. `site` selects `render_entry_site` (headings + tables)
+    over `render_entry` (the man-page indented block `build_concat` needs).
     """
     used_by: dict[str, list[str]] = {}
     for name, fn in functions.items():
@@ -762,10 +911,11 @@ def build_entries(functions: dict[str, dict], link=None) -> dict[str, list[tuple
             if dep in functions:
                 used_by.setdefault(dep, []).append(name)
 
+    render = render_entry_site if site else render_entry
     out: dict[str, list[tuple[str, str]]] = {}
     for name in sorted(functions):
         fn = functions[name]
-        body = render_entry(fn, used_by.get(name, []), link)
+        body = render(fn, used_by.get(name, []), link)
         out.setdefault(fn["CATEGORY"][0], []).append((name, body))
     return out
 
@@ -866,7 +1016,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
     out.mkdir(parents=True)
 
     functions = mt.parse_functions(FUNCTIONS)
-    entries = build_entries(functions, link=lambda n: _entry_link(n, functions))
+    entries = build_entries(functions, link=lambda n: _entry_link(n, functions), site=True)
 
     sidebar: list[dict] = [{"label": "Home", "link": "/"}]
     standard_groups: dict = {}
