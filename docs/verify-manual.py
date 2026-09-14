@@ -1042,6 +1042,155 @@ def test_returns_renders_after_exit_status():
     assert exit_pos < returns_pos, f"Returns: rendered before Exit Status::\n{out}"
 
 
+def test_render_entry_site_headings_every_present_section():
+    """`render_entry_site` gives each present header its own `###` heading, in order."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["thing [args...]"],
+        "DESCRIPTION": ["Does a thing."],
+        "ARGUMENTS": ["args...  Arguments forwarded to the thing"],
+        "EXIT STATUS": ["0  Always"],
+        "RETURNS": ["The thing, printed to stdout"],
+        "NOTES": ["Some extra context."],
+        "EXAMPLE": ["thing foo"],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    headings = ["Synopsis", "Description", "Arguments", "Exit Status", "Returns", "Notes", "Example"]
+    positions = [out.find(f"### {h}") for h in headings]
+    assert all(p != -1 for p in positions), f"missing a heading:\n{out}"
+    assert positions == sorted(positions), f"sections out of order:\n{out}"
+
+
+def test_render_entry_site_single_argument_becomes_a_table_not_a_code_block():
+    """A one-row Arguments section (e.g. `cat`'s `args...`) is still a table.
+
+    Regression guard: the old man-page-block path required >= 2 rows before
+    it would recognise a table, so a single argument fell through to an
+    unhighlighted code-block fallback.
+    """
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["cat [args...]"],
+        "DESCRIPTION": ["Enhanced cat replacement."],
+        "ARGUMENTS": ["args...  Files or directories to display"],
+        "EXAMPLE": ["cat README.md"],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert "```text" not in out, f"single-row Arguments fell back to a code block:\n{out}"
+    assert "| `args...` | Files or directories to display |" in out, out
+
+
+def test_render_entry_site_wrapped_description_stays_prose():
+    """A hard-wrapped DESCRIPTION whose last line is short still reads as prose.
+
+    Regression guard for the exact `cat.fish` bug report: the man-page path
+    ran a per-line "each line has >= 3 words" prose heuristic that broke on
+    a short final line like "installed.", sending the whole description to
+    an unhighlighted code-block fallback instead of flowing text.
+    """
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["cat [args...]"],
+        "DESCRIPTION": [
+            "Enhanced cat replacement. Wraps bat for files, giving syntax highlighting",
+            "and line numbers; falls back to raw cat for ANSI-colored log files if bat is not",
+            "installed.",
+        ],
+        "EXAMPLE": ["cat README.md"],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert "```text" not in out, f"wrapped description fell back to a code block:\n{out}"
+    assert (
+        "Enhanced cat replacement. Wraps bat for files, giving syntax highlighting and "
+        "line numbers; falls back to raw cat for ANSI-colored log files if bat is not "
+        "installed." in out
+    ), f"description was not unwrapped into one flowing paragraph:\n{out}"
+
+
+def test_render_entry_site_single_sentence_exit_status_stays_prose():
+    """A one-sentence EXIT STATUS (e.g. `ltr`'s) renders as prose, not a table or code block."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["ltr [args...]"],
+        "DESCRIPTION": ["Reversed time-sorted listing."],
+        "EXIT STATUS": ["Exit status of eza, lsd, or ls, whichever ran"],
+        "EXAMPLE": ["ltr ~/projects"],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert "```text" not in out, f"prose Exit Status fell back to a code block:\n{out}"
+    assert "| | |" not in out, f"a single sentence was wrongly tabled:\n{out}"
+    assert "### Exit Status\n\nExit status of eza, lsd, or ls, whichever ran" in out, out
+
+
+def test_kv_rows_splits_a_narrow_single_space_column():
+    """A term that fills the padded column leaves only one space -- still a table.
+
+    `rm.fish` authors `-r, -R, --recursive Forwarded to trash put...` with
+    only one space before the description because the term exactly fills
+    the shared column; the shared-column reuse must still split it.
+    """
+    import build_manual
+
+    rows = build_manual._kv_rows(
+        [
+            "(none)              List current trash contents",
+            "-r, -R, --recursive Forwarded to trash put alongside path arguments",
+        ]
+    )
+    assert rows == [
+        ["(none)", "List current trash contents"],
+        ["-r, -R, --recursive", "Forwarded to trash put alongside path arguments"],
+    ], rows
+
+
+def test_kv_rows_folds_a_name_only_line_with_wrapped_continuation():
+    """A term too wide for the column sits alone; its description wraps onto
+    the next, deeper-indented line(s) (`mkrep`'s `--new-remote [<cmd>]`)."""
+    import build_manual
+
+    rows = build_manual._kv_rows(
+        [
+            "--cd, --no-cd    Change into <dir> (default: --cd)",
+            "--new-remote [<cmd>]",
+            "                 Create + link a remote by running <cmd> (or",
+            "                 $MKREP_REMOTE_CMD) in the new repo directory",
+        ]
+    )
+    assert rows == [
+        ["--cd, --no-cd", "Change into <dir> (default: --cd)"],
+        [
+            "--new-remote [<cmd>]",
+            "Create + link a remote by running <cmd> (or $MKREP_REMOTE_CMD) in the new repo directory",
+        ],
+    ], rows
+
+
+def test_kv_rows_rejects_a_bare_prose_sentence():
+    """A single sentence with no column structure and no continuation is prose, not a table."""
+    import build_manual
+
+    assert build_manual._kv_rows(["See jobrunner --help for the full argument reference."]) is None
+    assert build_manual._kv_rows(["Exit status of eza, lsd, or ls, whichever ran"]) is None
+
+
+def test_build_entries_site_matches_build_entries_man_by_function_set():
+    """The site path (headings/tables) must document exactly the same
+    functions as the man-page path (indented blocks) -- only the rendering
+    differs, never the coverage."""
+    import build_manual
+
+    functions = _parsed_functions()
+    man_entries = build_manual.build_entries(functions)
+    site_entries = build_manual.build_entries(functions, site=True)
+    man_names = {name for names in man_entries.values() for name, _ in names}
+    site_names = {name for names in site_entries.values() for name, _ in names}
+    assert man_names == site_names, f"coverage mismatch: {man_names ^ site_names}"
+
+
 def test_site_avoids_reserved_dir():
     """No output directory may collide with a Cloudflare Pages reserved name.
 
