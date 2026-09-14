@@ -1231,7 +1231,7 @@ functions). They are active in all interactive sessions.
     Synopsis:  mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
                      [-c | --clean | --no-clean] [--strict] [-v | --verbose]
                      [-s | --silent] [--template <path>] [--branch <name>]
-                     [--remote <url>] [--new-remote[=<cmd>]] [--name <name>]
+                     [--remote <url>] [--new-remote [<cmd>]] [--name <name>]
                      [-h | --help] <dir>
 
     Creates a directory, cds into it, and git-inits it -- mkcd plus a git
@@ -1271,10 +1271,10 @@ functions). They are active in all interactive sessions.
                        Passed through as git init --template=<path>
       --branch <name>  Passed through as git init -b <name>
       --remote <url>   Link an existing remote: git remote add origin <url>
-      --new-remote[=<cmd>]
+      --new-remote [<cmd>]
                        Create + link a remote by running <cmd> (or
                        $MKREP_REMOTE_CMD) in the new repo directory
-      --name <name>    {name} substitution for --new-remote (default: <dir>'s
+      --name <name>    {name} substitution when --new-remote (default: <dir>'s
                        basename)
       -h, --help       Show this help message
 
