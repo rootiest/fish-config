@@ -1231,8 +1231,8 @@ functions). They are active in all interactive sessions.
     Synopsis:  mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
                      [-c | --clean | --no-clean] [--strict] [-v | --verbose]
                      [-s | --silent] [--template <path>] [--branch <name>]
-                     [--remote <url>] [--new-remote [<cmd>]] [--name <name>]
-                     [-h | --help] <dir>
+                     [--remote <url>] [--new-remote [<cmd>]] [--server <type>]
+                     [--check-existing] [--name <name>] [-h | --help] <dir>
 
     Creates a directory, cds into it, and git-inits it -- mkcd plus a git
     repo in one step. All three actions are on by default and each has a
@@ -1250,11 +1250,35 @@ functions). They are active in all interactive sessions.
     by running a shell command template in the new repo directory, then
     nothing further is needed since the template itself does the linking
     (e.g. gh repo create {name} --source=. --remote=origin --push).
-    Two placeholders are substituted in the template: {name} (--name, or
-    the target directory's basename) and {user} ($USER). Pass a command
-    after --new-remote to use it for this call only; with no value it
-    falls back to $MKREP_REMOTE_CMD. --remote and --new-remote are
-    mutually exclusive, and either requires --git.
+    Three placeholders are substituted in a template: {name} (--name, or
+    the target directory's basename), {user} ($USER), and {server} (the
+    resolved server base URL, gitea/gitlab only). Pass a command after
+    --new-remote to use it for this call only; with no value it falls
+    back to $MKREP_REMOTE_CMD. --remote and --new-remote are mutually
+    exclusive, and either requires --git.
+
+    --server <type> (gitea, gitlab, or github) picks a host without an
+    explicit --remote/--new-remote: resolve its base URL from
+    $GITEA_URL/$GITEA_HOST (gitea) or $GITLAB_URL/$GITLAB_HOST (gitlab),
+    preferring the _URL form when both are set. _URL is used as-is and
+    must include its scheme (https://git.example.com); _HOST is bare
+    (git.example.com) and gets https:// prepended. Then run
+    $MKREP_REMOTE_CMD or that type's built-in default template. With no
+    --server, --remote, or --new-remote, $GIT_SERVER picks the type the
+    same way (invalid values are rejected the same as an invalid
+    --server) -- $GITEA_URL/$GITEA_HOST/$GITLAB_URL/$GITLAB_HOST only ever
+    supply the base URL, never the type on their own, so setting one for
+    an unrelated tool (an API token helper, say) can't turn a plain mkrep
+    call into a remote-creating one. This auto-detect path is silent (no
+    error) under --no-git; --server itself still requires --git, and
+    --server together with --remote or --new-remote is an error. Either
+    way, before creating anything mkrep checks whether
+    <user>/<name> already exists on that host: if so, it links to the
+    existing repo instead of creating one; if not, it creates the repo
+    and reports the new remote's URL. --check-existing runs just that
+    check and reports the result without creating or linking anything; it
+    requires a resolved server and is mutually exclusive with --remote
+    and --new-remote.
 
     Arguments:
       <dir>            Directory to create and enter
@@ -1274,8 +1298,11 @@ functions). They are active in all interactive sessions.
       --new-remote [<cmd>]
                        Create + link a remote by running <cmd> (or
                        $MKREP_REMOTE_CMD) in the new repo directory
-      --name <name>    {name} substitution when --new-remote (default: <dir>'s
-                       basename)
+      --server <type>  Auto-create/link a remote on gitea, gitlab, or github
+      --check-existing Report whether the repo exists on the resolved
+                       server; creates or links nothing
+      --name <name>    {name} substitution for --new-remote/--server
+                       (default: <dir>'s basename)
       -h, --help       Show this help message
 
     Exit Status:
@@ -1288,18 +1315,26 @@ functions). They are active in all interactive sessions.
     mkrep --remote git@git.example.com:me/foo.git ~/projects/foo
     set -Ux MKREP_REMOTE_CMD 'gh repo create {name} --private --source=. --remote=origin --push'
     mkrep --new-remote ~/projects/foo
+    set -gx GITEA_URL https://git.example.com
+    set -gx GIT_SERVER gitea
+    mkrep ~/projects/foo
+    mkrep --server gitlab --check-existing ~/projects/foo
 
     Starting points for $MKREP_REMOTE_CMD, one per host CLI -- each assumes
     that tool is already installed and authenticated, creates a private
-    repo under the caller's own account, and pushes the initial commit.
-    gh and glab support a one-shot --source/--remote/--push; tea's create
-    does not, so it is chained with the git commands that do the linking
-    (adjust the host in the URL to your Gitea instance):
+    repo under the caller's own account, and pushes it if there is
+    already a commit to push (mkrep itself only runs git init, so a
+    freshly created repo has none yet -- pushing an unborn HEAD is a
+    guaranteed error regardless of the remote, so the push is skipped
+    rather than attempted). These are also mkrep's built-in defaults for
+    --server/$GIT_SERVER when $MKREP_REMOTE_CMD is unset. gh supports a
+    one-shot --source/--remote/--push; glab and tea's create commands do
+    not, so they are chained with the git commands that do the linking:
       GitHub (gh):   gh repo create {name} --private --source=. --remote=origin --push
-      GitLab (glab): glab repo create {name} --private --source=. --remote=origin --push
-      Gitea (tea):   tea repo create --name {name} --private && git remote add origin https://YOUR-GITEA-HOST/{user}/{name}.git && git push -u origin HEAD
+      GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
+      Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 
-**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_verbose`, `git`
+**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_verbose`, `_mkrep_default_remote_cmd`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
 
 ## 5.5 Package Management
 
