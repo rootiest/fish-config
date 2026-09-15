@@ -42,7 +42,9 @@
 #   --server <type> (gitea, gitlab, or github) picks a host without an
 #   explicit --remote/--new-remote: resolve its base URL from
 #   $GITEA_URL/$GITEA_HOST (gitea) or $GITLAB_URL/$GITLAB_HOST (gitlab),
-#   preferring the _URL form when both are set, then run
+#   preferring the _URL form when both are set. _URL is used as-is and
+#   must include its scheme (https://git.example.com); _HOST is bare
+#   (git.example.com) and gets https:// prepended. Then run
 #   $MKREP_REMOTE_CMD or that type's built-in default template. With no
 #   --server, --remote, or --new-remote, $GIT_SERVER picks the type the
 #   same way (invalid values are rejected the same as an invalid
@@ -195,13 +197,13 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                 if test -n "$GITEA_URL"
                     set srv_url $GITEA_URL
                 else if test -n "$GITEA_HOST"
-                    set srv_url $GITEA_HOST
+                    set srv_url "https://$GITEA_HOST"
                 end
             case gitlab
                 if test -n "$GITLAB_URL"
                     set srv_url $GITLAB_URL
                 else if test -n "$GITLAB_HOST"
-                    set srv_url $GITLAB_HOST
+                    set srv_url "https://$GITLAB_HOST"
                 end
             case github
                 # gh defaults to github.com; no base url needed

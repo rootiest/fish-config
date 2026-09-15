@@ -289,6 +289,38 @@ begin
     rm -rf $base
 end
 
+section "mkrep: \$GITEA_HOST gets https:// prepended, \$GITEA_URL wins over it"
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GITEA_URL ''
+    set -lx GITEA_HOST gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo {server} >created.txt'
+    mkrep --server gitea $target >/dev/null
+    check "bare \$GITEA_HOST exits 0" 0 $status
+    check "bare \$GITEA_HOST gets https:// prepended" https://gitea.example.invalid (cat $target/created.txt)
+    cd $start
+    rm -rf $base
+end
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GITEA_HOST wrong.example.invalid
+    set -lx GITEA_URL https://right.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo {server} >created.txt'
+    mkrep --server gitea $target >/dev/null
+    check "\$GITEA_URL wins over \$GITEA_HOST exits 0" 0 $status
+    check "\$GITEA_URL wins over \$GITEA_HOST, used as-is" https://right.example.invalid (cat $target/created.txt)
+    cd $start
+    rm -rf $base
+end
+
 section "mkrep: \$GITEA_URL alone (no \$GIT_SERVER) does not trigger anything"
 
 begin
