@@ -255,6 +255,28 @@ function _mkrep_stub_tool --argument-names name exit_code
     chmod +x $stub_bin/$name
 end
 
+section "mkrep: --server's default gitea template survives an empty (commit-less) repo"
+
+begin
+    # Regression: mkrep only ever runs `git init`, so a freshly created
+    # repo has no commits yet. The default template's final push must not
+    # error on that unborn HEAD once `tea repos create` and `git remote
+    # add` (both real, local-only) have already succeeded.
+    printf '#!/bin/sh\ncase "$2" in\n  create) exit 0 ;;\n  *) exit 1 ;;\nesac\n' >$stub_bin/tea
+    chmod +x $stub_bin/tea
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD ''
+    mkrep --server gitea $target >/dev/null
+    check "default template exits 0 with no commits yet" 0 $status
+    set -l url (git -C $target remote get-url origin)
+    check "default template still linked the new remote" "https://gitea.example.invalid/$USER/repo.git" $url
+    cd $start
+    rm -rf $base
+end
+
 section "mkrep: --server auto-creates when the repo does not exist"
 
 begin

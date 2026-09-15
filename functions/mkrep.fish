@@ -104,14 +104,17 @@
 #
 #   Starting points for $MKREP_REMOTE_CMD, one per host CLI -- each assumes
 #   that tool is already installed and authenticated, creates a private
-#   repo under the caller's own account, and pushes the initial commit.
-#   These are also mkrep's built-in defaults for --server/$GIT_SERVER when
-#   $MKREP_REMOTE_CMD is unset. gh supports a one-shot
-#   --source/--remote/--push; glab and tea's create commands do not, so
-#   they are chained with the git commands that do the linking:
+#   repo under the caller's own account, and pushes it if there is
+#   already a commit to push (mkrep itself only runs git init, so a
+#   freshly created repo has none yet -- pushing an unborn HEAD is a
+#   guaranteed error regardless of the remote, so the push is skipped
+#   rather than attempted). These are also mkrep's built-in defaults for
+#   --server/$GIT_SERVER when $MKREP_REMOTE_CMD is unset. gh supports a
+#   one-shot --source/--remote/--push; glab and tea's create commands do
+#   not, so they are chained with the git commands that do the linking:
 #     GitHub (gh):   gh repo create {name} --private --source=. --remote=origin --push
-#     GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && git push -u origin HEAD
-#     Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && git push -u origin HEAD
+#     GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
+#     Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 function mkrep --description 'Create a directory, cd into it, and git init it'
     __fish_palette
 
