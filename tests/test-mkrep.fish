@@ -184,6 +184,173 @@ check "env fallback template ran" repo (cat $target/created.txt)
 cd $start
 rm -rf $base
 
+section "mkrep: --server conflicts with --remote/--new-remote"
+
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+mkrep --server gitea --remote https://example.invalid/x.git $target >/dev/null 2>/tmp/mkrep-test-err
+check "--server + --remote exits 1" 1 $status
+mkrep --server gitea --new-remote $target >/dev/null 2>/tmp/mkrep-test-err
+check "--server + --new-remote exits 1" 1 $status
+check "conflicting server flags create nothing" false (test -d $target; and echo true; or echo false)
+rm -f /tmp/mkrep-test-err
+rm -rf $base
+
+section "mkrep: --check-existing conflicts with --remote/--new-remote"
+
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+mkrep --check-existing --remote https://example.invalid/x.git $target >/dev/null 2>/tmp/mkrep-test-err
+check "--check-existing + --remote exits 1" 1 $status
+rm -f /tmp/mkrep-test-err
+rm -rf $base
+
+section "mkrep: --check-existing needs a resolved server"
+
+begin
+    # Shadow to empty rather than erase: these are real exported vars in
+    # this dev environment (GITEA_URL et al.), and mkrep treats an empty
+    # value the same as unset, so this gives a clean slate without
+    # touching the actual global.
+    set -lx GIT_SERVER ''
+    set -lx GITEA_URL ''
+    set -lx GITEA_HOST ''
+    set -lx GITLAB_URL ''
+    set -lx GITLAB_HOST ''
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    mkrep --check-existing $target >/dev/null 2>/tmp/mkrep-test-err
+    check "--check-existing with no server exits 1" 1 $status
+    check "unresolved --check-existing creates nothing" false (test -d $target; and echo true; or echo false)
+    rm -f /tmp/mkrep-test-err
+    rm -rf $base
+end
+
+section "mkrep: --server requires --git"
+
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+mkrep --no-git --server gitea $target >/dev/null 2>/tmp/mkrep-test-err
+check "--no-git + --server exits 1" 1 $status
+rm -f /tmp/mkrep-test-err
+rm -rf $base
+
+section "mkrep: --server rejects an unknown type"
+
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+mkrep --server bitbucket $target >/dev/null 2>/tmp/mkrep-test-err
+check "unknown --server type exits 1" 1 $status
+rm -f /tmp/mkrep-test-err
+rm -rf $base
+
+# The rest of this section stub gh/glab/tea so no real network/CLI auth is
+# needed: a fake binary on $PATH decides whether the "repo" is reported as
+# already existing, and $MKREP_REMOTE_CMD (which --server honors exactly
+# like --new-remote) stands in for the real create command.
+set -g stub_bin (mktemp -d)
+
+function _mkrep_stub_tool --argument-names name exit_code
+    printf '#!/bin/sh\nexit %s\n' $exit_code >$stub_bin/$name
+    chmod +x $stub_bin/$name
+end
+
+section "mkrep: --server auto-creates when the repo does not exist"
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo {server}/{user}/{name} >created.txt'
+    mkrep --server gitea $target >/dev/null
+    check "--server (repo absent) exits 0" 0 $status
+    check "--server ran the create template" "https://gitea.example.invalid/$USER/repo" (cat $target/created.txt)
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: --server links instead of creating when the repo exists"
+
+begin
+    _mkrep_stub_tool tea 0
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo should-not-run >created.txt'
+    mkrep --server gitea $target >/dev/null
+    check "--server (repo present) exits 0" 0 $status
+    check "--server did not run the create template" false (test -f $target/created.txt; and echo true; or echo false)
+    set -l url (git -C $target remote get-url origin)
+    check "--server linked the existing repo's url" "https://gitea.example.invalid/$USER/repo.git" $url
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: \$GITEA_URL alone (no \$GIT_SERVER) does not trigger anything"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx GITEA_URL https://gitea.example.invalid
+    mkrep $target >/dev/null
+    check "bare \$GITEA_URL exits 0" 0 $status
+    check "bare \$GITEA_URL creates no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: \$GIT_SERVER + \$GITEA_URL together trigger the auto-create flow"
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GIT_SERVER gitea
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo {name} >created.txt'
+    mkrep $target >/dev/null
+    check "\$GIT_SERVER + \$GITEA_URL exits 0" 0 $status
+    check "\$GIT_SERVER picked gitea" repo (cat $target/created.txt)
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: an explicit --remote overrides \$GIT_SERVER/\$GITEA_URL"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx GIT_SERVER gitea
+    set -lx GITEA_URL https://gitea.example.invalid
+    mkrep --remote https://example.invalid/me/repo.git $target >/dev/null
+    check "--remote over env exits 0" 0 $status
+    set -l url (git -C $target remote get-url origin)
+    check "--remote wins over \$GIT_SERVER/\$GITEA_URL" https://example.invalid/me/repo.git $url
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: --check-existing reports without creating anything"
+
+begin
+    _mkrep_stub_tool tea 0
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -l out (mkrep --server gitea --check-existing $target)
+    check "--check-existing exits 0" 0 $status
+    check "--check-existing creates the directory (mkrep's other defaults still run)" true (test -d $target; and echo true; or echo false)
+    check "--check-existing adds no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+rm -rf $stub_bin
+
 section "mkrep: --help"
 
 set -l base (_mkrep_sandbox)
