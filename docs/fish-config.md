@@ -2175,6 +2175,11 @@ functions). They are active in all interactive sessions.
     agent-related files into it, and replaces them with symlinks so the outer
     project never tracks agent files directly.
 
+    Scaffolding runs only inside a git repository, or in a directory that
+    already has an AGENTS.md, CLAUDE.md, or AGENTS/. Elsewhere it is a
+    no-op, so running an agent CLI in an arbitrary directory does not
+    create a repository there.
+
     File layout after setup:
       AGENTS/AGENTS.md          canonical agent spec (real file)
       AGENTS/CLAUDE.md          real file (if CLAUDE.md existed separately)
