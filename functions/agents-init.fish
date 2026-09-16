@@ -17,6 +17,11 @@
 #   agent-related files into it, and replaces them with symlinks so the outer
 #   project never tracks agent files directly.
 #
+#   Scaffolding runs only inside a git repository, or in a directory that
+#   already has an AGENTS.md, CLAUDE.md, or AGENTS/. Elsewhere it is a
+#   no-op, so running an agent CLI in an arbitrary directory does not
+#   create a repository there.
+#
 #   File layout after setup:
 #     AGENTS/AGENTS.md          canonical agent spec (real file)
 #     AGENTS/CLAUDE.md          real file (if CLAUDE.md existed separately)
@@ -127,9 +132,20 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     end
     # --verbose is explicit default; no-op but accepted for completeness
 
-    # Resolve target root: git root if available, otherwise cwd
+    # Only scaffold inside a git repository, or where an agent file already
+    # exists. Falling back to (pwd) meant `claude --version` in any
+    # directory created an AGENTS/ repo, two root symlinks, and a docs/
+    # tree there.
     set -l root (git rev-parse --show-toplevel 2>/dev/null)
-    test -z "$root"; and set root (pwd)
+    if test -z "$root"
+        if test -e (pwd)/AGENTS.md -o -e (pwd)/CLAUDE.md -o -d (pwd)/AGENTS
+            set root (pwd)
+        else
+            test $verbose -eq 1
+            and echo "$c_dim→ Not a git repository; skipping AGENTS/ scaffolding$c_reset"
+            return 0
+        end
+    end
 
     set -l agents_dir "$root/AGENTS"
     set -l plugins_dir "$agents_dir/plugins"
