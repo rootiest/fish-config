@@ -126,6 +126,20 @@ function _fish_deps_install
                 case wakatime-binary
                     set -a methods special-wakatime
                     set -a method_labels "binary download (github releases)"
+                case marktext-release
+                    # Upstream packages MarkText for the AUR and for its own
+                    # GitHub releases only -- no distro carries it under a
+                    # common name, so off Arch the AppImage is the only
+                    # option and $_fdc_pm is deliberately empty.
+                    if type -q paru
+                        set -a methods special-marktext-paru
+                        set -a method_labels "paru -S marktext-bin (AUR)"
+                    else if type -q yay
+                        set -a methods special-marktext-yay
+                        set -a method_labels "yay -S marktext-bin (AUR)"
+                    end
+                    set -a methods special-marktext-appimage
+                    set -a method_labels "AppImage download (~/.local/bin/marktext)"
                 case go-ov
                     if type -q go
                         set -a methods special-go-ov
@@ -251,6 +265,12 @@ function _fish_deps_install
                     test $_go_status -eq 0
                 case special-lazydocker
                     curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+                case special-marktext-paru
+                    paru -S --noconfirm marktext-bin
+                case special-marktext-yay
+                    yay -S --noconfirm marktext-bin
+                case special-marktext-appimage
+                    _fish_deps_marktext_appimage
                 case special-wakatime
                     set -l _arch (uname -m)
                     switch $_arch

@@ -1050,6 +1050,49 @@ functions). They are active in all interactive sessions.
     Example:
     less /var/log/syslog
 
+### md
+
+    Synopsis:  md [-r] [--foreground] [marktext-args...] [FILE...]
+
+    Opens files in MarkText, detached from the terminal so the shell stays
+    usable and the editor survives closing the window that launched it.
+
+    Every argument is forwarded to marktext untouched except the two flags
+    below, which md consumes itself. marktext's own flags (--new-window,
+    --safe, --disable-gpu, ...) therefore work exactly as documented in
+    marktext --help.
+
+    Flags whose entire purpose is terminal output -- --version, -v/--verbose
+    and --debug -- imply --foreground, since backgrounding them would send
+    the output you asked for to /dev/null.
+
+    --read-only sandboxes the editor with firejail so saving fails instead of
+    overwriting the file. MarkText has no read-only mode of its own.
+
+    Arguments:
+      FILE...            Markdown files to open
+      -r, --read-only    Open sandboxed, with every named file bound read-only
+      --foreground       Run in the foreground; do not detach
+      -h, --help         Show this help message
+
+    Exit Status:
+      0  MarkText launched (or, with --foreground, exited successfully)
+      1  --read-only was requested without firejail or without an existing file
+
+    Notes:
+      This file is autoloaded, so it never shadows an md function or alias
+      defined elsewhere -- fish only looks here when nothing named md exists.
+      A real md *binary* would be shadowed, so md hands off to it verbatim
+      whenever marktext is not installed.
+
+    Example:
+    md README.md
+    md --read-only NOTES.md
+    md --foreground --debug draft.md
+    md --new-window one.md two.md
+
+**Dependencies:** `marktext`, `firejail`, `bkg`
+
 ### rawfish
 
     Synopsis:  rawfish [args...]
@@ -1650,6 +1693,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     bkg firefox
+
+**Used by:** `md`
 
 ### detach
 
@@ -3258,6 +3303,8 @@ matter if you already use that specific tool. Skipped by
 | `docker` | Container runtime; gates the Docker context indicator in the right prompt and backs the `ld` wrapper. Both consumers are guarded with `type -q docker` and degrade gracefully without it. Installing the daemon package does not enable/start the service — do that yourself if you want it running. |
 | `yt-dlp` | Video/media downloader; backs the `yt-dlp` wrapper function. The wrapper falls back to the system `yt-dlp` and the rest of the config works without it. |
 | `screen` | GNU screen; fallback backend for `jobrunner` when `tmux` is unavailable. |
+| `marktext` | Markdown editor; backs the `md` wrapper, which is the only thing that references it. No distro packages it under a common name, so `fish-deps` offers the AUR package (`marktext-bin`) on Arch and otherwise installs upstream's AppImage to `~/.local/bin/marktext`. |
+| `firejail` | Sandbox; needed only by `md --read-only`, which uses it to make MarkText unable to save over the file it opened. Every other `md` invocation works without it. |
 
 ## Terminal Emulators
 
