@@ -1275,7 +1275,7 @@ functions). They are active in all interactive sessions.
                      [-c | --clean | --no-clean] [--strict] [-v | --verbose]
                      [-s | --silent] [--template <path>] [--branch <name>]
                      [--remote <url>] [--new-remote [<cmd>]] [--server <type>]
-                     [--check-existing] [--name <name>] [-h | --help] <dir>
+                     [--check-existing] [-y | --yes] [--name <name>] [-h | --help] <dir>
 
     Creates a directory, cds into it, and git-inits it -- mkcd plus a git
     repo in one step. All three actions are on by default and each has a
@@ -1323,6 +1323,19 @@ functions). They are active in all interactive sessions.
     requires a resolved server and is mutually exclusive with --remote
     and --new-remote.
 
+    Creating a repository on a live forge is the only outward-facing thing
+    mkrep does, and on the $GIT_SERVER path an exported variable is all it
+    takes to reach it -- so a plain mkrep call, which reads as purely
+    local, would otherwise make a repo on a server without ever saying so.
+    That case therefore asks for confirmation first, defaulting to no.
+    Declining leaves the local repo in place with no remote and still
+    exits 0. Linking an existing repo is not affected, and neither is an
+    explicitly requested remote: --server, --remote and --new-remote all
+    say outright what they are going to do, so none of them prompts. Pass
+    --yes to skip the question. Where it cannot be asked -- a script, a
+    pipe, any non-interactive shell -- creation is skipped rather than
+    assumed, with a note on stderr naming the flags that would allow it.
+
     Arguments:
       <dir>            Directory to create and enter
       --cd, --no-cd    Change into <dir> (default: --cd)
@@ -1344,12 +1357,15 @@ functions). They are active in all interactive sessions.
       --server <type>  Auto-create/link a remote on gitea, gitlab, or github
       --check-existing Report whether the repo exists on the resolved
                        server; creates or links nothing
+      -y, --yes        Create the remote without confirming, on the
+                       $GIT_SERVER path that would otherwise ask
       --name <name>    {name} substitution for --new-remote/--server
                        (default: <dir>'s basename)
       -h, --help       Show this help message
 
     Exit Status:
-      0  All requested steps completed
+      0  All requested steps completed, or a $GIT_SERVER remote-create was
+         declined at the prompt (the local repo is still set up)
       1  Bad arguments, or a step (mkdir, cd, git init, remote) failed
 
     Example:
@@ -1360,7 +1376,8 @@ functions). They are active in all interactive sessions.
     mkrep --new-remote ~/projects/foo
     set -gx GITEA_URL https://git.example.com
     set -gx GIT_SERVER gitea
-    mkrep ~/projects/foo
+    mkrep ~/projects/foo        # asks before creating the remote
+    mkrep --yes ~/projects/foo  # creates it without asking
     mkrep --server gitlab --check-existing ~/projects/foo
 
     Starting points for $MKREP_REMOTE_CMD, one per host CLI -- each assumes
