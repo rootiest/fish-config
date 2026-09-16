@@ -2082,7 +2082,7 @@ echo "== gitignore fallback anchoring =="
 set -l ng (mktemp -d)
 set -ga TMPDIRS $ng
 printf '!AGENTS/foo\n' >$ng/.gitignore
-_agents_init_ensure_gitignore $ng "test" "AGENTS/" >/dev/null
+_agents_init_ensure_gitignore $ng test AGENTS/ >/dev/null
 check "negation does not count as ignored" true (grep -qx 'AGENTS/' $ng/.gitignore; and echo true; or echo false)
 
 #   ──────────────────────── hermeticity assertion ────────────────────────
