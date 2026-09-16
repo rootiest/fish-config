@@ -163,6 +163,30 @@ check "--remote links origin to the given url" https://example.invalid/me/repo.g
 cd $start
 rm -rf $base
 
+# `mkrep .` against an existing checkout, and a plain rerun against the same
+# target, both reach `git remote add origin` on a repo that already has one.
+# A bare add fails there with "remote origin already exists" and takes the
+# whole call down, so linking has to accept the end state it already wanted.
+section "mkrep: --remote is idempotent"
+
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+mkrep --remote https://example.invalid/me/repo.git $target >/dev/null
+mkrep --remote https://example.invalid/me/repo.git $target >/dev/null
+check "relinking the same url exits 0" 0 $status
+check "relinking leaves one origin" 1 (count (git -C $target remote))
+set -l url (git -C $target remote get-url origin)
+check "relinking leaves origin untouched" https://example.invalid/me/repo.git $url
+
+# A different url is a different repo. Repointing a checkout the caller did
+# not ask about is more likely a mistargeted mkrep than an intended rewrite.
+mkrep --remote https://example.invalid/me/other.git $target >/dev/null 2>/tmp/mkrep-test-err
+check "relinking a different url exits 1" 1 $status
+set -l url (git -C $target remote get-url origin)
+check "a refused relink leaves origin alone" https://example.invalid/me/repo.git $url
+cd $start
+rm -rf $base
+
 section "mkrep: --remote and --new-remote are exclusive"
 
 set -l base (_mkrep_sandbox)
