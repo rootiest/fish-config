@@ -6,14 +6,34 @@
 # matrix (--clean/--strict interaction, --no-* precedence, remote linking
 # and remote creation via a user command template).
 #
-# Runs isolated (no `# MODE:` marker). mkrep does real filesystem
-# mutations and cds, so every case works inside its own mktemp -d sandbox
-# and restores $PWD afterward -- this suite runs autoloaded straight in
-# the driver's own process (like test-guards.fish), so a stray cd or a
-# leftover sandbox would leak into later cases/suites.
+# Runs isolated (no `# MODE:` marker), which run-tests.fish executes as its
+# own `fish --no-config` process with a throwaway XDG_CONFIG_HOME. mkrep does
+# real filesystem mutations and cds, so every case works inside its own
+# mktemp -d sandbox and restores $PWD afterward -- a stray cd or a leftover
+# sandbox would still leak into later cases in this same file.
 
 source (realpath (dirname (status filename)))/lib.fish
 set -p fish_function_path $repo_root/functions
+
+# mkrep resolves a server from $GIT_SERVER plus
+# $GITEA_URL/$GITEA_HOST/$GITLAB_URL/$GITLAB_HOST, and this repo doubles as a
+# real ~/.config/fish where all of them are exported for day-to-day use. Left
+# ambient, a bare `mkrep <dir>` with no remote flag takes the auto-create
+# branch and contacts the live forge: that is how an empty `rootiest/repo` came
+# to exist on git.rootiest.dev on 2026-09-14, and why these cases then passed
+# standalone (the repo exists, so mkrep links instead of creating) while
+# failing under run-tests.fish (throwaway XDG_CONFIG_HOME, so `tea` has no
+# login). Neutralize all five for the whole suite.
+#
+# Empty reads the same as unset to mkrep, so this is a clean slate without
+# erasing the caller's real globals, and every section that wants a server sets
+# its own `set -lx GIT_SERVER ...`, which still wins. Each isolated suite runs
+# as its own `fish --no-config` process, so these cannot leak to another suite.
+set -gx GIT_SERVER ''
+set -gx GITEA_URL ''
+set -gx GITEA_HOST ''
+set -gx GITLAB_URL ''
+set -gx GITLAB_HOST ''
 
 function _mkrep_sandbox
     set -l tmp (mktemp -d)
@@ -366,9 +386,53 @@ begin
     set -lx GIT_SERVER gitea
     set -lx GITEA_URL https://gitea.example.invalid
     set -lx MKREP_REMOTE_CMD 'echo {name} >created.txt'
-    mkrep $target >/dev/null
-    check "\$GIT_SERVER + \$GITEA_URL exits 0" 0 $status
+    mkrep --yes $target >/dev/null
+    check "--yes on the \$GIT_SERVER path exits 0" 0 $status
     check "\$GIT_SERVER picked gitea" repo (cat $target/created.txt)
+    cd $start
+    rm -rf $base
+end
+
+# The $GIT_SERVER path creates a repo on a live forge off nothing but an
+# exported variable, so it confirms first. These cases run non-interactively
+# (run-tests.fish uses `fish --no-config`), which is itself one of the
+# behaviors under test: with no tty to ask, creation is skipped rather than
+# assumed. The interactive y/N read is not covered here -- that needs a PTY,
+# and the answer parsing it guards is a single `string match`.
+section "mkrep: an implicit \$GIT_SERVER remote-create is not silently performed"
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GIT_SERVER gitea
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo {name} >created.txt'
+    mkrep $target >/dev/null 2>$base/err
+    check "unconfirmed \$GIT_SERVER create exits 0" 0 $status
+    check "unconfirmed \$GIT_SERVER create ran no command" false (test -e $target/created.txt; and echo true; or echo false)
+    check "unconfirmed \$GIT_SERVER create added no remote" 0 (count (git -C $target remote))
+    check "the local repo is still set up" true (test -d $target/.git; and echo true; or echo false)
+    check "the skip is reported on stderr" true (string match -q '*Skipped creating*' -- (cat $base/err); and echo true; or echo false)
+    check "the note names --yes" true (string match -q '*--yes*' -- (cat $base/err); and echo true; or echo false)
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: an explicit --server never prompts"
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo {name} >created.txt'
+    mkrep --server gitea $target >/dev/null 2>$base/err
+    check "--server exits 0 with no tty" 0 $status
+    check "--server created without confirming" repo (cat $target/created.txt)
+    check "--server printed no skip note" false (string match -q '*Skipped creating*' -- (cat $base/err); and echo true; or echo false)
     cd $start
     rm -rf $base
 end

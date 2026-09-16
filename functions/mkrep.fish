@@ -13,7 +13,7 @@
 #         [-c | --clean | --no-clean] [--strict] [-v | --verbose]
 #         [-s | --silent] [--template <path>] [--branch <name>]
 #         [--remote <url>] [--new-remote [<cmd>]] [--server <type>]
-#         [--check-existing] [--name <name>] [-h | --help] <dir>
+#         [--check-existing] [-y | --yes] [--name <name>] [-h | --help] <dir>
 #
 # DESCRIPTION
 #   Creates a directory, cds into it, and git-inits it -- mkcd plus a git
@@ -62,6 +62,19 @@
 #   requires a resolved server and is mutually exclusive with --remote
 #   and --new-remote.
 #
+#   Creating a repository on a live forge is the only outward-facing thing
+#   mkrep does, and on the $GIT_SERVER path an exported variable is all it
+#   takes to reach it -- so a plain mkrep call, which reads as purely
+#   local, would otherwise make a repo on a server without ever saying so.
+#   That case therefore asks for confirmation first, defaulting to no.
+#   Declining leaves the local repo in place with no remote and still
+#   exits 0. Linking an existing repo is not affected, and neither is an
+#   explicitly requested remote: --server, --remote and --new-remote all
+#   say outright what they are going to do, so none of them prompts. Pass
+#   --yes to skip the question. Where it cannot be asked -- a script, a
+#   pipe, any non-interactive shell -- creation is skipped rather than
+#   assumed, with a note on stderr naming the flags that would allow it.
+#
 # ARGUMENTS
 #   <dir>            Directory to create and enter
 #   --cd, --no-cd    Change into <dir> (default: --cd)
@@ -83,12 +96,15 @@
 #   --server <type>  Auto-create/link a remote on gitea, gitlab, or github
 #   --check-existing Report whether the repo exists on the resolved
 #                    server; creates or links nothing
+#   -y, --yes        Create the remote without confirming, on the
+#                    $GIT_SERVER path that would otherwise ask
 #   --name <name>    {name} substitution for --new-remote/--server
 #                    (default: <dir>'s basename)
 #   -h, --help       Show this help message
 #
 # EXIT STATUS
-#   0  All requested steps completed
+#   0  All requested steps completed, or a $GIT_SERVER remote-create was
+#      declined at the prompt (the local repo is still set up)
 #   1  Bad arguments, or a step (mkdir, cd, git init, remote) failed
 #
 # EXAMPLE
@@ -99,7 +115,8 @@
 #   mkrep --new-remote ~/projects/foo
 #   set -gx GITEA_URL https://git.example.com
 #   set -gx GIT_SERVER gitea
-#   mkrep ~/projects/foo
+#   mkrep ~/projects/foo        # asks before creating the remote
+#   mkrep --yes ~/projects/foo  # creates it without asking
 #   mkrep --server gitlab --check-existing ~/projects/foo
 #
 #   Starting points for $MKREP_REMOTE_CMD, one per host CLI -- each assumes
@@ -119,7 +136,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     __fish_palette
 
     argparse h/help cd no-cd mkdir no-mkdir git no-git c/clean no-clean strict \
-        v/verbose s/silent template= branch= remote= new-remote=? server= \
+        v/verbose s/silent y/yes template= branch= remote= new-remote=? server= \
         check-existing name= \
         -- $argv
     or return 1
@@ -144,6 +161,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         echo "  $c_flag--new-remote$c_reset $c_arg<cmd>$c_reset (optional)  Create + link a remote"
         echo "  $c_flag--server$c_reset $c_arg<type>$c_reset          Auto-create/link a remote (gitea, gitlab, github)"
         echo "  $c_flag--check-existing$c_reset          Report whether the repo exists; creates nothing"
+        echo "  $c_flag-y$c_reset, $c_flag--yes$c_reset              Skip the \$GIT_SERVER remote-create confirmation"
         echo "  $c_flag--name$c_reset $c_arg<name>$c_reset           {name} substitution for --new-remote/--server"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset             Show this help message"
         echo
@@ -189,10 +207,15 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
 
     set -l srv_type ''
     set -l srv_url ''
+    # Track HOW the server was resolved, not just that it was. --server is an
+    # explicit request to auto-create; an ambient $GIT_SERVER is not, and only
+    # the latter needs confirming before we create a repo on a live forge.
+    set -l srv_implicit 0
     if set -q _flag_server
         set srv_type $_flag_server
     else if test -n "$GIT_SERVER"
         set srv_type $GIT_SERVER
+        set srv_implicit 1
     end
     if test -n "$srv_type"
         switch $srv_type
@@ -369,33 +392,55 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                 end
                 _mkrep_say $silent "$c_ok""✔$c_reset  Linked remote $c_arg$url$c_reset"
             else
-                set -l cmd $MKREP_REMOTE_CMD
-                test -z "$cmd"; and set cmd (_mkrep_default_remote_cmd $srv_type)
+                # Creating a repository on a live forge is the only outward-facing
+                # thing mkrep does, and an exported $GIT_SERVER alone is enough to
+                # reach here -- so a plain `mkrep foo`, which reads as purely
+                # local, would silently make a repo on someone's server. Confirm
+                # first. Skipped when the remote was asked for explicitly
+                # (--server/--new-remote never reach this check) or with --yes.
+                set -l do_create 1
+                if test $srv_implicit -eq 1; and not set -q _flag_yes
+                    set do_create 0
+                    if status is-interactive; and isatty stdin
+                        read -l -P (set_color yellow)"?"(set_color normal)"  Create new remote "(set_color --bold)"$USER/$name"(set_color normal)" on $srv_type? [y/N] " _reply
+                        string match -qr '^[Yy]' -- "$_reply"; and set do_create 1
+                    end
+                    # Not gated on $silent: declining to do something the caller
+                    # may be expecting is a diagnostic, and mkrep already writes
+                    # its errors to stderr regardless of -s.
+                    test $do_create -eq 0
+                    and echo "$c_warn""→$c_reset  Skipped creating $c_arg$USER/$name$c_reset on $srv_type — pass $c_flag--yes$c_reset or $c_flag--server $srv_type$c_reset to create it" >&2
+                end
 
-                if string match -q '*{server}*' -- $cmd
-                    if test -z "$srv_url"
-                        echo "$c_err""✘$c_reset  No base URL resolved for $srv_type (set \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
+                if test $do_create -eq 1
+                    set -l cmd $MKREP_REMOTE_CMD
+                    test -z "$cmd"; and set cmd (_mkrep_default_remote_cmd $srv_type)
+
+                    if string match -q '*{server}*' -- $cmd
+                        if test -z "$srv_url"
+                            echo "$c_err""✘$c_reset  No base URL resolved for $srv_type (set \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
+                            cd $orig_pwd
+                            return 1
+                        end
+                        set cmd (string replace -a '{server}' $srv_url -- $cmd)
+                    end
+                    set cmd (string replace -a '{name}' $name -- $cmd)
+                    set cmd (string replace -a '{user}' $USER -- $cmd)
+
+                    _mkrep_verbose $silent $verbose "$c_dim""Running: $cmd$c_reset"
+                    if test $silent -eq 1
+                        eval $cmd >/dev/null 2>&1
+                    else
+                        eval $cmd
+                    end
+                    or begin
+                        echo "$c_err""✘$c_reset  Remote-create command failed" >&2
                         cd $orig_pwd
                         return 1
                     end
-                    set cmd (string replace -a '{server}' $srv_url -- $cmd)
+                    set -l url (_mkrep_remote_url $srv_type $USER $name $srv_url)
+                    _mkrep_say $silent "$c_ok""✔$c_reset  Created new remote $c_arg$url$c_reset on $srv_type"
                 end
-                set cmd (string replace -a '{name}' $name -- $cmd)
-                set cmd (string replace -a '{user}' $USER -- $cmd)
-
-                _mkrep_verbose $silent $verbose "$c_dim""Running: $cmd$c_reset"
-                if test $silent -eq 1
-                    eval $cmd >/dev/null 2>&1
-                else
-                    eval $cmd
-                end
-                or begin
-                    echo "$c_err""✘$c_reset  Remote-create command failed" >&2
-                    cd $orig_pwd
-                    return 1
-                end
-                set -l url (_mkrep_remote_url $srv_type $USER $name $srv_url)
-                _mkrep_say $silent "$c_ok""✔$c_reset  Created new remote $c_arg$url$c_reset on $srv_type"
             end
         end
     end
