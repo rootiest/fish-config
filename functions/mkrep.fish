@@ -6,7 +6,8 @@
 #
 # DEPENDENCIES
 #   _fish_mkdir_p, __fish_palette, _mkrep_say, _mkrep_verbose,
-#   _mkrep_default_remote_cmd, _mkrep_remote_url, _mkrep_repo_exists, git
+#   _mkrep_add_origin, _mkrep_default_remote_cmd, _mkrep_remote_url,
+#   _mkrep_repo_exists, git
 #
 # SYNOPSIS
 #   mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
@@ -28,7 +29,12 @@
 #   empty slot because clean just emptied it.
 #
 #   --remote links an already-existing remote (git remote add origin
-#   <url>) -- it does not create anything. --new-remote creates one first
+#   <url>) -- it does not create anything. Linking is idempotent: an origin
+#   already pointing at that URL is reported and accepted, so rerunning
+#   mkrep against the same target, or pointing it at a checkout that is
+#   already linked, succeeds instead of failing on "remote origin already
+#   exists". An origin pointing somewhere else is an error, not a silent
+#   repoint. --new-remote creates one first
 #   by running a shell command template in the new repo directory, then
 #   nothing further is needed since the template itself does the linking
 #   (e.g. gh repo create {name} --source=. --remote=origin --push).
@@ -333,13 +339,11 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
 
     if set -q _flag_remote
         _mkrep_verbose $silent $verbose "$c_dim""Running: git remote add origin $_flag_remote$c_reset"
-        git remote add origin $_flag_remote
+        _mkrep_add_origin $silent $_flag_remote
         or begin
-            echo "$c_err""✘$c_reset  Failed to add remote $c_arg$_flag_remote$c_reset" >&2
             cd $orig_pwd
             return 1
         end
-        _mkrep_say $silent "$c_ok""✔$c_reset  Linked remote $c_arg$_flag_remote$c_reset"
     end
 
     if set -q _flag_new_remote
@@ -384,13 +388,11 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
             if _mkrep_repo_exists $srv_type $USER $name
                 set -l url (_mkrep_remote_url $srv_type $USER $name $srv_url)
                 _mkrep_say $silent "$c_warn""→$c_reset  $c_arg$USER/$name$c_reset already exists on $srv_type; linking instead of creating"
-                git remote add origin $url
+                _mkrep_add_origin $silent $url
                 or begin
-                    echo "$c_err""✘$c_reset  Failed to add remote $c_arg$url$c_reset" >&2
                     cd $orig_pwd
                     return 1
                 end
-                _mkrep_say $silent "$c_ok""✔$c_reset  Linked remote $c_arg$url$c_reset"
             else
                 # Creating a repository on a live forge is the only outward-facing
                 # thing mkrep does, and an exported $GIT_SERVER alone is enough to
