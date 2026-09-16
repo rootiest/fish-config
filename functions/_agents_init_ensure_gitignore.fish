@@ -7,7 +7,7 @@
 # DESCRIPTION
 #   Appends any patterns not already covered by the project's .gitignore.
 #   Uses git check-ignore for accurate rule matching (catches wildcards
-#   and parent-dir globs). Falls back to a plain string search when the
+#   and parent-dir globs). Falls back to a whole-line string search when the
 #   root is not a git repository. Leading / is stripped from each pattern
 #   before the path-based check so root-anchored patterns (e.g. /AGENTS.md)
 #   are matched correctly.
@@ -58,7 +58,9 @@ function _agents_init_ensure_gitignore
             git -C "$root" check-ignore -q --no-index "$check_path" 2>/dev/null
             and set already 1
         else if test -f "$gitignore"
-            grep -qF "$pattern" "$gitignore"
+            # Whole-line match: a substring match treats a negation line
+            # such as "!AGENTS/foo" as covering the pattern "AGENTS/".
+            grep -qxF "$pattern" "$gitignore"
             and set already 1
         end
         if test $already -eq 0

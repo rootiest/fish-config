@@ -2053,6 +2053,38 @@ check "agents-init: a rejected commit returns non-zero" 1 "$ibrc"
 check "agents-init: a rejected commit says nothing was recorded" true (string match -q '*nothing recorded*' -- (cat $ierr); and echo true; or echo false)
 check "agents-init: a rejected commit really recorded nothing" $ibhead (git -C $ip/AGENTS rev-list --count HEAD)
 
+#   ─────────────────────── scaffolding guard ──────────────────────────────
+# Resolving the root to (pwd) meant running an agent CLI in any directory
+# created an AGENTS/ repo, root symlinks and a docs/ tree there.
+echo ""
+echo "== agents-init scaffolding guard =="
+
+set -l plain (mktemp -d)
+set -ga TMPDIRS $plain
+pushd $plain >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "no scaffold in a non-git dir" false (test -e $plain/AGENTS; and echo true; or echo false)
+
+# A pre-existing agent file still opts the directory in.
+set -l plainagents (mktemp -d)
+set -ga TMPDIRS $plainagents
+touch $plainagents/AGENTS.md
+pushd $plainagents >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "an existing AGENTS.md still scaffolds" true (test -d $plainagents/AGENTS; and echo true; or echo false)
+
+#   ──────────────────── gitignore fallback anchoring ──────────────────────
+echo ""
+echo "== gitignore fallback anchoring =="
+
+set -l ng (mktemp -d)
+set -ga TMPDIRS $ng
+printf '!AGENTS/foo\n' >$ng/.gitignore
+_agents_init_ensure_gitignore $ng "test" "AGENTS/" >/dev/null
+check "negation does not count as ignored" true (grep -qx 'AGENTS/' $ng/.gitignore; and echo true; or echo false)
+
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The
 # failure this guards is specific: a global-memory sync with no test
