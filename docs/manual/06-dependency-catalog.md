@@ -57,6 +57,8 @@ matter if you already use that specific tool. Skipped by
 | `docker` | Container runtime; gates the Docker context indicator in the right prompt and backs the `ld` wrapper. Both consumers are guarded with `type -q docker` and degrade gracefully without it. Installing the daemon package does not enable/start the service — do that yourself if you want it running. |
 | `yt-dlp` | Video/media downloader; backs the `yt-dlp` wrapper function. The wrapper falls back to the system `yt-dlp` and the rest of the config works without it. |
 | `screen` | GNU screen; fallback backend for `jobrunner` when `tmux` is unavailable. |
+| `marktext` | Markdown editor; backs the `md` wrapper, which is the only thing that references it. No distro packages it under a common name, so `fish-deps` offers the AUR package (`marktext-bin`) on Arch and otherwise installs upstream's AppImage to `~/.local/bin/marktext`. |
+| `firejail` | Sandbox; needed only by `md --read-only`, which uses it to make MarkText unable to save over the file it opened. Every other `md` invocation works without it. |
 
 ## Terminal Emulators
 

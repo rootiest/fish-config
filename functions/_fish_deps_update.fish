@@ -96,6 +96,27 @@ function _fish_deps_update
             continue
         end
 
+        # marktext: AUR where it exists, else refresh the AppImage. Only an
+        # AppImage we own is refreshed -- a distro-packaged marktext belongs
+        # to that package manager, and ~/.local/bin/marktext would shadow it.
+        if test "$special" = marktext-release
+            if type -q paru
+                echo "Updating $bin..."
+                paru -S --noconfirm marktext-bin
+                set updated_any 1
+            else if type -q yay
+                echo "Updating $bin..."
+                yay -S --noconfirm marktext-bin
+                set updated_any 1
+            else if test -f "$HOME/.local/bin/marktext"
+                echo "Updating $bin..."
+                _fish_deps_marktext_appimage
+                set updated_any 1
+            end
+            set i (math $i + 1)
+            continue
+        end
+
         # wakatime: re-download the binary from github releases
         if test "$special" = wakatime-binary
             echo "Updating $bin..."
