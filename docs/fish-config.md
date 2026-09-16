@@ -1289,7 +1289,12 @@ functions). They are active in all interactive sessions.
     empty slot because clean just emptied it.
 
     --remote links an already-existing remote (git remote add origin
-    <url>) -- it does not create anything. --new-remote creates one first
+    <url>) -- it does not create anything. Linking is idempotent: an origin
+    already pointing at that URL is reported and accepted, so rerunning
+    mkrep against the same target, or pointing it at a checkout that is
+    already linked, succeeds instead of failing on "remote origin already
+    exists". An origin pointing somewhere else is an error, not a silent
+    repoint. --new-remote creates one first
     by running a shell command template in the new repo directory, then
     nothing further is needed since the template itself does the linking
     (e.g. gh repo create {name} --source=. --remote=origin --push).
@@ -1394,7 +1399,7 @@ functions). They are active in all interactive sessions.
       GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
       Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 
-**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_verbose`, `_mkrep_default_remote_cmd`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
+**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_verbose`, `_mkrep_add_origin`, `_mkrep_default_remote_cmd`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
 
 ## 5.5 Package Management
 
