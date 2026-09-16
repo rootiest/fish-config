@@ -2075,6 +2075,16 @@ agents-init --silent 2>/dev/null
 popd >/dev/null
 check "an existing AGENTS.md still scaffolds" true (test -d $plainagents/AGENTS; and echo true; or echo false)
 
+#   ──────────────────── gitignore fallback anchoring ──────────────────────
+echo ""
+echo "== gitignore fallback anchoring =="
+
+set -l ng (mktemp -d)
+set -ga TMPDIRS $ng
+printf '!AGENTS/foo\n' >$ng/.gitignore
+_agents_init_ensure_gitignore $ng "test" "AGENTS/" >/dev/null
+check "negation does not count as ignored" true (grep -qx 'AGENTS/' $ng/.gitignore; and echo true; or echo false)
+
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The
 # failure this guards is specific: a global-memory sync with no test
