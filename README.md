@@ -5,7 +5,7 @@ built around a Catppuccin Mocha aesthetic with a curated set of modern
 CLI tool integrations, smart shell functions, and a heavily customized
 abbreviation system for keyboard-driven workflows.
 
-📖 **[Documentation site](https://fish.rootiest.fyi/)**
+📖 **[Project Wiki](https://fish.rootiest.fyi/)**
 
 ## Table of Contents
 
@@ -159,7 +159,7 @@ To browse the docs from the terminal:
 |---|---|
 | `help config` | Open the terminal manual in the best available pager |
 | `help config <keyword>` | Jump directly to a section matching the keyword |
-| `help config --html` | Open the documentation site in the default browser |
+| `help config --html` | Open the project wiki in the default browser |
 | `help config --man` | Open the compiled man page via `man -l` |
 | `help config <keyword> --man` | Open the man page jumping to the nearest match |
 | `repo-open` | Open this repo's web page in the browser (deep-links to the current branch and sub-directory) |
