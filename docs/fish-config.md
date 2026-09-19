@@ -4530,7 +4530,7 @@ For an interactive alternative to setting these variables by hand, run `config-s
 
 There are four ways to read this manual.
 
-## The documentation website
+## The project wiki
 
     help config --html
 
