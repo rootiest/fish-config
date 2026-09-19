@@ -397,9 +397,9 @@ manual=# 13. VIEWING THIS MANUAL
 ov=## In the terminal
 manpage=## As a man page
 jump=## In the terminal
-html=## The documentation website
-browser=## The documentation website
-site=## The documentation website
+html=## The project wiki
+browser=## The project wiki
+site=## The project wiki
 source=## Reading the source directly
 raw-source=## Reading the source directly
 
