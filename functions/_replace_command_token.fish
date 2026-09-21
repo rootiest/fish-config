@@ -20,7 +20,7 @@ function _replace_command_token --description 'Remove first command token (or fi
     # Empty prompt: recall the last history entry first, same as it would
     # behave if that command were already on the commandline.
     if string match -rq '^\s*$' -- "$cmd"
-        set cmd (history --max 1)
+        set cmd (builtin history --max 1)
     end
 
     # 1. Logic for commands starting with sudo
