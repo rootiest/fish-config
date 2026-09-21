@@ -8,8 +8,8 @@
 #   paste [args...]
 #
 # DESCRIPTION
-#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
-#   falls back to xclip on X11.
+#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland, xclip on
+#   X11, or win32yank on WSL2.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to the clipboard tool
@@ -28,8 +28,10 @@ function paste --description 'Paste from clipboard'
         wl-paste $argv
     else if type -q xclip
         xclip -selection clipboard -o $argv
+    else if type -q win32yank.exe
+        win32yank.exe -o --lf $argv
     else
-        echo "Error: Neither wl-paste nor xclip found." >&2
+        echo "Error: No clipboard provider (wl-paste, xclip, or win32yank) found." >&2
         return 1
     end
 end

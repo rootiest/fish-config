@@ -8,8 +8,8 @@
 #   y [text...]
 #
 # DESCRIPTION
-#   Copies text to the system clipboard using wl-copy (Wayland) or xclip (X11).
-#   Reads from stdin when no arguments are given.
+#   Copies text to the system clipboard using wl-copy (Wayland), xclip (X11),
+#   or win32yank (WSL2). Reads from stdin when no arguments are given.
 #
 # ARGUMENTS
 #   text  Text to copy; reads from stdin if omitted
@@ -42,8 +42,10 @@ function y --description 'Yank to clipboard'
         set copy_cmd wl-copy
     else if type -q xclip
         set copy_cmd xclip -selection clipboard
+    else if type -q win32yank.exe
+        set copy_cmd win32yank.exe -i --crlf
     else
-        echo "Error: No clipboard provider (wl-copy or xclip) found." >&2
+        echo "Error: No clipboard provider (wl-copy, xclip, or win32yank) found." >&2
         return 1
     end
 

@@ -8,8 +8,8 @@
 #   p [args...]
 #
 # DESCRIPTION
-#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
-#   falls back to xclip on X11. Supports -h/--help for usage info.
+#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland, xclip on
+#   X11, or win32yank on WSL2. Supports -h/--help for usage info.
 #
 # ARGUMENTS
 #   -h, --help  Show usage help
@@ -47,8 +47,10 @@ function p --description 'Put from clipboard'
         set paste_cmd wl-paste
     else if type -q xclip
         set paste_cmd xclip -selection clipboard -o
+    else if type -q win32yank.exe
+        set paste_cmd win32yank.exe -o --lf
     else
-        echo "Error: No clipboard provider (wl-paste or xclip) found." >&2
+        echo "Error: No clipboard provider (wl-paste, xclip, or win32yank) found." >&2
         return 1
     end
 
