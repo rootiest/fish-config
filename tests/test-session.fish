@@ -145,10 +145,10 @@ check "palette roles all defined, non-empty, and scoped to the caller" true (tes
 # which is not installed in CI, so its colour path is unreachable here.
 # tests/palette-bytes.fish stubs aichat and does cover it.
 function test_functions_keep_their_palette
-    set -l colored agents-init agents-vault auto-pull config-settings \
-        config-update detach dng2avif dockup edit jobrunner kitty-logging \
-        logs mkcd open-url p pkg play-media rand_string replay repo-open \
-        scrub smart_exit spark y
+    set -l colored agents-init agents-vault auto-pull config-help \
+        config-settings config-update detach dng2avif dockup edit fish-deps \
+        gi git-clean jobrunner kitty-logging logs mkcd mkrep open-url p pkg \
+        play-media rand_string replay repo-open scrub smart_exit spark y
     set -l uncolored
     for fn in $colored
         functions -q $fn; or continue
@@ -163,6 +163,51 @@ function test_functions_keep_their_palette
     return 0
 end
 check "colored --help output keeps its escape sequences" true (test_functions_keep_their_palette; and echo true; or echo false)
+
+# The presence check above only catches a --help block that lost ALL of its
+# colour. It would not have caught the actual regressions found by hand in
+# config-help/logs/smart_exit: a heading or command name left in the PREVIOUS
+# static colour (or another role's colour) instead of the current dynamic
+# one, because *some* escape sequence is still present -- just the wrong
+# one. These two checks compare against the palette's OWN roles, computed in
+# this same session, so they track the theme instead of a hand-copied value.
+#
+# c_warn/c_err/c_ok/c_accent/c_sel/c_hi are deliberately excluded from
+# "allowed": those are the STATIC roles (see __fish_palette's own NOTES) and
+# are legitimate elsewhere, but a --help block that reaches for one of them
+# is always a mistake -- logs and smart_exit both did this, coloring their
+# own command name with the static c_accent green instead of the
+# theme-derived c_cmd. Reusing $colored from the test above -- same
+# functions, same "not installed" skip.
+function test_help_colors_are_theme_derived
+    __fish_palette
+    set -l allowed $c_reset $c_head $c_cmd $c_flag $c_arg $c_dim
+    set -l colored agents-init agents-vault auto-pull config-help \
+        config-settings config-update detach dng2avif dockup edit fish-deps \
+        gi git-clean jobrunner kitty-logging logs mkcd mkrep open-url p pkg \
+        play-media rand_string replay repo-open scrub smart_exit spark y
+    set -l failed 0
+    for fn in $colored
+        functions -q $fn; or continue
+        set -l out ($fn --help 2>&1 | string collect)
+        set -l missing_head 0
+        set -l missing_cmd 0
+        string match -q "*$c_head*" -- $out; or set missing_head 1
+        string match -q "*$c_cmd*" -- $out; or set missing_cmd 1
+        if test $missing_head -eq 1; or test $missing_cmd -eq 1
+            echo "    $fn: missing"(test $missing_head -eq 1; and echo " a heading (c_head)")(test $missing_cmd -eq 1; and echo " its own command color (c_cmd)")
+            set failed 1
+        end
+        for code in (string match -ar -- '\e\[[0-9;]*m' -- $out | sort -u)
+            if not contains -- $code $allowed
+                echo "    $fn: --help uses a color outside the head/cmd/flag/arg/dim/reset roles"
+                set failed 1
+            end
+        end
+    end
+    return $failed
+end
+check "help output uses only the dynamic head/cmd/flag/arg roles" true (test_help_colors_are_theme_derived; and echo true; or echo false)
 
 section "session: config-settings state dump"
 
