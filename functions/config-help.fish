@@ -190,63 +190,52 @@ function config-help --description 'Open the offline fish shell configuration ma
 
     # ── --help / -h ──────────────────────────────────────────────
     if contains -- --help $argv; or contains -- -h $argv
-        set_color --bold
-        echo "help config / config-help"
-        set_color normal
+        __fish_palette
+        echo "$c_cmd""help config / config-help$c_reset"
         echo " — view the offline fish shell configuration manual"
         echo ""
-        set_color --bold brblue
-        echo USAGE
-        set_color normal
-        echo "  help config "(set_color yellow)"[section]"(set_color normal)
-        echo "  help config "(set_color yellow)"[section] --html"(set_color normal)
-        echo "  help config "(set_color yellow)"[section] --man"(set_color normal)
-        echo "  help config "(set_color yellow)"--help"(set_color normal)
+        echo "$c_head""USAGE$c_reset"
+        echo "  help config $c_arg""[section]$c_reset"
+        echo "  help config $c_arg""[section]$c_reset $c_flag--html$c_reset"
+        echo "  help config $c_arg""[section]$c_reset $c_flag--man$c_reset"
+        echo "  help config $c_flag--help$c_reset"
         echo ""
-        set_color --bold brblue
-        echo ARGUMENTS
-        set_color normal
-        echo "  "(set_color yellow)"section"(set_color normal)"      Optional keyword to jump to a matching section heading."
+        echo "$c_head""ARGUMENTS$c_reset"
+        echo "  $c_arg""section$c_reset      Optional keyword to jump to a matching section heading."
         echo "               Searches docs/fish-config.index for aliases first, then"
         echo "               falls back to a normalized (case- and punctuation-insensitive)"
         echo "               scan of heading lines."
-        echo "  "(set_color yellow)"-w, --html"(set_color normal)"   Open the published documentation website in the default browser."
+        echo "  $c_flag-w, --html$c_reset   Open the published documentation website in the default browser."
         echo "               Deep links aren't supported — use the site's search box."
-        echo "  "(set_color yellow)"-m, --man"(set_color normal)"    Open the compiled man page via man -l."
+        echo "  $c_flag-m, --man$c_reset    Open the compiled man page via man -l."
         echo "               If a section keyword is given, jumps to the nearest match."
         echo ""
-        set_color --bold brblue
-        echo EXAMPLES
-        set_color normal
-        echo "  "(set_color green)"help config"(set_color normal)"                       open at top"
-        echo "  "(set_color green)"help config keybindings"(set_color normal)"           jump to Key Bindings section"
-        echo "  "(set_color green)"help config pkg"(set_color normal)"                   jump to the pkg function entry"
-        echo "  "(set_color green)"help config fish-deps"(set_color normal)"             jump to fish-deps"
-        echo "  "(set_color green)"help config abbreviations"(set_color normal)"         jump to Abbreviations section"
-        echo "  "(set_color green)"help config --html"(set_color normal)"                open the documentation website"
-        echo "  "(set_color green)"help config --man"(set_color normal)"                 open compiled man page"
-        echo "  "(set_color green)"help config pkg --man"(set_color normal)"             open man page at pkg section"
+        echo "$c_head""EXAMPLES$c_reset"
+        echo "  $c_cmd""help config$c_reset                       open at top"
+        echo "  $c_cmd""help config$c_reset $c_arg""keybindings$c_reset           jump to Key Bindings section"
+        echo "  $c_cmd""help config$c_reset $c_arg""pkg$c_reset                   jump to the pkg function entry"
+        echo "  $c_cmd""help config$c_reset $c_arg""fish-deps$c_reset             jump to fish-deps"
+        echo "  $c_cmd""help config$c_reset $c_arg""abbreviations$c_reset         jump to Abbreviations section"
+        echo "  $c_cmd""help config$c_reset $c_flag--html$c_reset                open the documentation website"
+        echo "  $c_cmd""help config$c_reset $c_flag--man$c_reset                 open compiled man page"
+        echo "  $c_cmd""help config$c_reset $c_arg""pkg$c_reset $c_flag--man$c_reset             open man page at pkg section"
         echo ""
-        set_color --bold brblue
-        echo "NAVIGATION (ov pager)"
-        set_color normal
-        echo "  "(set_color cyan)"Space"(set_color normal)"       next section"
-        echo "  "(set_color cyan)"^"(set_color normal)"           previous section"
-        echo "  "(set_color cyan)"Alt+u"(set_color normal)"       toggle section list sidebar"
-        echo "  "(set_color cyan)"/"(set_color normal)"           search forward"
-        echo "  "(set_color cyan)"n"(set_color normal)" / "(set_color cyan)"N"(set_color normal)"       next / previous search match"
-        echo "  "(set_color cyan)"g"(set_color normal)"           go to line number"
-        echo "  "(set_color cyan)"q"(set_color normal)"           quit"
+        echo "$c_head""NAVIGATION (ov pager)$c_reset"
+        echo "  $c_arg""Space$c_reset       next section"
+        echo "  $c_arg""^$c_reset           previous section"
+        echo "  $c_arg""Alt+u$c_reset       toggle section list sidebar"
+        echo "  $c_arg""/$c_reset           search forward"
+        echo "  $c_arg""n$c_reset / $c_arg""N$c_reset       next / previous search match"
+        echo "  $c_arg""g$c_reset           go to line number"
+        echo "  $c_arg""q$c_reset           quit"
         echo ""
-        set_color --bold brblue
-        echo "PAGER FALLBACK CHAIN"
-        set_color normal
-        echo "  "(set_color brblack)"1."(set_color normal)" ov + bat   section nav + syntax highlighting  "(set_color brblack)"(best)"(set_color normal)
-        echo "  "(set_color brblack)"2."(set_color normal)" ov alone   section nav, raw Markdown"
-        echo "  "(set_color brblack)"3."(set_color normal)" bat alone  syntax highlighting, use / to search"
-        echo "  "(set_color brblack)"4."(set_color normal)" man -l     pre-compiled man page (if available)"
-        echo "  "(set_color brblack)"5."(set_color normal)" less       plain text with line-jump"
-        echo "  "(set_color brblack)"6."(set_color normal)" cat        plain output"
+        echo "$c_head""PAGER FALLBACK CHAIN$c_reset"
+        echo "  $c_dim""1.$c_reset ov + bat   section nav + syntax highlighting  $c_dim""(best)$c_reset"
+        echo "  $c_dim""2.$c_reset ov alone   section nav, raw Markdown"
+        echo "  $c_dim""3.$c_reset bat alone  syntax highlighting, use / to search"
+        echo "  $c_dim""4.$c_reset man -l     pre-compiled man page (if available)"
+        echo "  $c_dim""5.$c_reset less       plain text with line-jump"
+        echo "  $c_dim""6.$c_reset cat        plain output"
         return 0
     end
 

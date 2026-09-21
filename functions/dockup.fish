@@ -31,13 +31,13 @@ function dockup --description 'Pull and restart docker compose containers'
     # Handle help flags
     if contains -- -h $argv; or contains -- --help $argv
         __fish_palette
-        echo "$c_head""Usage:$c_reset $c_cmd""dockup$c_reset $c_dim""[DIRECTORY]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""dockup$c_reset $c_arg""[DIRECTORY]$c_reset"
         echo ""
         echo "$c_head""Options:$c_reset"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset    Show this help message"
         echo ""
         echo "$c_head""Arguments:$c_reset"
-        echo "  $c_dim""DIRECTORY$c_reset     Optional path to the compose project (defaults to current dir)"
+        echo "  $c_arg""DIRECTORY$c_reset     Optional path to the compose project (defaults to current dir)"
         return 0
     end
 

@@ -79,7 +79,7 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
         echo "  • Compiles:      core.[0-9]+ (Linux core dumps)"
         echo "  • Slicers:       *.gcode.tmp, *.gcode.bak, .bambu_bak"
         echo
-        echo (set_color --bold yellow)"Aggressive Targets:"(set_color normal)
+        echo "$c_head""Aggressive Targets:$c_reset"
         echo "  • Heavy Caches:  node_modules, .vagrant"
         echo "  • Extra Cruft:   *.class, *.log, *.log.[0-9]+, Thumbs.db:encryptable"
         echo "  • IDE/Git Junk:  .idea, .clwb, .git-crypt"

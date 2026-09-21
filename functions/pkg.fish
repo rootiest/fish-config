@@ -73,7 +73,7 @@ function pkg --description 'Install or remove packages via the system package ma
         switch $arg
             case -h --help
                 echo "$c_head""Usage:$c_reset $c_cmd""pkg$c_reset " \
-                    "$c_flag""[-h] [-i] [-u]$c_reset $c_dim""<package>...$c_reset"
+                    "$c_flag""[-h] [-i] [-u]$c_reset $c_arg""<package>...$c_reset"
                 echo
                 echo "  Install or remove packages via $pm."
                 echo
@@ -107,7 +107,7 @@ function pkg --description 'Install or remove packages via the system package ma
 
     if test (count $packages) -eq 0
         echo "$c_head""Usage:$c_reset $c_cmd""pkg$c_reset " \
-            "$c_flag""[-h] [-i] [-u]$c_reset $c_dim""<package>...$c_reset"
+            "$c_flag""[-h] [-i] [-u]$c_reset $c_arg""<package>...$c_reset"
         echo
         echo "  Install or remove packages via $pm."
         echo

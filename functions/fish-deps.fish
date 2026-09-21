@@ -105,7 +105,7 @@ function __fish_deps_help
     echo "$c_head""fish-deps$c_reset — manage fish shell dependencies"
     echo ""
     echo "$c_head""Usage:$c_reset"
-    echo "  $c_cmd""fish-deps$c_reset $c_dim""[status]$c_reset    Check installed/missing deps (default)"
+    echo "  $c_cmd""fish-deps$c_reset $c_arg""[status]$c_reset    Check installed/missing deps (default)"
     echo "  $c_cmd""fish-deps$c_reset install     Install missing deps interactively"
     echo "  $c_cmd""fish-deps$c_reset update      Update all installed deps"
     echo "  $c_cmd""fish-deps$c_reset sync        Install missing, then update all"

@@ -29,9 +29,10 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
     or return
 
     if set -q _flag_help
-        echo (set_color --bold blue)"Usage: "(set_color normal)"git-clean [OPTIONS]"
+        __fish_palette
+        echo "$c_head""Usage:$c_reset $c_cmd""git-clean$c_reset $c_arg""[OPTIONS]$c_reset"
         echo
-        echo "Steps taken:"
+        echo "$c_head""Steps taken:$c_reset"
         echo "  1. Fetches and prunes to find deleted remote branches."
         echo "  2. Switches to main if you are on an orphaned branch."
         echo "  3. Pulls the latest changes from the remote."
