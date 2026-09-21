@@ -230,12 +230,12 @@ function config-help --description 'Open the offline fish shell configuration ma
         echo "  $c_arg""q$c_reset           quit"
         echo ""
         echo "$c_head""PAGER FALLBACK CHAIN$c_reset"
-        echo "  $c_dim""1.$c_reset ov + bat   section nav + syntax highlighting  $c_dim""(best)$c_reset"
-        echo "  $c_dim""2.$c_reset ov alone   section nav, raw Markdown"
-        echo "  $c_dim""3.$c_reset bat alone  syntax highlighting, use / to search"
-        echo "  $c_dim""4.$c_reset man -l     pre-compiled man page (if available)"
-        echo "  $c_dim""5.$c_reset less       plain text with line-jump"
-        echo "  $c_dim""6.$c_reset cat        plain output"
+        echo "  $c_dim""1.$c_reset $c_cmd""ov$c_reset + $c_cmd""bat$c_reset   section nav + syntax highlighting  $c_dim""(best)$c_reset"
+        echo "  $c_dim""2.$c_reset $c_cmd""ov$c_reset alone   section nav, raw Markdown"
+        echo "  $c_dim""3.$c_reset $c_cmd""bat$c_reset alone  syntax highlighting, use / to search"
+        echo "  $c_dim""4.$c_reset $c_cmd""man$c_reset $c_flag-l$c_reset     pre-compiled man page (if available)"
+        echo "  $c_dim""5.$c_reset $c_cmd""less$c_reset       plain text with line-jump"
+        echo "  $c_dim""6.$c_reset $c_cmd""cat$c_reset        plain output"
         return 0
     end
 
