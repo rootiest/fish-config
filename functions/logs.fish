@@ -50,16 +50,16 @@ function logs --description 'Browse terminal log files interactively with fzf'
 
     if set -q _flag_help
         __fish_palette
-        echo "Usage: "$c_accent"logs"$c_reset" ["$c_arg"OPTIONS"$c_reset"]"
+        echo "$c_head""Usage:$c_reset "$c_cmd"logs"$c_reset" ["$c_arg"OPTIONS"$c_reset"]"
         echo ""
         echo "Browse and open terminal log files interactively."
         echo "Logs sorted newest-first. Type to fuzzy-filter by date or category."
         echo ""
-        echo "Options:"
-        echo "  "$c_arg"-h, --help"$c_reset"       Show this help"
-        echo "  "$c_arg"-c, --category"$c_reset"   Limit to one category: scrollback, paru, yay"
+        echo "$c_head""Options:$c_reset"
+        echo "  "$c_flag"-h, --help"$c_reset"       Show this help"
+        echo "  "$c_flag"-c, --category"$c_reset"   Limit to one category: scrollback, paru, yay"
         echo ""
-        echo "Keys in fzf:"
+        echo "$c_head""Keys in fzf:$c_reset"
         echo "  "$c_arg"Enter"$c_reset"     Open in \$PAGER"
         echo "  "$c_arg"Ctrl-E"$c_reset"    Open in \$EDITOR"
         echo "  "$c_arg"Ctrl-D"$c_reset"    Delete selected log"
