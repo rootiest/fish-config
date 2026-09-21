@@ -2673,6 +2673,53 @@ functions). They are active in all interactive sessions.
     dng2avif photo.dng
     dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 
+### key-crypt
+
+    Synopsis:  key-crypt [options] <input> [output]
+               key-crypt -i <input> -o <output> [options]
+               key-crypt --install | --uninstall
+
+    Encrypts or decrypts a file or directory with OpenPGP, choosing the
+    recipient/secret key from the connected smartcard (YubiKey etc.) by
+    default. Direction is detected from the input: a GPG-encrypted file is
+    decrypted (a tar payload is extracted into the output directory),
+    anything else is encrypted. Run with --help for the full reference,
+    including key selection and output-naming rules.
+
+    Arguments:
+      -i, --input PATH    Directory, file, or encrypted file to process
+      -o, --output PATH   Where to write the result
+      -k, --key KEY       Key ID or fingerprint (repeatable); overrides card detection
+      -f, --force         Overwrite an existing output
+      -a, --archive       Decrypt: keep the decrypted archive as-is instead of extracting
+      -m, --mkdir         Decrypt: create the output directory without asking
+      -p, --preset        Hands-off mode: same as --force --mkdir --remove
+      -r, --remove        Delete the input after a successful run
+          --install       Copy a standalone wrapper to ~/.local/bin and add
+                          "Open With" entries for .gpg files and folders.
+                          Must be the only argument.
+          --uninstall     Remove the installed wrapper and entries. Same rule.
+      -h, --help          Show this help message
+
+    Exit Status:
+      0  Success
+      1  Error (missing input, output exists, gpg or tar failed, no key)
+      2  Bad usage
+
+    Notes:
+      --remove uses plain rm, not a secure wipe: on SSDs and copy-on-write
+      filesystems the old data may remain recoverable. The input is only
+      removed after the output is fully written; when decrypting, that means
+      the encrypted file is deleted only once gpg has verified and decrypted it.
+
+    Example:
+    key-crypt mydir                  # -> mydir.tgz.gpg
+    key-crypt mydir.tgz.gpg          # -> extracted into mydir/
+    key-crypt -k 0xDEADBEEF mydir    # choose the recipient manually
+    key-crypt --install              # register the standalone wrapper + Open With entries
+
+**Dependencies:** `gpg`, `tar`
+
 ### play-media
 
     Synopsis:  play-media [-p|--player <cmd>]
