@@ -12,6 +12,7 @@ abbreviation system for keyboard-driven workflows.
 - [Overview](#overview)
 - [Session Logging](#session-logging)
 - [Documentation](#documentation)
+- [OS Compatibility](#os-compatibility)
 - [Installation](#installation)
 - [Personalization](#personalization)
 - [Minimal Mode](#minimal-mode)
@@ -167,6 +168,36 @@ To browse the docs from the terminal:
 The pager falls back through: **ov** → **bat** → **man -l** → **less** → **cat**.
 
 > **Note:** `fish-config` (hyphen) is this configuration's man page. `fish_config` (underscore) is fish's built-in browser-based configuration tool — a completely separate command. Don't mix them up.
+
+---
+
+## OS Compatibility
+
+This is a **Linux-only** configuration. It is developed and tested on an
+Arch Linux system; `fish-deps` also detects `apt`, `dnf`, `zypper`, and `yum`
+for broader distro support, but coverage outside Arch is thinner.
+
+A number of functions call Linux-specific subsystems directly, with no
+fallback: `systemd-inhibit` (`wake-lock`), `zramctl`/`swapon` (`swapstat`),
+`sbctl` and UEFI Secure Boot state (`sbver`), `wl-copy`/`xclip` for clipboard
+access (`y`, `p`, `paste`, `hist` — Wayland or X11 only, no `pbcopy`/`pbpaste`
+fallback), and GNU coreutils flags like `stat -c`/`numfmt` (`sudo-toggle`,
+`dng2avif`), which differ or don't exist under a BSD userland.
+
+**macOS** is not supported — `_fish_deps_detect_pm` checks for `brew`, but
+that alone doesn't make the functions above work; they have no macOS
+equivalent path today.
+
+**Windows** is not supported. Fish has no native Windows build, and this
+config isn't tested under WSL either. WSL2 can run `systemd`, so basic shell
+use may work, but Secure Boot/zram state is meaningless inside a VM and
+clipboard integration has no WSL-specific path here.
+
+**Assumed present on any Linux system this runs on:** `git`, `gpg`, `tar`,
+and GNU coreutils. These aren't tracked by `fish-deps` — they're base-system
+utilities, not opt-in software with an install journey to manage.
+
+See [OS Compatibility](https://fish.rootiest.fyi/10-installation/#os-compatibility) in the project wiki for more.
 
 ---
 

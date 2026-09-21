@@ -360,6 +360,15 @@ fish-plugins-manifest=## fish_plugins Manifest
 # ── Section 10: Installation ────────────────────────────────────
 installation=# 10. INSTALLATION
 install=# 10. INSTALLATION
+os=## OS Compatibility
+os-compatibility=## OS Compatibility
+operating-system=## OS Compatibility
+compatibility=## OS Compatibility
+linux=## OS Compatibility
+macos=## OS Compatibility
+mac=## OS Compatibility
+windows=## OS Compatibility
+wsl=## OS Compatibility
 sentinel=## Return Sentinel
 updating=## Updating
 
