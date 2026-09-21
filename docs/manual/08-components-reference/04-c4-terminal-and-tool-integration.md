@@ -13,7 +13,7 @@ These features couple the shell to specific external tools. Disabling
     spwin                      Kitty or WezTerm
     tab                        Kitty, WezTerm, or Konsole
     split                      Kitty or WezTerm
-    hist                       fzf + wl-copy or win32yank.exe (WSL2)
+    hist                       fzf + wl-copy, xclip, or win32yank.exe (WSL2)
     logs                       fzf + ov; reads from ~/.terminal_history/
     upgrade                    paru or yay (Arch Linux only)
     WakaTime hook              wakatime CLI and a configured API key

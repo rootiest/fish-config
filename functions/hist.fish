@@ -12,8 +12,11 @@
 #
 # DESCRIPTION
 #   Searches fish history interactively using fzf, inserts the selected command
-#   into the command line, and copies it to the clipboard via wl-copy (falls
-#   back to win32yank on WSL2).
+#   into the command line, and copies it to the clipboard via wl-copy, xclip,
+#   or win32yank (WSL2).
+#
+# DEPENDENCIES
+#   _fish_clipboard_copy
 #
 # EXIT STATUS
 #   0  Command selected and inserted, or fzf was cancelled
@@ -37,11 +40,7 @@ function hist --description 'Search fish history and put it in the prompt'
         # Strip the timestamp for the final output
         set -l command (echo $selected | string replace -r '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ' '')
 
-        if type -q wl-copy
-            echo $command | wl-copy 2>/dev/null
-        else if type -q win32yank.exe
-            echo $command | win32yank.exe -i --crlf 2>/dev/null
-        end
+        echo $command | _fish_clipboard_copy 2>/dev/null
         commandline -r $command
     end
 end
