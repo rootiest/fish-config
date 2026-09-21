@@ -1260,7 +1260,8 @@ functions). They are active in all interactive sessions.
     Synopsis:  hist
 
     Searches fish history interactively using fzf, inserts the selected command
-    into the command line, and copies it to the clipboard via wl-copy.
+    into the command line, and copies it to the clipboard via wl-copy, xclip,
+    or win32yank (WSL2).
 
     Exit Status:
       0  Command selected and inserted, or fzf was cancelled
@@ -1268,6 +1269,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     hist
+
+**Dependencies:** `_fish_clipboard_copy`
 
 ### mkrep
 
@@ -1923,8 +1926,8 @@ functions). They are active in all interactive sessions.
 
     Synopsis:  p [args...]
 
-    Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
-    falls back to xclip on X11. Supports -h/--help for usage info.
+    Outputs clipboard contents to stdout. Uses wl-paste on Wayland, xclip on
+    X11, or win32yank on WSL2. Supports -h/--help for usage info.
 
     Arguments:
       -h, --help  Show usage help
@@ -1941,12 +1944,14 @@ functions). They are active in all interactive sessions.
     p | grep foo
     p > file.txt
 
+**Dependencies:** `_fish_clipboard_paste`
+
 ### paste
 
     Synopsis:  paste [args...]
 
-    Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
-    falls back to xclip on X11.
+    Outputs clipboard contents to stdout. Uses wl-paste on Wayland, xclip on
+    X11, or win32yank on WSL2.
 
     Arguments:
       args...  Arguments forwarded to the clipboard tool
@@ -1961,12 +1966,14 @@ functions). They are active in all interactive sessions.
     Example:
     paste > file.txt
 
+**Dependencies:** `_fish_clipboard_paste`
+
 ### y
 
     Synopsis:  y [text...]
 
-    Copies text to the system clipboard using wl-copy (Wayland) or xclip (X11).
-    Reads from stdin when no arguments are given.
+    Copies text to the system clipboard using wl-copy (Wayland), xclip (X11),
+    or win32yank (WSL2). Reads from stdin when no arguments are given.
 
     Arguments:
       text  Text to copy; reads from stdin if omitted
@@ -1979,6 +1986,8 @@ functions). They are active in all interactive sessions.
     y "hello world"
     ls | y
     cat file.txt | y
+
+**Dependencies:** `_fish_clipboard_copy`
 
 ## 5.10 Network
 
@@ -3379,6 +3388,7 @@ matter if you already use that specific tool. Skipped by
 | `screen` | GNU screen; fallback backend for `jobrunner` when `tmux` is unavailable. |
 | `marktext` | Markdown editor; backs the `md` wrapper, which is the only thing that references it. No distro packages it under a common name, so `fish-deps` offers the AUR package (`marktext-bin`) on Arch and otherwise installs upstream's AppImage to `~/.local/bin/marktext`. |
 | `firejail` | Sandbox; needed only by `md --read-only`, which uses it to make MarkText unable to save over the file it opened. Every other `md` invocation works without it. |
+| `win32yank.exe` | Clipboard bridge for WSL2; backs the `y`/`p`/`paste`/`hist` clipboard fallback chain when neither `wl-copy`/`wl-paste` nor `xclip` are present. `fish-deps` only offers to install it when WSL2 is detected (`microsoft` in `/proc/sys/kernel/osrelease`), downloading the `x86_64` binary from GitHub releases to `~/.local/bin`. |
 
 ## Terminal Emulators
 
@@ -3929,7 +3939,7 @@ These features couple the shell to specific external tools. Disabling
     spwin                      Kitty or WezTerm
     tab                        Kitty, WezTerm, or Konsole
     split                      Kitty or WezTerm
-    hist                       fzf + wl-copy (Wayland clipboard)
+    hist                       fzf + wl-copy, xclip, or win32yank.exe (WSL2)
     logs                       fzf + ov; reads from ~/.terminal_history/
     upgrade                    paru or yay (Arch Linux only)
     WakaTime hook              wakatime CLI and a configured API key
@@ -4261,10 +4271,13 @@ no fallback:
 - `systemd-inhibit` (`wake-lock`)
 - `zramctl` / `swapon` (`swapstat`)
 - `sbctl` and UEFI Secure Boot state (`sbver`)
-- `wl-copy` / `xclip` for clipboard access (`y`, `p`, `paste`, `hist`) —
-  Wayland or X11 only, no `pbcopy`/`pbpaste` fallback
 - GNU coreutils flags such as `stat -c` and `numfmt` (`sudo-toggle`,
   `dng2avif`), which differ or don't exist under a BSD userland
+
+Clipboard access (`y`, `p`, `paste`, `hist`) is the exception: it falls back
+through `wl-copy`/`wl-paste` (Wayland), `xclip` (X11), and `win32yank.exe`
+(WSL2), so it works on all three. There is still no `pbcopy`/`pbpaste`
+fallback for macOS.
 
 **macOS** is not supported. `_fish_deps_detect_pm` does check for `brew`, but
 that alone does not make the functions above work — they have no macOS
@@ -4273,10 +4286,10 @@ equivalent path today.
 **Windows** is not supported. Fish itself has no native Windows build;
 upstream's own "Windows" install docs are Cygwin/WSL workarounds, not a real
 port. This config is not tested under WSL either. WSL2 runs a real Linux
-kernel and can run `systemd`, so basic shell use may work, but `zramctl`,
-`sbctl`, and Secure Boot state are meaningless inside a VM, and clipboard
-integration would need a WSL-specific path (`clip.exe`, `win32yank`) that
-does not exist here.
+kernel and can run `systemd`, so basic shell use may work; `zramctl`,
+`sbctl`, and Secure Boot state are still meaningless inside a VM, but
+clipboard integration works via `win32yank.exe` (see above) once it's
+installed on the Windows side and reachable through WSL interop.
 
 **Assumed present on any Linux system this runs on:** `git`, `gpg`, `tar`,
 and GNU coreutils (for `stat`, `date`, `numfmt`). These are not tracked by
