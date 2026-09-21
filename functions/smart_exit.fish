@@ -47,13 +47,13 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
     __fish_palette
 
     if set -q _flag_help
-        echo -e "Usage: $c_accent"exit"$c_reset [$c_arg""OPTIONS""$c_reset]"
+        echo -e "$c_head""Usage:$c_reset $c_cmd"exit"$c_reset [$c_arg""OPTIONS""$c_reset]"
         echo ""
         echo "Closes the current shell session, automatically archiving the window scrollback."
         echo ""
-        echo "Options:"
-        echo -e "  $c_arg""-h, --help""$c_reset    Show this help message"
-        echo -e "  $c_arg""-n, --no-log""$c_reset  Exit immediately $c_cmd""without""$c_reset saving a scrollback history log"
+        echo "$c_head""Options:$c_reset"
+        echo -e "  $c_flag""-h, --help""$c_reset    Show this help message"
+        echo -e "  $c_flag""-n, --no-log""$c_reset  Exit immediately without saving a scrollback history log"
         return 0
     end
 

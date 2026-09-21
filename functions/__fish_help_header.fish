@@ -45,9 +45,10 @@ function __fish_help_header --argument-names name
     # First argument only -- see DESCRIPTION.
     contains -- "$argv[2]" -h --help; or return 1
 
-    set -l c_ttl (set_color --bold)
-    set -l c_sec (set_color --bold brblue)
-    set -l c_rst (set_color normal)
+    __fish_palette
+    set -l c_ttl $c_cmd
+    set -l c_sec $c_head
+    set -l c_rst $c_reset
     set -l miss "  No documentation header found. Try: help config $name"
 
     set -l file (functions -D -- $name 2>/dev/null)

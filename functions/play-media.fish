@@ -42,12 +42,12 @@ function play-media --description 'Pick audio/video files with fzf and play them
     or return 1
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""play-media$c_reset $c_flag""[-p|--player$c_reset $c_dim<cmd>$c_reset""$c_flag]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""play-media$c_reset $c_flag""[-p|--player$c_reset $c_arg<cmd>$c_reset""$c_flag]$c_reset"
         echo
         echo "  Pick audio/video files under the current directory with fzf and play them."
         echo
         echo "$c_head""Options:$c_reset"
-        echo "  $c_flag-p$c_reset, $c_flag--player$c_reset $c_dim<cmd>$c_reset  Force a specific player command"
+        echo "  $c_flag-p$c_reset, $c_flag--player$c_reset $c_arg<cmd>$c_reset  Force a specific player command"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset          Show this help"
         return 0
     end

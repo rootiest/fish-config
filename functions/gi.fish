@@ -39,32 +39,29 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
     or return 1
 
     if set -q _flag_help
-        set_color --bold
-        echo "Usage:"(set_color normal)" gi "(set_color cyan)"[TARGETS...]"(set_color yellow)" [FLAGS]"(set_color normal)
+        __fish_palette
+        echo "$c_head""Usage:$c_reset $c_cmd""gi$c_reset $c_arg""[TARGETS...]$c_reset $c_arg""[FLAGS]$c_reset"
         echo ""
-        set_color --bold
-        echo "Arguments:"(set_color normal)
-        echo "  "(set_color cyan)"TARGETS"(set_color normal)"       Comma-separated list of languages or tools"
-        echo "                 "(set_color brblack)"e.g. c++,neovim,archlinux"(set_color normal)
+        echo "$c_head""Arguments:$c_reset"
+        echo "  $c_arg""TARGETS$c_reset       Comma-separated list of languages or tools"
+        echo "                 $c_dim""e.g. c++,neovim,archlinux$c_reset"
         echo ""
-        set_color --bold
-        echo "Flags:"(set_color normal)
-        echo "  "(set_color yellow)"-h, --help        "(set_color normal)" Show this help message"
-        echo "  "(set_color yellow)"-d, --description "(set_color normal)" Show the Fish function description"
-        echo "  "(set_color yellow)"-l, --list        "(set_color normal)" List all supported targets from the API"
-        echo "  "(set_color yellow)"-b, --boilerplate "(set_color normal)" Append boilerplate from "(set_color cyan)"\$GITIGNORE_BOILERPLATE"(set_color normal)" to .gitignore"
-        echo "  "(set_color yellow)"-p, --prompt      "(set_color normal)" Prompt for patterns and append them to .gitignore"
-        echo "  "(set_color yellow)"-s, --stdout      "(set_color normal)" Print API output to stdout instead of appending to .gitignore"
+        echo "$c_head""Flags:$c_reset"
+        echo "  $c_flag-h, --help        $c_reset Show this help message"
+        echo "  $c_flag-d, --description $c_reset Show the Fish function description"
+        echo "  $c_flag-l, --list        $c_reset List all supported targets from the API"
+        echo "  $c_flag-b, --boilerplate $c_reset Append boilerplate from $c_arg""\$GITIGNORE_BOILERPLATE$c_reset to .gitignore"
+        echo "  $c_flag-p, --prompt      $c_reset Prompt for patterns and append them to .gitignore"
+        echo "  $c_flag-s, --stdout      $c_reset Print API output to stdout instead of appending to .gitignore"
         echo ""
-        set_color --bold
-        echo "Examples:"(set_color normal)
-        echo "  "(set_color green)"gi"(set_color normal)"                      "(set_color brblack)"# Append boilerplate and prompt for patterns (default)"(set_color normal)
-        echo "  "(set_color green)"gi -b"(set_color normal)"                   "(set_color brblack)"# Append boilerplate only"(set_color normal)
-        echo "  "(set_color green)"gi -p"(set_color normal)"                   "(set_color brblack)"# Prompt for patterns and append to .gitignore"(set_color normal)
-        echo "  "(set_color green)"gi"(set_color normal)" "(set_color cyan)"c++"(set_color normal)"                  "(set_color brblack)"# Append C++ patterns to .gitignore"(set_color normal)
-        echo "  "(set_color green)"gi"(set_color normal)" "(set_color cyan)"python,venv"(set_color normal)"          "(set_color brblack)"# Append Python+venv patterns to .gitignore"(set_color normal)
-        echo "  "(set_color green)"gi -s"(set_color normal)" "(set_color cyan)"python,venv"(set_color normal)"       "(set_color brblack)"# Print Python+venv patterns to stdout"(set_color normal)
-        echo "  "(set_color green)"gi -l"(set_color normal)" | grep -i linux   "(set_color brblack)"# Search for specific OS support"(set_color normal)
+        echo "$c_head""Examples:$c_reset"
+        echo "  $c_cmd""gi$c_reset                      $c_dim""# Append boilerplate and prompt for patterns (default)$c_reset"
+        echo "  $c_cmd""gi -b$c_reset                   $c_dim""# Append boilerplate only$c_reset"
+        echo "  $c_cmd""gi -p$c_reset                   $c_dim""# Prompt for patterns and append to .gitignore$c_reset"
+        echo "  $c_cmd""gi$c_reset $c_arg""c++$c_reset                  $c_dim""# Append C++ patterns to .gitignore$c_reset"
+        echo "  $c_cmd""gi$c_reset $c_arg""python,venv$c_reset          $c_dim""# Append Python+venv patterns to .gitignore$c_reset"
+        echo "  $c_cmd""gi -s$c_reset $c_arg""python,venv$c_reset       $c_dim""# Print Python+venv patterns to stdout$c_reset"
+        echo "  $c_cmd""gi -l$c_reset | grep -i linux   $c_dim""# Search for specific OS support$c_reset"
         return 0
     end
 
