@@ -179,10 +179,14 @@ for broader distro support, but coverage outside Arch is thinner.
 
 A number of functions call Linux-specific subsystems directly, with no
 fallback: `systemd-inhibit` (`wake-lock`), `zramctl`/`swapon` (`swapstat`),
-`sbctl` and UEFI Secure Boot state (`sbver`), `wl-copy`/`xclip` for clipboard
-access (`y`, `p`, `paste`, `hist` — Wayland or X11 only, no `pbcopy`/`pbpaste`
-fallback), and GNU coreutils flags like `stat -c`/`numfmt` (`sudo-toggle`,
-`dng2avif`), which differ or don't exist under a BSD userland.
+`sbctl` and UEFI Secure Boot state (`sbver`), and GNU coreutils flags like
+`stat -c`/`numfmt` (`sudo-toggle`, `dng2avif`), which differ or don't exist
+under a BSD userland.
+
+Clipboard access (`y`, `p`, `paste`, `hist`) is the exception: it falls back
+through `wl-copy`/`wl-paste` (Wayland), `xclip` (X11), and `win32yank.exe`
+(WSL2), so it works on all three — there's still no `pbcopy`/`pbpaste`
+fallback for macOS.
 
 **macOS** is not supported — `_fish_deps_detect_pm` checks for `brew`, but
 that alone doesn't make the functions above work; they have no macOS
@@ -190,8 +194,9 @@ equivalent path today.
 
 **Windows** is not supported. Fish has no native Windows build, and this
 config isn't tested under WSL either. WSL2 can run `systemd`, so basic shell
-use may work, but Secure Boot/zram state is meaningless inside a VM and
-clipboard integration has no WSL-specific path here.
+use may work; Secure Boot/zram state is still meaningless inside a VM, but
+clipboard integration works via `win32yank.exe` once it's reachable through
+WSL interop — `fish-deps install` can fetch it for you.
 
 **Assumed present on any Linux system this runs on:** `git`, `gpg`, `tar`,
 and GNU coreutils. These aren't tracked by `fish-deps` — they're base-system
