@@ -29,8 +29,11 @@ are active in Insert, Normal, and Visual modes unless noted.
 
     Ctrl+Alt+U      Strip the first token of the current command line,
                     leaving arguments in place with the cursor at the
-                    start. Useful for quickly retyping the command.
+                    start. Useful for quickly retyping the command. On
+                    an empty command line, first recalls the most recent
+                    history entry (like Up), then strips its first token.
                     Example: "mkdir new_folder" -> " new_folder"
+                    Example: empty line after "cd /home/me" -> " /home/me"
 
     Ctrl+Alt+=      Evaluate the current command line buffer with
                     Qalculate! (qalc) and print the result inline.
