@@ -7,13 +7,21 @@
 # DESCRIPTION
 #   Removes the first command token from the commandline buffer and
 #   positions the cursor for immediate replacement. If the command starts
-#   with sudo, preserves sudo and removes the token after it instead.
+#   with sudo, preserves sudo and removes the token after it instead. If
+#   the commandline is empty, first recalls the most recent history entry
+#   (like pressing Up) before doing the token replacement on it.
 #   Intended to be bound to a key in key_bindings.fish.
 #
 # EXAMPLE
 #   bind \cx _replace_command_token
 function _replace_command_token --description 'Remove first command token (or first after sudo) and place cursor for replacement'
     set -l cmd (commandline)
+
+    # Empty prompt: recall the last history entry first, same as it would
+    # behave if that command were already on the commandline.
+    if string match -rq '^\s*$' -- "$cmd"
+        set cmd (history --max 1)
+    end
 
     # 1. Logic for commands starting with sudo
     if string match -rq '^sudo\s+' -- "$cmd"
