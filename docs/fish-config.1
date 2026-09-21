@@ -5317,6 +5317,49 @@ Fisher installs automatically on first launch and the Catppuccin Mocha
 theme is applied.
 All other plugin functionality is bundled directly with this config and
 requires no additional installation.
+.SS OS Compatibility
+.PP
+This is a \f[B]Linux-only\f[R] configuration.
+It is developed and tested on an Arch Linux system; \f[V]fish-deps\f[R]
+also detects \f[V]apt\f[R], \f[V]dnf\f[R], \f[V]zypper\f[R], and
+\f[V]yum\f[R] for broader distro support, but coverage outside Arch is
+thinner.
+.PP
+IMPORTANT: A number of functions call Linux-specific subsystems
+directly, with no fallback: - \f[V]systemd-inhibit\f[R]
+(\f[V]wake-lock\f[R]) - \f[V]zramctl\f[R] / \f[V]swapon\f[R]
+(\f[V]swapstat\f[R]) - \f[V]sbctl\f[R] and UEFI Secure Boot state
+(\f[V]sbver\f[R]) - \f[V]wl-copy\f[R] / \f[V]xclip\f[R] for clipboard
+access (\f[V]y\f[R], \f[V]p\f[R], \f[V]paste\f[R], \f[V]hist\f[R]) \[em]
+Wayland or X11 only, no \f[V]pbcopy\f[R]/\f[V]pbpaste\f[R] fallback -
+GNU coreutils flags such as \f[V]stat -c\f[R] and \f[V]numfmt\f[R]
+(\f[V]sudo-toggle\f[R], \f[V]dng2avif\f[R]), which differ or don\[cq]t
+exist under a BSD userland
+.PP
+\f[B]macOS\f[R] is not supported.
+\f[V]_fish_deps_detect_pm\f[R] does check for \f[V]brew\f[R], but that
+alone does not make the functions above work \[em] they have no macOS
+equivalent path today.
+.PP
+\f[B]Windows\f[R] is not supported.
+Fish itself has no native Windows build; upstream\[cq]s own
+\[lq]Windows\[rq] install docs are Cygwin/WSL workarounds, not a real
+port.
+This config is not tested under WSL either.
+WSL2 runs a real Linux kernel and can run \f[V]systemd\f[R], so basic
+shell use may work, but \f[V]zramctl\f[R], \f[V]sbctl\f[R], and Secure
+Boot state are meaningless inside a VM, and clipboard integration would
+need a WSL-specific path (\f[V]clip.exe\f[R], \f[V]win32yank\f[R]) that
+does not exist here.
+.PP
+\f[B]Assumed present on any Linux system this runs on:\f[R]
+\f[V]git\f[R], \f[V]gpg\f[R], \f[V]tar\f[R], and GNU coreutils (for
+\f[V]stat\f[R], \f[V]date\f[R], \f[V]numfmt\f[R]).
+These are not tracked by \f[V]fish-deps\f[R] \[em] see the Dependency
+Catalog \[em] because they are base-system utilities, not opt-in
+software with an install journey to manage.
+A system missing any of them is missing basic Linux tooling, not a
+\f[V]fish-deps\f[R] gap.
 .SS Return Sentinel
 .PP
 \f[V]config.fish\f[R] ends with a return sentinel guard.
