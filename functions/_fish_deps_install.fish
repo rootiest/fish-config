@@ -46,6 +46,14 @@ function _fish_deps_install
 
     set -l i 1
     for bin in $_fdc_bins
+        # win32yank only matters under WSL2 — skip the entry entirely
+        # elsewhere so a plain Linux box never sees it, not even as a
+        # "no install method available" note.
+        if test "$bin" = win32yank.exe; and not string match -qi '*microsoft*' (cat /proc/sys/kernel/osrelease 2>/dev/null)
+            set i (math $i + 1)
+            continue
+        end
+
         # Optional-tier deps are opt-in: skip unless --optional/--all was passed.
         if test "$_fdc_tiers[$i]" = opt; and test $include_optional -eq 0
             if not command -q $bin
@@ -140,6 +148,15 @@ function _fish_deps_install
                     end
                     set -a methods special-marktext-appimage
                     set -a method_labels "AppImage download (~/.local/bin/marktext)"
+                case win32yank-release
+                    if test (uname -m) = x86_64
+                        set -a methods special-win32yank
+                        set -a method_labels "binary download (github releases)"
+                    else
+                        set_color brblack
+                        echo "  note: win32yank only ships x86_64 builds (this is "(uname -m)")"
+                        set_color normal
+                    end
                 case go-ov
                     if type -q go
                         set -a methods special-go-ov
@@ -296,6 +313,18 @@ function _fish_deps_install
                     and chmod +x "$_wt_bin"
                     and ln -sf "$_wt_bin" "$HOME/.local/bin/wakatime"
                     rm -rf "$_tmpdir"
+                case special-win32yank
+                    set -l _zip win32yank-x64.zip
+                    set -l _tmpdir (mktemp -d)
+                    mkdir -p "$HOME/.local/bin"
+                    and curl -fL "https://github.com/equalsraf/win32yank/releases/latest/download/$_zip" \
+                        -o "$_tmpdir/$_zip"
+                    and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
+                    and cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
+                    and chmod +x "$HOME/.local/bin/win32yank.exe"
+                    set -l _dl_status $status
+                    rm -rf "$_tmpdir"
+                    test $_dl_status -eq 0
                 case special-fzf
                     fzf-update
                 case special-curl

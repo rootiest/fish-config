@@ -8,8 +8,11 @@
 #   paste [args...]
 #
 # DESCRIPTION
-#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
-#   falls back to xclip on X11.
+#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland, xclip on
+#   X11, or win32yank on WSL2.
+#
+# DEPENDENCIES
+#   _fish_clipboard_paste
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to the clipboard tool
@@ -24,12 +27,5 @@
 # EXAMPLE
 #   paste > file.txt
 function paste --description 'Paste from clipboard'
-    if type -q wl-paste
-        wl-paste $argv
-    else if type -q xclip
-        xclip -selection clipboard -o $argv
-    else
-        echo "Error: Neither wl-paste nor xclip found." >&2
-        return 1
-    end
+    _fish_clipboard_paste $argv
 end

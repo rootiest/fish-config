@@ -146,6 +146,25 @@ function _fish_deps_update
             continue
         end
 
+        # win32yank: re-download the binary from github releases (WSL2 only;
+        # only reached if a copy is already on PATH, so no WSL check needed)
+        if test "$special" = win32yank-release
+            echo "Updating $bin..."
+            set -l _zip win32yank-x64.zip
+            set -l _tmpdir (mktemp -d)
+            curl -fL "https://github.com/equalsraf/win32yank/releases/latest/download/$_zip" \
+                -o "$_tmpdir/$_zip"
+            and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
+            and cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
+            and chmod +x "$HOME/.local/bin/win32yank.exe"
+            set -l _up_status $status
+            rm -rf "$_tmpdir"
+            test $_up_status -eq 0
+            and set updated_any 1
+            set i (math $i + 1)
+            continue
+        end
+
         # pipx tools
         if test "$special" = pipx
             if type -q pipx

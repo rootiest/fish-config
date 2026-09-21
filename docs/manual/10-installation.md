@@ -35,10 +35,13 @@ no fallback:
 - `systemd-inhibit` (`wake-lock`)
 - `zramctl` / `swapon` (`swapstat`)
 - `sbctl` and UEFI Secure Boot state (`sbver`)
-- `wl-copy` / `xclip` for clipboard access (`y`, `p`, `paste`, `hist`) —
-  Wayland or X11 only, no `pbcopy`/`pbpaste` fallback
 - GNU coreutils flags such as `stat -c` and `numfmt` (`sudo-toggle`,
   `dng2avif`), which differ or don't exist under a BSD userland
+
+Clipboard access (`y`, `p`, `paste`, `hist`) is the exception: it falls back
+through `wl-copy`/`wl-paste` (Wayland), `xclip` (X11), and `win32yank.exe`
+(WSL2), so it works on all three. There is still no `pbcopy`/`pbpaste`
+fallback for macOS.
 
 **macOS** is not supported. `_fish_deps_detect_pm` does check for `brew`, but
 that alone does not make the functions above work — they have no macOS
@@ -47,10 +50,10 @@ equivalent path today.
 **Windows** is not supported. Fish itself has no native Windows build;
 upstream's own "Windows" install docs are Cygwin/WSL workarounds, not a real
 port. This config is not tested under WSL either. WSL2 runs a real Linux
-kernel and can run `systemd`, so basic shell use may work, but `zramctl`,
-`sbctl`, and Secure Boot state are meaningless inside a VM, and clipboard
-integration would need a WSL-specific path (`clip.exe`, `win32yank`) that
-does not exist here.
+kernel and can run `systemd`, so basic shell use may work; `zramctl`,
+`sbctl`, and Secure Boot state are still meaningless inside a VM, but
+clipboard integration works via `win32yank.exe` (see above) once it's
+installed on the Windows side and reachable through WSL interop.
 
 **Assumed present on any Linux system this runs on:** `git`, `gpg`, `tar`,
 and GNU coreutils (for `stat`, `date`, `numfmt`). These are not tracked by

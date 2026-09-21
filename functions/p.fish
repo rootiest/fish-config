@@ -8,8 +8,11 @@
 #   p [args...]
 #
 # DESCRIPTION
-#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland,
-#   falls back to xclip on X11. Supports -h/--help for usage info.
+#   Outputs clipboard contents to stdout. Uses wl-paste on Wayland, xclip on
+#   X11, or win32yank on WSL2. Supports -h/--help for usage info.
+#
+# DEPENDENCIES
+#   _fish_clipboard_paste
 #
 # ARGUMENTS
 #   -h, --help  Show usage help
@@ -41,17 +44,5 @@ function p --description 'Put from clipboard'
         return 0
     end
 
-    # Determine the clipboard provider
-    set -l paste_cmd
-    if type -q wl-paste
-        set paste_cmd wl-paste
-    else if type -q xclip
-        set paste_cmd xclip -selection clipboard -o
-    else
-        echo "Error: No clipboard provider (wl-paste or xclip) found." >&2
-        return 1
-    end
-
-    # Execute the paste command with any provided arguments
-    $paste_cmd $argv
+    _fish_clipboard_paste $argv
 end

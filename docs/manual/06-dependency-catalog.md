@@ -59,6 +59,7 @@ matter if you already use that specific tool. Skipped by
 | `screen` | GNU screen; fallback backend for `jobrunner` when `tmux` is unavailable. |
 | `marktext` | Markdown editor; backs the `md` wrapper, which is the only thing that references it. No distro packages it under a common name, so `fish-deps` offers the AUR package (`marktext-bin`) on Arch and otherwise installs upstream's AppImage to `~/.local/bin/marktext`. |
 | `firejail` | Sandbox; needed only by `md --read-only`, which uses it to make MarkText unable to save over the file it opened. Every other `md` invocation works without it. |
+| `win32yank.exe` | Clipboard bridge for WSL2; backs the `y`/`p`/`paste`/`hist` clipboard fallback chain when neither `wl-copy`/`wl-paste` nor `xclip` are present. `fish-deps` only offers to install it when WSL2 is detected (`microsoft` in `/proc/sys/kernel/osrelease`), downloading the x86_64 binary from GitHub releases to `~/.local/bin`. |
 
 ## Terminal Emulators
 
