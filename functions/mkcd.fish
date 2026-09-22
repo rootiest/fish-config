@@ -5,7 +5,7 @@
 #   01-file-and-directory
 #
 # CLASSIFICATION
-#   uses-shadow(cd)
+#   bypasses-shadow(cd)
 #
 # SYNOPSIS
 #   mkcd [-s | --silent] <dir>
@@ -68,7 +68,7 @@ function mkcd --description 'Create a directory (with parents) and cd into it'
         _fish_mkdir_p --tree $dir; or return $status
     end
 
-    cd $dir
+    builtin cd $dir
     or return $status
 
     if test $is_new -eq 1
