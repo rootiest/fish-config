@@ -912,6 +912,9 @@ cat README.md
 cat \[ti]/projects/myapp
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(ls)\f[R],
+\f[V]bypasses-shadow(cat)\f[R]
 .SS copy
 .IP
 .nf
@@ -930,6 +933,8 @@ copy ./mydir/ \[ti]/backup
 copy ./mydir/ \[ti]/backup    # copies mydir INTO backup, not backup/mydir/
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(cp)\f[R]
 .SS du
 .IP
 .nf
@@ -951,6 +956,8 @@ du \[ti]/Downloads
 du --disk
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(du)\f[R]
 .SS dusize
 .IP
 .nf
@@ -968,6 +975,8 @@ dusize \[ti]/Downloads
 dusize \[ti]/Videos
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(du)\f[R]
 .SS lD
 .IP
 .nf
@@ -987,6 +996,8 @@ Example:
 lD \[ti]/projects
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS ls
 .IP
 .nf
@@ -1005,6 +1016,8 @@ ls
 ls -a \[ti]/projects
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS lsr
 .IP
 .nf
@@ -1024,6 +1037,8 @@ Example:
 lsr \[ti]/projects
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS lss
 .IP
 .nf
@@ -1043,6 +1058,8 @@ Example:
 lss \[ti]/downloads
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS lstree
 .IP
 .nf
@@ -1062,6 +1079,8 @@ Example:
 lstree \[ti]/projects/myapp
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS lt
 .IP
 .nf
@@ -1081,6 +1100,8 @@ Example:
 lt \[ti]/projects
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS ltr
 .IP
 .nf
@@ -1101,6 +1122,8 @@ Example:
 ltr \[ti]/projects
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS lx
 .IP
 .nf
@@ -1120,6 +1143,8 @@ Example:
 lx \[ti]/projects
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ls)\f[R]
 .SS mkcd
 .IP
 .nf
@@ -1145,6 +1170,8 @@ mkcd \[ti]/projects/myapp
 mkcd \[ti]/projects/newapp/src
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(cd)\f[R]
 .SS mkdir
 .IP
 .nf
@@ -1163,6 +1190,8 @@ Example:
 mkdir \[ti]/projects/myapp/src
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(mkdir)\f[R]
 .SS mv
 .IP
 .nf
@@ -1188,6 +1217,8 @@ Example:
 mv \[ti]/.config/btop/themes/themes \[ti]/.config/btop/themes
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(mv)\f[R]
 .SS poke
 .IP
 .nf
@@ -1227,6 +1258,8 @@ rg \[dq]fish_greeting\[dq] \[ti]/.config/fish/
 rg -l \[dq]TODO\[dq] \[ti]/projects/myapp
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(rg)\f[R]
 .SS rm
 .IP
 .nf
@@ -1263,6 +1296,9 @@ rm -e
 rm -S sensitive_key.pem
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(rm)\f[R],
+\f[V]destructive\f[R]
 .SS scrub
 .IP
 .nf
@@ -1290,6 +1326,9 @@ scrub -a
 scrub -d
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(rm)\f[R],
+\f[V]bypasses-shadow(rm)\f[R], \f[V]destructive\f[R]
 .SS 5.2 Navigation
 .SS cdi
 .IP
@@ -1389,6 +1428,8 @@ edit --editor=code --clipboard
 edit --text=\[dq]hello world\[dq]
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(rm)\f[R]
 .SS fc
 .IP
 .nf
@@ -1412,6 +1453,9 @@ fc
 fc git
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(rm)\f[R],
+\f[V]self-limiting(cat)\f[R]
 .SS less
 .IP
 .nf
@@ -1428,6 +1472,8 @@ Example:
 less /var/log/syslog
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(cat,less)\f[R]
 .SS md
 .IP
 .nf
@@ -1475,6 +1521,8 @@ md --new-window one.md two.md
 .PP
 \f[B]Dependencies:\f[R] \f[V]marktext\f[R], \f[V]firejail\f[R],
 \f[V]bkg\f[R]
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(mkdir)\f[R]
 .SS rawfish
 .IP
 .nf
@@ -1507,6 +1555,8 @@ Example:
 view /etc/fstab
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(less)\f[R]
 .SS 5.4 Git and Version Control
 .SS auto-pull
 .IP
@@ -1600,6 +1650,9 @@ gi -b -p
 gi -s node > .gitignore
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(grep,cat)\f[R],
+\f[V]network\f[R], \f[V]blocking-prompt\f[R]
 .SS git-clean
 .IP
 .nf
@@ -1623,6 +1676,8 @@ git-clean --force
 git-clean
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS gitui
 .IP
 .nf
@@ -1660,6 +1715,8 @@ gitup
 gitup --all
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS hist
 .IP
 .nf
@@ -1819,6 +1876,9 @@ not, so they are chained with the git commands that do the linking:
 \f[V]_mkrep_verbose\f[R], \f[V]_mkrep_add_origin\f[R],
 \f[V]_mkrep_default_remote_cmd\f[R], \f[V]_mkrep_remote_url\f[R],
 \f[V]_mkrep_repo_exists\f[R], \f[V]git\f[R]
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(cd)\f[R],
+\f[V]self-limiting(rm)\f[R], \f[V]destructive\f[R], \f[V]network\f[R]
 .SS 5.5 Package Management
 .SS cleanup
 .IP
@@ -1837,6 +1897,8 @@ Example:
 cleanup
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(grep)\f[R]
 .SS parur
 .IP
 .nf
@@ -1855,6 +1917,8 @@ Example:
 parur
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS pkg
 .IP
 .nf
@@ -1890,6 +1954,8 @@ pkg -i ripgrep fd-find
 pkg -u cowsay
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS search
 .IP
 .nf
@@ -1910,6 +1976,8 @@ Example:
 search neovim
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS upgrade
 .IP
 .nf
@@ -1927,6 +1995,8 @@ Example:
 upgrade
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS 5.6 Dependency Management
 .SS check_fish_deps
 .IP
@@ -2018,6 +2088,8 @@ Example:
 fzf-update
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS 5.7 System and Monitoring
 .SS limine-edit
 .IP
@@ -2091,6 +2163,8 @@ sbver
 sbver --brief
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(grep)\f[R]
 .SS screensleep
 .IP
 .nf
@@ -2158,6 +2232,8 @@ Example:
 top
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(top)\f[R]
 .SS 5.8 Terminal Management
 .SS bkg
 .IP
@@ -2306,6 +2382,8 @@ jobrunner kill build
 \f[B]Dependencies:\f[R] \f[V]tmux\f[R], \f[V]screen\f[R],
 \f[V]__jobrunner_sessions\f[R]
 .PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(cat,rm)\f[R]
+.PP
 \f[B]Used by:\f[R] \f[V]jr\f[R]
 .SS jr
 .IP
@@ -2392,6 +2470,9 @@ Example:
 ssh user\[at]host
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ssh)\f[R],
+\f[V]network\f[R]
 .SS tab
 .IP
 .nf
@@ -2538,6 +2619,8 @@ Example:
 gip
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS gip4
 .IP
 .nf
@@ -2553,6 +2636,8 @@ Example:
 gip4
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS gip6
 .IP
 .nf
@@ -2573,6 +2658,8 @@ Example:
 gip6
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS ping
 .IP
 .nf
@@ -2592,6 +2679,8 @@ ping google.com
 ping --legend google.com
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(ping)\f[R]
 .SS qr
 .IP
 .nf
@@ -2613,6 +2702,9 @@ qr \[dq]https://example.com\[dq]
 echo \[dq]hello\[dq] | qr
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(cat)\f[R],
+\f[V]network\f[R]
 .SS 5.11 Pager and Logging
 .SS logs
 .IP
@@ -2647,6 +2739,9 @@ logs
 logs -c scrollback
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(cat)\f[R],
+\f[V]self-limiting(rm)\f[R], \f[V]network\f[R]
 .SS smart_exit
 .IP
 .nf
@@ -2675,6 +2770,9 @@ smart_exit
 smart_exit --no-log
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(rm,mkdir)\f[R],
+\f[V]destructive\f[R]
 .SS sponge_filter_secrets
 .IP
 .nf
@@ -2796,6 +2894,9 @@ agents-init --quiet
 .PP
 \f[B]Dependencies:\f[R] \f[V]_agents_repo_install_tools\f[R],
 \f[V]_agents_repo_sync\f[R], \f[V]_agents_init_ensure_gitignore\f[R]
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(rm,mkdir)\f[R],
+\f[V]bypasses-shadow(mv)\f[R]
 .PP
 \f[B]Used by:\f[R] \f[V]agy\f[R], \f[V]claude\f[R]
 .SS agents-vault
@@ -2984,6 +3085,8 @@ agents-vault --restore
 \f[V]_agents_repo_ensure_symlink\f[R], \f[V]_agents_repo_sync\f[R],
 \f[V]_agents_repo_install_tools\f[R], \f[V]git\f[R], \f[V]hostname\f[R]
 .PP
+\f[B]Classification:\f[R] \f[V]self-limiting(rm,mkdir)\f[R]
+.PP
 \f[B]Used by:\f[R] \f[V]agy\f[R], \f[V]claude\f[R]
 .SS agy
 .IP
@@ -3045,6 +3148,8 @@ Example:
 antigravity-ide
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(grep)\f[R]
 .SS claude
 .IP
 .nf
@@ -3082,6 +3187,8 @@ claude \[dq]Explain the recent changes\[dq]
 .fi
 .PP
 \f[B]Dependencies:\f[R] \f[V]agents-init\f[R], \f[V]agents-vault\f[R]
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(claude)\f[R]
 .SS claude-docs
 .IP
 .nf
@@ -3099,6 +3206,8 @@ Example:
 claude-docs
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(claude)\f[R]
 .SS claude-pr
 .IP
 .nf
@@ -3116,6 +3225,8 @@ Example:
 claude-pr
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(claude)\f[R]
 .SS docker
 .IP
 .nf
@@ -3222,6 +3333,8 @@ superpowers on
 superpowers off -g
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(claude)\f[R]
 .SS 5.13 Media and Utilities
 .SS dng2avif
 .IP
@@ -3249,6 +3362,8 @@ dng2avif photo.dng
 dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(rm)\f[R]
 .SS key-crypt
 .IP
 .nf
@@ -3299,6 +3414,9 @@ key-crypt --install              # register the standalone wrapper + Open With e
 .fi
 .PP
 \f[B]Dependencies:\f[R] \f[V]gpg\f[R], \f[V]tar\f[R]
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(rm)\f[R],
+\f[V]destructive\f[R]
 .SS play-media
 .IP
 .nf
@@ -3400,6 +3518,8 @@ yt-dlp dQw4w9WgXcQ
 yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS 5.14 Miscellaneous
 .SS bash
 .IP
@@ -3417,6 +3537,8 @@ Example:
 bash
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(bash)\f[R]
 .SS bd-pull
 .IP
 .nf
@@ -3455,6 +3577,8 @@ Example:
 cffetch
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(ls)\f[R]
 .SS cheat
 .IP
 .nf
@@ -3528,6 +3652,9 @@ config-help --help
 config-help pkg --man
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]self-limiting(grep)\f[R],
+\f[V]bypasses-shadow(less)\f[R]
 .SS config-settings
 .IP
 .nf
@@ -3607,6 +3734,8 @@ config-settings
 \f[V]__config_settings_state\f[R], \f[V]__config_settings_apply\f[R],
 \f[V]__config_settings_set_value\f[R], \f[V]python3\f[R]
 .PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(rm)\f[R]
+.PP
 \f[B]Used by:\f[R] \f[V]config-toggle\f[R]
 .SS config-toggle
 .IP
@@ -3676,6 +3805,8 @@ Example:
 dockup \[ti]/myapp
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]network\f[R]
 .SS ffetch
 .IP
 .nf
@@ -3692,6 +3823,8 @@ Example:
 ffetch
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]uses-shadow(ls)\f[R]
 .SS fzf_configure_bindings
 .IP
 .nf
@@ -3774,6 +3907,8 @@ kitty-logging install
 kitty-logging status
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(grep,mkdir,rm)\f[R]
 .SS ld
 .IP
 .nf
@@ -3869,6 +4004,8 @@ rand_string --case=title color animal --separator=dot digits=4
 rand_string literal=TEST --separator=underscore verb noun
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(cat)\f[R]
 .SS replay
 .IP
 .nf
@@ -3891,6 +4028,8 @@ replay \[dq]source \[ti]/.bashrc\[dq]
 replay \[dq]export FOO=bar\[dq]
 \f[R]
 .fi
+.PP
+\f[B]Classification:\f[R] \f[V]bypasses-shadow(bash,cd)\f[R]
 .SS repo-open
 .IP
 .nf
@@ -4728,7 +4867,6 @@ ssh                kitten ssh in Kitty terminal           system ssh
 rg                 rg --hyperlink-format=kitty            system rg
 mkdir              verbose path-tree display on creation  mkdir -p silently
 bash               XDG bashrc + $SHELL reset on exit      system bash
-history            timestamps prepended to every entry    fish builtin history
 cp / mv            forced -i confirmation prompt          cp / mv unmodified
 wget               forced --continue (resume downloads)   system wget
 grep/fgrep/egrep   forced --color=auto                    system grep variants
@@ -4742,6 +4880,12 @@ edit               multi-editor launcher (GUI/term + fallbacks)  $EDITOR/nvim/na
 When C1 is disabled, \f[V]rm\f[R] uses bare \f[V]command rm\f[R] with no
 wrapper \[em] files are permanently deleted, not trashed.
 There is no intermediate safety net.
+.PP
+\f[V]history\f[R] itself is never shadowed \[em] every function in this
+config that reads history depends on its stock builtin semantics.
+\f[V]pretty-history\f[R] (same \f[V]aliases-tricks\f[R] toggle) is a
+separate command that prints history with a timestamp prepended to every
+entry.
 .SS Sub-categories
 .PP
 \f[V]__fish_config_op_aliases\f[R] sub-divides into six sub-categories,
@@ -4771,6 +4915,56 @@ interception.
 .PP
 \f[V]claude\f[R] (\f[V]AGENTS.md/CLAUDE.md\f[R] auto-linking) and
 \f[V]edit\f[R] (multi-editor launcher), plus \f[V]agy\f[R].
+.SS For function authors
+.PP
+Calling one of these names bare from inside your own function means the
+override runs whenever C1 (or its sub-category) is on \[em] which may
+not be what your function wants: a shadow can change stdout
+(\f[V]cat\f[R]\[cq]s syntax highlighting, \f[V]mkdir\f[R]\[cq]s tree
+display), prompt interactively where none is expected
+(\f[V]cp\f[R]/\f[V]mv\f[R]\[cq]s forced \f[V]-i\f[R]), or reshape output
+structurally (\f[V]ls\f[R]\[cq]s icons/columns, \f[V]rg\f[R]\[cq]s
+hyperlink markers).
+If your function\[cq]s logic depends on stock behavior, bypass the
+shadow deterministically, regardless of the toggle state:
+.IP
+.nf
+\f[C]
+Shadow                  Bypass                        Why
+─────────────────────────────────────────────────────────────────────────
+ls, cat, rm, less, du,  command <name>                Real external
+top, ping, ssh, rg,                                    binaries \[em] a
+mkdir, bash, cp, mv,                                    real system command
+wget, grep/fgrep/egrep,                                exists to fall
+dir/vdir, claude                                        back to.
+cd                       builtin cd                    The one true
+                                                         fish builtin
+                                                         in this table.
+help config              __original_help $argv         \[ga]help\[ga] is neither
+                                                         a builtin nor an
+                                                         external binary
+                                                         (embedded in the
+                                                         fish binary
+                                                         itself) \[em] see
+                                                         conf.d/help.fish
+                                                         for why the
+                                                         wrapper keeps its
+                                                         own backup copy.
+edit                     (nothing to bypass to)         Purely our own
+                                                         invention, no
+                                                         stock command
+                                                         exists. Call
+                                                         $EDITOR/$VISUAL
+                                                         yourself if you
+                                                         want a plain
+                                                         editor launch.
+\f[R]
+.fi
+.PP
+A function\[cq]s own doc header records which of these it depends on:
+see the \f[V]CLASSIFICATION\f[R] label (\f[V]uses-shadow(...)\f[R] /
+\f[V]bypasses-shadow(...)\f[R]), documented in full at
+\f[V]docs/function-classification-schema.md\f[R] (https://git.rootiest.dev/rootiest/fish-config/src/branch/main/docs/function-classification-schema.md).
 .SS C2 \[em] Startup Side-Effects
 .PP
 These run automatically without any user action.
