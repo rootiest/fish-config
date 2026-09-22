@@ -703,6 +703,29 @@ ENTRY_HEADS = {
 }
 
 
+def _classification_tags(raw: list[str]) -> list[str]:
+    """Split a CLASSIFICATION body into its comma-separated tags.
+
+    A plain comma split (as `names()` uses for DEPENDENCIES) would break on
+    the commas inside `uses-shadow(rm, cp)`-style tags, so this only splits
+    on commas at paren depth 0.
+    """
+    text = " ".join(raw)
+    tags: list[str] = []
+    depth = 0
+    start = 0
+    for i, ch in enumerate(text):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+        elif ch == "," and depth == 0:
+            tags.append(text[start:i].strip())
+            start = i + 1
+    tags.append(text[start:].strip())
+    return [t for t in tags if t]
+
+
 def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str:
     """Render one parsed function header as a manual entry body.
 
@@ -739,6 +762,7 @@ def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str
     refs = []
     for label, values in (
         ("Dependencies", names(fn.get("DEPENDENCIES", []))),
+        ("Classification", _classification_tags(fn.get("CLASSIFICATION", []))),
         ("Used by", sorted(used_by)),
     ):
         if values:
@@ -884,6 +908,7 @@ def render_entry_site(fn: dict[str, list[str]], used_by: list[str], link=None) -
     refs = []
     for label, values in (
         ("Dependencies", names(fn.get("DEPENDENCIES", []))),
+        ("Classification", _classification_tags(fn.get("CLASSIFICATION", []))),
         ("Used by", sorted(used_by)),
     ):
         if values:

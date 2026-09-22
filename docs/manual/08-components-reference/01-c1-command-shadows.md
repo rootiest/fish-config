@@ -19,7 +19,6 @@ all of these commands.
     rg                 rg --hyperlink-format=kitty            system rg
     mkdir              verbose path-tree display on creation  mkdir -p silently
     bash               XDG bashrc + $SHELL reset on exit      system bash
-    history            timestamps prepended to every entry    fish builtin history
     cp / mv            forced -i confirmation prompt          cp / mv unmodified
     wget               forced --continue (resume downloads)   system wget
     grep/fgrep/egrep   forced --color=auto                    system grep variants
@@ -30,6 +29,11 @@ all of these commands.
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.
+
+`history` itself is never shadowed — every function in this config that
+reads history depends on its stock builtin semantics. `pretty-history`
+(same `aliases-tricks` toggle) is a separate command that prints history
+with a timestamp prepended to every entry.
 
 ## Sub-categories
 
@@ -62,4 +66,48 @@ and the `help config` interception.
 
 `claude` (AGENTS.md/CLAUDE.md auto-linking) and `edit` (multi-editor
 launcher), plus `agy`.
+
+## For function authors
+
+Calling one of these names bare from inside your own function means the
+override runs whenever C1 (or its sub-category) is on — which may not be
+what your function wants: a shadow can change stdout (`cat`'s syntax
+highlighting, `mkdir`'s tree display), prompt interactively where none is
+expected (`cp`/`mv`'s forced `-i`), or reshape output structurally (`ls`'s
+icons/columns, `rg`'s hyperlink markers). If your function's logic depends
+on stock behavior, bypass the shadow deterministically, regardless of the
+toggle state:
+
+    Shadow                  Bypass                        Why
+    ─────────────────────────────────────────────────────────────────────────
+    ls, cat, rm, less, du,  command <name>                Real external
+    top, ping, ssh, rg,                                    binaries — a
+    mkdir, bash, cp, mv,                                    real system command
+    wget, grep/fgrep/egrep,                                exists to fall
+    dir/vdir, claude                                        back to.
+    cd                       builtin cd                    The one true
+                                                             fish builtin
+                                                             in this table.
+    help config              __original_help $argv         `help` is neither
+                                                             a builtin nor an
+                                                             external binary
+                                                             (embedded in the
+                                                             fish binary
+                                                             itself) — see
+                                                             conf.d/help.fish
+                                                             for why the
+                                                             wrapper keeps its
+                                                             own backup copy.
+    edit                     (nothing to bypass to)         Purely our own
+                                                             invention, no
+                                                             stock command
+                                                             exists. Call
+                                                             $EDITOR/$VISUAL
+                                                             yourself if you
+                                                             want a plain
+                                                             editor launch.
+
+A function's own doc header records which of these it depends on: see the
+`CLASSIFICATION` label (`uses-shadow(...)` / `bypasses-shadow(...)`) in
+`AGENTS/functions/CLAUDE.md`.
 

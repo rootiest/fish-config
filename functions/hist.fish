@@ -34,7 +34,7 @@ function hist --description 'Search fish history and put it in the prompt'
         return 1
     end
 
-    set -l selected (history | fzf --reverse --height 40% --with-nth 3..)
+    set -l selected (builtin history --show-time='%F %T ' | fzf --reverse --height 40% --with-nth 3..)
 
     if test -n "$selected"
         # Strip the timestamp for the final output
