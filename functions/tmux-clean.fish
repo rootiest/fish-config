@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   tmux
+#
 # SYNOPSIS
 #   tmux-clean
 #

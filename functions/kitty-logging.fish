@@ -7,6 +7,10 @@
 # COMPONENT
 #   logging/terminal-capture
 #
+# DEPENDENCIES
+#   kitty, __kitty_logging_dir, __kitty_logging_has_watcher,
+#   __kitty_logging_version
+#
 # CLASSIFICATION
 #   bypasses-shadow(grep,mkdir,rm)
 #

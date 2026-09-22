@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   cheat, tldr, man
+#
 # SYNOPSIS
 #   cheat <topic> [args...]
 #

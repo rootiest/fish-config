@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/monitor
 #
+# DEPENDENCIES
+#   btop
+#
 # CLASSIFICATION
 #   bypasses-shadow(top)
 #

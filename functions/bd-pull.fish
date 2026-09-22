@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   curl, jq, git
+#
 # SYNOPSIS
 #   bd-pull <owner/repo>
 #

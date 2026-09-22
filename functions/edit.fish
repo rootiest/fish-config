@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/dev-tools
 #
+# DEPENDENCIES
+#   p, nano, nvim
+#
 # CLASSIFICATION
 #   bypasses-shadow(rm)
 #

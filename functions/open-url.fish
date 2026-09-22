@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   xdg-mime, xdg-open
+#
 # SYNOPSIS
 #   open-url [-s|--silent] [-v|--verbose] <url>
 #   open-url --help

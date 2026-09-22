@@ -7,6 +7,9 @@
 # COMPONENT
 #   autoexec/sync
 #
+# DEPENDENCIES
+#   git
+#
 # SYNOPSIS
 #   auto-pull [list]
 #   auto-pull add [PATH]

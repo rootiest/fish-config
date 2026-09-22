@@ -4,6 +4,9 @@
 # CATEGORY
 #   04-git-and-version-control
 #
+# DEPENDENCIES
+#   curl, md5sum, md5
+#
 # CLASSIFICATION
 #   self-limiting(grep,cat), network, blocking-prompt
 #

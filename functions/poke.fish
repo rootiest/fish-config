@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# DEPENDENCIES
+#   _fish_mkdir_p
+#
 # SYNOPSIS
 #   poke <file> [file...]
 #

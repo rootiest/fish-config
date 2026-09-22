@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# DEPENDENCIES
+#   trash
+#
 # CLASSIFICATION
 #   bypasses-shadow(rm), destructive
 #

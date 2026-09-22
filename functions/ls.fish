@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# DEPENDENCIES
+#   eza, lsd
+#
 # CLASSIFICATION
 #   bypasses-shadow(ls)
 #

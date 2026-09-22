@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/network
 #
+# DEPENDENCIES
+#   prettyping
+#
 # CLASSIFICATION
 #   bypasses-shadow(ping)
 #

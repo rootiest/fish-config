@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   xdg-open, man, ov, bat
+#
 # CLASSIFICATION
 #   self-limiting(grep), bypasses-shadow(less)
 #

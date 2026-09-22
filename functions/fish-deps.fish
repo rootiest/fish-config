@@ -4,6 +4,9 @@
 # CATEGORY
 #   06-dependency-management
 #
+# DEPENDENCIES
+#   _fish_deps_status, _fish_deps_install, _fish_deps_update
+#
 # SYNOPSIS
 #   fish-deps [status|install|update|sync] [--optional] [--terminals] [--all]
 #

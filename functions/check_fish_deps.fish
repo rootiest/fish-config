@@ -4,6 +4,9 @@
 # CATEGORY
 #   06-dependency-management
 #
+# DEPENDENCIES
+#   fish-deps
+#
 # SYNOPSIS
 #   check_fish_deps
 #
