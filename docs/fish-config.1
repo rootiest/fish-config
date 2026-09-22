@@ -1742,10 +1742,11 @@ hist
 .nf
 \f[C]
 Synopsis:  mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
-                 [-c | --clean | --no-clean] [--strict] [-v | --verbose]
-                 [-s | --silent] [--template <path>] [--branch <name>]
-                 [--remote <url>] [--new-remote [<cmd>]] [--server <type>]
-                 [--check-existing] [-y | --yes] [--name <name>] [-h | --help] <dir>
+                 [-c | --clean | --no-clean] [--strict] [-l | --local]
+                 [-v | --verbose] [-s | --silent] [--template <path>]
+                 [--branch <name>] [--remote <url>] [--new-remote [<cmd>]]
+                 [--server <type>] [--check-existing] [-y | --yes]
+                 [--name <name>] [-h | --help] <dir>
 
 Creates a directory, cds into it, and git-inits it -- mkcd plus a git
 repo in one step. All three actions are on by default and each has a
@@ -1757,6 +1758,15 @@ for a guaranteed-fresh start; --strict instead refuses to proceed if
 the directory already exists. The two compose: --clean runs first, so
 --clean --strict together is not a contradiction -- strict sees an
 empty slot because clean just emptied it.
+
+-l/--local forces strictly local action: any flag or environment
+variable that would link to, create, or check a remote (--remote,
+--new-remote, --server, --check-existing, $GIT_SERVER, $GITEA_URL,
+$GITEA_HOST, $GITLAB_URL, $GITLAB_HOST, $MKREP_REMOTE_CMD) is
+overridden and ignored. Even when passed alongside conflicting remote
+flags like --server or --remote, -l/--local takes precedence and
+proceeds with local directory creation and git initialization without
+erroring or contacting any forge.
 
 --remote links an already-existing remote (git remote add origin
 <url>) -- it does not create anything. Linking is idempotent: an origin
@@ -1820,6 +1830,9 @@ Arguments:
   -c, --clean      Remove <dir> first if it already exists
   --no-clean       Leave an existing <dir> alone (default)
   --strict         Fail if <dir> already exists (checked after --clean)
+  -l, --local      Force local-only operation; overrides and ignores any
+                   remote flags (--remote, --new-remote, --server,
+                   --check-existing) and remote environment variables
   -v, --verbose    Print each step as it runs
   -s, --silent     Suppress all output; overrides --verbose
   --template <path>
@@ -1846,6 +1859,7 @@ Exit Status:
 Example:
 mkrep \[ti]/projects/my-new-repo
 mkrep --clean --strict \[ti]/projects/scratch
+mkrep -l \[ti]/projects/my-local-repo
 mkrep --remote git\[at]git.example.com:me/foo.git \[ti]/projects/foo
 set -Ux MKREP_REMOTE_CMD \[aq]gh repo create {name} --private --source=. --remote=origin --push\[aq]
 mkrep --new-remote \[ti]/projects/foo
