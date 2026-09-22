@@ -20,7 +20,7 @@
 #   having no backup at all.
 #
 #   When <link> is an existing real directory, its contents are copied into
-#   <target> without clobbering (cp -n) before the directory is replaced by
+#   <target> without clobbering (cp --update=none) before the directory is replaced by
 #   the link, so adopting a populated live directory never overwrites the
 #   copy already in the vault.
 #
@@ -60,7 +60,7 @@ function _agents_repo_ensure_symlink --argument-names link target
     else if test -d "$link"
         set -l contents (command ls -A "$link" 2>/dev/null)
         if test (count $contents) -gt 0
-            command cp -rn "$link/." "$target/"; or return 1
+            command cp -r --update=none "$link/." "$target/"; or return 1
         end
         rm -rf "$link"; or return 1
     else if test -e "$link"

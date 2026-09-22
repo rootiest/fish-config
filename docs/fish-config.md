@@ -607,6 +607,8 @@ functions). They are active in all interactive sessions.
     cat README.md
     cat ~/projects/myapp
 
+**Classification:** `uses-shadow(ls)`, `bypasses-shadow(cat)`
+
 ### copy
 
     Synopsis:  copy <source> <dest>
@@ -621,6 +623,8 @@ functions). They are active in all interactive sessions.
     Example:
     copy ./mydir/ ~/backup
     copy ./mydir/ ~/backup    # copies mydir INTO backup, not backup/mydir/
+
+**Classification:** `bypasses-shadow(cp)`
 
 ### du
 
@@ -640,6 +644,8 @@ functions). They are active in all interactive sessions.
     du ~/Downloads
     du --disk
 
+**Classification:** `bypasses-shadow(du)`
+
 ### dusize
 
     Synopsis:  dusize [dir]
@@ -653,6 +659,8 @@ functions). They are active in all interactive sessions.
     Example:
     dusize ~/Downloads
     dusize ~/Videos
+
+**Classification:** `uses-shadow(du)`
 
 ### lD
 
@@ -670,6 +678,8 @@ functions). They are active in all interactive sessions.
     Example:
     lD ~/projects
 
+**Classification:** `bypasses-shadow(ls)`
+
 ### ls
 
     Synopsis:  ls [args...]
@@ -684,6 +694,8 @@ functions). They are active in all interactive sessions.
     ls ~/projects
     ls
     ls -a ~/projects
+
+**Classification:** `bypasses-shadow(ls)`
 
 ### lsr
 
@@ -701,6 +713,8 @@ functions). They are active in all interactive sessions.
     Example:
     lsr ~/projects
 
+**Classification:** `bypasses-shadow(ls)`
+
 ### lss
 
     Synopsis:  lss [args...]
@@ -716,6 +730,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     lss ~/downloads
+
+**Classification:** `bypasses-shadow(ls)`
 
 ### lstree
 
@@ -733,6 +749,8 @@ functions). They are active in all interactive sessions.
     Example:
     lstree ~/projects/myapp
 
+**Classification:** `bypasses-shadow(ls)`
+
 ### lt
 
     Synopsis:  lt [args...]
@@ -748,6 +766,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     lt ~/projects
+
+**Classification:** `bypasses-shadow(ls)`
 
 ### ltr
 
@@ -766,6 +786,8 @@ functions). They are active in all interactive sessions.
     Example:
     ltr ~/projects
 
+**Classification:** `bypasses-shadow(ls)`
+
 ### lx
 
     Synopsis:  lx [args...]
@@ -781,6 +803,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     lx ~/projects
+
+**Classification:** `bypasses-shadow(ls)`
 
 ### mkcd
 
@@ -804,6 +828,8 @@ functions). They are active in all interactive sessions.
     mkcd ~/projects/myapp
     mkcd ~/projects/newapp/src
 
+**Classification:** `bypasses-shadow(cd)`
+
 ### mkdir
 
     Synopsis:  mkdir [args...]
@@ -818,6 +844,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     mkdir ~/projects/myapp/src
+
+**Classification:** `bypasses-shadow(mkdir)`
 
 ### mv
 
@@ -840,6 +868,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     mv ~/.config/btop/themes/themes ~/.config/btop/themes
+
+**Classification:** `bypasses-shadow(mv)`
 
 ### poke
 
@@ -874,6 +904,8 @@ functions). They are active in all interactive sessions.
     rg "fish_greeting" ~/.config/fish/
     rg -l "TODO" ~/projects/myapp
 
+**Classification:** `bypasses-shadow(rg)`
+
 ### rm
 
     Synopsis:  rm [-e [options] | -S | args...]
@@ -907,6 +939,8 @@ functions). They are active in all interactive sessions.
     rm -e
     rm -S sensitive_key.pem
 
+**Classification:** `bypasses-shadow(rm)`, `destructive`
+
 ### scrub
 
     Synopsis:  scrub [-a] [-d] [-h]
@@ -930,6 +964,8 @@ functions). They are active in all interactive sessions.
     scrub
     scrub -a
     scrub -d
+
+**Classification:** `uses-shadow(rm)`, `bypasses-shadow(rm)`, `destructive`
 
 ## 5.2 Navigation
 
@@ -1020,6 +1056,8 @@ functions). They are active in all interactive sessions.
     edit --editor=code --clipboard
     edit --text="hello world"
 
+**Classification:** `bypasses-shadow(rm)`
+
 ### fc
 
     Synopsis:  fc [command_prefix]
@@ -1040,6 +1078,8 @@ functions). They are active in all interactive sessions.
     fc
     fc git
 
+**Classification:** `bypasses-shadow(rm)`, `self-limiting(cat)`
+
 ### less
 
     Synopsis:  less [args...]
@@ -1052,6 +1092,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     less /var/log/syslog
+
+**Classification:** `bypasses-shadow(cat,less)`
 
 ### md
 
@@ -1096,6 +1138,8 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `marktext`, `firejail`, `bkg`
 
+**Classification:** `uses-shadow(mkdir)`
+
 ### rawfish
 
     Synopsis:  rawfish [args...]
@@ -1121,6 +1165,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     view /etc/fstab
+
+**Classification:** `uses-shadow(less)`
 
 ## 5.4 Git and Version Control
 
@@ -1207,6 +1253,8 @@ functions). They are active in all interactive sessions.
     gi -b -p
     gi -s node > .gitignore
 
+**Classification:** `self-limiting(grep,cat)`, `network`, `blocking-prompt`
+
 ### git-clean
 
     Synopsis:  git-clean [-h] [-f]
@@ -1226,6 +1274,8 @@ functions). They are active in all interactive sessions.
     Example:
     git-clean --force
     git-clean
+
+**Classification:** `network`
 
 ### gitui
 
@@ -1257,6 +1307,8 @@ functions). They are active in all interactive sessions.
     Example:
     gitup
     gitup --all
+
+**Classification:** `network`
 
 ### hist
 
@@ -1407,6 +1459,8 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_verbose`, `_mkrep_add_origin`, `_mkrep_default_remote_cmd`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
 
+**Classification:** `bypasses-shadow(cd)`, `self-limiting(rm)`, `destructive`, `network`
+
 ## 5.5 Package Management
 
 ### cleanup
@@ -1423,6 +1477,8 @@ functions). They are active in all interactive sessions.
     Example:
     cleanup
 
+**Classification:** `self-limiting(grep)`
+
 ### parur
 
     Synopsis:  parur
@@ -1437,6 +1493,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     parur
+
+**Classification:** `network`
 
 ### pkg
 
@@ -1470,6 +1528,8 @@ functions). They are active in all interactive sessions.
     pkg -i ripgrep fd-find
     pkg -u cowsay
 
+**Classification:** `network`
+
 ### search
 
     Synopsis:  search [args...]
@@ -1487,6 +1547,8 @@ functions). They are active in all interactive sessions.
     Example:
     search neovim
 
+**Classification:** `network`
+
 ### upgrade
 
     Synopsis:  upgrade
@@ -1500,6 +1562,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     upgrade
+
+**Classification:** `network`
 
 ## 5.6 Dependency Management
 
@@ -1584,6 +1648,8 @@ functions). They are active in all interactive sessions.
     Example:
     fzf-update
 
+**Classification:** `network`
+
 ## 5.7 System and Monitoring
 
 ### limine-edit
@@ -1646,6 +1712,8 @@ functions). They are active in all interactive sessions.
     sbver
     sbver --brief
 
+**Classification:** `self-limiting(grep)`
+
 ### screensleep
 
     Synopsis:  screensleep
@@ -1700,6 +1768,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     top
+
+**Classification:** `bypasses-shadow(top)`
 
 ## 5.8 Terminal Management
 
@@ -1830,6 +1900,8 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `tmux`, `screen`, `__jobrunner_sessions`
 
+**Classification:** `bypasses-shadow(cat,rm)`
+
 **Used by:** `jr`
 
 ### jr
@@ -1904,6 +1976,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     ssh user@host
+
+**Classification:** `bypasses-shadow(ssh)`, `network`
 
 ### tab
 
@@ -2032,6 +2106,8 @@ functions). They are active in all interactive sessions.
     Example:
     gip
 
+**Classification:** `network`
+
 ### gip4
 
     Synopsis:  gip4
@@ -2043,6 +2119,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     gip4
+
+**Classification:** `network`
 
 ### gip6
 
@@ -2061,6 +2139,8 @@ functions). They are active in all interactive sessions.
     Example:
     gip6
 
+**Classification:** `network`
+
 ### ping
 
     Synopsis:  ping [args...]
@@ -2076,6 +2156,8 @@ functions). They are active in all interactive sessions.
     Example:
     ping google.com
     ping --legend google.com
+
+**Classification:** `bypasses-shadow(ping)`
 
 ### qr
 
@@ -2094,6 +2176,8 @@ functions). They are active in all interactive sessions.
     Example:
     qr "https://example.com"
     echo "hello" | qr
+
+**Classification:** `self-limiting(cat)`, `network`
 
 ## 5.11 Pager and Logging
 
@@ -2127,6 +2211,8 @@ functions). They are active in all interactive sessions.
     logs
     logs -c scrollback
 
+**Classification:** `bypasses-shadow(cat)`, `self-limiting(rm)`, `network`
+
 ### smart_exit
 
     Synopsis:  smart_exit [-h] [-n]
@@ -2151,6 +2237,8 @@ functions). They are active in all interactive sessions.
     Example:
     smart_exit
     smart_exit --no-log
+
+**Classification:** `self-limiting(rm,mkdir)`, `destructive`
 
 ### sponge_filter_secrets
 
@@ -2266,6 +2354,8 @@ functions). They are active in all interactive sessions.
     agents-init --quiet
 
 **Dependencies:** `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
+
+**Classification:** `self-limiting(rm,mkdir)`, `bypasses-shadow(mv)`
 
 **Used by:** `agy`, `claude`
 
@@ -2448,6 +2538,8 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `git`, `hostname`
 
+**Classification:** `self-limiting(rm,mkdir)`
+
 **Used by:** `agy`, `claude`
 
 ### agy
@@ -2504,6 +2596,8 @@ functions). They are active in all interactive sessions.
     Example:
     antigravity-ide
 
+**Classification:** `self-limiting(grep)`
+
 ### claude
 
     Synopsis:  claude [ARGS...]
@@ -2538,6 +2632,8 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `agents-init`, `agents-vault`
 
+**Classification:** `bypasses-shadow(claude)`
+
 ### claude-docs
 
     Synopsis:  claude-docs
@@ -2552,6 +2648,8 @@ functions). They are active in all interactive sessions.
     Example:
     claude-docs
 
+**Classification:** `uses-shadow(claude)`
+
 ### claude-pr
 
     Synopsis:  claude-pr
@@ -2565,6 +2663,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     claude-pr
+
+**Classification:** `uses-shadow(claude)`
 
 ### docker
 
@@ -2660,6 +2760,8 @@ functions). They are active in all interactive sessions.
     superpowers on
     superpowers off -g
 
+**Classification:** `uses-shadow(claude)`
+
 ## 5.13 Media and Utilities
 
 ### dng2avif
@@ -2684,6 +2786,8 @@ functions). They are active in all interactive sessions.
     Example:
     dng2avif photo.dng
     dng2avif -q 85 -s 5 -i shot.dng -o out.avif
+
+**Classification:** `self-limiting(rm)`
 
 ### key-crypt
 
@@ -2731,6 +2835,8 @@ functions). They are active in all interactive sessions.
     key-crypt --install              # register the standalone wrapper + Open With entries
 
 **Dependencies:** `gpg`, `tar`
+
+**Classification:** `bypasses-shadow(rm)`, `destructive`
 
 ### play-media
 
@@ -2821,6 +2927,8 @@ functions). They are active in all interactive sessions.
     yt-dlp dQw4w9WgXcQ
     yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
 
+**Classification:** `network`
+
 ## 5.14 Miscellaneous
 
 ### bash
@@ -2835,6 +2943,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     bash
+
+**Classification:** `bypasses-shadow(bash)`
 
 ### bd-pull
 
@@ -2867,6 +2977,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     cffetch
+
+**Classification:** `uses-shadow(ls)`
 
 ### cheat
 
@@ -2934,6 +3046,8 @@ functions). They are active in all interactive sessions.
     config-help keys --man
     config-help --help
     config-help pkg --man
+
+**Classification:** `self-limiting(grep)`, `bypasses-shadow(less)`
 
 ### config-settings
 
@@ -3008,6 +3122,8 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `__fish_palette`, `__config_settings_state`, `__config_settings_apply`, `__config_settings_set_value`, `python3`
 
+**Classification:** `bypasses-shadow(rm)`
+
 **Used by:** `config-toggle`
 
 ### config-toggle
@@ -3069,6 +3185,8 @@ functions). They are active in all interactive sessions.
     Example:
     dockup ~/myapp
 
+**Classification:** `network`
+
 ### ffetch
 
     Synopsis:  ffetch [args...]
@@ -3081,6 +3199,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     ffetch
+
+**Classification:** `uses-shadow(ls)`
 
 ### fzf_configure_bindings
 
@@ -3154,6 +3274,8 @@ functions). They are active in all interactive sessions.
     Example:
     kitty-logging install
     kitty-logging status
+
+**Classification:** `bypasses-shadow(grep,mkdir,rm)`
 
 ### ld
 
@@ -3241,6 +3363,8 @@ functions). They are active in all interactive sessions.
     rand_string --case=title color animal --separator=dot digits=4
     rand_string literal=TEST --separator=underscore verb noun
 
+**Classification:** `bypasses-shadow(cat)`
+
 ### replay
 
     Synopsis:  replay <commands>
@@ -3259,6 +3383,8 @@ functions). They are active in all interactive sessions.
     Example:
     replay "source ~/.bashrc"
     replay "export FOO=bar"
+
+**Classification:** `bypasses-shadow(bash,cd)`
 
 ### repo-open
 
@@ -3757,7 +3883,6 @@ all of these commands.
     rg                 rg --hyperlink-format=kitty            system rg
     mkdir              verbose path-tree display on creation  mkdir -p silently
     bash               XDG bashrc + $SHELL reset on exit      system bash
-    history            timestamps prepended to every entry    fish builtin history
     cp / mv            forced -i confirmation prompt          cp / mv unmodified
     wget               forced --continue (resume downloads)   system wget
     grep/fgrep/egrep   forced --color=auto                    system grep variants
@@ -3768,6 +3893,11 @@ all of these commands.
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
 are permanently deleted, not trashed. There is no intermediate safety net.
+
+`history` itself is never shadowed — every function in this config that
+reads history depends on its stock builtin semantics. `pretty-history`
+(same `aliases-tricks` toggle) is a separate command that prints history
+with a timestamp prepended to every entry.
 
 ### Sub-categories
 
@@ -3800,6 +3930,51 @@ and the `help config` interception.
 
 `claude` (`AGENTS.md/CLAUDE.md` auto-linking) and `edit` (multi-editor
 launcher), plus `agy`.
+
+### For function authors
+
+Calling one of these names bare from inside your own function means the
+override runs whenever C1 (or its sub-category) is on — which may not be
+what your function wants: a shadow can change stdout (`cat`'s syntax
+highlighting, `mkdir`'s tree display), prompt interactively where none is
+expected (`cp`/`mv`'s forced `-i`), or reshape output structurally (`ls`'s
+icons/columns, `rg`'s hyperlink markers). If your function's logic depends
+on stock behavior, bypass the shadow deterministically, regardless of the
+toggle state:
+
+    Shadow                  Bypass                        Why
+    ─────────────────────────────────────────────────────────────────────────
+    ls, cat, rm, less, du,  command <name>                Real external
+    top, ping, ssh, rg,                                    binaries — a
+    mkdir, bash, cp, mv,                                    real system command
+    wget, grep/fgrep/egrep,                                exists to fall
+    dir/vdir, claude                                        back to.
+    cd                       builtin cd                    The one true
+                                                             fish builtin
+                                                             in this table.
+    help config              __original_help $argv         `help` is neither
+                                                             a builtin nor an
+                                                             external binary
+                                                             (embedded in the
+                                                             fish binary
+                                                             itself) — see
+                                                             conf.d/help.fish
+                                                             for why the
+                                                             wrapper keeps its
+                                                             own backup copy.
+    edit                     (nothing to bypass to)         Purely our own
+                                                             invention, no
+                                                             stock command
+                                                             exists. Call
+                                                             $EDITOR/$VISUAL
+                                                             yourself if you
+                                                             want a plain
+                                                             editor launch.
+
+A function's own doc header records which of these it depends on: see the
+`CLASSIFICATION` label (`uses-shadow(...)` / `bypasses-shadow(...)`),
+documented in full at
+[`docs/function-classification-schema.md`](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/docs/function-classification-schema.md).
 
 ## C2 — Startup Side-Effects
 

@@ -893,7 +893,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             if test -n "$stash"
                 test -f "$stash/origin"
                 and command cat "$stash/origin" >>"$entry/origin" 2>/dev/null
-                command cp -rn "$stash/." "$entry/" 2>/dev/null
+                command cp -r --update=none "$stash/." "$entry/" 2>/dev/null
                 rm -rf "$stash"
             end
             printf 'renamed: %s → %s (%s)\n' "$prev_slug" "$slug" (date -I) >>"$entry/origin"
