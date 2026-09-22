@@ -482,7 +482,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # a hook-rejected commit fell straight through to a reported success.
     set -l msg "chore: sync AGENTS repository"
     test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
-    set -l sync_out (_agents_repo_sync "$agents_dir" "$msg")
+    # 2>/dev/null: a command substitution's stderr does not inherit a
+    # caller-scoped redirect on this call (fish quirk), so _agents_repo_sync's
+    # own error message leaks past --silent regardless; it is redundant with
+    # the $sync_rc-driven echoes just below anyway.
+    set -l sync_out (_agents_repo_sync "$agents_dir" "$msg" 2>/dev/null)
     set -l sync_rc $status
     set -l failed 0
     if test $sync_rc -eq 2

@@ -769,7 +769,11 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         if not mkdir -p "$gvault"
             echo "$c_warn""agents-vault: could not create $gvault; skipping global memory$c_reset" >&2
         else
-            set -l gmsg (_agents_repo_ensure_symlink "$glive" "$gvault")
+            # 2>/dev/null: see the same call's comment further down this
+            # function -- a command substitution's stderr bypasses this
+            # call's own caller-scoped redirect, and the raw message is
+            # always redundant with the $grc-driven echo just below.
+            set -l gmsg (_agents_repo_ensure_symlink "$glive" "$gvault" 2>/dev/null)
             set -l grc $status
             if test $grc -ne 0
                 echo "$c_warn""agents-vault: could not link $glive; global memory not backed up$c_reset" >&2
@@ -939,7 +943,14 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         # idempotent and makes its own parent directories, so there is
         # nothing this guard would protect that the helper does not already
         # handle on its own.
-        set -l link_msg (_agents_repo_ensure_symlink "$live" "$vmem")
+        #
+        # 2>/dev/null: a command substitution's stderr does not inherit a
+        # caller-scoped redirect on this call (fish quirk -- proven with a
+        # two-line repro: `outer 2>/dev/null` where outer does `set -l x
+        # (inner)` still leaks inner's stderr to the real terminal). The
+        # raw message below is always redundant: failure is re-announced on
+        # $link_rc below in this function's own voice.
+        set -l link_msg (_agents_repo_ensure_symlink "$live" "$vmem" 2>/dev/null)
         set -l link_rc $status
         if test $link_rc -ne 0
             echo "$c_err""agents-vault: could not link $live$c_reset" >&2
@@ -973,7 +984,11 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     if not set -q _flag_link
         set -l msg "chore: sync agent memory vault"
         test $did_init -eq 1; and set msg "chore: initialize agent memory vault"
-        set -l sync_out (_agents_repo_sync "$vault" "$msg")
+        # 2>/dev/null: command-substitution stderr bypasses this call's
+        # caller-scoped redirect (see the _agents_repo_ensure_symlink calls
+        # above for the proof); the raw message is redundant with the
+        # $sync_rc-driven echoes just below.
+        set -l sync_out (_agents_repo_sync "$vault" "$msg" 2>/dev/null)
         set -l sync_rc $status
         if test $sync_rc -eq 2
             echo "$c_err""agents-vault: unresolved rebase in the vault; nothing committed$c_reset" >&2
