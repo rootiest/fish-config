@@ -119,7 +119,7 @@ function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
     end
 
     # Final Cleanup
-    test -f "$temp_pnm"; and rm "$temp_pnm"
+    test -f "$temp_pnm"; and rm -f "$temp_pnm"
 
     set -l size (stat -c '%s' "$output" | numfmt --to=iec)
     echo (set_color yellow)"Complete: $output ($size)"(set_color normal)

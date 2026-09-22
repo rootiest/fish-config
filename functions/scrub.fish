@@ -5,7 +5,7 @@
 #   01-file-and-directory
 #
 # CLASSIFICATION
-#   bypasses-shadow(rm), destructive
+#   uses-shadow(rm), bypasses-shadow(rm), destructive
 #
 # SYNOPSIS
 #   scrub [-a] [-d] [-h]

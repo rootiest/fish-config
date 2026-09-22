@@ -4,6 +4,9 @@
 # CATEGORY
 #   03-editors-and-viewers
 #
+# CLASSIFICATION
+#   bypasses-shadow(rm)
+#
 # SYNOPSIS
 #   fc [command_prefix]
 #
@@ -50,15 +53,15 @@ function fc --description 'Edit and execute the last command (Bash-style fc)'
         # Final check if user cleared the file in the editor
         if test -s $tmpfile
             set -l command (cat $tmpfile)
-            rm $tmpfile
+            command rm -f $tmpfile
             commandline -r "$command"
             commandline -f execute
         else
-            rm $tmpfile
+            command rm -f $tmpfile
             echo "fc: Aborted (empty file)"
         end
     else
-        rm $tmpfile
+        command rm -f $tmpfile
         echo "fc: Could not retrieve history"
     end
 end

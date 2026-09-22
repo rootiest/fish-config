@@ -72,3 +72,10 @@ schema's own rollout caught several false positives this way: a piped
 `read` misread as an interactive prompt, a documented `--yes` flag missed
 as an escape hatch, and cleanup of a function's own temp output flagged
 as `destructive` despite the explicit exclusion above.
+
+`rm` specifically has its own internal flag check (any flag other than
+`-r`/`-R`/`--recursive` falls back to `command rm` *inside the shadow
+itself*, before it ever touches trash) — a caller writing plain `rm -f`
+or `rm -rf` is not bypassing anything itself, the shadow is. Only tag
+`bypasses-shadow(rm)` when the caller explicitly writes `command rm` or
+`builtin rm`; a bare `rm -f`/`rm -rf` call gets no shadow tag at all.

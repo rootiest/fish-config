@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/dev-tools
 #
+# CLASSIFICATION
+#   bypasses-shadow(rm)
+#
 # SYNOPSIS
 #   edit [-V|-t] [-e EDITOR] [-c] [-x TEXT] [-n] [-v|-s] [FILE...]
 #

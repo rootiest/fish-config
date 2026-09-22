@@ -8,6 +8,9 @@
 #   __fish_palette, __config_settings_state, __config_settings_apply,
 #   __config_settings_set_value, python3
 #
+# CLASSIFICATION
+#   bypasses-shadow(rm)
+#
 # SYNOPSIS
 #   config-settings [-h | --help]
 #
