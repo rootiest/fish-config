@@ -9,6 +9,9 @@
 #   _mkrep_add_origin, _mkrep_default_remote_cmd, _mkrep_remote_url,
 #   _mkrep_repo_exists, git
 #
+# CLASSIFICATION
+#   uses-shadow(cd), destructive, network
+#
 # SYNOPSIS
 #   mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
 #         [-c | --clean | --no-clean] [--strict] [-v | --verbose]

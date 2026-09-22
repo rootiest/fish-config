@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# CLASSIFICATION
+#   bypasses-shadow(rm), destructive
+#
 # SYNOPSIS
 #   rm [-e [options] | -S | args...]
 #

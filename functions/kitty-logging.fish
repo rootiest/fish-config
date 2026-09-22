@@ -7,6 +7,9 @@
 # COMPONENT
 #   logging/terminal-capture
 #
+# CLASSIFICATION
+#   bypasses-shadow(grep,mkdir,rm)
+#
 # SYNOPSIS
 #   kitty-logging [install | uninstall | status | dismiss] [-h]
 #

@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/network
 #
+# CLASSIFICATION
+#   bypasses-shadow(ping)
+#
 # SYNOPSIS
 #   ping [args...]
 #

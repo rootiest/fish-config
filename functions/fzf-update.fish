@@ -4,6 +4,9 @@
 # CATEGORY
 #   06-dependency-management
 #
+# CLASSIFICATION
+#   network
+#
 # SYNOPSIS
 #   fzf-update
 #

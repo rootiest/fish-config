@@ -7,6 +7,9 @@
 # COMPONENT
 #   integrations/pkg-upgrade
 #
+# CLASSIFICATION
+#   network
+#
 # SYNOPSIS
 #   upgrade
 #

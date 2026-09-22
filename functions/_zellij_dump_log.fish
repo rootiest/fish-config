@@ -4,6 +4,9 @@
 # COMPONENT
 #   logging/multiplexer-capture
 #
+# CLASSIFICATION
+#   uses-shadow(mkdir), bypasses-shadow(rm)
+#
 # SYNOPSIS
 #   _zellij_dump_log
 #

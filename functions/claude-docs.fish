@@ -4,6 +4,9 @@
 # CATEGORY
 #   12-ai-and-developer-tools
 #
+# CLASSIFICATION
+#   uses-shadow(claude)
+#
 # SYNOPSIS
 #   claude-docs
 #

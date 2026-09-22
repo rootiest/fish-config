@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# CLASSIFICATION
+#   bypasses-shadow(du)
+#
 # SYNOPSIS
 #   du [--disk|--dir|--dua] [args...]
 #

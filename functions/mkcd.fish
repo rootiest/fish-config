@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# CLASSIFICATION
+#   uses-shadow(cd)
+#
 # SYNOPSIS
 #   mkcd [-s | --silent] <dir>
 #

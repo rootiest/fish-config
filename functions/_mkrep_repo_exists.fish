@@ -4,6 +4,9 @@
 # DEPENDENCIES
 #   gh, glab, tea
 #
+# CLASSIFICATION
+#   network
+#
 # SYNOPSIS
 #   _mkrep_repo_exists <type> <user> <name>
 #

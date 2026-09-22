@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/search
 #
+# CLASSIFICATION
+#   bypasses-shadow(rg)
+#
 # SYNOPSIS
 #   rg [args...]
 #

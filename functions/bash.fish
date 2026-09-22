@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/shell-tools
 #
+# CLASSIFICATION
+#   bypasses-shadow(bash)
+#
 # SYNOPSIS
 #   bash [args...]
 #

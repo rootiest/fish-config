@@ -7,6 +7,9 @@
 # COMPONENT
 #   integrations/history-logs
 #
+# CLASSIFICATION
+#   bypasses-shadow(cat), network
+#
 # SYNOPSIS
 #   logs [-h] [-c <category>]
 #

@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CLASSIFICATION
+#   uses-shadow(mkdir), bypasses-shadow(cp,grep)
+#
 # SYNOPSIS
 #   _agents_repo_install_tools <repo_dir>
 #

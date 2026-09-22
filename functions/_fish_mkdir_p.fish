@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CLASSIFICATION
+#   uses-shadow(mkdir)
+#
 # SYNOPSIS
 #   _fish_mkdir_p [--path|--tree|--silent] <dir>
 #

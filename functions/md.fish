@@ -7,6 +7,9 @@
 # DEPENDENCIES
 #   marktext, firejail, bkg
 #
+# CLASSIFICATION
+#   uses-shadow(mkdir)
+#
 # SYNOPSIS
 #   md [-r] [--foreground] [marktext-args...] [FILE...]
 #

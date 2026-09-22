@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# CLASSIFICATION
+#   bypasses-shadow(cat)
+#
 # SYNOPSIS
 #   rand_string [COMPONENTS/MODIFIERS]...
 #

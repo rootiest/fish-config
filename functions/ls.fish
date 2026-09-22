@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# CLASSIFICATION
+#   bypasses-shadow(ls)
+#
 # SYNOPSIS
 #   ls [args...]
 #
