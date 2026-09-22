@@ -110,5 +110,5 @@ toggle state:
 A function's own doc header records which of these it depends on: see the
 `CLASSIFICATION` label (`uses-shadow(...)` / `bypasses-shadow(...)`),
 documented in full at
-[`docs/function-classification-schema.md`](../../function-classification-schema.md).
+[`docs/function-classification-schema.md`](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/docs/function-classification-schema.md).
 
