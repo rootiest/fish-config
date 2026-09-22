@@ -14,10 +14,11 @@
 #
 # SYNOPSIS
 #   mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
-#         [-c | --clean | --no-clean] [--strict] [-v | --verbose]
-#         [-s | --silent] [--template <path>] [--branch <name>]
-#         [--remote <url>] [--new-remote [<cmd>]] [--server <type>]
-#         [--check-existing] [-y | --yes] [--name <name>] [-h | --help] <dir>
+#         [-c | --clean | --no-clean] [--strict] [-l | --local]
+#         [-v | --verbose] [-s | --silent] [--template <path>]
+#         [--branch <name>] [--remote <url>] [--new-remote [<cmd>]]
+#         [--server <type>] [--check-existing] [-y | --yes]
+#         [--name <name>] [-h | --help] <dir>
 #
 # DESCRIPTION
 #   Creates a directory, cds into it, and git-inits it -- mkcd plus a git
@@ -30,6 +31,15 @@
 #   the directory already exists. The two compose: --clean runs first, so
 #   --clean --strict together is not a contradiction -- strict sees an
 #   empty slot because clean just emptied it.
+#
+#   -l/--local forces strictly local action: any flag or environment
+#   variable that would link to, create, or check a remote (--remote,
+#   --new-remote, --server, --check-existing, $GIT_SERVER, $GITEA_URL,
+#   $GITEA_HOST, $GITLAB_URL, $GITLAB_HOST, $MKREP_REMOTE_CMD) is
+#   overridden and ignored. Even when passed alongside conflicting remote
+#   flags like --server or --remote, -l/--local takes precedence and
+#   proceeds with local directory creation and git initialization without
+#   erroring or contacting any forge.
 #
 #   --remote links an already-existing remote (git remote add origin
 #   <url>) -- it does not create anything. Linking is idempotent: an origin
@@ -93,6 +103,9 @@
 #   -c, --clean      Remove <dir> first if it already exists
 #   --no-clean       Leave an existing <dir> alone (default)
 #   --strict         Fail if <dir> already exists (checked after --clean)
+#   -l, --local      Force local-only operation; overrides and ignores any
+#                    remote flags (--remote, --new-remote, --server,
+#                    --check-existing) and remote environment variables
 #   -v, --verbose    Print each step as it runs
 #   -s, --silent     Suppress all output; overrides --verbose
 #   --template <path>
@@ -119,6 +132,7 @@
 # EXAMPLE
 #   mkrep ~/projects/my-new-repo
 #   mkrep --clean --strict ~/projects/scratch
+#   mkrep -l ~/projects/my-local-repo
 #   mkrep --remote git@git.example.com:me/foo.git ~/projects/foo
 #   set -Ux MKREP_REMOTE_CMD 'gh repo create {name} --private --source=. --remote=origin --push'
 #   mkrep --new-remote ~/projects/foo
@@ -145,7 +159,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     __fish_palette
 
     argparse h/help cd no-cd mkdir no-mkdir git no-git c/clean no-clean strict \
-        v/verbose s/silent y/yes template= branch= remote= new-remote=? server= \
+        l/local v/verbose s/silent y/yes template= branch= remote= new-remote=? server= \
         check-existing name= \
         -- $argv
     or return 1
@@ -162,6 +176,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         echo "  $c_flag-c$c_reset, $c_flag--clean$c_reset            Remove <dir> first if it exists"
         echo "  $c_flag--no-clean$c_reset                Leave an existing <dir> alone (default)"
         echo "  $c_flag--strict$c_reset                Fail if <dir> already exists"
+        echo "  $c_flag-l$c_reset, $c_flag--local$c_reset            Force local only; ignore remote flags/env"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset          Print each step as it runs"
         echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset           Suppress all output (overrides -v)"
         echo "  $c_flag--template$c_reset $c_arg<path>$c_reset       git init --template=<path>"
@@ -186,6 +201,14 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         return 1
     end
     set -l dir $argv[1]
+
+    if set -q _flag_local
+        set -e _flag_remote
+        set -e _flag_new_remote
+        set -e _flag_server
+        set -e _flag_check_existing
+        set -e _flag_yes
+    end
 
     if set -q _flag_remote; and set -q _flag_new_remote
         echo "$c_err""✘$c_reset  --remote and --new-remote are mutually exclusive" >&2
@@ -220,31 +243,33 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     # explicit request to auto-create; an ambient $GIT_SERVER is not, and only
     # the latter needs confirming before we create a repo on a live forge.
     set -l srv_implicit 0
-    if set -q _flag_server
-        set srv_type $_flag_server
-    else if test -n "$GIT_SERVER"
-        set srv_type $GIT_SERVER
-        set srv_implicit 1
-    end
-    if test -n "$srv_type"
-        switch $srv_type
-            case gitea
-                if test -n "$GITEA_URL"
-                    set srv_url $GITEA_URL
-                else if test -n "$GITEA_HOST"
-                    set srv_url "https://$GITEA_HOST"
-                end
-            case gitlab
-                if test -n "$GITLAB_URL"
-                    set srv_url $GITLAB_URL
-                else if test -n "$GITLAB_HOST"
-                    set srv_url "https://$GITLAB_HOST"
-                end
-            case github
-                # gh defaults to github.com; no base url needed
-            case '*'
-                echo "$c_err""✘$c_reset  Unrecognized server type $c_arg$srv_type$c_reset (expected gitea, gitlab, or github)" >&2
-                return 1
+    if not set -q _flag_local
+        if set -q _flag_server
+            set srv_type $_flag_server
+        else if test -n "$GIT_SERVER"
+            set srv_type $GIT_SERVER
+            set srv_implicit 1
+        end
+        if test -n "$srv_type"
+            switch $srv_type
+                case gitea
+                    if test -n "$GITEA_URL"
+                        set srv_url $GITEA_URL
+                    else if test -n "$GITEA_HOST"
+                        set srv_url "https://$GITEA_HOST"
+                    end
+                case gitlab
+                    if test -n "$GITLAB_URL"
+                        set srv_url $GITLAB_URL
+                    else if test -n "$GITLAB_HOST"
+                        set srv_url "https://$GITLAB_HOST"
+                    end
+                case github
+                    # gh defaults to github.com; no base url needed
+                case '*'
+                    echo "$c_err""✘$c_reset  Unrecognized server type $c_arg$srv_type$c_reset (expected gitea, gitlab, or github)" >&2
+                    return 1
+            end
         end
     end
 

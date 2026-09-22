@@ -491,6 +491,121 @@ begin
     rm -rf $base
 end
 
+section "mkrep: -l/--local forces local-only operation"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    mkrep -l $target >/dev/null
+    check "-l exits 0" 0 $status
+    check "-l creates directory" true (test -d $target; and echo true; or echo false)
+    check "-l inits git repo" true (test -d $target/.git; and echo true; or echo false)
+    check "-l creates no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    mkrep --local $target >/dev/null
+    check "--local exits 0" 0 $status
+    check "--local creates directory" true (test -d $target; and echo true; or echo false)
+    check "--local inits git repo" true (test -d $target/.git; and echo true; or echo false)
+    check "--local creates no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: -l overrides --server"
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo should-not-run >created.txt'
+    mkrep --server gitea -l $target >/dev/null
+    check "--server with -l exits 0" 0 $status
+    check "--server with -l did not run create command" false (test -f $target/created.txt; and echo true; or echo false)
+    check "--server with -l added no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: -l overrides --remote"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    mkrep --remote https://example.invalid/me/repo.git -l $target >/dev/null
+    check "--remote with -l exits 0" 0 $status
+    check "--remote with -l added no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: -l overrides --new-remote"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    mkrep --new-remote='echo should-not-run >created.txt' -l $target >/dev/null
+    check "--new-remote with -l exits 0" 0 $status
+    check "--new-remote with -l did not run template" false (test -f $target/created.txt; and echo true; or echo false)
+    check "--new-remote with -l added no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: -l overrides --check-existing"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx GIT_SERVER ''
+    set -lx GITEA_URL ''
+    mkrep --check-existing -l $target >/dev/null
+    check "--check-existing with -l exits 0" 0 $status
+    check "--check-existing with -l creates local repo" true (test -d $target/.git; and echo true; or echo false)
+    check "--check-existing with -l adds no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: -l overrides ambient \$GIT_SERVER and \$GITEA_URL"
+
+begin
+    _mkrep_stub_tool tea 1
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx PATH $stub_bin $PATH
+    set -lx GIT_SERVER gitea
+    set -lx GITEA_URL https://gitea.example.invalid
+    set -lx MKREP_REMOTE_CMD 'echo should-not-run >created.txt'
+    mkrep -l $target >/dev/null 2>$base/err
+    check "\$GIT_SERVER with -l exits 0" 0 $status
+    check "\$GIT_SERVER with -l ran no command" false (test -e $target/created.txt; and echo true; or echo false)
+    check "\$GIT_SERVER with -l added no remote" 0 (count (git -C $target remote))
+    check "\$GIT_SERVER with -l printed no skip note" false (string match -q '*Skipped creating*' -- (cat $base/err); and echo true; or echo false)
+    cd $start
+    rm -rf $base
+end
+
+section "mkrep: -l overrides conflicting remote flags without error"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    mkrep --server gitea --remote https://example.invalid/x.git -l $target >/dev/null
+    check "--server + --remote with -l exits 0" 0 $status
+    check "--server + --remote with -l created local repo" true (test -d $target/.git; and echo true; or echo false)
+    check "--server + --remote with -l added no remote" 0 (count (git -C $target remote))
+    cd $start
+    rm -rf $base
+end
+
 rm -rf $stub_bin
 
 section "mkrep: --help"
@@ -499,6 +614,7 @@ set -l base (_mkrep_sandbox)
 set -l out (mkrep --help)
 check "--help exits 0" 0 $status
 check "--help prints usage" true (string match -q -- '*Usage:*' $out; and echo true; or echo false)
+check "--help mentions --local" true (string match -q -- '*--local*' $out; and echo true; or echo false)
 check "--help creates nothing" false (test -d $base/repo; and echo true; or echo false)
 rm -rf $base
 
