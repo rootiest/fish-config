@@ -108,6 +108,7 @@ toggle state:
                                                              editor launch.
 
 A function's own doc header records which of these it depends on: see the
-`CLASSIFICATION` label (`uses-shadow(...)` / `bypasses-shadow(...)`) in
-`AGENTS/functions/CLAUDE.md`.
+`CLASSIFICATION` label (`uses-shadow(...)` / `bypasses-shadow(...)`),
+documented in full at
+[`docs/function-classification-schema.md`](../../function-classification-schema.md).
 
