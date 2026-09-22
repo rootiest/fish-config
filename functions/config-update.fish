@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   git
+#
 # SYNOPSIS
 #   config-update [-h | --help] [-f | --force] [-n | --dry-run]
 #

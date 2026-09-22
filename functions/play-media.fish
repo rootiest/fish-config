@@ -4,6 +4,9 @@
 # CATEGORY
 #   13-media-and-utilities
 #
+# DEPENDENCIES
+#   _fzf_preview_media, _fzf_wrapper, fd, fdfind, file, xdg-mime
+#
 # SYNOPSIS
 #   play-media [-p|--player <cmd>]
 #   play-media --help

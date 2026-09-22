@@ -4,6 +4,9 @@
 # CATEGORY
 #   12-ai-and-developer-tools
 #
+# DEPENDENCIES
+#   aichat
+#
 # SYNOPSIS
 #   qc [prompt...]
 #

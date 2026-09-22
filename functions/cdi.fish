@@ -4,6 +4,9 @@
 # CATEGORY
 #   02-navigation
 #
+# DEPENDENCIES
+#   zoxide
+#
 # SYNOPSIS
 #   cdi [query]
 #

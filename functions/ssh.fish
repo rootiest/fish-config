@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/network
 #
+# DEPENDENCIES
+#   kitten
+#
 # CLASSIFICATION
 #   bypasses-shadow(ssh), network
 #

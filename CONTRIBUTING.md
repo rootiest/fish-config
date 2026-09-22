@@ -390,7 +390,7 @@ all optional except where noted:
 |---|---|
 | `CATEGORY` | **Required to appear in the manual at all** — see below. |
 | `COMPONENT` | Only for functions gated by the [opinionated-component system](#opinionated-components). |
-| `DEPENDENCIES` | Other functions this one calls that a reader may want to look up. |
+| `DEPENDENCIES` | Other functions, and external CLI tools, this one needs for full functionality — required or optional-with-fallback alike. |
 | `CLASSIFICATION` | Hazard/shadow-interaction tags — see below. |
 | `SYNOPSIS` | One-line usage form. |
 | `DESCRIPTION` | Prose description; can span multiple paragraphs. |

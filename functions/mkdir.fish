@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# DEPENDENCIES
+#   _fish_mkdir_p
+#
 # CLASSIFICATION
 #   bypasses-shadow(mkdir)
 #

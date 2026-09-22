@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# DEPENDENCIES
+#   fd, trash
+#
 # CLASSIFICATION
 #   uses-shadow(rm), bypasses-shadow(rm), destructive
 #

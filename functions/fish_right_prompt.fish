@@ -7,6 +7,9 @@
 # COMPONENT
 #   overrides/prompt
 #
+# DEPENDENCIES
+#   docker, starship
+#
 # SYNOPSIS
 #   fish_right_prompt
 #

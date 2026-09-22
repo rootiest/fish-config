@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   docker, lazydocker
+#
 # SYNOPSIS
 #   ld
 #

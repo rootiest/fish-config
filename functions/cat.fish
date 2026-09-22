@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# DEPENDENCIES
+#   bat
+#
 # CLASSIFICATION
 #   uses-shadow(ls), bypasses-shadow(cat)
 #

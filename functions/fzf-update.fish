@@ -4,6 +4,9 @@
 # CATEGORY
 #   06-dependency-management
 #
+# DEPENDENCIES
+#   git, fzf
+#
 # CLASSIFICATION
 #   network
 #

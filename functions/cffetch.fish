@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   fastfetch, neofetch
+#
 # CLASSIFICATION
 #   uses-shadow(ls)
 #

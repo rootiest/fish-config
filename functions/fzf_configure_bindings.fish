@@ -4,6 +4,10 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   _fzf_search_directory, _fzf_search_git_log, _fzf_search_git_status,
+#   _fzf_search_history, _fzf_search_processes, _fzf_search_variables
+#
 # SYNOPSIS
 #   fzf_configure_bindings [--directory=<key>] [--git_log=<key>] [--git_status=<key>]
 #                          [--history=<key>] [--processes=<key>] [--variables=<key>] [-h]

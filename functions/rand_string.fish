@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# DEPENDENCIES
+#   shuf
+#
 # CLASSIFICATION
 #   bypasses-shadow(cat)
 #

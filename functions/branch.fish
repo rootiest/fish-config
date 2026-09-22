@@ -4,6 +4,9 @@
 # CATEGORY
 #   04-git-and-version-control
 #
+# DEPENDENCIES
+#   git
+#
 # SYNOPSIS
 #   branch <branch_name>
 #

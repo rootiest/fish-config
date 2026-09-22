@@ -7,6 +7,9 @@
 # COMPONENT
 #   integrations/pkg-upgrade
 #
+# DEPENDENCIES
+#   paru, yay
+#
 # CLASSIFICATION
 #   network
 #

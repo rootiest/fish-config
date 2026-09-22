@@ -4,6 +4,9 @@
 # CATEGORY
 #   03-editors-and-viewers
 #
+# DEPENDENCIES
+#   fish
+#
 # SYNOPSIS
 #   rawfish [args...]
 #

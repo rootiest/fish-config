@@ -4,6 +4,9 @@
 # CATEGORY
 #   13-media-and-utilities
 #
+# DEPENDENCIES
+#   magick, ffmpeg, avifenc, exiftool
+#
 # CLASSIFICATION
 #   self-limiting(rm)
 #
