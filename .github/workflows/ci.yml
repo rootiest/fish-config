@@ -48,14 +48,16 @@ jobs:
       - name: Install fish
         run: |
           sudo apt-get -o Acquire::Retries=3 update -qq
-          # apt-utils on its own, before anything else: bundled into the
-          # same transaction as another package, apt-utils prints the
-          # "delaying package configuration" notice anyway (it configures
-          # last in dependency order, same as any other transaction
-          # member) -- only a fully separate, already-finished install
-          # ahead of the rest actually silences it.
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y apt-utils
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y software-properties-common
+          # apt-utils, so debconf has a target for the "delaying package
+          # configuration" notice's OWN follow-up run (irrelevant to
+          # anything else in this job). That notice still fires exactly
+          # once here regardless -- verified live against two orderings
+          # (bundled with another package, and installed fully alone,
+          # first) -- because it fires *during* apt-utils' own first
+          # install, before debconf considers it "installed". Nothing
+          # this workflow controls can pre-seed that; accepted as
+          # unavoidable, same as the runs-on/checkout hint noise below.
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y apt-utils software-properties-common
           sudo add-apt-repository -y ppa:fish-shell/release-4
           sudo apt-get -o Acquire::Retries=3 update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y fish
@@ -86,10 +88,10 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -o Acquire::Retries=3 update -qq
-          # apt-utils on its own, before anything else: see the "Install
-          # fish" step's identical comment in the test job.
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y apt-utils
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y software-properties-common
+          # apt-utils: see the "Install fish" step's identical comment in
+          # the test job for why its own debconf notice is accepted, not
+          # chased further.
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y apt-utils software-properties-common
           sudo add-apt-repository -y ppa:fish-shell/release-4
           sudo apt-get -o Acquire::Retries=3 update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y pandoc python3-yaml fish
