@@ -8,6 +8,9 @@
 #   site exit-plain: overrides/key-bindings
 #   site logging-guard: logging/terminal-capture
 #
+# CLASSIFICATION
+#   self-limiting(rm,mkdir), destructive
+#
 # SYNOPSIS
 #   smart_exit [-h] [-n]
 #

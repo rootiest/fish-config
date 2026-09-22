@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# CLASSIFICATION
+#   bypasses-shadow(ls)
+#
 # SYNOPSIS
 #   lss [args...]
 #

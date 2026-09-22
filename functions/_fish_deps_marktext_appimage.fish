@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CLASSIFICATION
+#   self-limiting(rm,mkdir), bypasses-shadow(mv), destructive, network
+#
 # SYNOPSIS
 #   _fish_deps_marktext_appimage
 #
@@ -54,7 +57,7 @@ function _fish_deps_marktext_appimage
     and chmod +x "$tmp/marktext"
     # Replace via mv, not a write into $dest: overwriting a running AppImage
     # in place corrupts the live mount.
-    and mv -f "$tmp/marktext" "$dest"
+    and command mv -f "$tmp/marktext" "$dest"
     and set ok 1
     rm -rf $tmp
 

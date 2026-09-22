@@ -4,6 +4,9 @@
 # COMPONENT
 #   autoexec/sync
 #
+# CLASSIFICATION
+#   self-limiting(rm), destructive
+#
 # SYNOPSIS
 #   __fish_user_dots_link
 #

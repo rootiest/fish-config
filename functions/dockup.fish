@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# CLASSIFICATION
+#   network
+#
 # SYNOPSIS
 #   dockup [-h] [directory]
 #

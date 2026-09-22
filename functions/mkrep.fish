@@ -9,6 +9,9 @@
 #   _mkrep_add_origin, _mkrep_default_remote_cmd, _mkrep_remote_url,
 #   _mkrep_repo_exists, git
 #
+# CLASSIFICATION
+#   bypasses-shadow(cd), self-limiting(rm), destructive, network
+#
 # SYNOPSIS
 #   mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]
 #         [-c | --clean | --no-clean] [--strict] [-v | --verbose]
@@ -304,7 +307,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         _mkrep_say $silent "$c_warn""→$c_reset  $c_arg$dir$c_reset already exists"
     end
 
-    cd $dir
+    builtin cd $dir
     or begin
         echo "$c_err""✘$c_reset  Failed to enter $c_arg$dir$c_reset" >&2
         return 1
@@ -326,7 +329,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         end
         or begin
             echo "$c_err""✘$c_reset  git init failed in $c_arg$dir$c_reset" >&2
-            cd $orig_pwd
+            builtin cd $orig_pwd
             return 1
         end
 
@@ -341,7 +344,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         _mkrep_verbose $silent $verbose "$c_dim""Running: git remote add origin $_flag_remote$c_reset"
         _mkrep_add_origin $silent $_flag_remote
         or begin
-            cd $orig_pwd
+            builtin cd $orig_pwd
             return 1
         end
     end
@@ -351,7 +354,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         test -z "$cmd"; and set cmd $MKREP_REMOTE_CMD
         if test -z "$cmd"
             echo "$c_err""✘$c_reset  --new-remote given no command and \$MKREP_REMOTE_CMD is unset" >&2
-            cd $orig_pwd
+            builtin cd $orig_pwd
             return 1
         end
 
@@ -368,7 +371,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         end
         or begin
             echo "$c_err""✘$c_reset  Remote-create command failed" >&2
-            cd $orig_pwd
+            builtin cd $orig_pwd
             return 1
         end
         _mkrep_say $silent "$c_ok""✔$c_reset  Ran remote-create command"
@@ -390,7 +393,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                 _mkrep_say $silent "$c_warn""→$c_reset  $c_arg$USER/$name$c_reset already exists on $srv_type; linking instead of creating"
                 _mkrep_add_origin $silent $url
                 or begin
-                    cd $orig_pwd
+                    builtin cd $orig_pwd
                     return 1
                 end
             else
@@ -421,7 +424,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                     if string match -q '*{server}*' -- $cmd
                         if test -z "$srv_url"
                             echo "$c_err""✘$c_reset  No base URL resolved for $srv_type (set \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
-                            cd $orig_pwd
+                            builtin cd $orig_pwd
                             return 1
                         end
                         set cmd (string replace -a '{server}' $srv_url -- $cmd)
@@ -437,7 +440,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                     end
                     or begin
                         echo "$c_err""✘$c_reset  Remote-create command failed" >&2
-                        cd $orig_pwd
+                        builtin cd $orig_pwd
                         return 1
                     end
                     set -l url (_mkrep_remote_url $srv_type $USER $name $srv_url)
@@ -448,7 +451,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     end
 
     if test $do_cd -eq 0
-        cd $orig_pwd
+        builtin cd $orig_pwd
     else
         _mkrep_say $silent "$c_ok""✔$c_reset  Entered $c_arg$dir$c_reset"
     end

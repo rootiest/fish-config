@@ -4,6 +4,9 @@
 # CATEGORY
 #   01-file-and-directory
 #
+# CLASSIFICATION
+#   uses-shadow(rm), bypasses-shadow(rm), destructive
+#
 # SYNOPSIS
 #   scrub [-a] [-d] [-h]
 #

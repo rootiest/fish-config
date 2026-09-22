@@ -391,6 +391,7 @@ all optional except where noted:
 | `CATEGORY` | **Required to appear in the manual at all** — see below. |
 | `COMPONENT` | Only for functions gated by the [opinionated-component system](#opinionated-components). |
 | `DEPENDENCIES` | Other functions this one calls that a reader may want to look up. |
+| `CLASSIFICATION` | Hazard/shadow-interaction tags — see below. |
 | `SYNOPSIS` | One-line usage form. |
 | `DESCRIPTION` | Prose description; can span multiple paragraphs. |
 | `ARGUMENTS` | Flags/positional args, one per line. |
@@ -413,6 +414,9 @@ A full example (`functions/claude.fish`):
 #
 # DEPENDENCIES
 #   agents-init
+#
+# CLASSIFICATION
+#   bypasses-shadow(claude)
 #
 # SYNOPSIS
 #   claude [ARGS...]
@@ -442,6 +446,14 @@ exclusion list. `CATEGORY` must exactly match one of the existing
 If your function genuinely doesn't fit any of these, add a new
 `docs/manual/05-functions/NN-your-category.md` stub (with frontmatter
 matching its siblings) rather than force-fitting it into an existing one.
+
+**`CLASSIFICATION` flags hazards and shadow interactions, optional and
+omitted when nothing applies:** whether the function calls a
+[C1-shadowed command](docs/manual/08-components-reference/01-c1-command-shadows.md)
+bare wanting the override (`uses-shadow(ls)`) or bypasses it deliberately
+via `command`/`builtin` (`bypasses-shadow(cat)`), and general hazards —
+`destructive`, `network`, `blocking-prompt`. Full tag definitions and
+placement rule: [`docs/function-classification-schema.md`](docs/function-classification-schema.md).
 
 ### Private/internal helper functions
 

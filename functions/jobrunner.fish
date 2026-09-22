@@ -7,6 +7,9 @@
 # DEPENDENCIES
 #   tmux, screen, __jobrunner_sessions
 #
+# CLASSIFICATION
+#   bypasses-shadow(cat,rm)
+#
 # SYNOPSIS
 #   jobrunner [-t <tool>] [<subcommand>] [<name>] [<command>...]
 #   jr [-t <tool>] [<subcommand>] [<name>] [<command>...]

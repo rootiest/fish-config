@@ -4,6 +4,9 @@
 # CATEGORY
 #   05-package-management
 #
+# CLASSIFICATION
+#   self-limiting(grep)
+#
 # SYNOPSIS
 #   cleanup
 #

@@ -7,6 +7,9 @@
 # DEPENDENCIES
 #   gpg, tar
 #
+# CLASSIFICATION
+#   bypasses-shadow(rm), destructive
+#
 # SYNOPSIS
 #   key-crypt [options] <input> [output]
 #   key-crypt -i <input> -o <output> [options]

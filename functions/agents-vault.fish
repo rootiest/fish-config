@@ -9,6 +9,9 @@
 #   _agents_repo_ensure_symlink, _agents_repo_sync,
 #   _agents_repo_install_tools, git, hostname
 #
+# CLASSIFICATION
+#   self-limiting(rm,mkdir)
+#
 # SYNOPSIS
 #   agents-vault [--link] [--push] [--restore] [--status]
 #                [--adopt=SLUG] [--remote=URL]

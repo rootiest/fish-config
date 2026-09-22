@@ -24,6 +24,9 @@ __fish_config_op_enabled (status basename); or exit
 # COMPONENT
 #   autoexec/sync
 #
+# CLASSIFICATION
+#   bypasses-shadow(cat)
+#
 # SYNOPSIS
 #   __auto_pull_on_pwd (event handler, --on-variable PWD)
 #

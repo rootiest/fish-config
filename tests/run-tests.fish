@@ -53,6 +53,89 @@ if test $syntax_failed -ne 0 -o $indent_failed -ne 0
     set overall_failed 1
 end
 
+# ---- Phase 1b: shadow-classification lint --------------------------------
+# Catches a bare C1-shadowed-command call in a function body with no
+# matching uses-shadow(name) or self-limiting(name) in that function's own
+# CLASSIFICATION header -- the exact bug class fixed across fc.fish,
+# dng2avif.fish, _scrollback_prune_junk.fish, mkcd.fish, and mkrep.fish. A
+# bare call is either declared (uses-shadow: wanted; self-limiting: safe
+# because the shadow's own logic neutralizes it, e.g. rm/mkdir's flag check
+# or grep/cat's tty-auto-detected color) or it's undocumented at best, a bug
+# at worst -- the lint never guesses which on its own; see
+# docs/function-classification-schema.md for the full tag definitions and
+# why the reasoning belongs in a tag, not in this script.
+#
+# Scoped to functions/*.fish only: the one-function-per-file convention
+# there makes "everything after the function line is its body" exact, with
+# no block-depth parser needed. conf.d/*.fish can define several functions
+# in one file and isn't covered -- see docs/function-classification-schema.md.
+echo
+echo "== Shadow-classification lint =="
+
+# help and edit are deliberately excluded: help's real bypass is
+# __original_help (not command/builtin), and edit has no backing binary at
+# all to bypass to -- see docs/manual/08-components-reference/01-c1-command-shadows.md.
+set -l shadow_names ls cat cd rm less du top ping ssh rg mkdir bash cp mv wget grep fgrep egrep dir vdir claude
+
+set -l class_checked 0
+set -l class_files_failed 0
+set -l class_issues 0
+
+for f in $repo_root/functions/*.fish
+    set -l lines (cat $f)
+
+    # Find the function line; everything before it is header, everything
+    # from it onward is body (one function per file).
+    set -l func_idx 0
+    for i in (seq (count $lines))
+        if string match -qr '^function ' -- $lines[$i]
+            set func_idx $i
+            break
+        end
+    end
+    test $func_idx -eq 0; and continue
+    set class_checked (math $class_checked + 1)
+
+    # Pull uses-shadow(...) and self-limiting(...) names from the
+    # CLASSIFICATION tag line, if any -- either one accounts for a bare call.
+    set -l declared
+    for i in (seq (math $func_idx - 1))
+        if test "$lines[$i]" = "# CLASSIFICATION"; and test $i -lt $func_idx
+            set -l tagline $lines[(math $i + 1)]
+            for tag in uses-shadow self-limiting
+                set -l m (string match -r "$tag"'\(([^)]*)\)' -- $tagline)
+                test -n "$m[2]"; and set -a declared (string trim -- (string split ',' -- $m[2]))
+            end
+            break
+        end
+    end
+
+    set -l file_failed 0
+    for i in (seq $func_idx (count $lines))
+        set -l line $lines[$i]
+        # Strip quoted spans and comments so string literals (error
+        # messages, --description text) never masquerade as a call.
+        set -l stripped (string replace -ra '"[^"]*"' '' -- $line)
+        set stripped (string replace -ra "'[^']*'" '' -- $stripped)
+        set stripped (string replace -r '#.*$' '' -- $stripped)
+
+        for name in $shadow_names
+            if string match -qr '(^|[;|(]|\band\b|\bor\b|\bnot\b|\bif\b|\bwhile\b|\bbegin\b)\s*'"$name"'(\s|$)' -- $stripped
+                if not contains -- $name $declared
+                    echo "  FAIL (shadow) "(string replace $repo_root/ '' $f)": line $i calls bare '$name' with no uses-shadow($name)/self-limiting($name)"
+                    set class_issues (math $class_issues + 1)
+                    set file_failed 1
+                end
+            end
+        end
+    end
+    test $file_failed -eq 1; and set class_files_failed (math $class_files_failed + 1)
+end
+echo (math $class_checked - $class_files_failed)"/$class_checked functions passed shadow-classification check"
+if test $class_issues -ne 0
+    set overall_failed 1
+end
+
 # ---- Phase 2: discover suites --------------------------------------------
 # Mode is declared by the suite, not by this driver. Detection is
 # case-insensitive so a near-miss like "# Mode: in-session" is caught rather

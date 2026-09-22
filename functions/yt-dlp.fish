@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/network
 #
+# CLASSIFICATION
+#   network
+#
 # SYNOPSIS
 #   yt-dlp [args...] URL [URL...]
 #

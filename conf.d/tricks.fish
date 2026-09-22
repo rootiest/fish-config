@@ -97,11 +97,13 @@ if __fish_config_op_enabled (status basename) tricks-bang
     end
 end
 
-# Fish command history override to show timestamps
-# Shadowing the history command is opinionated (C1 aliasing); when disabled,
-# the function is never defined and fish's stock history behavior applies.
+# Timestamped history view. Named pretty-history (not history) so it never
+# shadows the fish builtin -- every function in this config that expects
+# stock `history` semantics (search, --max, merge, ...) would otherwise
+# silently break, which has happened more than once. Opinionated (C1
+# aliasing); when disabled, the function is never defined.
 if __fish_config_op_enabled (status basename) aliases-tricks
-    function history
+    function pretty-history --description 'History with timestamps prepended to every entry'
         builtin history --show-time='%F %T '
     end
 end

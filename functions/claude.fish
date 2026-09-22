@@ -10,6 +10,9 @@
 # DEPENDENCIES
 #   agents-init, agents-vault
 #
+# CLASSIFICATION
+#   bypasses-shadow(claude)
+#
 # SYNOPSIS
 #   claude [ARGS...]
 #

@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# CLASSIFICATION
+#   uses-shadow(ls), bypasses-shadow(cat)
+#
 # SYNOPSIS
 #   cat [args...]
 #

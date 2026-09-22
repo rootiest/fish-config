@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CLASSIFICATION
+#   bypasses-shadow(cat,rm), self-limiting(grep), destructive
+#
 # SYNOPSIS
 #   _scrollback_prune_junk [dir]
 #
@@ -26,7 +29,7 @@ function _scrollback_prune_junk --description 'Remove empty, trivial, and Kitty 
     # Remove any completely empty log file regardless of source
     for f in $dir/*.log $dir/*.txt
         test -f $f || continue
-        not test -s $f; and rm $f
+        not test -s $f; and command rm -f $f
     end
 
     # Remove any log with only a single meaningful line (e.g. [exited], a lone prompt, or a trivial error)
@@ -34,7 +37,7 @@ function _scrollback_prune_junk --description 'Remove empty, trivial, and Kitty 
         test -f $f || continue
         set -l line_count (command cat $f | sed 's/\x1b\[[0-9;:]*[a-zA-Z]//g' | grep -cv '^\s*$')
         if test $line_count -le 1
-            rm $f
+            command rm -f $f
         end
     end
 
@@ -42,7 +45,7 @@ function _scrollback_prune_junk --description 'Remove empty, trivial, and Kitty 
     for f in $dir/scrollback_*.log $dir/scrollback_*.txt
         test -f $f || continue
         if command cat $f | sed 's/\x1b\[[0-9;:]*[a-zA-Z]//g' | grep -q 'Enter the new title for this tab below'
-            rm $f
+            command rm -f $f
         end
     end
 end

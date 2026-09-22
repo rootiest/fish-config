@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CLASSIFICATION
+#   bypasses-shadow(grep)
+#
 # SYNOPSIS
 #   __kitty_logging_has_watcher
 #

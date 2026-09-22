@@ -4,6 +4,9 @@
 # CATEGORY
 #   07-system-and-monitoring
 #
+# CLASSIFICATION
+#   self-limiting(grep)
+#
 # SYNOPSIS
 #   sbver [--brief]
 #

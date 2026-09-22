@@ -4,6 +4,9 @@
 # CATEGORY
 #   04-git-and-version-control
 #
+# CLASSIFICATION
+#   network
+#
 # SYNOPSIS
 #   git-clean [-h] [-f]
 #

@@ -4,6 +4,9 @@
 # CATEGORY
 #   03-editors-and-viewers
 #
+# CLASSIFICATION
+#   uses-shadow(less)
+#
 # SYNOPSIS
 #   view [args...]
 #

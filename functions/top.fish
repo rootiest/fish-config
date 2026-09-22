@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/monitor
 #
+# CLASSIFICATION
+#   bypasses-shadow(top)
+#
 # SYNOPSIS
 #   top [args...]
 #
