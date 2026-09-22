@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # CLASSIFICATION
-#   destructive, network, blocking-prompt
+#   self-limiting(rm,mkdir,cat), bypasses-shadow(cp,bash), destructive, network, blocking-prompt
 #
 # SYNOPSIS
 #   _fish_deps_install
@@ -284,7 +284,7 @@ function _fish_deps_install
                     end
                     test $_go_status -eq 0
                 case special-lazydocker
-                    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+                    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | command bash
                 case special-marktext-paru
                     paru -S --noconfirm marktext-bin
                 case special-marktext-yay
@@ -312,7 +312,7 @@ function _fish_deps_install
                         -o "$_tmpdir/$_zip"
                     and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
                     and mkdir -p "$_wt_dir" "$HOME/.local/bin"
-                    and cp "$_tmpdir/$_bin_src" "$_wt_bin"
+                    and command cp "$_tmpdir/$_bin_src" "$_wt_bin"
                     and chmod +x "$_wt_bin"
                     and ln -sf "$_wt_bin" "$HOME/.local/bin/wakatime"
                     rm -rf "$_tmpdir"
@@ -323,7 +323,7 @@ function _fish_deps_install
                     and curl -fL "https://github.com/equalsraf/win32yank/releases/latest/download/$_zip" \
                         -o "$_tmpdir/$_zip"
                     and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
-                    and cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
+                    and command cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
                     and chmod +x "$HOME/.local/bin/win32yank.exe"
                     set -l _dl_status $status
                     rm -rf "$_tmpdir"

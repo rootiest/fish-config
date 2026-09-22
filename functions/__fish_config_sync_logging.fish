@@ -4,6 +4,9 @@
 # COMPONENT
 #   logging/terminal-capture
 #
+# CLASSIFICATION
+#   self-limiting(rm,mkdir)
+#
 # SYNOPSIS
 #   __fish_config_sync_logging
 #

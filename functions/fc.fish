@@ -5,7 +5,7 @@
 #   03-editors-and-viewers
 #
 # CLASSIFICATION
-#   bypasses-shadow(rm)
+#   bypasses-shadow(rm), self-limiting(cat)
 #
 # SYNOPSIS
 #   fc [command_prefix]

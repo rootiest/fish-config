@@ -10,7 +10,7 @@
 #   _mkrep_repo_exists, git
 #
 # CLASSIFICATION
-#   bypasses-shadow(cd), destructive, network
+#   bypasses-shadow(cd), self-limiting(rm), destructive, network
 #
 # SYNOPSIS
 #   mkrep [--cd | --no-cd] [--mkdir | --no-mkdir] [--git | --no-git]

@@ -8,7 +8,7 @@
 #   integrations/history-logs
 #
 # CLASSIFICATION
-#   bypasses-shadow(cat), network
+#   bypasses-shadow(cat), self-limiting(rm), network
 #
 # SYNOPSIS
 #   logs [-h] [-c <category>]

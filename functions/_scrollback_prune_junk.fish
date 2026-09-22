@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # CLASSIFICATION
-#   bypasses-shadow(cat,rm), destructive
+#   bypasses-shadow(cat,rm), self-limiting(grep), destructive
 #
 # SYNOPSIS
 #   _scrollback_prune_junk [dir]

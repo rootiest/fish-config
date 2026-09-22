@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# CLASSIFICATION
+#   self-limiting(grep), bypasses-shadow(less)
+#
 # SYNOPSIS
 #   config-help [section]
 #   config-help --html
@@ -347,7 +350,7 @@ function config-help --description 'Open the offline fish shell configuration ma
 
     else if type -q less
         string replace -ra $span_raw $span_bold <"$doc_file" \
-            | less -R +"$start_line"
+            | command less -R +"$start_line"
 
     else
         string replace -ra $span_raw $span_bold <"$doc_file"

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # CLASSIFICATION
-#   destructive, network
+#   self-limiting(rm), bypasses-shadow(cp,bash), destructive, network
 #
 # SYNOPSIS
 #   _fish_deps_update
@@ -93,7 +93,7 @@ function _fish_deps_update
         # lazydocker: re-run the official install/update script
         if test "$special" = curl-lazydocker
             echo "Updating $bin..."
-            curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+            curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | command bash
             set updated_any 1
             set i (math $i + 1)
             continue
@@ -141,7 +141,7 @@ function _fish_deps_update
             curl -L "https://github.com/wakatime/wakatime-cli/releases/latest/download/$_zip" \
                 -o "$_tmpdir/$_zip"
             and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
-            and cp "$_tmpdir/$_bin_src" "$_wt_bin"
+            and command cp "$_tmpdir/$_bin_src" "$_wt_bin"
             and chmod +x "$_wt_bin"
             rm -rf "$_tmpdir"
             and set updated_any 1
@@ -158,7 +158,7 @@ function _fish_deps_update
             curl -fL "https://github.com/equalsraf/win32yank/releases/latest/download/$_zip" \
                 -o "$_tmpdir/$_zip"
             and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
-            and cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
+            and command cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
             and chmod +x "$HOME/.local/bin/win32yank.exe"
             set -l _up_status $status
             rm -rf "$_tmpdir"

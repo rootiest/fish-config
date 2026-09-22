@@ -5,7 +5,7 @@
 #   10-network
 #
 # CLASSIFICATION
-#   network
+#   self-limiting(cat), network
 #
 # SYNOPSIS
 #   qr [text...]

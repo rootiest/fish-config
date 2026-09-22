@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CLASSIFICATION
+#   self-limiting(rm,mkdir)
+#
 # SYNOPSIS
 #   _agents_repo_ensure_symlink <link> <target>
 #

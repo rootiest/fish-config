@@ -7,6 +7,9 @@
 # DEPENDENCIES
 #   _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
 #
+# CLASSIFICATION
+#   self-limiting(rm,mkdir), bypasses-shadow(mv)
+#
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
 #               [-q | --quiet] [-s | --silent] [-h | --help]
@@ -212,7 +215,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         if test $has_agents -eq 1; and test $has_claude -eq 1
             # Both exist: preserve each as its own file in AGENTS/
             if not test -f "$agents_dir/AGENTS.md"
-                if not mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
+                if not command mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
                     echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
                     return 1
                 end
@@ -220,7 +223,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                 test $verbose -eq 1; and echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
             end
             if not test -f "$agents_dir/CLAUDE.md"; and not test -L "$agents_dir/CLAUDE.md"
-                if not mv "$root/CLAUDE.md" "$agents_dir/CLAUDE.md"
+                if not command mv "$root/CLAUDE.md" "$agents_dir/CLAUDE.md"
                     echo "$c_err""Error: could not move CLAUDE.md → AGENTS/CLAUDE.md$c_reset" >&2
                     return 1
                 end
@@ -229,7 +232,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             end
         else if test $has_agents -eq 1
             if not test -f "$agents_dir/AGENTS.md"
-                if not mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
+                if not command mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
                     echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
                     return 1
                 end
@@ -239,7 +242,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         else if test $has_claude -eq 1
             # Only CLAUDE.md: treat it as the agent spec
             if not test -f "$agents_dir/AGENTS.md"
-                if not mv "$root/CLAUDE.md" "$agents_dir/AGENTS.md"
+                if not command mv "$root/CLAUDE.md" "$agents_dir/AGENTS.md"
                     echo "$c_err""Error: could not move CLAUDE.md → AGENTS/AGENTS.md$c_reset" >&2
                     return 1
                 end

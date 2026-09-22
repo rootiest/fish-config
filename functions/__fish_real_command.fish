@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# CLASSIFICATION
+#   self-limiting(grep)
+#
 # SYNOPSIS
 #   __fish_real_command <name>
 #

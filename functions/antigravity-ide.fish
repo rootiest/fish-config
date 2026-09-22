@@ -4,6 +4,9 @@
 # CATEGORY
 #   12-ai-and-developer-tools
 #
+# CLASSIFICATION
+#   self-limiting(grep)
+#
 # SYNOPSIS
 #   antigravity-ide [args...]
 #

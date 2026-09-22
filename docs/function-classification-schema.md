@@ -35,6 +35,26 @@ it empty as a placeholder.
   break this function's logic: timestamps leaking into a parsed capture,
   `-i` prompting on a path meant to run unattended, structural output
   changes breaking a `string`/`sed` parse, etc.
+- **`self-limiting(name[,name...])`** — calls a shadowed command bare, and
+  it's safe not because the caller did anything but because *the shadow's
+  own logic* already neutralizes the override for this call. Verify the
+  actual condition per shadow, it's not the same check for each one:
+  - `rm` falls back to `command rm` for any flag **except** a bare `-r`,
+    `-R`, or `--recursive` (those still route to `trash put`) — so
+    `rm -f`/`rm -rf` qualify, but `rm -r $dir` alone does not.
+  - `mkdir` falls back to `command mkdir -p` for *any* flag at all, no
+    exception.
+  - `--color=auto`/`bat`'s own tty auto-detection (`grep`, `fgrep`,
+    `egrep`, `dir`, `vdir`, `cat` — verified byte-identical to stock when
+    piped or captured, since none of these force color on a
+    non-terminal).
+
+  Document it explicitly rather than leaving the bare call untagged: if a
+  shadow's bypass condition is ever weakened, narrowed, or removed, every
+  `self-limiting` site is one grep away instead of silently wrong.
+  Don't use this for `ls` — eza's long-format/icon layout is structural,
+  not tty-gated, so it stays different from stock `ls` even piped; a
+  bare `ls` call still needs `uses-shadow(ls)` or a real bypass.
 - **`destructive`** — can irreversibly delete or overwrite data: `rm -f`,
   `rm -rf`, truncating or force-overwriting a file, `git push --force`.
   Routine cleanup of the function's own `$tmpdir`/`$_tmpdir`/`mktemp`

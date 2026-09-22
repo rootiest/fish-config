@@ -9,7 +9,7 @@
 #   site logging-guard: logging/terminal-capture
 #
 # CLASSIFICATION
-#   destructive
+#   self-limiting(rm,mkdir), destructive
 #
 # SYNOPSIS
 #   smart_exit [-h] [-n]

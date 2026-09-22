@@ -5,7 +5,7 @@
 #   autoexec/sync
 #
 # CLASSIFICATION
-#   destructive
+#   self-limiting(rm), destructive
 #
 # SYNOPSIS
 #   __fish_user_dots_link

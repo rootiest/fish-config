@@ -4,6 +4,9 @@
 # CATEGORY
 #   13-media-and-utilities
 #
+# CLASSIFICATION
+#   self-limiting(rm)
+#
 # SYNOPSIS
 #   dng2avif [-h] [-i <file>] [-o <file>] [-q <n>] [-s <n>] [input.dng]
 #

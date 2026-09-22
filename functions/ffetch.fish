@@ -4,6 +4,9 @@
 # CATEGORY
 #   14-miscellaneous
 #
+# CLASSIFICATION
+#   uses-shadow(ls)
+#
 # SYNOPSIS
 #   ffetch [args...]
 #

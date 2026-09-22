@@ -5,7 +5,7 @@
 #   04-git-and-version-control
 #
 # CLASSIFICATION
-#   network, blocking-prompt
+#   self-limiting(grep,cat), network, blocking-prompt
 #
 # SYNOPSIS
 #   gi [-h] [-b] [-p] [-s] [-l] [targets...]
