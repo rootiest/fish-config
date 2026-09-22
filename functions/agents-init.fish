@@ -354,7 +354,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
                     set -l rel (string replace "$root/" "" "$src")
                     set -l contents (command ls -A "$src" 2>/dev/null)
                     if test (count $contents) -gt 0
-                        if not command cp -rn "$src/." "$canonical/"
+                        if not command cp -r --update=none "$src/." "$canonical/"
                             echo "$c_err""Error: could not merge $rel → AGENTS/$tgt$c_reset" >&2
                             return 1
                         end
@@ -437,7 +437,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             test -d "$devlogs_dir"; or mkdir -p "$devlogs_dir"
             set -l contents (command ls -A "$docs_devlogs" 2>/dev/null)
             if test (count $contents) -gt 0
-                if not command cp -rn "$docs_devlogs/." "$devlogs_dir/"
+                if not command cp -r --update=none "$docs_devlogs/." "$devlogs_dir/"
                     echo "$c_err""Error: could not copy docs/devlogs → AGENTS/devlogs$c_reset" >&2
                     return 1
                 end
