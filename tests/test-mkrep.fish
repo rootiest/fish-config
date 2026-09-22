@@ -35,6 +35,15 @@ set -gx GITEA_HOST ''
 set -gx GITLAB_URL ''
 set -gx GITLAB_HOST ''
 
+# init.defaultBranch is pinned for the same reason test-agents-vault.fish
+# pins it: a developer's global config says "main", a runner with no config
+# falls back to "master" and prints git's advice hint on every `git init`
+# this file makes. Pinning it here (not in mkrep.fish itself) keeps a real
+# user's own global git config the one that wins in normal use.
+set -gx GIT_CONFIG_COUNT 1
+set -gx GIT_CONFIG_KEY_0 init.defaultBranch
+set -gx GIT_CONFIG_VALUE_0 main
+
 function _mkrep_sandbox
     set -l tmp (mktemp -d)
     # Resolve symlinks (e.g. macOS/NixOS /tmp) so path comparisons against
