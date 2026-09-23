@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
+    paths: &ci-paths
       - "docs/manual/**"
       - "docs/build-manual.py"
       - "docs/manualtools.py"
@@ -16,6 +16,10 @@ on:
       - "completions/**"
       - "integrations/**"
       - "tests/**"
+  pull_request:
+    branches:
+      - main
+    paths: *ci-paths
   workflow_dispatch:
     inputs:
       job:
@@ -65,10 +69,16 @@ jobs:
       - name: Run fish config tests
         run: fish tests/run-tests.fish
 
+  # PRs only need the test job as a gate -- build-docs commits generated
+  # files straight to the checked-out branch and deploys the Cloudflare
+  # Pages production site, neither of which should ever happen from a PR
+  # (PR content isn't main yet, and a fork/branch push shouldn't touch
+  # prod). It only runs on push to main or an explicit workflow_dispatch.
   build-docs:
     needs: test
     if: |
       github.server_url != 'https://github.com' &&
+      github.event_name != 'pull_request' &&
       always() &&
       (github.event.inputs.job == 'build-docs' ||
         ((github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all') &&
