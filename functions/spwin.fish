@@ -8,7 +8,7 @@
 #   integrations/window-mgmt
 #
 # DEPENDENCIES
-#   kitty
+#   kitty, wezterm
 #
 # SYNOPSIS
 #   spwin [args...]
@@ -36,13 +36,23 @@ function spwin --wraps='~/.config/kitty/spawn-window.sh' --description 'spawn wi
         return 1
     end
 
+    # $TERM/$TERM_PROGRAM only prove the terminal type, not that its CLI
+    # binary is on $PATH -- e.g. sshing out from Kitty/WezTerm inherits the
+    # env var on the remote host without the binary. Check explicitly.
     if test "$TERM" = xterm-kitty
         if test -x ~/.config/kitty/spawn-window.sh
             ~/.config/kitty/spawn-window.sh $argv
-        else
+        else if type -q kitty
             kitty @ launch --type=window $argv
+        else
+            echo "Error: 'spwin' detected Kitty but neither spawn-window.sh nor the kitty binary is available." >&2
+            return 1
         end
     else if test "$TERM_PROGRAM" = WezTerm
+        if not type -q wezterm
+            echo "Error: 'spwin' detected WezTerm but the wezterm binary is not installed." >&2
+            return 1
+        end
         wezterm cli spawn $argv
     else
         echo "Error: The 'spwin' command requires Kitty or WezTerm." >&2

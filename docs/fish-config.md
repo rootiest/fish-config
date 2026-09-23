@@ -1026,10 +1026,12 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Repository cloned
-      1  Not running inside Kitty terminal
+      1  Not running inside Kitty terminal, or clone-in-kitty isn't available
 
     Example:
     clone https://github.com/user/repo.git
+
+**Dependencies:** `clone-in-kitty`
 
 ### clonet
 
@@ -1043,10 +1045,12 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Repository cloned
-      1  Not running inside Kitty terminal
+      1  Not running inside Kitty terminal, or clone-in-kitty isn't available
 
     Example:
     clonet https://github.com/user/repo.git
+
+**Dependencies:** `clone-in-kitty`
 
 ## 5.3 Editors and Viewers
 
@@ -1335,8 +1339,16 @@ functions). They are active in all interactive sessions.
     Arguments:
       args...  Arguments forwarded to the gitui command
 
+    Exit Status:
+      1  gitui is not installed
+      *  Exit status of gitui otherwise
+
     Example:
     gitui
+
+**Dependencies:** `gitui`
+
+**Used by:** `gitui`
 
 ### gitup
 
@@ -1758,10 +1770,13 @@ functions). They are active in all interactive sessions.
     Locks the current desktop session using loginctl lock-session.
 
     Exit Status:
-      Exit status of loginctl lock-session
+      1  loginctl is not installed
+      *  Exit status of loginctl lock-session otherwise
 
     Example:
     lock
+
+**Dependencies:** `loginctl`
 
 ### ports
 
@@ -1771,10 +1786,13 @@ functions). They are active in all interactive sessions.
     port numbers and addresses without hostname resolution.
 
     Exit Status:
-      Exit status of lsof
+      1  lsof is not installed
+      *  Exit status of lsof otherwise
 
     Example:
     ports
+
+**Dependencies:** `lsof`
 
 ### sbver
 
@@ -1808,10 +1826,13 @@ functions). They are active in all interactive sessions.
     PowerDevil "Turn Off Screen" global shortcut via busctl.
 
     Exit Status:
-      Exit status of busctl
+      1  busctl is not installed
+      *  Exit status of busctl otherwise
 
     Example:
     screensleep
+
+**Dependencies:** `busctl`
 
 ### sudo-toggle
 
@@ -1880,6 +1901,8 @@ functions). They are active in all interactive sessions.
     Example:
     bkg firefox
 
+**Dependencies:** `nohup`
+
 **Used by:** `md`
 
 ### detach
@@ -1902,6 +1925,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     detach rsync -a ./data remote:/backup/
+
+**Dependencies:** `nohup`
 
 ### fish_mode_prompt
 
@@ -2035,7 +2060,7 @@ functions). They are active in all interactive sessions.
     split
     split -v nvim README.md
 
-**Dependencies:** `kitty`
+**Dependencies:** `kitty`, `wezterm`
 
 ### spwin
 
@@ -2054,7 +2079,7 @@ functions). They are active in all interactive sessions.
     Example:
     spwin
 
-**Dependencies:** `kitty`
+**Dependencies:** `kitty`, `wezterm`
 
 ### ssh
 
@@ -2093,7 +2118,7 @@ functions). They are active in all interactive sessions.
     Example:
     tab
 
-**Dependencies:** `kitty`
+**Dependencies:** `kitty`, `wezterm`, `konsole`
 
 ## 5.9 Clipboard
 
@@ -2181,6 +2206,8 @@ functions). They are active in all interactive sessions.
     Example:
     fast
 
+**Used by:** `fast-cli`
+
 ### fast-cli
 
     Synopsis:  fast-cli [args...]
@@ -2190,8 +2217,14 @@ functions). They are active in all interactive sessions.
     Arguments:
       args...  Arguments forwarded to the fast command
 
+    Exit Status:
+      1  fast is not installed
+      *  Exit status of fast otherwise
+
     Example:
     fast-cli
+
+**Dependencies:** `fast`
 
 ### gip
 
@@ -2992,7 +3025,7 @@ functions). They are active in all interactive sessions.
     play-media
     play-media --player mpv
 
-**Dependencies:** `_fzf_preview_media`, `_fzf_wrapper`, `fd`, `fdfind`, `file`, `xdg-mime`
+**Dependencies:** `_fzf_preview_media`, `_fzf_wrapper`, `fd`, `fdfind`, `file`, `xdg-mime`, `mpv`, `vlc`
 
 ### spark
 
@@ -3022,10 +3055,13 @@ functions). They are active in all interactive sessions.
     or sleeping during active downloads.
 
     Exit Status:
-      Exit status of steam (via systemd-inhibit)
+      1  systemd-inhibit or steam is not installed
+      *  Exit status of steam (via systemd-inhibit) otherwise
 
     Example:
     steam-dl
+
+**Dependencies:** `systemd-inhibit`, `steam`
 
 ### yt-dlp
 
@@ -3615,10 +3651,12 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Command ran and completed
-      1  No command provided
+      1  No command provided, or systemd-inhibit is not installed
 
     Example:
     wake-lock rsync -avz src/ dest/
+
+**Dependencies:** `systemd-inhibit`
 
 # 6. DEPENDENCY CATALOG
 

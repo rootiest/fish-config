@@ -4,6 +4,9 @@
 # CATEGORY
 #   08-terminal-management
 #
+# DEPENDENCIES
+#   nohup
+#
 # SYNOPSIS
 #   detach [-h] [--version] <command> [args...]
 #
@@ -63,6 +66,11 @@ function detach --description 'Execute detach'
     if test (count $args) -eq 0
         echo "❌ No command provided."
         echo "Run 'detach --help' for usage."
+        return 1
+    end
+
+    if not type -q nohup
+        echo (set_color red)"Error: nohup is not installed."(set_color normal) >&2
         return 1
     end
 
