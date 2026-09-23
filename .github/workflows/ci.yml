@@ -138,7 +138,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITEA_TOKEN }}
+          # The default GITEA_TOKEN is Gitea Actions' built-in synthetic
+          # bot identity, not a real account -- main's branch protection
+          # rejects its pushes outright (run 983, run 990), and it can't
+          # be whitelisted because it isn't an addable user. BOT_PUSH_TOKEN
+          # is a PAT on the rootiest account (already bypass-whitelisted)
+          # used only so this job's later push succeeds; commit authorship
+          # and GPG signing below still use the fishconfig-bot identity,
+          # which is unrelated to push auth.
+          token: ${{ secrets.BOT_PUSH_TOKEN }}
           fetch-depth: 0
 
       # Same shape as the test job's identical step; see its comment.
