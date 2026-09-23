@@ -198,4 +198,6 @@ function _agents_init_sync_instructions --argument-names root agents_dir rel
         end
         echo "→ Removed $disp_claude"
     end
+
+    return 0
 end

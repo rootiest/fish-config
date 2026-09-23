@@ -142,5 +142,19 @@ check "duplicate: mirrored" same (cat $r6/AGENTS/dup/AGENTS.md)
 check "duplicate: project CLAUDE.md dropped" false (test -e $r6/dup/CLAUDE.md; and echo true; or echo false)
 check "duplicate: project AGENTS.md links to mirror" ../AGENTS/dup/AGENTS.md (readlink $r6/dup/AGENTS.md)
 
+echo ""
+echo "== _agents_init_sync_instructions: subdir with only a real AGENTS.md =="
+
+set -l r7 (new_repo)
+mkdir -p $r7/AGENTS $r7/onlyagents
+echo onlyagents >$r7/onlyagents/AGENTS.md
+set -l out7 (_agents_init_sync_instructions $r7 $r7/AGENTS onlyagents)
+set -l rc7 $status
+check "subdir lone AGENTS.md: exits 0" 0 "$rc7"
+check "subdir lone AGENTS.md: mirror AGENTS.md created" onlyagents (cat $r7/AGENTS/onlyagents/AGENTS.md)
+check "subdir lone AGENTS.md: no mirror CLAUDE.md" false (test -e $r7/AGENTS/onlyagents/CLAUDE.md; and echo true; or echo false)
+check "subdir lone AGENTS.md: project AGENTS.md links to mirror" ../AGENTS/onlyagents/AGENTS.md (readlink $r7/onlyagents/AGENTS.md)
+check "subdir lone AGENTS.md: no project CLAUDE.md" false (test -e $r7/onlyagents/CLAUDE.md; and echo true; or echo false)
+
 cleanup
 report
