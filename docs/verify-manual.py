@@ -211,12 +211,15 @@ def test_dependencies_resolve():
     repo = Path(__file__).parent.parent
     functions = _parsed_functions()
     known = {p.stem for p in (repo / "functions").glob("*.fish")} | set(functions)
-    guard_re = re.compile(r"(?:type -q|command -q|command -v|which)\s+([\w.\-]+)")
+    # `type` takes its own flags (e.g. `-f` to exclude functions from the
+    # match, as in `type -q -f $p`) that can sit between `-q` and the name
+    # -- skip over any of those so the guard is still recognized.
+    guard_re = re.compile(r"(?:type -q(?:\s+-\w+)*|command -q|command -v|which)\s+([\w.\-]+)")
     for path in list(repo.glob("conf.d/*.fish")) + list((repo / "functions").glob("*.fish")):
         text = path.read_text(encoding="utf-8")
         known |= set(guard_re.findall(text))
         for var, names in re.findall(r"for\s+(\w+)\s+in\s+([^\n;]+)", text):
-            if re.search(rf"type -q\s+\$\{{?{re.escape(var)}\}}?\b", text):
+            if re.search(rf"type -q(?:\s+-\w+)*\s+\$\{{?{re.escape(var)}\}}?\b", text):
                 known |= set(names.split())
     dangling = []
     for name, fn in functions.items():

@@ -5,7 +5,7 @@
 #   13-media-and-utilities
 #
 # DEPENDENCIES
-#   _fzf_preview_media, _fzf_wrapper, fd, fdfind, file, xdg-mime
+#   _fzf_preview_media, _fzf_wrapper, fd, fdfind, file, xdg-mime, mpv, vlc
 #
 # SYNOPSIS
 #   play-media [-p|--player <cmd>]

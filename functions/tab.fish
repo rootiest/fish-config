@@ -8,7 +8,7 @@
 #   integrations/window-mgmt
 #
 # DEPENDENCIES
-#   kitty
+#   kitty, wezterm, konsole
 #
 # SYNOPSIS
 #   tab [args...]
@@ -42,11 +42,27 @@ function tab --description 'Spawn a new tab in the current terminal'
         set dir "$PWD"
     end
 
+    # $TERM/$TERM_PROGRAM/$KONSOLE_VERSION only prove the terminal type,
+    # not that its CLI binary is on $PATH -- e.g. sshing out from one of
+    # these inherits the env var on the remote host without the binary.
+    # Check explicitly.
     if test "$TERM" = xterm-kitty
+        if not type -q kitty
+            echo "Error: 'tab' detected Kitty but the kitty binary is not installed." >&2
+            return 1
+        end
         kitty @ launch --type=tab --cwd="$dir" $argv
     else if test "$TERM_PROGRAM" = WezTerm
+        if not type -q wezterm
+            echo "Error: 'tab' detected WezTerm but the wezterm binary is not installed." >&2
+            return 1
+        end
         wezterm cli spawn --cwd "$dir" $argv
     else if set -q KONSOLE_VERSION
+        if not type -q konsole
+            echo "Error: 'tab' detected Konsole but the konsole binary is not installed." >&2
+            return 1
+        end
         konsole --new-tab --workdir "$dir" $argv
     else
         echo "Error: No supported terminal found. Try Kitty, WezTerm, or Konsole." >&2

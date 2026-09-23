@@ -4,6 +4,9 @@
 # CATEGORY
 #   04-git-and-version-control
 #
+# DEPENDENCIES
+#   gitui
+#
 # SYNOPSIS
 #   gitui [args...]
 #
@@ -14,9 +17,17 @@
 # ARGUMENTS
 #   args...  Arguments forwarded to the gitui command
 #
+# EXIT STATUS
+#   1  gitui is not installed
+#   *  Exit status of gitui otherwise
+#
 # EXAMPLE
 #   gitui
 function gitui --wraps='gitui' --description 'alias gitui=gitui -t mocha.ron'
-    command gitui -t frappe.ron $argv
+    if not type -q -f gitui
+        echo (set_color red)"Error: gitui is not installed."(set_color normal) >&2
+        return 1
+    end
 
+    command gitui -t frappe.ron $argv
 end

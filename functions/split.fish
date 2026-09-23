@@ -8,7 +8,7 @@
 #   integrations/window-mgmt
 #
 # DEPENDENCIES
-#   kitty
+#   kitty, wezterm
 #
 # SYNOPSIS
 #   split [-h | -v] [command...]
@@ -52,6 +52,17 @@ function split --description 'Run a command in a new terminal split'
         set is_wezterm 1
     else
         echo "Error: The 'split' command requires Kitty or WezTerm terminal." >&2
+        return 1
+    end
+
+    # $TERM/$TERM_PROGRAM only prove the terminal type, not that its CLI
+    # binary is on $PATH -- e.g. sshing out from Kitty/WezTerm inherits the
+    # env var on the remote host without the binary. Check explicitly.
+    if test $is_kitty -eq 1; and not type -q kitty
+        echo "Error: 'split' detected Kitty but the kitty binary is not installed." >&2
+        return 1
+    else if test $is_wezterm -eq 1; and not type -q wezterm
+        echo "Error: 'split' detected WezTerm but the wezterm binary is not installed." >&2
         return 1
     end
 

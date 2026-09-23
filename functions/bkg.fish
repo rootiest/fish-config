@@ -4,6 +4,9 @@
 # CATEGORY
 #   08-terminal-management
 #
+# DEPENDENCIES
+#   nohup
+#
 # SYNOPSIS
 #   bkg <command> [args...]
 #
@@ -29,6 +32,11 @@ function bkg --description 'Execute bkg'
     if test -z "$argv[1]"
         __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""bkg$c_reset $c_arg""<command> [arguments...]$c_reset"
+        return 1
+    end
+
+    if not type -q nohup
+        echo (set_color red)"Error: nohup is not installed."(set_color normal) >&2
         return 1
     end
 
