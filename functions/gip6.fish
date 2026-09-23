@@ -4,6 +4,9 @@
 # CATEGORY
 #   10-network
 #
+# DEPENDENCIES
+#   curl
+#
 # CLASSIFICATION
 #   network
 #

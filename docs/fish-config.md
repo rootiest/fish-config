@@ -607,6 +607,8 @@ functions). They are active in all interactive sessions.
     cat README.md
     cat ~/projects/myapp
 
+**Dependencies:** `bat`
+
 **Classification:** `uses-shadow(ls)`, `bypasses-shadow(cat)`
 
 ### copy
@@ -644,6 +646,8 @@ functions). They are active in all interactive sessions.
     du ~/Downloads
     du --disk
 
+**Dependencies:** `duf`, `dust`, `dua`
+
 **Classification:** `bypasses-shadow(du)`
 
 ### dusize
@@ -678,6 +682,8 @@ functions). They are active in all interactive sessions.
     Example:
     lD ~/projects
 
+**Dependencies:** `eza`, `lsd`
+
 **Classification:** `bypasses-shadow(ls)`
 
 ### ls
@@ -694,6 +700,8 @@ functions). They are active in all interactive sessions.
     ls ~/projects
     ls
     ls -a ~/projects
+
+**Dependencies:** `eza`, `lsd`
 
 **Classification:** `bypasses-shadow(ls)`
 
@@ -713,6 +721,8 @@ functions). They are active in all interactive sessions.
     Example:
     lsr ~/projects
 
+**Dependencies:** `eza`, `lsd`
+
 **Classification:** `bypasses-shadow(ls)`
 
 ### lss
@@ -730,6 +740,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     lss ~/downloads
+
+**Dependencies:** `eza`, `lsd`
 
 **Classification:** `bypasses-shadow(ls)`
 
@@ -749,6 +761,8 @@ functions). They are active in all interactive sessions.
     Example:
     lstree ~/projects/myapp
 
+**Dependencies:** `eza`, `lsd`
+
 **Classification:** `bypasses-shadow(ls)`
 
 ### lt
@@ -766,6 +780,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     lt ~/projects
+
+**Dependencies:** `eza`, `lsd`
 
 **Classification:** `bypasses-shadow(ls)`
 
@@ -786,6 +802,8 @@ functions). They are active in all interactive sessions.
     Example:
     ltr ~/projects
 
+**Dependencies:** `eza`, `lsd`
+
 **Classification:** `bypasses-shadow(ls)`
 
 ### lx
@@ -803,6 +821,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     lx ~/projects
+
+**Dependencies:** `eza`, `lsd`
 
 **Classification:** `bypasses-shadow(ls)`
 
@@ -828,6 +848,8 @@ functions). They are active in all interactive sessions.
     mkcd ~/projects/myapp
     mkcd ~/projects/newapp/src
 
+**Dependencies:** `_fish_mkdir_p`
+
 **Classification:** `bypasses-shadow(cd)`
 
 ### mkdir
@@ -844,6 +866,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     mkdir ~/projects/myapp/src
+
+**Dependencies:** `_fish_mkdir_p`
 
 **Classification:** `bypasses-shadow(mkdir)`
 
@@ -887,6 +911,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     poke ~/projects/new/src/main.fish
+
+**Dependencies:** `_fish_mkdir_p`
 
 ### rg
 
@@ -939,6 +965,8 @@ functions). They are active in all interactive sessions.
     rm -e
     rm -S sensitive_key.pem
 
+**Dependencies:** `trash`
+
 **Classification:** `bypasses-shadow(rm)`, `destructive`
 
 ### scrub
@@ -965,6 +993,8 @@ functions). They are active in all interactive sessions.
     scrub -a
     scrub -d
 
+**Dependencies:** `fd`, `trash`
+
 **Classification:** `uses-shadow(rm)`, `bypasses-shadow(rm)`, `destructive`
 
 ## 5.2 Navigation
@@ -981,6 +1011,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     cdi myproject
+
+**Dependencies:** `zoxide`
 
 ### clone
 
@@ -1056,6 +1088,8 @@ functions). They are active in all interactive sessions.
     edit --editor=code --clipboard
     edit --text="hello world"
 
+**Dependencies:** `p`, `nano`, `nvim`
+
 **Classification:** `bypasses-shadow(rm)`
 
 ### fc
@@ -1092,6 +1126,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     less /var/log/syslog
+
+**Dependencies:** `ov`, `more`
 
 **Classification:** `bypasses-shadow(cat,less)`
 
@@ -1153,6 +1189,8 @@ functions). They are active in all interactive sessions.
     Example:
     rawfish
 
+**Dependencies:** `fish`
+
 ### view
 
     Synopsis:  view [args...]
@@ -1165,6 +1203,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     view /etc/fstab
+
+**Dependencies:** `nvim`
 
 **Classification:** `uses-shadow(less)`
 
@@ -1205,6 +1245,8 @@ functions). They are active in all interactive sessions.
     auto-pull list
     auto-pull remove qmk_firmware
 
+**Dependencies:** `git`
+
 ### branch
 
     Synopsis:  branch <branch_name>
@@ -1221,6 +1263,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     branch feature/new-ui
+
+**Dependencies:** `git`
 
 ### gi
 
@@ -1253,6 +1297,8 @@ functions). They are active in all interactive sessions.
     gi -b -p
     gi -s node > .gitignore
 
+**Dependencies:** `curl`, `md5sum`, `md5`
+
 **Classification:** `self-limiting(grep,cat)`, `network`, `blocking-prompt`
 
 ### git-clean
@@ -1274,6 +1320,8 @@ functions). They are active in all interactive sessions.
     Example:
     git-clean --force
     git-clean
+
+**Dependencies:** `git`
 
 **Classification:** `network`
 
@@ -1307,6 +1355,8 @@ functions). They are active in all interactive sessions.
     Example:
     gitup
     gitup --all
+
+**Dependencies:** `git`
 
 **Classification:** `network`
 
@@ -1491,6 +1541,8 @@ functions). They are active in all interactive sessions.
     Example:
     cleanup
 
+**Dependencies:** `pacman`
+
 **Classification:** `self-limiting(grep)`
 
 ### parur
@@ -1507,6 +1559,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     parur
+
+**Dependencies:** `fzf`, `pacman`, `paru`, `yay`
 
 **Classification:** `network`
 
@@ -1542,6 +1596,8 @@ functions). They are active in all interactive sessions.
     pkg -i ripgrep fd-find
     pkg -u cowsay
 
+**Dependencies:** `_fish_deps_detect_pm`, `pacman`, `paru`, `yay`
+
 **Classification:** `network`
 
 ### search
@@ -1561,6 +1617,8 @@ functions). They are active in all interactive sessions.
     Example:
     search neovim
 
+**Dependencies:** `paru`, `yay`
+
 **Classification:** `network`
 
 ### upgrade
@@ -1576,6 +1634,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     upgrade
+
+**Dependencies:** `paru`, `yay`
 
 **Classification:** `network`
 
@@ -1593,6 +1653,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     check_fish_deps
+
+**Dependencies:** `fish-deps`
 
 ### fish-deps
 
@@ -1648,6 +1710,10 @@ functions). They are active in all interactive sessions.
     fish-deps install --all
     fish-deps update
 
+**Dependencies:** `_fish_deps_status`, `_fish_deps_install`, `_fish_deps_update`
+
+**Used by:** `check_fish_deps`
+
 ### fzf-update
 
     Synopsis:  fzf-update
@@ -1661,6 +1727,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     fzf-update
+
+**Dependencies:** `git`, `fzf`
 
 **Classification:** `network`
 
@@ -1680,6 +1748,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     limine-edit
+
+**Dependencies:** `sbctl`
 
 ### lock
 
@@ -1725,6 +1795,8 @@ functions). They are active in all interactive sessions.
     Example:
     sbver
     sbver --brief
+
+**Dependencies:** `sbctl`
 
 **Classification:** `self-limiting(grep)`
 
@@ -1782,6 +1854,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     top
+
+**Dependencies:** `btop`
 
 **Classification:** `bypasses-shadow(top)`
 
@@ -1876,6 +1950,8 @@ functions). They are active in all interactive sessions.
     Example:
     # Rendered automatically by fish; not called directly.
 
+**Dependencies:** `docker`, `starship`
+
 ### jobrunner
 
     Synopsis:  jobrunner [-t <tool>] [<subcommand>] [<name>] [<command>...]
@@ -1959,6 +2035,8 @@ functions). They are active in all interactive sessions.
     split
     split -v nvim README.md
 
+**Dependencies:** `kitty`
+
 ### spwin
 
     Synopsis:  spwin [args...]
@@ -1976,6 +2054,8 @@ functions). They are active in all interactive sessions.
     Example:
     spwin
 
+**Dependencies:** `kitty`
+
 ### ssh
 
     Synopsis:  ssh [args...]
@@ -1990,6 +2070,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     ssh user@host
+
+**Dependencies:** `kitten`
 
 **Classification:** `bypasses-shadow(ssh)`, `network`
 
@@ -2010,6 +2092,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     tab
+
+**Dependencies:** `kitty`
 
 ## 5.9 Clipboard
 
@@ -2036,6 +2120,8 @@ functions). They are active in all interactive sessions.
     p > file.txt
 
 **Dependencies:** `_fish_clipboard_paste`
+
+**Used by:** `edit`
 
 ### paste
 
@@ -2120,6 +2206,8 @@ functions). They are active in all interactive sessions.
     Example:
     gip
 
+**Dependencies:** `curl`
+
 **Classification:** `network`
 
 ### gip4
@@ -2133,6 +2221,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     gip4
+
+**Dependencies:** `curl`
 
 **Classification:** `network`
 
@@ -2153,6 +2243,8 @@ functions). They are active in all interactive sessions.
     Example:
     gip6
 
+**Dependencies:** `curl`
+
 **Classification:** `network`
 
 ### ping
@@ -2170,6 +2262,8 @@ functions). They are active in all interactive sessions.
     Example:
     ping google.com
     ping --legend google.com
+
+**Dependencies:** `prettyping`
 
 **Classification:** `bypasses-shadow(ping)`
 
@@ -2190,6 +2284,8 @@ functions). They are active in all interactive sessions.
     Example:
     qr "https://example.com"
     echo "hello" | qr
+
+**Dependencies:** `curl`, `qrencode`
 
 **Classification:** `self-limiting(cat)`, `network`
 
@@ -2225,6 +2321,8 @@ functions). They are active in all interactive sessions.
     logs
     logs -c scrollback
 
+**Dependencies:** `_scrollback_prune_junk`, `fzf`, `nvim`, `ov`
+
 **Classification:** `bypasses-shadow(cat)`, `self-limiting(rm)`, `network`
 
 ### smart_exit
@@ -2251,6 +2349,8 @@ functions). They are active in all interactive sessions.
     Example:
     smart_exit
     smart_exit --no-log
+
+**Dependencies:** `kitty`, `ps`, `_scrollback_prune_junk`
 
 **Classification:** `self-limiting(rm,mkdir)`, `destructive`
 
@@ -2597,6 +2697,8 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `agents-init`, `agents-vault`
 
+**Used by:** `superpowers`
+
 ### antigravity-ide
 
     Synopsis:  antigravity-ide [args...]
@@ -2702,7 +2804,7 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `dops`
 
-**Used by:** `dops`
+**Used by:** `dockup`, `dops`, `fish_right_prompt`, `ld`
 
 ### dops
 
@@ -2752,6 +2854,8 @@ functions). They are active in all interactive sessions.
     qc -m ollama:llama3 "explain this error"
     qc --role coder "refactor this function"
 
+**Dependencies:** `aichat`
+
 ### superpowers
 
     Synopsis:  superpowers [on|off] [-g]
@@ -2773,6 +2877,8 @@ functions). They are active in all interactive sessions.
     Example:
     superpowers on
     superpowers off -g
+
+**Dependencies:** `agy`
 
 **Classification:** `uses-shadow(claude)`
 
@@ -2800,6 +2906,8 @@ functions). They are active in all interactive sessions.
     Example:
     dng2avif photo.dng
     dng2avif -q 85 -s 5 -i shot.dng -o out.avif
+
+**Dependencies:** `magick`, `ffmpeg`, `avifenc`, `exiftool`
 
 **Classification:** `self-limiting(rm)`
 
@@ -2883,6 +2991,8 @@ functions). They are active in all interactive sessions.
     Example:
     play-media
     play-media --player mpv
+
+**Dependencies:** `_fzf_preview_media`, `_fzf_wrapper`, `fd`, `fdfind`, `file`, `xdg-mime`
 
 ### spark
 
@@ -2979,6 +3089,8 @@ functions). They are active in all interactive sessions.
     bd-pull myuser/myproject
     bd-pull rootiest/fish-config
 
+**Dependencies:** `curl`, `jq`, `git`
+
 ### cffetch
 
     Synopsis:  cffetch [args...]
@@ -2991,6 +3103,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     cffetch
+
+**Dependencies:** `fastfetch`, `neofetch`
 
 **Classification:** `uses-shadow(ls)`
 
@@ -3008,6 +3122,10 @@ functions). They are active in all interactive sessions.
     Example:
     cheat tar
     cheat git
+
+**Dependencies:** `cheat`, `tldr`, `man`
+
+**Used by:** `cheat`
 
 ### config-help
 
@@ -3060,6 +3178,8 @@ functions). They are active in all interactive sessions.
     config-help keys --man
     config-help --help
     config-help pkg --man
+
+**Dependencies:** `xdg-open`, `man`, `ov`, `bat`
 
 **Classification:** `self-limiting(grep)`, `bypasses-shadow(less)`
 
@@ -3181,6 +3301,8 @@ functions). They are active in all interactive sessions.
     config-update --dry-run
     config-update --force
 
+**Dependencies:** `git`
+
 ### dockup
 
     Synopsis:  dockup [-h] [directory]
@@ -3199,6 +3321,8 @@ functions). They are active in all interactive sessions.
     Example:
     dockup ~/myapp
 
+**Dependencies:** `docker`
+
 **Classification:** `network`
 
 ### ffetch
@@ -3213,6 +3337,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     ffetch
+
+**Dependencies:** `fastfetch`, `neofetch`
 
 **Classification:** `uses-shadow(ls)`
 
@@ -3241,6 +3367,8 @@ functions). They are active in all interactive sessions.
     Example:
     fzf_configure_bindings --history=ctrl-h
 
+**Dependencies:** `_fzf_search_directory`, `_fzf_search_git_log`, `_fzf_search_git_status`, `_fzf_search_history`, `_fzf_search_processes`, `_fzf_search_variables`
+
 ### joplin
 
     Synopsis:  joplin [args...]
@@ -3257,6 +3385,10 @@ functions). They are active in all interactive sessions.
 
     Example:
     joplin ls
+
+**Dependencies:** `joplin`
+
+**Used by:** `joplin`
 
 ### kitty-logging
 
@@ -3289,6 +3421,8 @@ functions). They are active in all interactive sessions.
     kitty-logging install
     kitty-logging status
 
+**Dependencies:** `kitty`, `__kitty_logging_dir`, `__kitty_logging_has_watcher`, `__kitty_logging_version`
+
 **Classification:** `bypasses-shadow(grep,mkdir,rm)`
 
 ### ld
@@ -3303,6 +3437,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     ld
+
+**Dependencies:** `docker`, `lazydocker`
 
 ### open-url
 
@@ -3341,6 +3477,8 @@ functions). They are active in all interactive sessions.
     open-url https://git.rootiest.dev/rootiest/fish-config
     open-url -v https://fish.rootiest.fyi/
 
+**Dependencies:** `xdg-mime`, `xdg-open`
+
 **Used by:** `repo-open`
 
 ### rand_string
@@ -3376,6 +3514,8 @@ functions). They are active in all interactive sessions.
     rand_string adjective animal
     rand_string --case=title color animal --separator=dot digits=4
     rand_string literal=TEST --separator=underscore verb noun
+
+**Dependencies:** `shuf`
 
 **Classification:** `bypasses-shadow(cat)`
 
@@ -3459,6 +3599,8 @@ functions). They are active in all interactive sessions.
 
     Example:
     tmux-clean
+
+**Dependencies:** `tmux`
 
 ### wake-lock
 

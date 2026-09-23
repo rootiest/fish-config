@@ -4,6 +4,9 @@
 # CATEGORY
 #   05-package-management
 #
+# DEPENDENCIES
+#   _fish_deps_detect_pm, pacman, paru, yay
+#
 # CLASSIFICATION
 #   network
 #

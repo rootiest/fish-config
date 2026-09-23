@@ -7,6 +7,9 @@
 # COMPONENT
 #   integrations/window-mgmt
 #
+# DEPENDENCIES
+#   kitty
+#
 # SYNOPSIS
 #   spwin [args...]
 #

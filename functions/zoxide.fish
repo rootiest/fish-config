@@ -6,6 +6,9 @@
 # CATEGORY
 #   02-navigation
 #
+# DEPENDENCIES
+#   zoxide
+#
 # INTERNAL SYNOPSIS
 #   _zoxide_z_complete [comp] [desc]
 #

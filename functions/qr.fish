@@ -4,6 +4,9 @@
 # CATEGORY
 #   10-network
 #
+# DEPENDENCIES
+#   curl, qrencode
+#
 # CLASSIFICATION
 #   self-limiting(cat), network
 #

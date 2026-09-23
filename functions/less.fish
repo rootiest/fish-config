@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/shell-tools
 #
+# DEPENDENCIES
+#   ov, more
+#
 # CLASSIFICATION
 #   bypasses-shadow(cat,less)
 #

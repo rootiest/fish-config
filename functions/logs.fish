@@ -7,6 +7,9 @@
 # COMPONENT
 #   integrations/history-logs
 #
+# DEPENDENCIES
+#   _scrollback_prune_junk, fzf, nvim, ov
+#
 # CLASSIFICATION
 #   bypasses-shadow(cat), self-limiting(rm), network
 #

@@ -202,13 +202,22 @@ def test_dependencies_resolve():
 
     Catches typos, and catches stale entries when a dependency is renamed
     or deleted. External binaries are accepted when some file in the tree
-    guards them with `type -q`, which is this repo's convention.
+    guards their availability -- `type -q name`, `command -q name`,
+    `command -v name`, or `which name`, this repo's four interchangeable
+    existence-check idioms -- either directly, or, for a multi-tool check
+    like dng2avif's `for cmd in magick ffmpeg avifenc exiftool; type -q
+    $cmd`, indirectly through a loop variable.
     """
     repo = Path(__file__).parent.parent
     functions = _parsed_functions()
     known = {p.stem for p in (repo / "functions").glob("*.fish")} | set(functions)
+    guard_re = re.compile(r"(?:type -q|command -q|command -v|which)\s+([\w.\-]+)")
     for path in list(repo.glob("conf.d/*.fish")) + list((repo / "functions").glob("*.fish")):
-        known |= set(re.findall(r"type -q\s+(\S+)", path.read_text(encoding="utf-8")))
+        text = path.read_text(encoding="utf-8")
+        known |= set(guard_re.findall(text))
+        for var, names in re.findall(r"for\s+(\w+)\s+in\s+([^\n;]+)", text):
+            if re.search(rf"type -q\s+\$\{{?{re.escape(var)}\}}?\b", text):
+                known |= set(names.split())
     dangling = []
     for name, fn in functions.items():
         for dep in (d for d in re.split(r"[,\s]+", " ".join(fn.get("DEPENDENCIES", []))) if d):

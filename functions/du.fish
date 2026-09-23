@@ -7,6 +7,9 @@
 # COMPONENT
 #   aliases/filesystem
 #
+# DEPENDENCIES
+#   duf, dust, dua
+#
 # CLASSIFICATION
 #   bypasses-shadow(du)
 #

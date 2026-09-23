@@ -4,6 +4,9 @@
 # CATEGORY
 #   07-system-and-monitoring
 #
+# DEPENDENCIES
+#   sbctl
+#
 # CLASSIFICATION
 #   self-limiting(grep)
 #

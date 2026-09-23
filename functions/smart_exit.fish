@@ -8,6 +8,9 @@
 #   site exit-plain: overrides/key-bindings
 #   site logging-guard: logging/terminal-capture
 #
+# DEPENDENCIES
+#   kitty, ps, _scrollback_prune_junk
+#
 # CLASSIFICATION
 #   self-limiting(rm,mkdir), destructive
 #
