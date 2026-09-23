@@ -1,8 +1,9 @@
-# Fish Shell Configuration
+# Rootiest Fish Configuration
 
-A feature-rich Fish shell configuration for CachyOS (Arch Linux),
-built around a Catppuccin Mocha aesthetic with a curated set of modern
-CLI tool integrations, smart shell functions, and a heavily customized
+This isn't a generic Fish shell configuration — it's the Rootiest Fish
+Configuration: a feature-rich setup for CachyOS (Arch Linux), built
+around a Catppuccin Mocha aesthetic with a curated set of modern CLI
+tool integrations, smart shell functions, and a heavily customized
 abbreviation system for keyboard-driven workflows.
 
 📖 **[Project Wiki](https://fish.rootiest.fyi/)**
