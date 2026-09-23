@@ -1,5 +1,5 @@
 ---
-title: Fish Shell Configuration
+title: Rootiest Fish Configuration
 description: Reference manual for the rootiest fish configuration.
 manTitle: DESCRIPTION
 sidebar:
