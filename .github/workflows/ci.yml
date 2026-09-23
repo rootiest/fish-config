@@ -16,10 +16,17 @@ on:
       - "completions/**"
       - "integrations/**"
       - "tests/**"
+      - "scripts/**"
   pull_request:
     branches:
       - main
-    paths: *ci-paths
+    # No `paths:` filter here (unlike push, above): a PR carrying
+    # Kind/Testing, Area/Docs, etc. must still trigger this workflow even
+    # when its diff touches nothing in ci-paths, or the label-based gates
+    # in the test/docs jobs below would never get a chance to evaluate.
+    # `labeled`/`unlabeled` cover a label added after the PR is already
+    # open, without a new commit.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   workflow_dispatch:
     inputs:
       job:
@@ -30,7 +37,7 @@ on:
         options:
           - all
           - test
-          - build-docs
+          - docs
 
 jobs:
   # This workflow file is mirrored to GitHub as-is, but the runner label
@@ -48,8 +55,41 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITEA_TOKEN }}
+          fetch-depth: 0
+
+      # Runs unconditionally and always sets an output, so every step
+      # after it can gate on a single `steps.relevance.outputs.run`
+      # check instead of repeating the label/path OR-chain everywhere.
+      # push/workflow_dispatch are always relevant -- push is already
+      # path-filtered above, and a manual dispatch is explicit intent.
+      # A pull_request is relevant if it carries a testing-related label
+      # (independent of what it touches -- see the `on.pull_request`
+      # comment above) or if its diff touches a ci-paths pattern (the
+      # same list the push trigger above filters on; duplicated here in
+      # shell glob form since a PR event isn't pre-filtered by paths).
+      - name: Determine relevance
+        id: relevance
+        env:
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels) }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if printf '%s' "$PR_LABELS" | grep -qE '"name":[[:space:]]*"(Kind/Testing|Area/Tests|Area/CI|Area/Scripts)"'; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin "${{ github.event.pull_request.base.ref }}"
+          if git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" \
+              | grep -qE '^(docs/manual/|docs/build-manual\.py$|docs/manualtools\.py$|docs/verify-manual\.py$|docs/site/|functions/|conf\.d/|config\.fish$|completions/|integrations/|tests/|scripts/)'; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "run=false" >>"$GITHUB_OUTPUT"
+          fi
 
       - name: Install fish
+        if: steps.relevance.outputs.run == 'true'
         run: |
           sudo apt-get -o Acquire::Retries=3 update -qq
           # apt-utils, so debconf has a target for the "delaying package
@@ -67,22 +107,27 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y fish
 
       - name: Run fish config tests
+        if: steps.relevance.outputs.run == 'true'
         run: fish tests/run-tests.fish
 
-  # PRs only need the test job as a gate -- build-docs commits generated
-  # files straight to the checked-out branch and deploys the Cloudflare
-  # Pages production site, neither of which should ever happen from a PR
-  # (PR content isn't main yet, and a fork/branch push shouldn't touch
-  # prod). It only runs on push to main or an explicit workflow_dispatch.
-  build-docs:
-    needs: test
+  # Documentation tests/build, and (push/dispatch only) publish. Split
+  # into two sections within one job rather than two jobs: the publish
+  # steps need the files the build steps just generated, and passing
+  # those between separate jobs would need upload/download-artifact for
+  # no real benefit here.
+  #
+  # Does NOT `need: test` (the old build-docs job did, gating publish
+  # on it). main now has branch protection requiring the test job to
+  # pass before a PR can merge, so by the time a push-to-main reaches
+  # this job, test has already passed as a condition of getting here --
+  # re-checking it in-workflow would be redundant. The one gap that
+  # leaves is a direct admin push bypassing the PR flow entirely; that's
+  # the same trust already extended by leaving block_admin_merge_override
+  # off on the branch protection rule, not a new hole.
+  docs:
     if: |
       github.server_url != 'https://github.com' &&
-      github.event_name != 'pull_request' &&
-      always() &&
-      (github.event.inputs.job == 'build-docs' ||
-        ((github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all') &&
-          needs.test.result == 'success'))
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'docs')
     runs-on: racknerd-mini
     env:
       # Silences Node's internal "punycode module is deprecated" notice
@@ -94,8 +139,34 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITEA_TOKEN }}
+          fetch-depth: 0
+
+      # Same shape as the test job's identical step; see its comment.
+      # Only the label set and path patterns differ, narrowed to the
+      # docs-specific subset of ci-paths.
+      - name: Determine relevance
+        id: relevance
+        env:
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels) }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if printf '%s' "$PR_LABELS" | grep -qE '"name":[[:space:]]*"(Kind/Documentation|Area/Docs)"'; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin "${{ github.event.pull_request.base.ref }}"
+          if git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" \
+              | grep -qE '^(docs/manual/|docs/build-manual\.py$|docs/manualtools\.py$|docs/verify-manual\.py$|docs/site/)'; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "run=false" >>"$GITHUB_OUTPUT"
+          fi
 
       - name: Install dependencies
+        if: steps.relevance.outputs.run == 'true'
         run: |
           sudo apt-get -o Acquire::Retries=3 update -qq
           # apt-utils: see the "Install fish" step's identical comment in
@@ -107,6 +178,7 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y pandoc python3-yaml fish
 
       - name: Generate concatenated markdown
+        if: steps.relevance.outputs.run == 'true'
         run: python3 docs/build-manual.py --concat -o docs/fish-config.md
 
       # Regeneration MUST run before verification: verify-manual.py's
@@ -114,13 +186,19 @@ jobs:
       # against docs/fish-config.md on disk. Before this step ran, that
       # file was still the stale pre-push copy, so any ordinary edit under
       # docs/manual/** failed the round-trip check before anything was
-      # regenerated. Do not reorder this back — verification still gates
+      # regenerated. Do not reorder this back -- verification still gates
       # pandoc and the auto-commit below, it just no longer requires a
       # contributor to hand-sync the generated file before pushing.
+      #
+      # This is the "documentation tests" section: on a PR, it runs
+      # (and can fail the job) whenever relevant, without needing the
+      # publish steps below to run at all.
       - name: Verify manual integrity
+        if: steps.relevance.outputs.run == 'true'
         run: python3 docs/verify-manual.py
 
       - name: Compile man page
+        if: steps.relevance.outputs.run == 'true'
         run: |
           pandoc --standalone \
                  --from markdown \
@@ -128,21 +206,30 @@ jobs:
                  docs/fish-config.md \
                  -o docs/fish-config.1
 
+      # ──────────────────────── Publish only ───────────────────────
+      # Everything below deploys the production site and commits
+      # generated files straight to the checked-out branch. Never runs
+      # from a pull_request -- PR content isn't main yet, and a
+      # fork/branch push shouldn't touch prod.
       - name: Set up Node
+        if: github.event_name != 'pull_request'
         uses: actions/setup-node@v4
         with:
           node-version: "24"
 
       - name: Generate site content
+        if: github.event_name != 'pull_request'
         run: python3 docs/build-manual.py --site
 
       - name: Build project wiki
+        if: github.event_name != 'pull_request'
         working-directory: docs/site
         run: |
           npm ci --no-fund
           npx astro build
 
       - name: Deploy to Cloudflare Pages
+        if: github.event_name != 'pull_request'
         working-directory: docs/site
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -154,6 +241,7 @@ jobs:
             --commit-dirty=true
 
       - name: Commit generated docs
+        if: github.event_name != 'pull_request'
         env:
           BOT_GPG_KEY: ${{ secrets.CI_GPG_PRIVATE_KEY }}
         run: |
@@ -211,4 +299,4 @@ jobs:
       - name: Note that CI runs on Gitea
         run: |
           echo "This repository mirrors from Gitea (git.rootiest.dev), where CI actually runs."
-          echo "See the commit's status on the Gitea instance for the real test/build-docs results."
+          echo "See the commit's status on the Gitea instance for the real test/docs results."
