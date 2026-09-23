@@ -156,5 +156,48 @@ check "subdir lone AGENTS.md: no mirror CLAUDE.md" false (test -e $r7/AGENTS/onl
 check "subdir lone AGENTS.md: project AGENTS.md links to mirror" ../AGENTS/onlyagents/AGENTS.md (readlink $r7/onlyagents/AGENTS.md)
 check "subdir lone AGENTS.md: no project CLAUDE.md" false (test -e $r7/onlyagents/CLAUDE.md; and echo true; or echo false)
 
+echo ""
+echo "== agents-init: end-to-end CLAUDE.md retirement =="
+
+set -l e1 (new_repo)
+echo root-real >$e1/CLAUDE.md
+mkdir -p $e1/functions
+echo scoped-real >$e1/functions/CLAUDE.md
+pushd $e1 >/dev/null
+set -l ercA (agents-init --agents --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "e2e: exits 0" 0 "$ercA"
+check "e2e: root CLAUDE.md gone" false (test -e $e1/CLAUDE.md; and echo true; or echo false)
+check "e2e: root AGENTS.md links to mirror" AGENTS/AGENTS.md (readlink $e1/AGENTS.md)
+check "e2e: root content preserved" root-real (cat $e1/AGENTS.md)
+check "e2e: functions CLAUDE.md gone" false (test -e $e1/functions/CLAUDE.md; and echo true; or echo false)
+check "e2e: functions AGENTS.md links to mirror" ../AGENTS/functions/AGENTS.md (readlink $e1/functions/AGENTS.md)
+check "e2e: functions content preserved" scoped-real (cat $e1/functions/AGENTS.md)
+check "e2e: no CLAUDE.md left anywhere under AGENTS/" "" (find $e1/AGENTS -name CLAUDE.md)
+check "e2e: gitignore covers AGENTS.md unanchored" true (grep -qx 'AGENTS.md' $e1/.gitignore; and echo true; or echo false)
+
+pushd $e1 >/dev/null
+set -l ercB (agents-init --agents --quiet 2>/dev/null)
+popd >/dev/null
+check "e2e: idempotent second run prints nothing" "" "$ercB"
+
+echo ""
+echo "== agents-init: this-repo-shaped inversion is fixed live =="
+
+set -l e2 (new_repo)
+mkdir -p $e2/AGENTS/docs $e2/docs
+echo docs-content >$e2/AGENTS/docs/CLAUDE.md
+ln -s CLAUDE.md $e2/AGENTS/docs/AGENTS.md
+ln -s CLAUDE.md $e2/docs/AGENTS.md
+ln -s ../AGENTS/docs/CLAUDE.md $e2/docs/CLAUDE.md
+pushd $e2 >/dev/null
+set -l ercC (agents-init --agents --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "inversion fix: exits 0" 0 "$ercC"
+check "inversion fix: mirror AGENTS.md real" docs-content (cat $e2/AGENTS/docs/AGENTS.md)
+check "inversion fix: mirror CLAUDE.md gone" false (test -e $e2/AGENTS/docs/CLAUDE.md; and echo true; or echo false)
+check "inversion fix: project docs/AGENTS.md relinked directly" ../AGENTS/docs/AGENTS.md (readlink $e2/docs/AGENTS.md)
+check "inversion fix: project docs/CLAUDE.md gone" false (test -e $e2/docs/CLAUDE.md; and echo true; or echo false)
+
 cleanup
 report
