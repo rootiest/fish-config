@@ -132,7 +132,7 @@ silent until you enable logging.
 
 ## Documentation
 
-### [📖 Documentation Site](https://fish.rootiest.fyi/)
+### [📖 Documentation Wiki](https://fish.rootiest.fyi/)
 
 A Starlight-powered site rebuilt on every push to `main`. It covers
 configuration variables, key bindings, abbreviations, all functions, the
