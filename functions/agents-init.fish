@@ -247,6 +247,29 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             end
         end
 
+        # ── Migrate stale anchored gitignore lines ──────────────────────────────
+        # A project scaffolded by the old agents-init already has anchored
+        # /AGENTS.md and/or /CLAUDE.md lines in .gitignore. git check-ignore
+        # sees those as covering the literal path "AGENTS.md", so the new
+        # unanchored pattern below would be judged already-covered and never
+        # added -- leaving any newly discovered subdirectory AGENTS.md with no
+        # gitignore coverage at all. Strip the stale exact lines first so the
+        # unanchored pattern always gets a chance to be added. No-op when
+        # neither stale line is present.
+        set -l gitignore "$root/.gitignore"
+        if test -f "$gitignore"
+            if grep -qxF "/AGENTS.md" "$gitignore"
+                sed -i '/^\/AGENTS\.md$/d' "$gitignore"
+                set changed 1
+                test $verbose -eq 1; and echo "$c_warn→ Removed stale /AGENTS.md line from .gitignore$c_reset"
+            end
+            if grep -qxF "/CLAUDE.md" "$gitignore"
+                sed -i '/^\/CLAUDE\.md$/d' "$gitignore"
+                set changed 1
+                test $verbose -eq 1; and echo "$c_warn→ Removed stale /CLAUDE.md line from .gitignore$c_reset"
+            end
+        end
+
         # ── .gitignore ────────────────────────────────────────────────────────
         # Unanchored: matches AGENTS.md at every depth, so a newly
         # discovered subdirectory needs no additional gitignore entry.

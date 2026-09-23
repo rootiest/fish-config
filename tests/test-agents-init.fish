@@ -199,5 +199,21 @@ check "inversion fix: mirror CLAUDE.md gone" false (test -e $e2/AGENTS/docs/CLAU
 check "inversion fix: project docs/AGENTS.md relinked directly" ../AGENTS/docs/AGENTS.md (readlink $e2/docs/AGENTS.md)
 check "inversion fix: project docs/CLAUDE.md gone" false (test -e $e2/docs/CLAUDE.md; and echo true; or echo false)
 
+echo ""
+echo "== agents-init: stale anchored gitignore lines migrated =="
+
+set -l e3 (new_repo)
+mkdir -p $e3/AGENTS
+echo real-agents >$e3/AGENTS/AGENTS.md
+ln -s AGENTS/AGENTS.md $e3/AGENTS.md
+printf '%s\n' AGENTS/ "/AGENTS.md" "/CLAUDE.md" >$e3/.gitignore
+pushd $e3 >/dev/null
+set -l ercD (agents-init --agents --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "stale gitignore: exits 0" 0 "$ercD"
+check "stale gitignore: anchored /AGENTS.md line removed" false (grep -qxF '/AGENTS.md' $e3/.gitignore; and echo true; or echo false)
+check "stale gitignore: anchored /CLAUDE.md line removed" false (grep -qxF '/CLAUDE.md' $e3/.gitignore; and echo true; or echo false)
+check "stale gitignore: unanchored AGENTS.md pattern present" true (grep -qxF 'AGENTS.md' $e3/.gitignore; and echo true; or echo false)
+
 cleanup
 report
