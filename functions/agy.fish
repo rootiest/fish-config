@@ -17,8 +17,8 @@
 #   Wrapper for the agy Antigravity AI CLI that ensures the AGENTS/
 #   sub-repository is initialized and any agent-made changes are committed
 #   before launch. Delegates all scaffold and commit logic to agents-init
-#   --quiet (full setup), which ensures AGENTS/ is scaffolded and CLAUDE.md
-#   is symlinked to AGENTS/AGENTS.md in the current project.
+#   --quiet (full setup), which ensures AGENTS.md (root and every scoped
+#   subdirectory) is symlinked into AGENTS/ in the current project.
 #
 #   Also syncs the host-scoped agent memory vault (agents-vault). agy has
 #   no session-end hook, so its memory is captured on the next launch

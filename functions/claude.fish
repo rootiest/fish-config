@@ -20,8 +20,9 @@
 #   Wrapper for the claude CLI that ensures the AGENTS/ sub-repository is
 #   initialized and any agent-made changes are committed before launch.
 #   Delegates all scaffold and commit logic to agents-init --quiet (full
-#   setup), which ensures AGENTS/ is scaffolded and CLAUDE.md is symlinked
-#   to AGENTS/AGENTS.md in the current project.
+#   setup), which ensures AGENTS.md (root and every scoped subdirectory)
+#   is symlinked into AGENTS/ in the current project. claude-code reads
+#   AGENTS.md natively, so no CLAUDE.md is created or maintained.
 #
 #   Also syncs the host-scoped agent memory vault (agents-vault), which
 #   tracks curated memory living outside the project tree. The vault
@@ -44,7 +45,7 @@
 #   claude
 #   claude --resume
 #   claude "Explain the recent changes"
-function claude --wraps=claude --description 'claude wrapper: auto-links AGENTS.md as CLAUDE.md'
+function claude --wraps=claude --description 'claude wrapper: ensures AGENTS/ is scaffolded before launch'
     if not __fish_config_op_enabled (status current-function)
         command claude $argv
         return $status
