@@ -5,7 +5,7 @@
 #   04-git-and-version-control
 #
 # DEPENDENCIES
-#   curl, md5sum, md5
+#   curl, md5sum, md5, gitignore-scrub
 #
 # CLASSIFICATION
 #   self-limiting(grep,cat), network, blocking-prompt
@@ -167,6 +167,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         else
             echo (set_color brblack)"No patterns selected. Skipping API fetch."(set_color normal)
         end
+        test $needs_git -eq 1; and gitignore-scrub
         return 0
     end
 
@@ -196,6 +197,8 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
             end
         end
     end
+
+    test $needs_git -eq 1; and gitignore-scrub
 end
 
 # SYNOPSIS
