@@ -220,6 +220,48 @@ warning naming the file and explaining why, rather than staying silent
 about a directory it chose not to touch.
 
 
+## Scenario reference
+
+Every combination of what a directory can hold, laid out directly. "No"
+in the tracked column also covers a tracked file in a project with no
+populated `.gitignore` (the bootstrap case, above) — both behave the same
+way. Whenever the tracked column reads "Yes", that reason always wins
+over the identical-or-different comparison below it, and the warning
+printed names the file as tracked rather than as differing — the outcome
+(left alone) is the same either way, only the explanation differs.
+
+Settling a directory for the first time — a real `AGENTS.md`, a real
+`CLAUDE.md`, both, or neither, discovered fresh:
+
+    Found                             Deliberately tracked?  Result
+    --------------------------------  ---------------------  -----------------------------------------------
+    Only AGENTS.md (real)             No                     Adopted into AGENTS/, symlinked back.
+    Only AGENTS.md (real)             Yes                    Left exactly as it is; not adopted.
+    Only CLAUDE.md (real)             No                     Adopted, renamed to AGENTS.md, symlinked back.
+    Only CLAUDE.md (real)             Yes                    Left exactly as it is; not adopted or renamed.
+    Both, byte-identical              No                     AGENTS.md adopted; duplicate CLAUDE.md dropped.
+    Both, byte-identical              Yes (either)           Left exactly as they are; neither touched.
+    Both, different content           n/a                    Neither touched; warns, resolve by hand.
+    Mirror has CLAUDE.md (real)       n/a                    Flipped in place: renamed, nothing lost.
+    Correct AGENTS.md symlink exists  n/a                    Nothing happens -- already settled.
+
+A new real file appearing after a directory's mirror has already settled
+— an agent's own `/init`-style command, for instance, writing a fresh
+`CLAUDE.md` where an `AGENTS.md` is already symlinked:
+
+    New file vs. mirror  Deliberately tracked?  Result
+    -------------------  ---------------------  --------------------------------------------------------
+    Byte-identical        No                     Adopted as a duplicate; the new file is dropped.
+    Byte-identical        Yes                    Left as it is; not adopted, even though content matches.
+    Different content     No                     Left as it is; warns that it differs, resolve by hand.
+    Different content     Yes                    Left as it is; warns that it's tracked, not adopted.
+
+And whatever a directory holds, it never gets this far at all if
+discovery pruned it outright — see the containment rules above: nested
+repositories, dot-directories, `node_modules/`, generated-output
+directories, and any directory literally named `AGENTS`.
+
+
 ## plans/, specs/, and devlogs/
 
 `agents-init --plugins` (the second half of what a bare `agents-init` run

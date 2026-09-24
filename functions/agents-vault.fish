@@ -188,6 +188,13 @@
 #   machine that has a real global memory directory would move it into a
 #   throwaway directory and leave a dangling symlink behind, which is
 #   strictly worse than having had no backup at all.
+#
+#   This header covers usage only. The full concept/behavior/purpose
+#   write-up -- how this relates to the per-project AGENTS/ repository
+#   agents-init manages, and where each kind of agent state actually lives
+#   -- is in docs/manual/16-agent-tooling.md. Update that section in the
+#   same change whenever this function's behavior changes; see "Dedicated
+#   manual sections for complex subsystems" in CONTRIBUTING.md.
 function agents-vault --description 'track curated agent memory in a host-scoped vault repo'
     __fish_palette
 

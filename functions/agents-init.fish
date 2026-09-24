@@ -110,6 +110,15 @@
 #   agents-init --agents
 #   agents-init --plugins
 #   agents-init --quiet
+#
+# NOTES
+#   This header covers usage only. The full concept/behavior/purpose
+#   write-up -- the AGENTS.md convention, the AGENTS/ sub-repository, the
+#   discovery and safety model, and a complete scenario-by-scenario
+#   reference table -- lives in its own manual section:
+#   docs/manual/16-agent-tooling.md. Update that section in the same
+#   change whenever this function's behavior changes; see "Dedicated
+#   manual sections for complex subsystems" in CONTRIBUTING.md.
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
     __fish_palette
 

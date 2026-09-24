@@ -455,6 +455,31 @@ via `command`/`builtin` (`bypasses-shadow(cat)`), and general hazards —
 `destructive`, `network`, `blocking-prompt`. Full tag definitions and
 placement rule: [`docs/function-classification-schema.md`](docs/function-classification-schema.md).
 
+### Dedicated manual sections for complex subsystems
+
+A doc-header's `DESCRIPTION` is for that one function's usage — it stops
+being the right place once a subsystem spans several functions, has its
+own file layout, or has enough behavior (a decision table, a safety
+model) that cramming it into one function's header would make that
+header useless as a quick reference. When that happens, give the
+subsystem its own numbered top-level section under `docs/manual/`
+(follow the sibling sections' frontmatter shape: `title`, `manTitle`,
+`sidebar.order`, `helpKeywords`) instead of stretching the header.
+`docs/manual/16-agent-tooling.md` (`agents-init`/`agents-vault`/the
+`AGENTS/` sub-repository) is the existing example — its own doc-headers
+stay short and point there for the full picture, the same way this
+document points at other reference files rather than repeating them.
+
+This is a genuine exception to "the doc-header is the single source of
+truth" above, and it comes with an obligation `verify-manual.py` cannot
+enforce for you: nothing checks that a dedicated section still describes
+the function's *current* behavior. **Whenever you change what one of
+these functions does, update its dedicated section in the same commit or
+pull request** — not as a follow-up. A function with a dedicated section
+should say so in its own `# NOTES` (see `functions/agents-init.fish` for
+the pattern), so a later reader of just the header still finds the fuller
+page.
+
 ### Private/internal helper functions
 
 Functions named with a leading `_` (e.g. `_agents_init_ensure_gitignore`,
