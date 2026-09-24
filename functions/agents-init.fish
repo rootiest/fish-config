@@ -20,9 +20,15 @@
 #   agent-related files into it, and replaces them with symlinks so the
 #   outer project never tracks agent files directly. This applies at the
 #   project root and, automatically, to any subdirectory that carries its
-#   own scoped AGENTS.md or CLAUDE.md -- discovered by scanning the tree
-#   (pruning .git/, node_modules/, and AGENTS/ itself), not a hardcoded
-#   list.
+#   own scoped AGENTS.md or CLAUDE.md -- discovered by scanning the tree,
+#   not a hardcoded list. The scan prunes dot-directories (.git/, .claude/,
+#   ...), nested repos, AGENTS/ itself, node_modules/, and generated-output
+#   directories (build/, dist/, out/, target/).
+#
+#   A real instruction file that the project deliberately tracks -- in
+#   git's index, in a project whose .gitignore is non-empty -- is left
+#   exactly where it is, with a warning, rather than moved into AGENTS/ and
+#   replaced by a symlink. See _agents_init_path_is_protected.
 #
 #   Scaffolding runs only inside a git repository, or in a directory that
 #   already has an AGENTS.md, CLAUDE.md, or AGENTS/. Elsewhere it is a
@@ -226,13 +232,17 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         # reach into every unrelated tree below. In a git root, pruned:
         # any AGENTS/ (a mirror, never a source), dot-directories (.git,
         # .claude, .github: tool state, not scoped project dirs),
-        # node_modules, and nested repos/submodules/worktrees (their own
-        # .git marks another project). -mindepth 1 keeps the root itself,
-        # which has a .git, from pruning the whole walk.
+        # node_modules, generated-output directories (build, dist, out,
+        # target: an instruction file there is a build artifact, never a
+        # source -- pruned outright, before tracked-file protection would
+        # even be consulted), and nested repos/submodules/worktrees (their
+        # own .git marks another project). -mindepth 1 keeps the root
+        # itself, which has a .git, from pruning the whole walk.
         set -l found
         if test $in_git -eq 1
             set found (find "$root" -mindepth 1 \
                 -type d \( -name '.*' -o -name AGENTS -o -name node_modules \
+                -o -name build -o -name dist -o -name out -o -name target \
                 -o -exec test -e '{}/.git' \; \) -prune -o \
                 \( -name AGENTS.md -o -name CLAUDE.md \) -print)
         end

@@ -1,6 +1,9 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+# DEPENDENCIES
+#   _agents_init_path_is_protected
+#
 # CLASSIFICATION
 #   self-limiting(rm,mkdir), bypasses-shadow(mv)
 #
@@ -15,15 +18,23 @@
 #   for that directory -- neither at the project level nor inside the
 #   mirror.
 #
+#   The exception is a real file that is deliberately git-tracked -- in
+#   git's index, in a project whose .gitignore is non-empty (see
+#   _agents_init_path_is_protected). Such a file is never adopted,
+#   relinked, or removed: whenever steps 2 or 4 find one, they leave that
+#   directory's instruction files exactly as they are and warn on stderr.
+#
 #   Four states of <rel> are handled, in order, so later steps only ever
 #   see a settled mirror:
 #
 #   1. The mirror itself is inverted (CLAUDE.md real, AGENTS.md symlinked
 #      to it). Flipped in place: same bytes, new name.
 #   2. The mirror has no real AGENTS.md yet, and the project directory
-#      has one or both files. A lone real file (either name) is adopted
-#      as the mirror's AGENTS.md -- a lone CLAUDE.md is renamed, never
-#      preserved under its own name. Both real and byte-identical: the
+#      has one or both files. If either real file is protected, both are
+#      left untouched, the mirror is not populated, and a warning naming
+#      the protected file(s) goes to stderr. Otherwise a lone real file
+#      (either name) is adopted as the mirror's AGENTS.md -- a lone
+#      CLAUDE.md is renamed, never preserved under its own name. Both real and byte-identical: the
 #      AGENTS.md side is adopted and the duplicate CLAUDE.md is dropped.
 #      Both real and different: neither is touched and a warning is
 #      printed to stderr -- this function has no way to know which side
@@ -34,8 +45,10 @@
 #   4. The project-level AGENTS.md symlink is (re)created if missing or
 #      stale, and any CLAUDE.md left at the project level is removed. A
 #      real project-level file found here (written after the mirror
-#      settled) is removed only if byte-identical to the mirror; if it
-#      differs, nothing is touched and a warning goes to stderr, as in 2.
+#      settled) is checked for protection first, as in 2 -- a protected
+#      one is left alone even if byte-identical to the mirror. An
+#      unprotected one is removed only if byte-identical to the mirror; if
+#      it differs, nothing is touched and a warning goes to stderr, as in 2.
 #
 # ARGUMENTS
 #   root        Absolute path to the project root
@@ -44,8 +57,8 @@
 #               ("." for the root itself)
 #
 # EXIT STATUS
-#   0  <rel> is settled (including the both-real-and-different skip, which
-#      is not a failure of this function)
+#   0  <rel> is settled (including the both-real-and-different and
+#      protected-file skips, which are not failures of this function)
 #   1  A filesystem operation (mkdir/mv/rm/ln) failed
 #
 # RETURNS
@@ -112,6 +125,17 @@ function _agents_init_sync_instructions --argument-names root agents_dir rel
         set -l has_claude 0
         test -f "$proj_agents"; and not test -L "$proj_agents"; and set has_agents 1
         test -f "$proj_claude"; and not test -L "$proj_claude"; and set has_claude 1
+
+        # A deliberately git-tracked file is left alone -- and so is its
+        # sibling, since adopting one of a pair would still relink or drop
+        # the tracked one.
+        set -l protected
+        test $has_agents -eq 1; and _agents_init_path_is_protected "$root" "$proj_agents"; and set -a protected $disp_agents
+        test $has_claude -eq 1; and _agents_init_path_is_protected "$root" "$proj_claude"; and set -a protected $disp_claude
+        if set -q protected[1]
+            echo "_agents_init_sync_instructions: "(string join ', ' -- $protected)" tracked by git; leaving this directory's instruction files untouched" >&2
+            return 0
+        end
 
         if test $has_agents -eq 1; and test $has_claude -eq 1
             if command diff -q "$proj_agents" "$proj_claude" >/dev/null 2>&1
@@ -180,8 +204,17 @@ function _agents_init_sync_instructions --argument-names root agents_dir rel
         set target "$up""AGENTS/$rel/AGENTS.md"
     end
     # A real (non-symlink) file here arrived after the mirror settled. Same
-    # rule as step 2: byte-identical to the mirror is a duplicate and is
-    # replaced below; different means touch nothing and warn.
+    # rules as step 2. A deliberately git-tracked one is left alone first,
+    # even if byte-identical: turning a tracked regular file into a symlink
+    # is itself a change to it. Otherwise, byte-identical to the mirror is a
+    # duplicate and is replaced below; different means touch nothing and warn.
+    set -l protected
+    test -f "$proj_agents"; and not test -L "$proj_agents"; and _agents_init_path_is_protected "$root" "$proj_agents"; and set -a protected $disp_agents
+    test -f "$proj_claude"; and not test -L "$proj_claude"; and _agents_init_path_is_protected "$root" "$proj_claude"; and set -a protected $disp_claude
+    if set -q protected[1]
+        echo "_agents_init_sync_instructions: "(string join ', ' -- $protected)" tracked by git; leaving this directory's instruction files untouched" >&2
+        return 0
+    end
     for f in $proj_agents $proj_claude
         if test -f "$f"; and not test -L "$f"
             if not command diff -q "$f" "$mirror_agents" >/dev/null 2>&1

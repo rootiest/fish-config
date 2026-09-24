@@ -299,5 +299,145 @@ check "settled differs (CLAUDE.md): real file kept" recreated (cat $s3/CLAUDE.md
 check "settled differs (CLAUDE.md): warned on stderr" true (string match -q '*differ*' -- "$errS3"; and echo true; or echo false)
 check "settled differs (CLAUDE.md): link intact" AGENTS/AGENTS.md (readlink $s3/AGENTS.md)
 
+echo ""
+echo "== _agents_init_sync_instructions: deliberately git-tracked files are protected =="
+
+# Tracked (committed) + populated .gitignore: left alone.
+set -l p1 (new_repo)
+mkdir -p $p1/AGENTS
+echo node_modules/ >$p1/.gitignore
+echo team-rules >$p1/AGENTS.md
+git -C $p1 add .gitignore AGENTS.md
+git -C $p1 commit -qm init
+set -l errP1 (_agents_init_sync_instructions $p1 $p1/AGENTS . 2>&1 >/dev/null)
+set -l rcP1 $status
+check "tracked+ignore: exits 0" 0 "$rcP1"
+check "tracked+ignore: still a real file" team-rules (test -L $p1/AGENTS.md; or cat $p1/AGENTS.md)
+check "tracked+ignore: mirror not populated" false (test -e $p1/AGENTS/AGENTS.md; and echo true; or echo false)
+check "tracked+ignore: still tracked, unmodified" "" (git -C $p1 status --porcelain -- AGENTS.md)
+check "tracked+ignore: warned on stderr, naming the file" true (string match -q '*AGENTS.md tracked by git*' -- "$errP1"; and echo true; or echo false)
+
+# Untracked because gitignored + populated .gitignore: adopted normally.
+set -l p2 (new_repo)
+mkdir -p $p2/AGENTS
+echo 'AGENTS.md' >$p2/.gitignore
+git -C $p2 add .gitignore
+git -C $p2 commit -qm init
+echo ignored-local >$p2/AGENTS.md
+set -l outP2 (_agents_init_sync_instructions $p2 $p2/AGENTS . 2>/dev/null)
+check "gitignored untracked: adopted into mirror" ignored-local (cat $p2/AGENTS/AGENTS.md)
+check "gitignored untracked: linked" AGENTS/AGENTS.md (readlink $p2/AGENTS.md)
+
+# Tracked but no .gitignore at all (bootstrap): adopted anyway.
+set -l p3 (new_repo)
+mkdir -p $p3/AGENTS
+echo bootstrap >$p3/AGENTS.md
+git -C $p3 add AGENTS.md
+git -C $p3 commit -qm init
+set -l outP3 (_agents_init_sync_instructions $p3 $p3/AGENTS . 2>/dev/null)
+check "tracked, no .gitignore: adopted into mirror" bootstrap (cat $p3/AGENTS/AGENTS.md)
+check "tracked, no .gitignore: linked" AGENTS/AGENTS.md (readlink $p3/AGENTS.md)
+
+# Tracked but .gitignore empty: same bootstrap rule.
+set -l p3b (new_repo)
+mkdir -p $p3b/AGENTS
+touch $p3b/.gitignore
+echo bootstrap-empty >$p3b/AGENTS.md
+git -C $p3b add .gitignore AGENTS.md
+git -C $p3b commit -qm init
+set -l outP3b (_agents_init_sync_instructions $p3b $p3b/AGENTS . 2>/dev/null)
+check "tracked, empty .gitignore: adopted into mirror" bootstrap-empty (cat $p3b/AGENTS/AGENTS.md)
+check "tracked, empty .gitignore: linked" AGENTS/AGENTS.md (readlink $p3b/AGENTS.md)
+
+# Staged, never committed + populated .gitignore: staged is enough.
+set -l p4 (new_repo)
+mkdir -p $p4/AGENTS
+echo node_modules/ >$p4/.gitignore
+echo staged-only >$p4/AGENTS.md
+git -C $p4 add AGENTS.md
+set -l errP4 (_agents_init_sync_instructions $p4 $p4/AGENTS . 2>&1 >/dev/null)
+check "staged-only: still a real file" staged-only (test -L $p4/AGENTS.md; or cat $p4/AGENTS.md)
+check "staged-only: mirror not populated" false (test -e $p4/AGENTS/AGENTS.md; and echo true; or echo false)
+check "staged-only: warned on stderr" true (string match -q '*tracked by git*' -- "$errP4"; and echo true; or echo false)
+
+# Never added, not matched by .gitignore, populated .gitignore: adopted.
+set -l p5 (new_repo)
+mkdir -p $p5/AGENTS
+echo node_modules/ >$p5/.gitignore
+git -C $p5 add .gitignore
+git -C $p5 commit -qm init
+echo brand-new >$p5/CLAUDE.md
+set -l outP5 (_agents_init_sync_instructions $p5 $p5/AGENTS . 2>/dev/null)
+check "never added: adopted into mirror" brand-new (cat $p5/AGENTS/AGENTS.md)
+check "never added: linked" AGENTS/AGENTS.md (readlink $p5/AGENTS.md)
+check "never added: CLAUDE.md gone" false (test -e $p5/CLAUDE.md; and echo true; or echo false)
+
+# A pair where only CLAUDE.md is tracked: both left, only CLAUDE.md named.
+set -l p5b (new_repo)
+mkdir -p $p5b/AGENTS
+echo node_modules/ >$p5b/.gitignore
+echo pair >$p5b/CLAUDE.md
+git -C $p5b add .gitignore CLAUDE.md
+git -C $p5b commit -qm init
+echo pair >$p5b/AGENTS.md
+set -l errP5b (_agents_init_sync_instructions $p5b $p5b/AGENTS . 2>&1 >/dev/null)
+check "pair, one tracked: AGENTS.md left real" pair (test -L $p5b/AGENTS.md; or cat $p5b/AGENTS.md)
+check "pair, one tracked: CLAUDE.md left real" pair (test -L $p5b/CLAUDE.md; or cat $p5b/CLAUDE.md)
+check "pair, one tracked: mirror not populated" false (test -e $p5b/AGENTS/AGENTS.md; and echo true; or echo false)
+check "pair, one tracked: names only the tracked file" true (string match -q '*: CLAUDE.md tracked by git*' -- "$errP5b"; and echo true; or echo false)
+
+# Settled mirror (step 4): a tracked real file arriving later is protected,
+# whether it differs from the mirror or is byte-identical to it.
+set -l p7 (new_repo)
+mkdir -p $p7/AGENTS
+echo settled >$p7/AGENTS/AGENTS.md
+ln -s AGENTS/AGENTS.md $p7/AGENTS.md
+echo node_modules/ >$p7/.gitignore
+echo team-claude >$p7/CLAUDE.md
+git -C $p7 add .gitignore CLAUDE.md
+git -C $p7 commit -qm init
+set -l errP7 (_agents_init_sync_instructions $p7 $p7/AGENTS . 2>&1 >/dev/null)
+check "settled, tracked differs: exits 0" 0 "$status"
+check "settled, tracked differs: CLAUDE.md kept" team-claude (test -L $p7/CLAUDE.md; or cat $p7/CLAUDE.md)
+check "settled, tracked differs: protection wins over diff warning" true (string match -q '*CLAUDE.md tracked by git*' -- "$errP7"; and echo true; or echo false)
+check "settled, tracked differs: mirror intact" settled (cat $p7/AGENTS/AGENTS.md)
+
+set -l p7b (new_repo)
+mkdir -p $p7b/AGENTS
+echo settled >$p7b/AGENTS/AGENTS.md
+echo node_modules/ >$p7b/.gitignore
+echo settled >$p7b/AGENTS.md
+git -C $p7b add .gitignore AGENTS.md
+git -C $p7b commit -qm init
+set -l errP7b (_agents_init_sync_instructions $p7b $p7b/AGENTS . 2>&1 >/dev/null)
+check "settled, tracked identical: still a real file" true (test -f $p7b/AGENTS.md; and not test -L $p7b/AGENTS.md; and echo true; or echo false)
+check "settled, tracked identical: warned on stderr" true (string match -q '*AGENTS.md tracked by git*' -- "$errP7b"; and echo true; or echo false)
+
+echo ""
+echo "== agents-init: tracked subdir file protected, generated dirs pruned =="
+
+set -l e5 (new_repo)
+echo node_modules/ >$e5/.gitignore
+mkdir -p $e5/team $e5/build $e5/dist $e5/out $e5/target
+echo team-shared >$e5/team/CLAUDE.md
+for g in build dist out target
+    echo gen-$g >$e5/$g/AGENTS.md
+end
+git -C $e5 add .gitignore team/CLAUDE.md build/AGENTS.md
+git -C $e5 commit -qm init
+pushd $e5 >/dev/null
+set -l ercG (agents-init --agents --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "subdir protection: exits 0" 0 "$ercG"
+check "subdir protection: team/CLAUDE.md still real" team-shared (test -L $e5/team/CLAUDE.md; or cat $e5/team/CLAUDE.md)
+check "subdir protection: no team/AGENTS.md created" false (test -e $e5/team/AGENTS.md -o -L $e5/team/AGENTS.md; and echo true; or echo false)
+check "subdir protection: no mirror file for team" false (test -e $e5/AGENTS/team/AGENTS.md; and echo true; or echo false)
+check "subdir protection: team/CLAUDE.md unmodified in git" "" (git -C $e5 status --porcelain -- team/CLAUDE.md)
+check "subdir protection: root still scaffolded" AGENTS/AGENTS.md (readlink $e5/AGENTS.md)
+for g in build dist out target
+    check "pruned $g/: AGENTS.md untouched" gen-$g (test -L $e5/$g/AGENTS.md; or cat $e5/$g/AGENTS.md)
+    check "pruned $g/: no mirror" false (test -e $e5/AGENTS/$g; and echo true; or echo false)
+end
+
 cleanup
 report
