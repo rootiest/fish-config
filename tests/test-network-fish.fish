@@ -20,6 +20,16 @@
 source (realpath (dirname (status filename)))/lib.fish
 set -p fish_function_path $repo_root/functions
 
+# Isolated runs sandbox XDG_CONFIG_HOME to an empty dir, and __fish_config_dir
+# is read-only under --no-config, so gi's bundled boilerplate fallback
+# (data/gi/boilerplate.gitignore) needs the real file reachable wherever
+# __fish_config_dir actually points. Same pattern as
+# test-string-and-expansion.fish uses for rand_string's data/words/.
+if not test -d "$__fish_config_dir/data/gi"
+    mkdir -p "$__fish_config_dir/data"
+    ln -sf "$repo_root/data/gi" "$__fish_config_dir/data/gi"
+end
+
 set -gx TERM xterm-256color
 set -g TMPDIRS
 
@@ -202,6 +212,62 @@ begin
     builtin cd $prev_pwd
     check "gi -o (default mode): boilerplate goes to stdout" "*.log" "$default_stdout_out"
     check "gi -o (default mode): does not create .gitignore" false (test -f "$stdout_repo/.gitignore"; and echo true; or echo false)
+end
+
+# Regression: stdout mode must return 0 on success, not leak needs_git's test status
+reset_mocks
+set -gx MOCK_CURL_BODY "# Python gitignore\n*.pyc"
+gi -o python >/dev/null 2>&1
+check "gi -o: success returns 0" 0 $status
+
+# Boilerplate: unset $GITIGNORE_BOILERPLATE falls back to the bundled standard template
+reset_mocks
+set -l fallback_repo (new_repo)
+begin
+    set -l prev_pwd $PWD
+    builtin cd $fallback_repo
+    set -e GITIGNORE_BOILERPLATE
+    gi -b -s >/dev/null 2>&1
+    set -l rc $status
+    builtin cd $prev_pwd
+    check "gi -b (no env var): falls back returns 0" 0 $rc
+    check "gi -b (no env var): appends bundled template content" true \
+        (grep -qF ".Trash-*" "$fallback_repo/.gitignore"; and echo true; or echo false)
+end
+
+# Boilerplate: -c/--custom overrides $GITIGNORE_BOILERPLATE
+reset_mocks
+set -l custom_repo (new_repo)
+set -l custom_file (mktemp)
+set -ga TMPDIRS $custom_file
+set -l env_file (mktemp)
+set -ga TMPDIRS $env_file
+printf '%s\n' from-custom-flag/ >$custom_file
+printf '%s\n' from-env-var/ >$env_file
+begin
+    set -l prev_pwd $PWD
+    builtin cd $custom_repo
+    set -gx GITIGNORE_BOILERPLATE $env_file
+    gi -c $custom_file -s >/dev/null 2>&1
+    set -e GITIGNORE_BOILERPLATE
+    builtin cd $prev_pwd
+    check "gi -c: uses custom template over env var" true \
+        (grep -qF "from-custom-flag/" "$custom_repo/.gitignore"; and echo true; or echo false)
+    check "gi -c: does not use env var template" false \
+        (grep -qF "from-env-var/" "$custom_repo/.gitignore"; and echo true; or echo false)
+end
+
+# Boilerplate: -c alone (no -b) still runs boilerplate mode, and a missing
+# custom template reports an error without touching .gitignore
+reset_mocks
+set -l custom_missing_repo (new_repo)
+begin
+    set -l prev_pwd $PWD
+    builtin cd $custom_missing_repo
+    gi -c /nonexistent/template.gitignore -s >/dev/null 2>&1
+    builtin cd $prev_pwd
+    check "gi -c: missing template leaves no .gitignore" false \
+        (test -f "$custom_missing_repo/.gitignore"; and echo true; or echo false)
 end
 
 # Append mode outside git repository

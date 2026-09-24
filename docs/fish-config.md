@@ -1272,22 +1272,27 @@ functions). They are active in all interactive sessions.
 
 ### gi
 
-    Synopsis:  gi [-h] [-b] [-p] [-o] [-s] [-f] [-l] [targets...]
+    Synopsis:  gi [-h] [-b] [-p] [-o] [-s] [-f] [-c TEMPLATE] [-l] [targets...]
 
     Generates .gitignore content by querying the gitignore.io API. Appends
     results to the repository's .gitignore with MD5-based deduplication —
     patterns already present are not re-appended — or prints to stdout with
-    -o/--stdout. Supports generic boilerplate and interactive prompt modes.
+    -o/--stdout. Boilerplate mode uses $GITIGNORE_BOILERPLATE if set, a
+    -c/--custom template if given, or falls back to the bundled standard
+    template (data/gi/boilerplate.gitignore) when neither is configured.
+    Supports generic boilerplate and interactive prompt modes.
 
     Arguments:
       -h, --help         Show help message
       -d, --description  Show the function description
       -l, --list         List all supported targets from the API
-      -b, --boilerplate  Append boilerplate from $GITIGNORE_BOILERPLATE
+      -b, --boilerplate  Append boilerplate (implied by -c)
       -p, --prompt       Prompt for patterns to append
       -o, --stdout       Print generated content to stdout instead of .gitignore
       -s, --silent       Suppress progress output (errors and prompts still show)
       -f, --force        Bypass prompts, proceeding with the default action
+      -c, --custom PATH  Use PATH as the boilerplate template instead of
+                          $GITIGNORE_BOILERPLATE
       targets            Comma- or space-separated list of language/tool names
 
     Exit Status:
@@ -1303,6 +1308,7 @@ functions). They are active in all interactive sessions.
     gi -b -p
     gi -o node > .gitignore
     gi -f              # skip prompt, proceed with no patterns
+    gi -c ~/my-template.gitignore
 
 **Dependencies:** `curl`, `md5sum`, `md5`
 
