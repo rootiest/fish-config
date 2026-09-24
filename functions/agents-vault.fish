@@ -10,7 +10,7 @@
 #   _agents_repo_install_tools, git, hostname
 #
 # CLASSIFICATION
-#   self-limiting(rm,mkdir)
+#   self-limiting(rm,mkdir), manual-section(16-agent-tooling)
 #
 # SYNOPSIS
 #   agents-vault [--link] [--push] [--restore] [--status]

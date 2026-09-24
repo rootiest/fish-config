@@ -8,7 +8,7 @@
 #   _agents_init_sync_instructions, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
 #
 # CLASSIFICATION
-#   self-limiting(rm,mkdir,grep), bypasses-shadow(mv)
+#   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
 #
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
