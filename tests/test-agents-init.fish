@@ -439,5 +439,27 @@ for g in build dist out target
     check "pruned $g/: no mirror" false (test -e $e5/AGENTS/$g; and echo true; or echo false)
 end
 
+echo ""
+echo "== _agents_init_path_is_protected: glob characters in filenames not false-matched =="
+
+# Glob character filenames (e.g. a[1]) should be treated literally, not as glob patterns.
+# A committed file a1/AGENTS.md should NOT falsely protect an untracked a[1]/AGENTS.md
+# when checking if a[1]/AGENTS.md is protected.
+set -l g1 (new_repo)
+mkdir -p $g1/a1
+echo committed-a1 >$g1/a1/AGENTS.md
+git -C $g1 add a1/AGENTS.md
+git -C $g1 commit -qm init
+mkdir -p "$g1/a[1]"
+echo untracked-bracket >"$g1/a[1]/AGENTS.md"
+echo node_modules/ >$g1/.gitignore
+git -C $g1 add .gitignore
+git -C $g1 commit -qm add-ignore
+# Before the fix, this would return 0 (protected) due to glob matching a1/AGENTS.md
+# After the fix, it should return 1 (not protected) since a[1]/AGENTS.md is untracked
+_agents_init_path_is_protected $g1 "$g1/a[1]/AGENTS.md"
+set -l protected $status
+check "glob false-match: untracked a[1]/AGENTS.md is not protected" 1 "$protected"
+
 cleanup
 report

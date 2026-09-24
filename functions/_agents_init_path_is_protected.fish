@@ -39,7 +39,7 @@
 #   _agents_init_path_is_protected /path/to/project /path/to/project/functions/CLAUDE.md
 function _agents_init_path_is_protected --argument-names root path
     test -n "$root" -a -n "$path"; or return 1
-    git -C "$root" ls-files --error-unmatch -- "$path" >/dev/null 2>&1; or return 1
+    git -C "$root" --literal-pathspecs ls-files --error-unmatch -- "$path" >/dev/null 2>&1; or return 1
     test -s "$root/.gitignore"; or return 1
     return 0
 end
