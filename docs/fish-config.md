@@ -1272,12 +1272,12 @@ functions). They are active in all interactive sessions.
 
 ### gi
 
-    Synopsis:  gi [-h] [-b] [-p] [-s] [-l] [targets...]
+    Synopsis:  gi [-h] [-b] [-p] [-o] [-s] [-f] [-l] [targets...]
 
     Generates .gitignore content by querying the gitignore.io API. Appends
     results to the repository's .gitignore with MD5-based deduplication —
     patterns already present are not re-appended — or prints to stdout with
-    -s. Supports generic boilerplate and interactive prompt modes.
+    -o/--stdout. Supports generic boilerplate and interactive prompt modes.
 
     Arguments:
       -h, --help         Show help message
@@ -1285,21 +1285,24 @@ functions). They are active in all interactive sessions.
       -l, --list         List all supported targets from the API
       -b, --boilerplate  Append boilerplate from $GITIGNORE_BOILERPLATE
       -p, --prompt       Prompt for patterns to append
-      -s, --stdout       Print API output to stdout instead of .gitignore
+      -o, --stdout       Print generated content to stdout instead of .gitignore
+      -s, --silent       Suppress progress output (errors and prompts still show)
+      -f, --force        Bypass prompts, proceeding with the default action
       targets            Comma- or space-separated list of language/tool names
 
     Exit Status:
-      0  Patterns appended, or resolved with -s/--stdout or -l/--list
+      0  Patterns appended, or resolved with -o/--stdout or -l/--list
       1  Not in a git repository or API fetch failed
 
     Returns:
-      With -s/--stdout, the fetched .gitignore pattern text, printed to stdout.
+      With -o/--stdout, the fetched .gitignore pattern text, printed to stdout.
       With -l/--list, the supported target list, printed to stdout.
 
     Example:
     gi python,venv
     gi -b -p
-    gi -s node > .gitignore
+    gi -o node > .gitignore
+    gi -f              # skip prompt, proceed with no patterns
 
 **Dependencies:** `curl`, `md5sum`, `md5`
 

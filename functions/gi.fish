@@ -11,13 +11,13 @@
 #   self-limiting(grep,cat), network, blocking-prompt
 #
 # SYNOPSIS
-#   gi [-h] [-b] [-p] [-s] [-l] [targets...]
+#   gi [-h] [-b] [-p] [-o] [-s] [-f] [-l] [targets...]
 #
 # DESCRIPTION
 #   Generates .gitignore content by querying the gitignore.io API. Appends
 #   results to the repository's .gitignore with MD5-based deduplication —
 #   patterns already present are not re-appended — or prints to stdout with
-#   -s. Supports generic boilerplate and interactive prompt modes.
+#   -o/--stdout. Supports generic boilerplate and interactive prompt modes.
 #
 # ARGUMENTS
 #   -h, --help         Show help message
@@ -25,23 +25,26 @@
 #   -l, --list         List all supported targets from the API
 #   -b, --boilerplate  Append boilerplate from $GITIGNORE_BOILERPLATE
 #   -p, --prompt       Prompt for patterns to append
-#   -s, --stdout       Print API output to stdout instead of .gitignore
+#   -o, --stdout       Print generated content to stdout instead of .gitignore
+#   -s, --silent       Suppress progress output (errors and prompts still show)
+#   -f, --force        Bypass prompts, proceeding with the default action
 #   targets            Comma- or space-separated list of language/tool names
 #
 # EXIT STATUS
-#   0  Patterns appended, or resolved with -s/--stdout or -l/--list
+#   0  Patterns appended, or resolved with -o/--stdout or -l/--list
 #   1  Not in a git repository or API fetch failed
 #
 # RETURNS
-#   With -s/--stdout, the fetched .gitignore pattern text, printed to stdout.
+#   With -o/--stdout, the fetched .gitignore pattern text, printed to stdout.
 #   With -l/--list, the supported target list, printed to stdout.
 #
 # EXAMPLE
 #   gi python,venv
 #   gi -b -p
-#   gi -s node > .gitignore
+#   gi -o node > .gitignore
+#   gi -f              # skip prompt, proceed with no patterns
 function gi --description 'Generate .gitignore files using the gitignore.io API'
-    argparse h/help d/description l/list b/boilerplate p/prompt s/stdout -- $argv
+    argparse h/help d/description l/list b/boilerplate p/prompt o/stdout s/silent f/force -- $argv
     or return 1
 
     if set -q _flag_help
@@ -58,7 +61,9 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         echo "  $c_flag-l, --list        $c_reset List all supported targets from the API"
         echo "  $c_flag-b, --boilerplate $c_reset Append boilerplate from $c_arg""\$GITIGNORE_BOILERPLATE$c_reset to .gitignore"
         echo "  $c_flag-p, --prompt      $c_reset Prompt for patterns and append them to .gitignore"
-        echo "  $c_flag-s, --stdout      $c_reset Print API output to stdout instead of appending to .gitignore"
+        echo "  $c_flag-o, --stdout      $c_reset Print generated content to stdout instead of .gitignore"
+        echo "  $c_flag-s, --silent      $c_reset Suppress progress output (errors and prompts still show)"
+        echo "  $c_flag-f, --force       $c_reset Bypass prompts, proceeding with the default action"
         echo ""
         echo "$c_head""Examples:$c_reset"
         echo "  $c_cmd""gi$c_reset                      $c_dim""# Append boilerplate and prompt for patterns (default)$c_reset"
@@ -66,7 +71,8 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         echo "  $c_cmd""gi -p$c_reset                   $c_dim""# Prompt for patterns and append to .gitignore$c_reset"
         echo "  $c_cmd""gi$c_reset $c_arg""c++$c_reset                  $c_dim""# Append C++ patterns to .gitignore$c_reset"
         echo "  $c_cmd""gi$c_reset $c_arg""python,venv$c_reset          $c_dim""# Append Python+venv patterns to .gitignore$c_reset"
-        echo "  $c_cmd""gi -s$c_reset $c_arg""python,venv$c_reset       $c_dim""# Print Python+venv patterns to stdout$c_reset"
+        echo "  $c_cmd""gi -o$c_reset $c_arg""python,venv$c_reset       $c_dim""# Print Python+venv patterns to stdout$c_reset"
+        echo "  $c_cmd""gi -f$c_reset                   $c_dim""# Skip prompt, proceed with no patterns$c_reset"
         echo "  $c_cmd""gi -l$c_reset | grep -i linux   $c_dim""# Search for specific OS support$c_reset"
         return 0
     end
@@ -80,6 +86,9 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         curl -sL https://www.toptal.com/developers/gitignore/api/list
         return 0
     end
+
+    set -l silent_flag 0
+    set -q _flag_silent; and set silent_flag 1
 
     # Determine which modes to run
     set -l do_boilerplate 0
@@ -98,14 +107,17 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         set do_prompt 1
     end
 
-    # Resolve git context for anything that writes to .gitignore
+    # Resolve git context for anything that writes to .gitignore.
+    # --stdout never touches .gitignore, so it never needs a git repo.
     set -l gitignore_path ""
     set -l readable_path ""
     set -l needs_git 0
-    if test $do_boilerplate -eq 1; or test $do_prompt -eq 1
-        set needs_git 1
-    else if set -q argv[1]; and not set -q _flag_stdout
-        set needs_git 1
+    if not set -q _flag_stdout
+        if test $do_boilerplate -eq 1; or test $do_prompt -eq 1
+            set needs_git 1
+        else if set -q argv[1]
+            set needs_git 1
+        end
     end
 
     if test $needs_git -eq 1
@@ -127,6 +139,8 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         else if not test -f "$GITIGNORE_BOILERPLATE"
             set_color red --bold
             echo "Error:" (set_color normal)"Boilerplate file not found at '$GITIGNORE_BOILERPLATE'" >&2
+        else if set -q _flag_stdout
+            cat "$GITIGNORE_BOILERPLATE"
         else
             set -l template_hash ""
             if command -q md5sum
@@ -138,20 +152,30 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
             set -l sig "# id: gitig-boilerplate-$template_hash"
 
             if test -f "$gitignore_path"; and grep -qF "$sig" "$gitignore_path"
-                set_color yellow --bold
-                echo "Notice:" (set_color normal)"Boilerplate already present in "(set_color cyan)"$readable_path"(set_color normal)"."
+                if not set -q _flag_silent
+                    set_color yellow --bold
+                    echo "Notice:" (set_color normal)"Boilerplate already present in "(set_color cyan)"$readable_path"(set_color normal)"."
+                end
             else
                 printf "\n%s\n" "$sig" >>"$gitignore_path"
                 cat "$GITIGNORE_BOILERPLATE" >>"$gitignore_path"
-                echo (set_color green)"✔"(set_color normal)" Appended boilerplate to "(set_color cyan)"$readable_path"(set_color normal)
+                if not set -q _flag_silent
+                    echo (set_color green)"✔"(set_color normal)" Appended boilerplate to "(set_color cyan)"$readable_path"(set_color normal)
+                end
             end
         end
     end
 
-    # Prompt mode: ask for patterns, fetch and dedup each one individually
+    # Prompt mode: ask for patterns, fetch and dedup (or print) each one individually
     if test $do_prompt -eq 1
-        read -P "Enter gitignore patterns (comma-separated, e.g. python,vim): " patterns
-        or return 0
+        set -l patterns ""
+        if set -q _flag_force
+            # Bypass the prompt: proceed with the default action (no patterns)
+            set patterns ""
+        else
+            read -P "Enter gitignore patterns (comma-separated, e.g. python,vim): " patterns
+            or return 0
+        end
         set patterns (string trim -- $patterns)
         if test -n "$patterns"
             for pattern in (string split "," -- $patterns)
@@ -162,9 +186,13 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
                     echo "Error: Failed to fetch gitignore for '$pattern'. Is the target spelled correctly?" >&2
                     continue
                 end
-                __gi_append_dedup "$content" "$pattern" "$gitignore_path" "$readable_path"
+                if set -q _flag_stdout
+                    echo "$content"
+                else
+                    __gi_append_dedup "$content" "$pattern" "$gitignore_path" "$readable_path" $silent_flag
+                end
             end
-        else
+        else if not set -q _flag_silent
             echo (set_color brblack)"No patterns selected. Skipping API fetch."(set_color normal)
         end
         test $needs_git -eq 1; and gitignore-scrub
@@ -193,7 +221,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
                     echo "Error: Failed to fetch gitignore for '$target'. Is the target spelled correctly?" >&2
                     continue
                 end
-                __gi_append_dedup "$content" "$target" "$gitignore_path" "$readable_path"
+                __gi_append_dedup "$content" "$target" "$gitignore_path" "$readable_path" $silent_flag
             end
         end
     end
@@ -202,7 +230,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
 end
 
 # SYNOPSIS
-#   __gi_append_dedup <content> <label> <gitignore_path> <readable_path>
+#   __gi_append_dedup <content> <label> <gitignore_path> <readable_path> [silent]
 #
 # DESCRIPTION
 #   Appends gitignore content to a .gitignore file using MD5-based deduplication.
@@ -213,14 +241,16 @@ end
 #   label           Human-readable label for the pattern set
 #   gitignore_path  Absolute path to the .gitignore file
 #   readable_path   Home-abbreviated path shown in output messages
+#   silent          1 to suppress progress output, 0/omitted to show it
 #
 # EXAMPLE
-#   __gi_append_dedup "$content" "python" "$root/.gitignore" "~/.gitignore"
+#   __gi_append_dedup "$content" "python" "$root/.gitignore" "~/.gitignore" 0
 function __gi_append_dedup
     set -l content $argv[1]
     set -l label $argv[2]
     set -l gitignore_path $argv[3]
     set -l readable_path $argv[4]
+    set -l silent $argv[5]
 
     set -l content_hash ""
     if command -q md5sum
@@ -232,10 +262,14 @@ function __gi_append_dedup
     set -l sig "# id: gi-patterns-$content_hash"
 
     if test -f "$gitignore_path"; and grep -qF "$sig" "$gitignore_path"
-        set_color yellow --bold
-        echo "Notice:" (set_color normal)"$label patterns already present in "(set_color cyan)"$readable_path"(set_color normal)"."
+        if test "$silent" != 1
+            set_color yellow --bold
+            echo "Notice:" (set_color normal)"$label patterns already present in "(set_color cyan)"$readable_path"(set_color normal)"."
+        end
     else
         printf "\n%s\n%s\n" "$sig" "$content" >>"$gitignore_path"
-        echo (set_color green)"✔"(set_color normal)" Appended $label patterns to "(set_color cyan)"$readable_path"(set_color normal)
+        if test "$silent" != 1
+            echo (set_color green)"✔"(set_color normal)" Appended $label patterns to "(set_color cyan)"$readable_path"(set_color normal)
+        end
     end
 end
