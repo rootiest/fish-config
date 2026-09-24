@@ -391,7 +391,7 @@ all optional except where noted:
 | `CATEGORY` | **Required to appear in the manual at all** — see below. |
 | `COMPONENT` | Only for functions gated by the [opinionated-component system](#opinionated-components). |
 | `DEPENDENCIES` | Other functions, and external CLI tools, this one needs for full functionality — required or optional-with-fallback alike. |
-| `CLASSIFICATION` | Hazard/shadow-interaction tags — see below. |
+| `CLASSIFICATION` | Hazard/shadow-interaction tags, plus a couple of general-purpose ones (`manual-section`) — see below. |
 | `SYNOPSIS` | One-line usage form. |
 | `DESCRIPTION` | Prose description; can span multiple paragraphs. |
 | `ARGUMENTS` | Flags/positional args, one per line. |
@@ -447,13 +447,51 @@ If your function genuinely doesn't fit any of these, add a new
 `docs/manual/05-functions/NN-your-category.md` stub (with frontmatter
 matching its siblings) rather than force-fitting it into an existing one.
 
-**`CLASSIFICATION` flags hazards and shadow interactions, optional and
-omitted when nothing applies:** whether the function calls a
+**`CLASSIFICATION` is the general-purpose tag field, optional and omitted
+when nothing applies:** mostly hazards and shadow interactions — whether
+the function calls a
 [C1-shadowed command](docs/manual/08-components-reference/01-c1-command-shadows.md)
 bare wanting the override (`uses-shadow(ls)`) or bypasses it deliberately
 via `command`/`builtin` (`bypasses-shadow(cat)`), and general hazards —
-`destructive`, `network`, `blocking-prompt`. Full tag definitions and
-placement rule: [`docs/function-classification-schema.md`](docs/function-classification-schema.md).
+`destructive`, `network`, `blocking-prompt` — but not exclusively: a
+function with its own dedicated manual section (below) carries
+`manual-section(<slug>)` here too, so that fact is grep-able without
+reading every `NOTES` field. Full tag definitions and placement rule:
+[`docs/function-classification-schema.md`](docs/function-classification-schema.md).
+
+### Dedicated manual sections for complex subsystems
+
+A doc-header's `DESCRIPTION` is for that one function's usage — it stops
+being the right place once a subsystem spans several functions, has its
+own file layout, or has enough behavior (a decision table, a safety
+model) that cramming it into one function's header would make that
+header useless as a quick reference. When that happens, give the
+subsystem its own numbered top-level section under `docs/manual/`
+(follow the sibling sections' frontmatter shape: `title`, `manTitle`,
+`sidebar.order`, `helpKeywords`) instead of stretching the header.
+`docs/manual/16-agent-tooling.md` (`agents-init`/`agents-vault`/the
+`AGENTS/` sub-repository) is the existing example — its own doc-headers
+stay short and point there for the full picture, the same way this
+document points at other reference files rather than repeating them.
+
+A function with a dedicated section carries `manual-section(<slug>)` in
+its own `# CLASSIFICATION` (see `functions/agents-init.fish`; full tag
+definition in
+[`docs/function-classification-schema.md`](docs/function-classification-schema.md))
+— that's what makes the section discoverable without reading every
+function's `NOTES` by hand, and it's what `docs/build-manual.py` reads to
+render the "See also" line on the function's generated entry.
+`docs/verify-manual.py` fails the build if the slug doesn't resolve to a
+real page, so a typo or a renamed file can't go unnoticed — but it cannot
+check the *content* is current. A `# NOTES` line pointing at the same page
+(see the existing example) is worth adding too, for a reader who only
+reads the header text rather than the generated docs, but the tag is the
+part something else actually verifies.
+
+This is a genuine exception to "the doc-header is the single source of
+truth" above. **Whenever you change what one of these functions does,
+update its dedicated section in the same commit or pull request** — not
+as a follow-up.
 
 ### Private/internal helper functions
 

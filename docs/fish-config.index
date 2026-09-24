@@ -423,14 +423,21 @@ contributing=# 15. CONTRIBUTING
 contribute=# 15. CONTRIBUTING
 forge=# 15. CONTRIBUTING
 
-# ── Section 16: Attribution ───────────────────────────────────
-attribution=# 16. ATTRIBUTION
-credits=# 16. ATTRIBUTION
+# ── Section 16: AI Agent Tooling ──────────────────────────────
+agent=# 16. AI AGENT TOOLING
+agent-tooling=# 16. AI AGENT TOOLING
+agents.md=# 16. AI AGENT TOOLING
+claude-code=# 16. AI AGENT TOOLING
+antigravity=# 16. AI AGENT TOOLING
 
-# ── Section 17: License ───────────────────────────────────────
-license=# 17. LICENSE
-licensing=# 17. LICENSE
-agpl=# 17. LICENSE
-copyright=# 17. LICENSE
+# ── Section 17: Attribution ───────────────────────────────────
+attribution=# 17. ATTRIBUTION
+credits=# 17. ATTRIBUTION
+
+# ── Section 18: License ────────────────────────────────────────
+license=# 18. LICENSE
+licensing=# 18. LICENSE
+agpl=# 18. LICENSE
+copyright=# 18. LICENSE
 
 

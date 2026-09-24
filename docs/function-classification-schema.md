@@ -5,6 +5,14 @@ doc-header label. It's referenced from code comments and commit messages —
 link here, not to anything under `AGENTS/` (that tree is git-ignored local
 agent state, not part of the repo).
 
+`CLASSIFICATION` isn't limited to command-safety hazards, even though most
+of the closed set below is exactly that — it's the general-purpose place to
+tag what a function touches or how it behaves, whenever that's worth
+surfacing without reading the function's own body. `manual-section(<slug>)`
+is the one tag in the set that isn't a hazard at all: it marks a function
+that has its own dedicated manual section beyond this header (see
+[Dedicated manual sections for complex subsystems](../CONTRIBUTING.md#dedicated-manual-sections-for-complex-subsystems)).
+
 See [Public function documentation header](../CONTRIBUTING.md#public-function-documentation-header)
 in `CONTRIBUTING.md` for where `CLASSIFICATION` fits among the other header
 labels, and [C1 — Command Shadows](manual/08-components-reference/01-c1-command-shadows.md)
@@ -72,6 +80,22 @@ it empty as a placeholder.
   handler, an fzf-driven picker) — the hazard this tag exists for is a
   script or another function calling it unexpectedly, not a human running
   it themselves.
+- **`manual-section(<slug>)`** — this function has a dedicated manual
+  section beyond its own header; `<slug>` is that page's filename under
+  `docs/manual/` with the extension dropped (`16-agent-tooling` for
+  `docs/manual/16-agent-tooling.md`; a directory-based section like
+  `08-components-reference` uses its directory name the same way, resolved
+  against its `index.md`). `docs/build-manual.py` reads the target page's
+  own `manTitle`/`title` at build time and renders a **See also** line on
+  the function's generated entry — the tag only needs to keep pointing at
+  the right *file*; the displayed section number is never duplicated into
+  the tag, so it can't go stale on its own if the manual gets renumbered.
+  `docs/verify-manual.py` fails if the slug doesn't resolve to a real page.
+  Multiple functions may carry the same slug (`agents-init` and
+  `agents-vault` both point at `16-agent-tooling`, one section covering
+  both). See [Dedicated manual sections for complex subsystems](../CONTRIBUTING.md#dedicated-manual-sections-for-complex-subsystems)
+  in `CONTRIBUTING.md` for when a function's behavior has outgrown its
+  header and belongs in one of these instead.
 
 ## Placement
 

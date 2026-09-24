@@ -24,7 +24,7 @@ all of these commands.
     grep/fgrep/egrep   forced --color=auto                    system grep variants
     dir / vdir         forced --color=auto                    system dir / vdir
     help config        intercepts "help config" → config-help  fish builtin help
-    claude             auto-links AGENTS.md as CLAUDE.md before launch  command claude
+    claude             ensures AGENTS/ is scaffolded before launch      command claude
     edit               multi-editor launcher (GUI/term + fallbacks)  $EDITOR/nvim/nano/vi
 
 When C1 is disabled, `rm` uses bare `command rm` with no wrapper — files
@@ -64,7 +64,7 @@ and the `help config` interception.
 
 ## dev-tools
 
-`claude` (AGENTS.md/CLAUDE.md auto-linking) and `edit` (multi-editor
+`claude` (AGENTS/ scaffolding) and `edit` (multi-editor
 launcher), plus `agy`.
 
 ## For function authors

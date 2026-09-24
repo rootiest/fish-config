@@ -202,7 +202,7 @@ def build_concat(root: Path) -> str:
     Only bodies are passed: the pandoc metadata block above is not prose
     and must survive byte-for-byte.
     """
-    entries = build_entries(mt.parse_functions(FUNCTIONS))
+    entries = build_entries(mt.parse_functions(FUNCTIONS), root=root)
     chunks: list[str] = []
     pandoc_path = root / "_pandoc.yml"
     if pandoc_path.exists():
@@ -726,7 +726,44 @@ def _classification_tags(raw: list[str]) -> list[str]:
     return [t for t in tags if t]
 
 
-def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str:
+MANUAL_SECTION_RE = re.compile(r"^manual-section\(([\w./-]+)\)$")
+
+
+def _manual_section_slug(tags: list[str]) -> str | None:
+    """Pull the slug out of a `manual-section(<slug>)` CLASSIFICATION tag, if present."""
+    for tag in tags:
+        m = MANUAL_SECTION_RE.match(tag)
+        if m:
+            return m.group(1)
+    return None
+
+
+def _resolve_manual_section(root: Path | None, slug: str) -> tuple[str, str, str] | None:
+    """Resolve a manual-section(<slug>) tag to (display label, site link, doc-relative path).
+
+    Looks for <slug>.md (a top-level single-file section) or <slug>/index.md
+    (a directory-based section), matching the two shapes docs/manual/
+    actually uses. The display label is read fresh from the target's own
+    frontmatter (manTitle, falling back to title) rather than duplicated in
+    the tag, so a renumbered section never needs its tag updated -- only
+    the slug (the filename) does, and that only changes if the page itself
+    is renamed. Returns None -- silently, this is a build, not a check;
+    verify-manual.py is where a dangling slug is a real failure -- when
+    <root> is unset or neither candidate exists.
+    """
+    if root is None:
+        return None
+    for relpath in (f"{slug}.md", f"{slug}/index.md"):
+        if (root / relpath).exists():
+            fm, _ = mt.parse(root / relpath)
+            label = fm.get("manTitle") or fm.get("title", slug)
+            return label, f"/{slug}/", relpath
+    return None
+
+
+def render_entry(
+    fn: dict[str, list[str]], used_by: list[str], link=None, root: Path | None = None
+) -> str:
     """Render one parsed function header as a manual entry body.
 
     Emits the same man-page shape Section 5 was authored in — one 4-space
@@ -759,15 +796,22 @@ def render_entry(fn: dict[str, list[str]], used_by: list[str], link=None) -> str
     def names(raw: list[str]) -> list[str]:
         return [n for n in re.split(r"[,\s]+", " ".join(raw)) if n]
 
+    classification = _classification_tags(fn.get("CLASSIFICATION", []))
     refs = []
     for label, values in (
         ("Dependencies", names(fn.get("DEPENDENCIES", []))),
-        ("Classification", _classification_tags(fn.get("CLASSIFICATION", []))),
+        ("Classification", classification),
         ("Used by", sorted(used_by)),
     ):
         if values:
             rendered = ", ".join(link(v) if link else f"`{v}`" for v in values)
             refs.append(f"**{label}:** {rendered}")
+    slug = _manual_section_slug(classification)
+    if slug:
+        resolved = _resolve_manual_section(root, slug)
+        if resolved:
+            label, _href, relpath = resolved
+            refs.append(f"**See also:** {label} (`docs/manual/{relpath}`)")
     if refs:
         block += "\n\n" + "\n\n".join(refs)
     return block
@@ -871,7 +915,9 @@ SITE_SECTIONS = (
 )
 
 
-def render_entry_site(fn: dict[str, list[str]], used_by: list[str], link=None) -> str:
+def render_entry_site(
+    fn: dict[str, list[str]], used_by: list[str], link=None, root: Path | None = None
+) -> str:
     """Render one parsed function header as a manual entry body for the site.
 
     Unlike `render_entry` (the single indented man-page block pandoc wants,
@@ -905,15 +951,22 @@ def render_entry_site(fn: dict[str, list[str]], used_by: list[str], link=None) -
     def names(raw: list[str]) -> list[str]:
         return [n for n in re.split(r"[,\s]+", " ".join(raw)) if n]
 
+    classification = _classification_tags(fn.get("CLASSIFICATION", []))
     refs = []
     for label, values in (
         ("Dependencies", names(fn.get("DEPENDENCIES", []))),
-        ("Classification", _classification_tags(fn.get("CLASSIFICATION", []))),
+        ("Classification", classification),
         ("Used by", sorted(used_by)),
     ):
         if values:
             rendered = ", ".join(link(v) if link else f"`{v}`" for v in values)
             refs.append(f"**{label}:** {rendered}")
+    slug = _manual_section_slug(classification)
+    if slug:
+        resolved = _resolve_manual_section(root, slug)
+        if resolved:
+            label, href, _relpath = resolved
+            refs.append(f"**See also:** [{label}]({href})")
     if refs:
         parts.append("\n\n".join(refs))
 
@@ -921,7 +974,7 @@ def render_entry_site(fn: dict[str, list[str]], used_by: list[str], link=None) -
 
 
 def build_entries(
-    functions: dict[str, dict], link=None, site: bool = False
+    functions: dict[str, dict], link=None, site: bool = False, root: Path | None = None
 ) -> dict[str, list[tuple[str, str]]]:
     """Group rendered entries by category stem, ordered by function name.
 
@@ -929,6 +982,9 @@ def build_entries(
     authored: a bidirectional link maintained by hand drifts the moment one
     side is edited. `site` selects `render_entry_site` (headings + tables)
     over `render_entry` (the man-page indented block `build_concat` needs).
+    `root` (docs/manual/) resolves any `manual-section(<slug>)`
+    CLASSIFICATION tag to that page's own title -- omitted, the default,
+    an entry with the tag just gets no "See also" line rather than failing.
     """
     used_by: dict[str, list[str]] = {}
     for name, fn in functions.items():
@@ -940,7 +996,7 @@ def build_entries(
     out: dict[str, list[tuple[str, str]]] = {}
     for name in sorted(functions):
         fn = functions[name]
-        body = render(fn, used_by.get(name, []), link)
+        body = render(fn, used_by.get(name, []), link, root=root)
         out.setdefault(fn["CATEGORY"][0], []).append((name, body))
     return out
 
@@ -1041,7 +1097,9 @@ def build_site(root: Path, out: Path) -> list[dict]:
     out.mkdir(parents=True)
 
     functions = mt.parse_functions(FUNCTIONS)
-    entries = build_entries(functions, link=lambda n: _entry_link(n, functions), site=True)
+    entries = build_entries(
+        functions, link=lambda n: _entry_link(n, functions), site=True, root=root
+    )
 
     sidebar: list[dict] = [{"label": "Home", "link": "/"}]
     standard_groups: dict = {}

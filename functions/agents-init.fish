@@ -5,10 +5,10 @@
 #   12-ai-and-developer-tools
 #
 # DEPENDENCIES
-#   _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
+#   _agents_init_sync_instructions, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
 #
 # CLASSIFICATION
-#   self-limiting(rm,mkdir), bypasses-shadow(mv)
+#   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
 #
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
@@ -17,8 +17,18 @@
 # DESCRIPTION
 #   Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
 #   a self-contained git repo for agent specifications, moves any existing
-#   agent-related files into it, and replaces them with symlinks so the outer
-#   project never tracks agent files directly.
+#   agent-related files into it, and replaces them with symlinks so the
+#   outer project never tracks agent files directly. This applies at the
+#   project root and, automatically, to any subdirectory that carries its
+#   own scoped AGENTS.md or CLAUDE.md -- discovered by scanning the tree,
+#   not a hardcoded list. The scan prunes dot-directories (.git/, .claude/,
+#   ...), nested repos, AGENTS/ itself, node_modules/, and generated-output
+#   directories (build/, dist/, out/, target/).
+#
+#   A real instruction file that the project deliberately tracks -- in
+#   git's index, in a project whose .gitignore is non-empty -- is left
+#   exactly where it is, with a warning, rather than moved into AGENTS/ and
+#   replaced by a symlink. See _agents_init_path_is_protected.
 #
 #   Scaffolding runs only inside a git repository, or in a directory that
 #   already has an AGENTS.md, CLAUDE.md, or AGENTS/. Elsewhere it is a
@@ -26,11 +36,12 @@
 #   create a repository there.
 #
 #   File layout after setup:
-#     AGENTS/AGENTS.md          canonical agent spec (real file)
-#     AGENTS/CLAUDE.md          real file (if CLAUDE.md existed separately)
-#                               or symlink → AGENTS.md (single-source case)
+#     AGENTS/AGENTS.md          canonical root agent spec (real file)
+#     AGENTS/<subdir>/AGENTS.md canonical spec for any subdir with its own
+#                               scoped instructions (real file, discovered
+#                               automatically -- see above)
 #     <root>/AGENTS.md          → AGENTS/AGENTS.md
-#     <root>/CLAUDE.md          → AGENTS/CLAUDE.md
+#     <root>/<subdir>/AGENTS.md → AGENTS/<subdir>/AGENTS.md
 #     AGENTS/plans              superpowers plans      (real dir, .gitkeep)
 #     AGENTS/specs              superpowers specs      (real dir, .gitkeep)
 #     AGENTS/devlogs            agent development logs (real dir, .gitkeep)
@@ -41,6 +52,12 @@
 #     docs/plans                → ../AGENTS/plans   (only if docs/plans existed)
 #     docs/specs                → ../AGENTS/specs   (only if docs/specs existed)
 #     docs/devlogs              → ../AGENTS/devlogs (only if docs/devlogs existed)
+#
+#   No CLAUDE.md survives anywhere in a managed tree: claude-code reads
+#   AGENTS.md natively when CLAUDE.md is absent, so CLAUDE.md exists here
+#   purely as a retirement target -- any found (root or subdirectory, real
+#   file or leftover symlink) is folded into the AGENTS.md-only shape
+#   above by _agents_init_sync_instructions.
 #
 #   plans/ and specs/ are merged from every legacy location (docs/<tgt>,
 #   docs/superpowers/<tgt>, and the old AGENTS/plugins/ layout) into the
@@ -75,7 +92,8 @@
 #   Called automatically by the claude and agy wrappers on every invocation.
 #
 # ARGUMENTS
-#   -a, --agents   Set up AGENTS/ repo + AGENTS.md / CLAUDE.md symlinks only
+#   -a, --agents   Set up AGENTS/ repo + AGENTS.md symlinks (root and every
+#                  discovered subdirectory) only
 #   -p, --plugins  Set up AGENTS/ repo + plans/specs/devlogs dirs + docs/ symlinks only
 #   -v, --verbose  Print all per-step output (default)
 #   -q, --quiet    Print one summary line only if changes were made
@@ -92,6 +110,15 @@
 #   agents-init --agents
 #   agents-init --plugins
 #   agents-init --quiet
+#
+# NOTES
+#   This header covers usage only. The full concept/behavior/purpose
+#   write-up -- the AGENTS.md convention, the AGENTS/ sub-repository, the
+#   discovery and safety model, and a complete scenario-by-scenario
+#   reference table -- lives in its own manual section:
+#   docs/manual/16-agent-tooling.md. Update that section in the same
+#   change whenever this function's behavior changes; see "Dedicated
+#   manual sections for complex subsystems" in CONTRIBUTING.md.
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
     __fish_palette
 
@@ -105,7 +132,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         echo
         echo "$c_head""Options:$c_reset"
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset      Show this help message"
-        echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md / CLAUDE.md symlinks only"
+        echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md symlinks only"
         echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plans/specs/devlogs dirs and docs/ symlinks only"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset   Print all per-step output (default)"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset     Print one summary line only if changes were made"
@@ -140,7 +167,9 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # directory created an AGENTS/ repo, two root symlinks, and a docs/
     # tree there.
     set -l root (git rev-parse --show-toplevel 2>/dev/null)
+    set -l in_git 1
     if test -z "$root"
+        set in_git 0
         if test -e (pwd)/AGENTS.md -o -e (pwd)/CLAUDE.md -o -d (pwd)/AGENTS
             set root (pwd)
         else
@@ -201,109 +230,84 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
 
     #   ──────────────────────────── --agents mode ──────────────────────────────
     if test $do_agents -eq 1
-        # Detect which root-level files are real (not symlinks)
-        set -l has_agents 0
-        set -l has_claude 0
-        if test -f "$root/AGENTS.md"; and not test -L "$root/AGENTS.md"
-            set has_agents 1
+        # Discover every directory carrying agent instructions -- root
+        # included, subdirectories found automatically rather than by a
+        # hardcoded list. A real file, an already-migrated symlink, or a
+        # leftover inverted-mirror survivor all match, so one pass covers
+        # fresh, migrated, and legacy state alike.
+        #
+        # Discovery stays inside this project: a non-git root (a lone
+        # agent file in, say, ~) syncs only itself -- walking it would
+        # reach into every unrelated tree below. In a git root, pruned:
+        # any AGENTS/ (a mirror, never a source), dot-directories (.git,
+        # .claude, .github: tool state, not scoped project dirs),
+        # node_modules, generated-output directories (build, dist, out,
+        # target: an instruction file there is a build artifact, never a
+        # source -- pruned outright, before tracked-file protection would
+        # even be consulted), and nested repos/submodules/worktrees (their
+        # own .git marks another project). -mindepth 1 keeps the root
+        # itself, which has a .git, from pruning the whole walk.
+        set -l found
+        if test $in_git -eq 1
+            set found (find "$root" -mindepth 1 \
+                -type d \( -name '.*' -o -name AGENTS -o -name node_modules \
+                -o -name build -o -name dist -o -name out -o -name target \
+                -o -exec test -e '{}/.git' \; \) -prune -o \
+                \( -name AGENTS.md -o -name CLAUDE.md \) -print)
         end
-        if test -f "$root/CLAUDE.md"; and not test -L "$root/CLAUDE.md"
-            set has_claude 1
-        end
-
-        # ── Move real files into AGENTS/ ──────────────────────────────────────
-        if test $has_agents -eq 1; and test $has_claude -eq 1
-            # Both exist: preserve each as its own file in AGENTS/
-            if not test -f "$agents_dir/AGENTS.md"
-                if not command mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
-                    echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
-                    return 1
-                end
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
-            end
-            if not test -f "$agents_dir/CLAUDE.md"; and not test -L "$agents_dir/CLAUDE.md"
-                if not command mv "$root/CLAUDE.md" "$agents_dir/CLAUDE.md"
-                    echo "$c_err""Error: could not move CLAUDE.md → AGENTS/CLAUDE.md$c_reset" >&2
-                    return 1
-                end
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Moved CLAUDE.md → AGENTS/CLAUDE.md$c_reset"
-            end
-        else if test $has_agents -eq 1
-            if not test -f "$agents_dir/AGENTS.md"
-                if not command mv "$root/AGENTS.md" "$agents_dir/AGENTS.md"
-                    echo "$c_err""Error: could not move AGENTS.md → AGENTS/AGENTS.md$c_reset" >&2
-                    return 1
-                end
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Moved AGENTS.md → AGENTS/AGENTS.md$c_reset"
-            end
-        else if test $has_claude -eq 1
-            # Only CLAUDE.md: treat it as the agent spec
-            if not test -f "$agents_dir/AGENTS.md"
-                if not command mv "$root/CLAUDE.md" "$agents_dir/AGENTS.md"
-                    echo "$c_err""Error: could not move CLAUDE.md → AGENTS/AGENTS.md$c_reset" >&2
-                    return 1
-                end
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Moved CLAUDE.md → AGENTS/AGENTS.md$c_reset"
-            end
-        else
-            # Neither exists: create AGENTS/AGENTS.md with the agent directive
-            if not test -f "$agents_dir/AGENTS.md"
-                printf '%s\n' \
-                    '# AGENTS.md' \
-                    '' \
-                    '> ⚠️ **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' \
-                    '> You may be reading this file via a symlink (`CLAUDE.md` or `AGENTS.md`) in' \
-                    '> the root of the project. Your environment'\''s file-editing tools cannot write' \
-                    '> through symlinks and will throw an error.' \
-                    '>' \
-                    '> **DO NOT** attempt to write to or edit `CLAUDE.md` or `AGENTS.md` in the' \
-                    '> project root. If you need to update these instructions, you **MUST write' \
-                    '> directly to `AGENTS/AGENTS.md`**.' >"$agents_dir/AGENTS.md"
-                set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/AGENTS.md with agent directive$c_reset"
-            end
+        set -l rels "."
+        for f in $found
+            set -l d (path dirname "$f")
+            set -l rel (string replace "$root/" "" "$d")
+            test "$rel" = "$d"; and set rel "."
+            contains -- "$rel" $rels; or set -a rels "$rel"
         end
 
-        # ── Ensure AGENTS/CLAUDE.md exists ────────────────────────────────────
-        # When both files existed, AGENTS/CLAUDE.md is already a real file.
-        # Otherwise, create it as a symlink → AGENTS.md (within AGENTS/).
-        if not test -f "$agents_dir/CLAUDE.md"; and not test -L "$agents_dir/CLAUDE.md"
-            if not ln -s AGENTS.md "$agents_dir/CLAUDE.md"
-                echo "$c_err""Error: could not create AGENTS/CLAUDE.md symlink$c_reset" >&2
+        for rel in $rels
+            set -l out (_agents_init_sync_instructions "$root" "$agents_dir" "$rel")
+            set -l rc $status
+            if test $rc -ne 0
+                echo "$c_err""Error: could not sync AGENTS.md for $rel$c_reset" >&2
                 return 1
             end
-            set changed 1
-            test $verbose -eq 1; and echo "$c_ok→ Linked AGENTS/CLAUDE.md → AGENTS/AGENTS.md$c_reset"
+            if test -n "$out"
+                set changed 1
+                if test $verbose -eq 1
+                    for line in $out
+                        echo "$c_ok$line$c_reset"
+                    end
+                end
+            end
         end
 
-        # Root symlinks point at files, not directories, so they cannot use
-        # _agents_repo_ensure_symlink (which is directory-only by design).
-        for pair in "AGENTS.md:AGENTS/AGENTS.md" "CLAUDE.md:AGENTS/CLAUDE.md"
-            set -l name (string split -f1 ':' -- $pair)
-            set -l want (string split -f2 ':' -- $pair)
-            set -l need 0
-            if not test -L "$root/$name"
-                set need 1
-            else if test (readlink "$root/$name") != "$want"
-                rm -f "$root/$name"
-                set need 1
-            end
-            if test $need -eq 1
-                if not ln -s "$want" "$root/$name"
-                    echo "$c_err""Error: could not create $name symlink$c_reset" >&2
-                    return 1
-                end
+        # ── Migrate stale anchored gitignore lines ──────────────────────────────
+        # A project scaffolded by the old agents-init already has anchored
+        # /AGENTS.md and/or /CLAUDE.md lines in .gitignore. git check-ignore
+        # sees those as covering the literal path "AGENTS.md", so the new
+        # unanchored pattern below would be judged already-covered and never
+        # added -- leaving any newly discovered subdirectory AGENTS.md with no
+        # gitignore coverage at all. Strip the stale exact lines first so the
+        # unanchored pattern always gets a chance to be added. No-op when
+        # neither stale line is present.
+        set -l gitignore "$root/.gitignore"
+        if test -f "$gitignore"
+            if grep -qxF "/AGENTS.md" "$gitignore"
+                sed -i '/^\/AGENTS\.md$/d' "$gitignore"
                 set changed 1
-                test $verbose -eq 1; and echo "$c_ok→ Linked $name → $want$c_reset"
+                test $verbose -eq 1; and echo "$c_warn→ Removed stale /AGENTS.md line from .gitignore$c_reset"
+            end
+            if grep -qxF "/CLAUDE.md" "$gitignore"
+                sed -i '/^\/CLAUDE\.md$/d' "$gitignore"
+                set changed 1
+                test $verbose -eq 1; and echo "$c_warn→ Removed stale /CLAUDE.md line from .gitignore$c_reset"
             end
         end
 
         # ── .gitignore ────────────────────────────────────────────────────────
-        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" "/AGENTS.md" "/CLAUDE.md")
+        # Unanchored: matches AGENTS.md at every depth, so a newly
+        # discovered subdirectory needs no additional gitignore entry.
+        # CLAUDE.md is dropped entirely -- nothing creates one anymore.
+        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" "AGENTS.md")
         if test -n "$_gi"
             set changed 1
             test $verbose -eq 1; and echo $_gi

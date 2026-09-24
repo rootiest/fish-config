@@ -1674,6 +1674,117 @@ def test_concat_section_five_stays_verbatim():
     assert not offenders, f"backticks inside verbatim entries: {offenders[:3]}"
 
 
+def test_manual_section_slug_extracts_tag():
+    """`manual-section(<slug>)` is found among other CLASSIFICATION tags, or not at all."""
+    import build_manual
+
+    assert build_manual._manual_section_slug(["destructive", "manual-section(foo-bar)"]) == "foo-bar"
+    assert build_manual._manual_section_slug(["network"]) is None
+    assert build_manual._manual_section_slug([]) is None
+
+
+def test_resolve_manual_section_reads_target_frontmatter():
+    """Resolves both page shapes (top-level file, directory index) and reports None cleanly."""
+    import build_manual
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "solo.md").write_text(
+            "---\ntitle: Solo\nmanTitle: 9. SOLO\n---\nbody\n"
+        )
+        (root / "grouped").mkdir()
+        (root / "grouped" / "index.md").write_text(
+            "---\ntitle: Grouped\nmanTitle: 10. GROUPED\n---\nbody\n"
+        )
+
+        label, href, relpath = build_manual._resolve_manual_section(root, "solo")
+        assert label == "9. SOLO", label
+        assert href == "/solo/", href
+        assert relpath == "solo.md", relpath
+
+        label, href, relpath = build_manual._resolve_manual_section(root, "grouped")
+        assert label == "10. GROUPED", label
+        assert href == "/grouped/", href
+        assert relpath == "grouped/index.md", relpath
+
+        assert build_manual._resolve_manual_section(root, "missing") is None
+        assert build_manual._resolve_manual_section(None, "solo") is None
+
+
+def test_render_entry_see_also_appears_only_when_root_resolves():
+    """The man-page See-also line needs both the tag and a root that resolves it."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["thing"],
+        "DESCRIPTION": ["Does a thing."],
+        "CLASSIFICATION": ["manual-section(deep-dive)"],
+    }
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "deep-dive.md").write_text(
+            "---\ntitle: Deep Dive\nmanTitle: 20. DEEP DIVE\n---\nbody\n"
+        )
+
+        out = build_manual.render_entry(fn, [], root=root)
+        assert "**See also:** 20. DEEP DIVE (`docs/manual/deep-dive.md`)" in out, out
+
+        # No root at all -- same as every other existing caller that never
+        # passes one -- silently omits the line rather than raising.
+        out_no_root = build_manual.render_entry(fn, [])
+        assert "See also" not in out_no_root, out_no_root
+
+        # A root that exists but doesn't have the target page: also silent.
+        with tempfile.TemporaryDirectory() as empty:
+            out_missing = build_manual.render_entry(fn, [], root=Path(empty))
+            assert "See also" not in out_missing, out_missing
+
+
+def test_render_entry_site_see_also_is_a_real_link():
+    """The site's See-also line is a markdown link to the resolved page's site path."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["thing"],
+        "DESCRIPTION": ["Does a thing."],
+        "CLASSIFICATION": ["manual-section(deep-dive)"],
+    }
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / "deep-dive.md").write_text(
+            "---\ntitle: Deep Dive\nmanTitle: 20. DEEP DIVE\n---\nbody\n"
+        )
+        out = build_manual.render_entry_site(fn, [], root=root)
+        assert "**See also:** [20. DEEP DIVE](/deep-dive/)" in out, out
+
+
+def test_real_manual_section_tags_resolve():
+    """Every manual-section(<slug>) tag on a real function points at a real page.
+
+    This is the enforcement half of the convention: build-manual.py stays
+    silent about a dangling slug (it just skips the See-also line), so this
+    is the only thing that turns a typo'd or stale slug into a failure.
+    """
+    import build_manual
+
+    functions = mt.parse_functions(build_manual.FUNCTIONS)
+    checked = 0
+    for name, fn in functions.items():
+        tags = build_manual._classification_tags(fn.get("CLASSIFICATION", []))
+        slug = build_manual._manual_section_slug(tags)
+        if slug is None:
+            continue
+        checked += 1
+        resolved = build_manual._resolve_manual_section(build_manual.MANUAL, slug)
+        assert resolved is not None, (
+            f"{name}'s manual-section({slug}) tag doesn't resolve to "
+            f"docs/manual/{slug}.md or docs/manual/{slug}/index.md"
+        )
+    assert checked > 0, "expected at least one real function to carry manual-section(...)"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 
