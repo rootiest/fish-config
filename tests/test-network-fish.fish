@@ -177,15 +177,32 @@ check "gi -l: returns 0 per contract" 0 $status
 # stdout mode with valid content
 reset_mocks
 set -gx MOCK_CURL_BODY "# Python gitignore\n*.pyc\n__pycache__/"
-set -l stdout_out (gi -s python)
-check "gi -s: prints fetched patterns to stdout" "# Python gitignore\n*.pyc\n__pycache__/" "$stdout_out"
+set -l stdout_out (gi -o python)
+check "gi -o: prints fetched patterns to stdout" "# Python gitignore\n*.pyc\n__pycache__/" "$stdout_out"
 
 # stdout mode with network failure / 404 (curl exit 22)
 reset_mocks
 set -gx MOCK_CURL_STATUS 22
 set -gx MOCK_CURL_BODY ""
-gi -s invalid_target >/dev/null 2>&1
-check "gi -s: API failure returns 1" 1 $status
+gi -o invalid_target >/dev/null 2>&1
+check "gi -o: API failure returns 1" 1 $status
+
+# Regression: default mode (no args/flags) + --stdout must not touch .gitignore
+reset_mocks
+set -l stdout_repo (new_repo)
+set -l boilerplate_file (mktemp)
+set -ga TMPDIRS $boilerplate_file
+printf '%s\n' '*.log' >$boilerplate_file
+begin
+    set -l prev_pwd $PWD
+    builtin cd $stdout_repo
+    set -gx GITIGNORE_BOILERPLATE $boilerplate_file
+    set -l default_stdout_out (echo "" | gi -o -s)
+    set -e GITIGNORE_BOILERPLATE
+    builtin cd $prev_pwd
+    check "gi -o (default mode): boilerplate goes to stdout" "*.log" "$default_stdout_out"
+    check "gi -o (default mode): does not create .gitignore" false (test -f "$stdout_repo/.gitignore"; and echo true; or echo false)
+end
 
 # Append mode outside git repository
 reset_mocks
