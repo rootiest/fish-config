@@ -152,7 +152,9 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # directory created an AGENTS/ repo, two root symlinks, and a docs/
     # tree there.
     set -l root (git rev-parse --show-toplevel 2>/dev/null)
+    set -l in_git 1
     if test -z "$root"
+        set in_git 0
         if test -e (pwd)/AGENTS.md -o -e (pwd)/CLAUDE.md -o -d (pwd)/AGENTS
             set root (pwd)
         else
@@ -217,11 +219,23 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         # included, subdirectories found automatically rather than by a
         # hardcoded list. A real file, an already-migrated symlink, or a
         # leftover inverted-mirror survivor all match, so one pass covers
-        # fresh, migrated, and legacy state alike. AGENTS/ itself is
-        # pruned: it is the mirror, never a source to discover.
-        set -l found (find "$root" \
-            \( -name .git -o -path "$agents_dir" -o -name node_modules \) -prune -o \
-            \( -name AGENTS.md -o -name CLAUDE.md \) -print)
+        # fresh, migrated, and legacy state alike.
+        #
+        # Discovery stays inside this project: a non-git root (a lone
+        # agent file in, say, ~) syncs only itself -- walking it would
+        # reach into every unrelated tree below. In a git root, pruned:
+        # any AGENTS/ (a mirror, never a source), dot-directories (.git,
+        # .claude, .github: tool state, not scoped project dirs),
+        # node_modules, and nested repos/submodules/worktrees (their own
+        # .git marks another project). -mindepth 1 keeps the root itself,
+        # which has a .git, from pruning the whole walk.
+        set -l found
+        if test $in_git -eq 1
+            set found (find "$root" -mindepth 1 \
+                -type d \( -name '.*' -o -name AGENTS -o -name node_modules \
+                -o -exec test -e '{}/.git' \; \) -prune -o \
+                \( -name AGENTS.md -o -name CLAUDE.md \) -print)
+        end
         set -l rels "."
         for f in $found
             set -l d (path dirname "$f")

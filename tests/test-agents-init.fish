@@ -215,5 +215,89 @@ check "stale gitignore: anchored /AGENTS.md line removed" false (grep -qxF '/AGE
 check "stale gitignore: anchored /CLAUDE.md line removed" false (grep -qxF '/CLAUDE.md' $e3/.gitignore; and echo true; or echo false)
 check "stale gitignore: unanchored AGENTS.md pattern present" true (grep -qxF 'AGENTS.md' $e3/.gitignore; and echo true; or echo false)
 
+echo ""
+echo "== agents-init: discovery stays out of nested repos and dot-dirs =="
+
+set -l e4 (new_repo)
+mkdir -p $e4/sub $e4/.claude $e4/vendor/other/AGENTS
+git -C $e4/sub init -q
+mkdir -p $e4/.gemini
+echo nested-claude >$e4/sub/CLAUDE.md
+echo tool-claude >$e4/.claude/CLAUDE.md
+echo tool-agents >$e4/.gemini/AGENTS.md
+echo foreign-mirror >$e4/vendor/other/AGENTS/CLAUDE.md
+echo own-docs >$e4/vendor/CLAUDE.md
+pushd $e4 >/dev/null
+set -l ercE (agents-init --agents --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "containment: exits 0" 0 "$ercE"
+check "containment: nested repo got no AGENTS.md" false (test -e $e4/sub/AGENTS.md -o -L $e4/sub/AGENTS.md; and echo true; or echo false)
+check "containment: nested repo CLAUDE.md still real" nested-claude (test -L $e4/sub/CLAUDE.md; or cat $e4/sub/CLAUDE.md)
+check "containment: no mirror for nested repo" false (test -e $e4/AGENTS/sub; and echo true; or echo false)
+check "containment: .claude/CLAUDE.md untouched" tool-claude (test -L $e4/.claude/CLAUDE.md; or cat $e4/.claude/CLAUDE.md)
+check "containment: .gemini/AGENTS.md untouched" tool-agents (test -L $e4/.gemini/AGENTS.md; or cat $e4/.gemini/AGENTS.md)
+check "containment: no mirror for .claude" false (test -e $e4/AGENTS/.claude; and echo true; or echo false)
+check "containment: foreign AGENTS/ dir untouched" foreign-mirror (test -L $e4/vendor/other/AGENTS/CLAUDE.md; or cat $e4/vendor/other/AGENTS/CLAUDE.md)
+check "containment: ordinary subdir still discovered" own-docs (cat $e4/AGENTS/vendor/AGENTS.md)
+check "containment: ordinary subdir linked" ../AGENTS/vendor/AGENTS.md (readlink $e4/vendor/AGENTS.md)
+
+echo ""
+echo "== agents-init: non-git root syncs only itself =="
+
+set -l n1 (mktemp -d)
+set -ga TMPDIRS $n1
+mkdir -p $n1/sub
+echo root-agents >$n1/AGENTS.md
+echo sub-agents >$n1/sub/AGENTS.md
+mkdir -p $n1/sub2
+echo sub-claude >$n1/sub2/CLAUDE.md
+pushd $n1 >/dev/null
+set -l ercF (set -lx GIT_CEILING_DIRECTORIES (path dirname $n1); agents-init --agents --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "non-git: exits 0" 0 "$ercF"
+check "non-git: root adopted into mirror" root-agents (cat $n1/AGENTS/AGENTS.md)
+check "non-git: root linked" AGENTS/AGENTS.md (readlink $n1/AGENTS.md)
+check "non-git: subdir AGENTS.md untouched" sub-agents (test -L $n1/sub/AGENTS.md; or cat $n1/sub/AGENTS.md)
+check "non-git: subdir CLAUDE.md untouched" sub-claude (test -L $n1/sub2/CLAUDE.md; or cat $n1/sub2/CLAUDE.md)
+check "non-git: no mirror for subdirs" false (test -e $n1/AGENTS/sub -o -e $n1/AGENTS/sub2; and echo true; or echo false)
+
+echo ""
+echo "== _agents_init_sync_instructions: real file written after mirror settled =="
+
+set -l s1 (new_repo)
+mkdir -p $s1/AGENTS
+echo settled >$s1/AGENTS/AGENTS.md
+echo settled >$s1/AGENTS.md
+echo settled >$s1/CLAUDE.md
+set -l outS1 (_agents_init_sync_instructions $s1 $s1/AGENTS . 2>/dev/null)
+set -l rcS1 $status
+check "settled identical: exits 0" 0 "$rcS1"
+check "settled identical: AGENTS.md replaced by link" AGENTS/AGENTS.md (readlink $s1/AGENTS.md)
+check "settled identical: duplicate CLAUDE.md dropped" false (test -e $s1/CLAUDE.md; and echo true; or echo false)
+check "settled identical: mirror intact" settled (cat $s1/AGENTS/AGENTS.md)
+
+set -l s2 (new_repo)
+mkdir -p $s2/AGENTS
+echo settled >$s2/AGENTS/AGENTS.md
+echo rewritten >$s2/AGENTS.md
+set -l errS2 (_agents_init_sync_instructions $s2 $s2/AGENTS . 2>&1 >/dev/null)
+set -l rcS2 $status
+check "settled differs (AGENTS.md): exits 0" 0 "$rcS2"
+check "settled differs (AGENTS.md): real file kept" rewritten (test -L $s2/AGENTS.md; or cat $s2/AGENTS.md)
+check "settled differs (AGENTS.md): warned on stderr" true (string match -q '*differ*' -- "$errS2"; and echo true; or echo false)
+check "settled differs (AGENTS.md): mirror intact" settled (cat $s2/AGENTS/AGENTS.md)
+
+set -l s3 (new_repo)
+mkdir -p $s3/AGENTS
+echo settled >$s3/AGENTS/AGENTS.md
+ln -s AGENTS/AGENTS.md $s3/AGENTS.md
+echo recreated >$s3/CLAUDE.md
+set -l errS3 (_agents_init_sync_instructions $s3 $s3/AGENTS . 2>&1 >/dev/null)
+set -l rcS3 $status
+check "settled differs (CLAUDE.md): exits 0" 0 "$rcS3"
+check "settled differs (CLAUDE.md): real file kept" recreated (cat $s3/CLAUDE.md)
+check "settled differs (CLAUDE.md): warned on stderr" true (string match -q '*differ*' -- "$errS3"; and echo true; or echo false)
+check "settled differs (CLAUDE.md): link intact" AGENTS/AGENTS.md (readlink $s3/AGENTS.md)
+
 cleanup
 report

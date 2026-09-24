@@ -32,7 +32,10 @@
 #   3. Any CLAUDE.md still left in the mirror once AGENTS.md is settled
 #      (belt-and-suspenders past step 1) is removed.
 #   4. The project-level AGENTS.md symlink is (re)created if missing or
-#      stale, and any CLAUDE.md left at the project level is removed.
+#      stale, and any CLAUDE.md left at the project level is removed. A
+#      real project-level file found here (written after the mirror
+#      settled) is removed only if byte-identical to the mirror; if it
+#      differs, nothing is touched and a warning goes to stderr, as in 2.
 #
 # ARGUMENTS
 #   root        Absolute path to the project root
@@ -176,6 +179,18 @@ function _agents_init_sync_instructions --argument-names root agents_dir rel
         set -l up (string repeat -n (count (string split / -- $rel)) "../")
         set target "$up""AGENTS/$rel/AGENTS.md"
     end
+    # A real (non-symlink) file here arrived after the mirror settled. Same
+    # rule as step 2: byte-identical to the mirror is a duplicate and is
+    # replaced below; different means touch nothing and warn.
+    for f in $proj_agents $proj_claude
+        if test -f "$f"; and not test -L "$f"
+            if not command diff -q "$f" "$mirror_agents" >/dev/null 2>&1
+                echo "_agents_init_sync_instructions: $f and $mirror_agents differ; leaving both, resolve by hand" >&2
+                return 0
+            end
+        end
+    end
+
     set -l need_link 1
     if test -L "$proj_agents"
         test (readlink "$proj_agents") = "$target"; and set need_link 0
