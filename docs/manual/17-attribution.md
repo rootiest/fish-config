@@ -1,8 +1,8 @@
 ---
 title: Attribution
-manTitle: 16. ATTRIBUTION
+manTitle: 17. ATTRIBUTION
 sidebar:
-  order: 20
+  order: 21
 helpKeywords:
 - attribution
 - credits
