@@ -170,6 +170,33 @@ assumes you *do* have push access (maintainers, regular contributors).
      approval before doing this** — there's no standing exception, no matter
      how trivial the change looks.
 
+### Branch protection on `main`
+
+Gitea enforces these rules server-side — not just convention, so violating
+one is a hard rejection, not a review comment:
+
+- **No direct push**, except an allowlist: the repo owner and
+  `fishconfig-bot` (the docs-regen commit CI makes on every push — see
+  [Documentation Pipeline](#documentation-pipeline)). Everyone else merges
+  through a PR, which is what [the bullets above](#branching--pull-requests)
+  already describe.
+- **Force-push is disabled outright** — no allowlist exception.
+- **Signed commits are required.** An unsigned or bad-signature commit is
+  rejected at push time, which is what the tracked `pre-push` hook in
+  [Getting Started](#getting-started) catches locally before you find out
+  the hard way from Gitea.
+- **`CI / test (pull_request)` must pass** before a PR can merge.
+- **A PR with changes requested by a reviewer can't merge** until that's
+  resolved, even with enough approvals otherwise.
+- **A PR behind `main` can't merge** — use Gitea's "Update branch" first.
+  This bites a stacked PR specifically: once the PR it was based on merges,
+  the stacked one now shows behind `main` and needs an update before it can
+  merge too, even though nothing about its own content changed.
+- The repo owner is on the bypass allowlist and can override the above when
+  there's a genuine reason to (the emergency valve for [item 3 of keeping
+  feature branches focused](#branching--pull-requests)) — this is the
+  exception, not a way to routinely skip review.
+
 ### Pull request descriptions
 
 Fill in `.github/PULL_REQUEST_TEMPLATE.md` — Gitea pre-loads it into the
