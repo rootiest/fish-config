@@ -31,6 +31,13 @@
 #
 #   All arguments are forwarded verbatim to the real claude binary.
 #
+#   When the C3 privacy override is active, DO_NOT_TRACK and
+#   DISABLE_TELEMETRY are removed from the claude process environment
+#   only. claude-code turns off feature-flag evaluation when either is
+#   set, and Remote Control (/remote-control, --remote-control) is gated
+#   on a feature flag, so the global opt-out otherwise disables it. This
+#   applies even when the C1 wrapper behavior is disabled.
+#
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases
 #   (or the __fish_config_opinionated master), the command is passed through
 #   to the real claude binary unchanged.
@@ -46,13 +53,16 @@
 #   claude --resume
 #   claude "Explain the recent changes"
 function claude --wraps=claude --description 'claude wrapper: ensures AGENTS/ is scaffolded before launch'
-    if not __fish_config_op_enabled (status current-function)
-        command claude $argv
-        return $status
+    # Remote Control needs feature flags, which the C3 privacy vars disable
+    set -l strip
+    if __fish_config_op_enabled config.fish privacy
+        set strip -u DO_NOT_TRACK -u DISABLE_TELEMETRY
     end
 
-    agents-init --quiet
-    agents-vault --quiet
+    if __fish_config_op_enabled (status current-function)
+        agents-init --quiet
+        agents-vault --quiet
+    end
 
-    command claude $argv
+    env $strip claude $argv
 end
