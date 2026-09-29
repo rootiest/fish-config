@@ -2856,6 +2856,13 @@ functions). They are active in all interactive sessions.
 
     All arguments are forwarded verbatim to the real claude binary.
 
+    When the C3 privacy override is active, DO_NOT_TRACK and
+    DISABLE_TELEMETRY are removed from the claude process environment
+    only. claude-code turns off feature-flag evaluation when either is
+    set, and Remote Control (/remote-control, --remote-control) is gated
+    on a feature flag, so the global opt-out otherwise disables it. This
+    applies even when the C1 wrapper behavior is disabled.
+
     Opinionated component (C1): when disabled via __fish_config_op_aliases
     (or the __fish_config_opinionated master), the command is passed through
     to the real claude binary unchanged.
@@ -4389,6 +4396,12 @@ unit, not independently toggleable from each other.
 
 `$DO_NOT_TRACK` and `$DISABLE_TELEMETRY` environment variables for
 telemetry opt-out across CLI tools, runtimes, and AI agents.
+
+NOTE:
+The `claude` wrapper removes both variables from the `claude` process
+only. claude-code turns off feature-flag evaluation when either is set,
+and Remote Control (`/remote-control`, `--remote-control`) depends on a
+feature flag. Every other tool still receives the opt-out.
 
 ## C4 — Terminal and Tool Integration
 
