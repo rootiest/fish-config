@@ -27,7 +27,7 @@ set -l overall_failed 0
 # ---- Phase 1: syntax & indent lint ---------------------------------------
 echo "== Syntax & indent lint =="
 set -l lint_files $repo_root/config.fish
-for dir in functions conf.d completions integrations tests
+for dir in functions conf.d completions integrations templates tests
     set -a lint_files (find $repo_root/$dir -name '*.fish' | sort)
 end
 

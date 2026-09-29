@@ -321,6 +321,14 @@ To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots li
 
 `fish_variables` (which fish auto-manages and may contain universal variable state) is excluded from this repo via `.gitignore`.
 
+### Function templates
+
+`templates/` holds starting points for your own functions. Each one has a short settings block at the top; edit it and save the file as `<name>.fish` in a directory on `$fish_function_path`.
+
+| Template | Purpose |
+|---|---|
+| `allow-telemetry.fish` | Wrap one command and remove environment variables (default: `DO_NOT_TRACK`, `DISABLE_TELEMETRY`) from that command's process only |
+
 ---
 
 ## Minimal Mode
