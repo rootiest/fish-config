@@ -60,3 +60,9 @@ unit, not independently toggleable from each other.
 `$DO_NOT_TRACK` and `$DISABLE_TELEMETRY` environment variables for
 telemetry opt-out across CLI tools, runtimes, and AI agents.
 
+NOTE:
+The `claude` wrapper removes both variables from the claude process
+only. claude-code turns off feature-flag evaluation when either is set,
+and Remote Control (`/remote-control`, `--remote-control`) depends on a
+feature flag. Every other tool still receives the opt-out.
+
