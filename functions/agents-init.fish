@@ -5,7 +5,7 @@
 #   12-ai-and-developer-tools
 #
 # DEPENDENCIES
-#   _agents_init_sync_instructions, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
+#   _agents_init_find, _agents_init_sync_instructions, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
@@ -238,22 +238,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         #
         # Discovery stays inside this project: a non-git root (a lone
         # agent file in, say, ~) syncs only itself -- walking it would
-        # reach into every unrelated tree below. In a git root, pruned:
-        # any AGENTS/ (a mirror, never a source), dot-directories (.git,
-        # .claude, .github: tool state, not scoped project dirs),
-        # node_modules, generated-output directories (build, dist, out,
-        # target: an instruction file there is a build artifact, never a
-        # source -- pruned outright, before tracked-file protection would
-        # even be consulted), and nested repos/submodules/worktrees (their
-        # own .git marks another project). -mindepth 1 keeps the root
-        # itself, which has a .git, from pruning the whole walk.
+        # reach into every unrelated tree below. In a git root the walk
+        # uses the shared prune set; see _agents_init_find.
         set -l found
         if test $in_git -eq 1
-            set found (find "$root" -mindepth 1 \
-                -type d \( -name '.*' -o -name AGENTS -o -name node_modules \
-                -o -name build -o -name dist -o -name out -o -name target \
-                -o -exec test -e '{}/.git' \; \) -prune -o \
-                \( -name AGENTS.md -o -name CLAUDE.md \) -print)
+            set found (_agents_init_find "$root" \( -name AGENTS.md -o -name CLAUDE.md \) -print)
         end
         set -l rels "."
         for f in $found
