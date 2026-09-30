@@ -22,8 +22,10 @@
 #   Every symlink that resolves into AGENTS/ is replaced by the real file
 #   or directory it points to. When two links share a target (docs/plans
 #   and docs/superpowers/plans), the shallower one receives the content
-#   and the other is removed; a link to a target holding only .gitkeep is
-#   removed with nothing put in its place. An AGENTS.md that is exactly
+#   and the other is removed; a link to a target holding only .gitkeep, a
+#   dangling link, or a link to AGENTS/ itself is removed with nothing put
+#   in its place. Dangling links are removed even when AGENTS/ is already
+#   gone. An AGENTS.md that is exactly
 #   the stub agents-init writes is deleted; any other AGENTS.md loses only
 #   the SYSTEM DIRECTIVE blockquote that pointed agents at AGENTS/AGENTS.md.
 #   No CLAUDE.md is recreated.
@@ -38,14 +40,17 @@
 #   Files inside AGENTS/ that no project symlink points to -- other than
 #   agents-init's own .version, .agents-tools/ and .gitkeep files -- stop
 #   the cleanup before anything changes. They are listed; --drop-extras
-#   discards them instead.
+#   discards them instead. A nested git repository inside AGENTS/ is always
+#   refused, --drop-extras or not: the bundle keeps only a pointer to it, so
+#   move it out first.
 #
 #   The disabled marker is the per-clone git config key
 #   agents-init.disabled, set on every run. --marker-file also writes
 #   .agents-disabled in the project root, which agents-init honors too and
 #   which may be committed to opt every clone out; it is the only marker
-#   available outside a git repository. In a project with no AGENTS/, only
-#   the marker is set -- a pre-emptive opt-out. agents-init --enable
+#   available outside a git repository, where the project root is taken to
+#   be the current directory -- run it from there. In a project with no
+#   AGENTS/, only the marker is set -- a pre-emptive opt-out. agents-init --enable
 #   clears the git key again.
 #
 #   Re-running is safe: an interrupted cleanup resumes where it stopped,
@@ -63,7 +68,8 @@
 # EXIT STATUS
 #   0  Cleanup finished, or nothing was left to do
 #   1  Refused (outside git without --marker-file, unresolved rebase in
-#      AGENTS/, unlinked files in AGENTS/) or a step failed
+#      AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
+#      failed
 #
 # EXAMPLE
 #   agents-cleanup --dry-run
@@ -154,7 +160,12 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     set -l keep # links to materialize
     set -l keep_tgt # their resolved targets, index-aligned with $keep
     set -l drop # links removed with nothing put in their place
-    if test $has_agents -eq 1
+    # Also runs with no AGENTS/ (deleted by hand): every such link then
+    # dangles and is dropped. Not outside git, though: there (pwd) is only a
+    # guess at the project root, so without an AGENTS/ in it the walk could
+    # cover an arbitrary tree.
+    if test $has_agents -eq 1; or test $in_git -eq 1
+        test $has_agents -eq 1; or set agents_dir (realpath -m -- "$agents_dir")
         set -l agents_re '^'(string escape --style=regex -- "$agents_dir")'(/|$)'
         set -l links
         for l in (_agents_init_find "$root" -type l -print)
@@ -168,6 +179,10 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
             set -l t (realpath -m -- "$l")
             if not test -e "$t"
                 set -a drop "$l" # dangling
+            else if test "$t" = "$agents_dir"
+                # A link to AGENTS/ itself: materializing it would move the
+                # whole repository. Drop-only, like any link with nothing to restore.
+                set -a drop "$l"
             else if contains -- "$t" $keep_tgt
                 set -a drop "$l" # duplicate of a shallower link
             else if test -d "$t"; and test -z "$(find "$t" ! -type d ! -name .gitkeep -print -quit)"
@@ -183,12 +198,26 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     # own tooling. Refused by default: nothing says where they belong.
     set -l extras
     set -l extras_ignored
+    set -l nested
     if test $has_agents -eq 1
         set -l cover_re
         for t in $keep_tgt
             set -a cover_re '^'(string escape --style=regex -- "$t")'(/|$)'
         end
-        for f in (find "$agents_dir" -name .git -prune -o ! -type d -print)
+        # A nested repository is recorded by `git add -A` as a bare gitlink,
+        # so neither the bundle nor --drop-extras treats it as files: it is
+        # listed on its own and never walked into.
+        for f in (find "$agents_dir" -mindepth 1 -name .git -prune -o -type d -exec test -e '{}/.git' \; -print -prune)
+            set -l covered 0
+            for re in $cover_re
+                if string match -qr -- $re "$f"
+                    set covered 1
+                    break
+                end
+            end
+            test $covered -eq 1; or set -a nested (string replace -- "$agents_dir/" "" "$f")
+        end
+        for f in (find "$agents_dir" -mindepth 1 \( -name .git -o -type d -exec test -e '{}/.git' \; \) -prune -o ! -type d -print)
             set -l rel (string replace -- "$agents_dir/" "" "$f")
             switch "$rel"
                 case .version '.agents-tools/*' .gitkeep '*/.gitkeep'
@@ -207,6 +236,15 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
                 set -a extras_ignored "$rel"
             end
         end
+    end
+
+    if set -q nested[1]
+        echo "$c_err""Error: AGENTS/ holds nested git repositories; the history bundle records only a pointer to them, so they would be lost:$c_reset" >&2
+        for n in $nested
+            echo "  AGENTS/$n/  (nested repository -- not in bundle)" >&2
+        end
+        echo "Move them out of AGENTS/ first; --drop-extras does not cover them." >&2
+        return 1
     end
 
     if set -q extras[1]; and not set -q _flag_drop_extras
@@ -230,7 +268,14 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
 
     set -l state_dir $XDG_STATE_HOME
     test -n "$state_dir"; or set state_dir "$HOME/.local/state"
-    set -l bundle "$state_dir/agents-cleanup/"(_agents_repo_slug "$root")"-"(date +%Y%m%d-%H%M%S)".bundle"
+    set -l bundle_base "$state_dir/agents-cleanup/"(_agents_repo_slug "$root")"-"(date +%Y%m%d-%H%M%S)
+    # `git bundle create` overwrites: never reuse a name from the same second.
+    set -l bundle "$bundle_base.bundle"
+    set -l n 0
+    while test -e "$bundle"
+        set n (math $n + 1)
+        set bundle "$bundle_base-$fish_pid-$n.bundle"
+    end
     set -l gitignore "$root/.gitignore"
 
     if set -q _flag_dry_run
@@ -343,8 +388,13 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         if not command mv "$keep_tgt[$i]" "$link"
             # Put the link back: without it the target looks like an unlinked
             # extra and a re-run would refuse.
-            ln -s -- "$was" "$link"
-            echo "$c_err""Error: could not restore $rel from AGENTS/; link left in place$c_reset" >&2
+            if ln -s -- "$was" "$link"
+                echo "$c_err""Error: could not restore $rel from AGENTS/; link left in place$c_reset" >&2
+            else
+                set -l where "AGENTS/"(string replace -- "$agents_dir/" "" "$keep_tgt[$i]")
+                test -n "$archived"; and set where "$where and in the bundle"
+                echo "$c_err""Error: could not restore $rel and could not put its link back; the content is still at $where$c_reset" >&2
+            end
             return 1
         end
         set changed 1
@@ -414,7 +464,10 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         end
         set changed 1
         test $verbose -eq 1; and echo "$c_ok→ Removed AGENTS/$c_reset"
-        # agents-init creates these; drop them only if nothing else lives there.
+    end
+    # agents-init creates these; drop them only if nothing else lives there.
+    # Also after dropping links with no AGENTS/ left, which empties them too.
+    if test $has_agents -eq 1; or set -q drop[1]
         for d in "$root/docs/superpowers" "$root/docs"
             if test -d "$d"; and rmdir "$d" 2>/dev/null
                 test $verbose -eq 1; and echo "$c_ok→ Removed empty "(string replace -- "$root/" "" "$d")"/$c_reset"
@@ -428,10 +481,10 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     # footer before the next header is left in place (and reported).
     if test -f "$gitignore"; and grep -q 'Added by agents-init' "$gitignore"
         # The unterminated-block warning is verbose-only, so a quiet or silent
-        # re-run stays silent.
-        set -l awk_err /dev/stderr
-        test $verbose -eq 1; or set awk_err /dev/null
-        set -l kept (awk '
+        # re-run stays silent. awk writes /dev/stderr itself: a fish-level
+        # 2>/dev/stderr reopens the path, which truncates a log file when
+        # stderr is one (`agents-cleanup &>log`).
+        set -l kept (awk -v warn=$verbose '
             { line[NR] = $0 }
             END {
                 n = 0
@@ -446,12 +499,12 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
                             i = j
                             continue
                         }
-                        print "agents-cleanup: unterminated agents-init block in .gitignore left in place" > "/dev/stderr"
+                        if (warn) print "agents-cleanup: unterminated agents-init block in .gitignore left in place" > "/dev/stderr"
                     }
                     out[++n] = line[i]
                 }
                 for (i = 1; i <= n; i++) print out[i]
-            }' "$gitignore" 2>$awk_err)
+            }' "$gitignore")
         if test $status -ne 0
             echo "$c_err""Error: could not rewrite .gitignore$c_reset" >&2
             return 1
@@ -486,7 +539,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         test $verbose -eq 1; and echo "$c_dim→ Nothing to clean up; agents-init is already disabled here$c_reset"
     else if test $quiet -eq 1
         if test -n "$archived"
-            echo "$c_ok→ Cleaned up AGENTS scaffolding (history: $archived)$c_reset"
+            echo "$c_ok→ Cleaned up AGENTS scaffolding (history: $archived; restore with: git clone $archived AGENTS)$c_reset"
         else
             echo "$c_ok→ Cleaned up AGENTS scaffolding$c_reset"
         end

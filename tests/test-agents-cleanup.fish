@@ -19,6 +19,10 @@ set -gx GIT_AUTHOR_NAME t
 set -gx GIT_AUTHOR_EMAIL t@t
 set -gx GIT_COMMITTER_NAME t
 set -gx GIT_COMMITTER_EMAIL t@t
+# No user or system config: a developer's global hooks, signing or
+# init.defaultBranch must not reach these repos.
+set -gx GIT_CONFIG_GLOBAL /dev/null
+set -gx GIT_CONFIG_NOSYSTEM 1
 set -gx GIT_CONFIG_COUNT 2
 set -gx GIT_CONFIG_KEY_0 commit.gpgsign
 set -gx GIT_CONFIG_VALUE_0 false
@@ -295,34 +299,42 @@ check "rejected commit: no bundle" 0 (count $fb)
 
 section "agents-cleanup: failed move keeps the link, re-run resumes"
 fresh_state
-set -l w1 (scaffolded_repo)
-chmod a-w $w1/AGENTS/functions
-pushd $w1 >/dev/null
-set -l w1rc (agents-cleanup --silent 2>/dev/null; echo $status)
-popd >/dev/null
-check "failed mv: exits 1" 1 "$w1rc"
-check "failed mv: link still a symlink" true (test -L $w1/functions/AGENTS.md; and echo true; or echo false)
-chmod u+w $w1/AGENTS/functions
-pushd $w1 >/dev/null
-set -l w2rc (agents-cleanup --silent 2>/dev/null; echo $status)
-popd >/dev/null
-check "failed mv re-run: exits 0" 0 "$w2rc"
-check "failed mv re-run: real file, content kept" user-scoped (test -L $w1/functions/AGENTS.md; or string collect <$w1/functions/AGENTS.md)
+if test (id -u) -eq 0
+    echo "  SKIP  failed move: chmod cannot block root"
+else
+    set -l w1 (scaffolded_repo)
+    chmod a-w $w1/AGENTS/functions
+    pushd $w1 >/dev/null
+    set -l w1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+    popd >/dev/null
+    check "failed mv: exits 1" 1 "$w1rc"
+    check "failed mv: link still a symlink" true (test -L $w1/functions/AGENTS.md; and echo true; or echo false)
+    chmod u+w $w1/AGENTS/functions
+    pushd $w1 >/dev/null
+    set -l w2rc (agents-cleanup --silent 2>/dev/null; echo $status)
+    popd >/dev/null
+    check "failed mv re-run: exits 0" 0 "$w2rc"
+    check "failed mv re-run: real file, content kept" user-scoped (test -L $w1/functions/AGENTS.md; or string collect <$w1/functions/AGENTS.md)
+end
 
 section "agents-cleanup: failed directive rewrite keeps AGENTS/"
 fresh_state
-set -l k1 (new_repo)
-printf '%s\n' '# Title' '' '> **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> x' '' body >$k1/AGENTS.md
-pushd $k1 >/dev/null
-agents-init --silent 2>/dev/null
-popd >/dev/null
-chmod a-w $k1/AGENTS/AGENTS.md
-pushd $k1 >/dev/null
-set -l k1rc (agents-cleanup --silent 2>/dev/null; echo $status)
-popd >/dev/null
-chmod u+w $k1/AGENTS/AGENTS.md $k1/AGENTS.md 2>/dev/null
-check "failed rewrite: exits 1" 1 "$k1rc"
-check "failed rewrite: AGENTS/ kept" true (test -d $k1/AGENTS; and echo true; or echo false)
+if test (id -u) -eq 0
+    echo "  SKIP  failed rewrite: chmod cannot block root"
+else
+    set -l k1 (new_repo)
+    printf '%s\n' '# Title' '' '> **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> x' '' body >$k1/AGENTS.md
+    pushd $k1 >/dev/null
+    agents-init --silent 2>/dev/null
+    popd >/dev/null
+    chmod a-w $k1/AGENTS/AGENTS.md
+    pushd $k1 >/dev/null
+    set -l k1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+    popd >/dev/null
+    chmod u+w $k1/AGENTS/AGENTS.md $k1/AGENTS.md 2>/dev/null
+    check "failed rewrite: exits 1" 1 "$k1rc"
+    check "failed rewrite: AGENTS/ kept" true (test -d $k1/AGENTS; and echo true; or echo false)
+end
 
 section "agents-cleanup: unterminated .gitignore block is left alone, quietly"
 fresh_state
@@ -392,6 +404,96 @@ check "invalid .git: exits 0" 0 "$i1rc"
 check "invalid .git: outer repo untouched" "$i1before" (git -C $i1 rev-list --all | count)
 check "invalid .git: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
 check "invalid .git: AGENTS/ removed" false (test -e $i1/AGENTS; and echo true; or echo false)
+
+section "agents-cleanup: verbose output survives a log-file stderr"
+fresh_state
+set -l o1 (scaffolded_repo)
+set -l o1log (mktemp)
+set -a TMPDIRS $o1log
+# A subshell: only a shell whose own stderr is the file reproduces the
+# truncation (an in-process redirect is emulated and never reopens it).
+fish -c "set -p fish_function_path $repo_root/functions; cd $o1; agents-cleanup" >$o1log 2>&1
+check "log file: archive line kept" true (string match -q -- '*Archived AGENTS/ history*' (string collect <$o1log); and echo true; or echo false)
+check "log file: restore hint kept" true (string match -q -- '*restore with: git clone*' (string collect <$o1log); and echo true; or echo false)
+
+section "agents-cleanup: nested repository under AGENTS/ is never dropped"
+fresh_state
+set -l q1 (scaffolded_repo)
+mkdir -p $q1/AGENTS/scratch/tool
+git -C $q1/AGENTS/scratch/tool init -q
+echo precious >$q1/AGENTS/scratch/tool/file.txt
+set -l q1before (tree_hash $q1)
+pushd $q1 >/dev/null
+set -l q1err (agents-cleanup --drop-extras 2>&1 >/dev/null)
+set -l q1rc $status
+popd >/dev/null
+check "nested repo: exits 1 even with --drop-extras" 1 "$q1rc"
+check "nested repo: tree unchanged" "$q1before" (tree_hash $q1)
+check "nested repo: file survives" precious (string collect <$q1/AGENTS/scratch/tool/file.txt)
+check "nested repo: message names it" true (string match -q -- '*AGENTS/scratch/tool/*nested repository*' "$q1err"; and echo true; or echo false)
+check "nested repo: git key not set" 1 (git -C $q1 config --get agents-init.disabled >/dev/null; echo $status)
+
+section "agents-cleanup: a link to AGENTS/ itself is dropped, not moved"
+fresh_state
+set -l z1 (scaffolded_repo)
+ln -s ../AGENTS $z1/docs/agents
+pushd $z1 >/dev/null
+set -l z1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "self link: exits 0" 0 "$z1rc"
+check "self link: docs/agents gone" false (test -e $z1/docs/agents -o -L $z1/docs/agents; and echo true; or echo false)
+check "self link: docs/plans restored real" a-plan (test -L $z1/docs/plans; or string collect <$z1/docs/plans/p.md)
+
+section "agents-cleanup: AGENTS/ deleted by hand, dangling links still go"
+fresh_state
+set -l h1 (scaffolded_repo)
+rm -rf $h1/AGENTS
+pushd $h1 >/dev/null
+set -l h1dry (agents-cleanup --dry-run 2>/dev/null)
+set -l h1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "no AGENTS/, dangling: dry-run plans removing links" true (string match -q -- '*remove link AGENTS.md*' "$h1dry"; and echo true; or echo false)
+check "no AGENTS/, dangling: exits 0" 0 "$h1rc"
+check "no AGENTS/, dangling: AGENTS.md link gone" false (test -e $h1/AGENTS.md -o -L $h1/AGENTS.md; and echo true; or echo false)
+check "no AGENTS/, dangling: docs/superpowers gone" false (test -e $h1/docs/superpowers -o -L $h1/docs/superpowers; and echo true; or echo false)
+check "no AGENTS/, dangling: git key set" true (git -C $h1 config --type=bool --get agents-init.disabled)
+
+section "agents-cleanup: outside git, no AGENTS/ here: links are not inventoried"
+fresh_state
+set -l b1 (mktemp -d)
+set -a TMPDIRS $b1
+mkdir -p $b1/sub
+ln -s ../AGENTS/x $b1/sub/dangling
+pushd $b1 >/dev/null
+set -l b1rc (set -lx GIT_CEILING_DIRECTORIES (path dirname $b1); agents-cleanup --marker-file --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "non-git no AGENTS/: exits 0" 0 "$b1rc"
+check "non-git no AGENTS/: stray link untouched" true (test -L $b1/sub/dangling; and echo true; or echo false)
+
+section "agents-cleanup: quiet summary carries the restore command"
+fresh_state
+set -l y1 (scaffolded_repo)
+pushd $y1 >/dev/null
+set -l y1out (agents-cleanup --quiet 2>&1)
+popd >/dev/null
+check "quiet: names the restore command" true (string match -q -- '*git clone *.bundle AGENTS*' "$y1out"; and echo true; or echo false)
+
+section "agents-cleanup: user .gitignore lines around two agents-init blocks"
+fresh_state
+set -l w9 (new_repo)
+pushd $w9 >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+set -l blk (string collect <$w9/.gitignore)
+printf '%s\n' before1 before2 >$w9/.gitignore
+printf '%s\n' "$blk" >>$w9/.gitignore
+printf '%s\n' between >>$w9/.gitignore
+printf '%s\n' "$blk" >>$w9/.gitignore
+printf '%s\n' after1 after2 >>$w9/.gitignore
+pushd $w9 >/dev/null
+agents-cleanup --silent 2>/dev/null
+popd >/dev/null
+check "gitignore: exactly the user lines remain, in order" (printf '%s\n' before1 before2 between after1 after2 | string collect) (string collect <$w9/.gitignore)
 
 cleanup
 report
