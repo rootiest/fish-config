@@ -379,5 +379,19 @@ end
 check "directive-only: deleted" false (test -e $v1/AGENTS.md -o -L $v1/AGENTS.md; and echo true; or echo false)
 check "no directive: content identical" "$v2before" (string collect <$v2/AGENTS.md)
 
+section "agents-cleanup: invalid AGENTS/.git never commits the outer repo"
+fresh_state
+set -l i1 (scaffolded_repo)
+echo secret >$i1/untracked-secret.txt
+rm -rf $i1/AGENTS/.git/HEAD $i1/AGENTS/.git/objects
+set -l i1before (git -C $i1 rev-list --all | count)
+pushd $i1 >/dev/null
+set -l i1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "invalid .git: exits 0" 0 "$i1rc"
+check "invalid .git: outer repo untouched" "$i1before" (git -C $i1 rev-list --all | count)
+check "invalid .git: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
+check "invalid .git: AGENTS/ removed" false (test -e $i1/AGENTS; and echo true; or echo false)
+
 cleanup
 report

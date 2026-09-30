@@ -136,7 +136,9 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         # Resolved, because link targets are compared after realpath, which
         # also resolves any symlinked parent of $root.
         set agents_dir (realpath -- "$agents_dir")
-        test -d "$agents_dir/.git"; and set has_repo 1
+        # A .git that is not a valid gitdir (half-removed) is "not a repository";
+        # git would otherwise resolve to the enclosing project.
+        test "$(git -C "$agents_dir" rev-parse --git-dir 2>/dev/null)" = .git; and set has_repo 1
     end
 
     if test $has_repo -eq 1
