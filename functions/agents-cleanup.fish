@@ -272,6 +272,172 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         test $verbose -eq 1; and echo "$c_ok→ Wrote .agents-disabled$c_reset"
     end
 
+    #   ────────────────────────── Phase 3: archive ─────────────────────────
+    # Nothing is moved until the history is safely out of AGENTS/.
+    if test $has_repo -eq 1
+        # 2>/dev/null: the helper's own message would leak past --silent (a
+        # command substitution's stderr ignores the caller's redirect); the
+        # error below says the same thing.
+        set -l sync_out (_agents_repo_sync "$agents_dir" "chore: final sync before agents-cleanup" 2>/dev/null)
+        if test $status -ne 0
+            echo "$c_err""Error: could not commit pending AGENTS/ changes; nothing moved or removed$c_reset" >&2
+            return 1
+        end
+        if test -n "$sync_out"
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
+        end
+
+        if git -C "$agents_dir" rev-parse -q --verify HEAD >/dev/null
+            if not mkdir -p (path dirname "$bundle")
+                echo "$c_err""Error: could not create "(path dirname "$bundle")"; nothing moved or removed$c_reset" >&2
+                return 1
+            end
+            if not git -C "$agents_dir" bundle create -q "$bundle" --all 2>/dev/null
+                echo "$c_err""Error: could not write $bundle; nothing moved or removed$c_reset" >&2
+                return 1
+            end
+            if not git -C "$agents_dir" bundle verify -q "$bundle" >/dev/null 2>&1
+                echo "$c_err""Error: $bundle failed verification; nothing moved or removed$c_reset" >&2
+                return 1
+            end
+            set changed 1
+            set archived "$bundle"
+            if test $verbose -eq 1
+                echo "$c_ok→ Archived AGENTS/ history to $bundle$c_reset"
+                echo "$c_dim  restore with: git clone $bundle AGENTS$c_reset"
+            end
+        else
+            test $verbose -eq 1; and echo "$c_dim→ AGENTS/ has no commits; nothing to archive$c_reset"
+        end
+    else if test $has_agents -eq 1
+        test $verbose -eq 1; and echo "$c_dim→ AGENTS/ is not a git repository; nothing to archive$c_reset"
+    end
+
+    #   ──────────────────────── Phase 4: materialize ───────────────────────
+    set -l directive 'SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING'
+    for i in (seq (count $keep))
+        set -l link $keep[$i]
+        set -l rel (string replace -- "$root/" "" "$link")
+        if not rm -f "$link"; or not command mv "$keep_tgt[$i]" "$link"
+            echo "$c_err""Error: could not restore $rel from AGENTS/; re-run to resume$c_reset" >&2
+            return 1
+        end
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Restored $rel$c_reset"
+
+        if test -d "$link"
+            rm -f "$link/.gitkeep"
+        else if test (path basename "$link") = AGENTS.md
+            if _agents_init_stub | cmp -s - "$link"
+                rm -f "$link"
+                test $verbose -eq 1; and echo "$c_ok→ Removed $rel (agents-init stub, no user content)$c_reset"
+            else if grep -qF -- "$directive" "$link"
+                # Drop the first run of '>' lines carrying the directive, and
+                # the blank lines after it. Not "the first lines": real files
+                # put a heading above it.
+                set -l body (awk -v d="$directive" '
+                    { line[NR] = $0 }
+                    END {
+                        s = 0
+                        for (i = 1; i <= NR; i++) {
+                            if (line[i] !~ /^>/) continue
+                            j = i; hit = 0
+                            while (j <= NR && line[j] ~ /^>/) { if (index(line[j], d)) hit = 1; j++ }
+                            if (hit) { s = i; e = j; break }
+                            i = j
+                        }
+                        if (!s) { for (i = 1; i <= NR; i++) print line[i]; exit }
+                        while (e <= NR && line[e] ~ /^[ \t]*$/) e++
+                        for (i = 1; i < s; i++) print line[i]
+                        for (i = e; i <= NR; i++) print line[i]
+                    }' "$link")
+                if test $status -ne 0
+                    echo "$c_err""Error: could not rewrite $rel$c_reset" >&2
+                    return 1
+                end
+                if set -q body[1]; and string match -qr -- '\S' $body
+                    printf '%s\n' $body >"$link"
+                    test $verbose -eq 1; and echo "$c_ok→ Removed the AGENTS/ directive from $rel$c_reset"
+                else
+                    rm -f "$link"
+                    test $verbose -eq 1; and echo "$c_ok→ Removed $rel (only the directive, no user content)$c_reset"
+                end
+            end
+        end
+    end
+
+    for link in $drop
+        set -l rel (string replace -- "$root/" "" "$link")
+        if not rm -f "$link"
+            echo "$c_err""Error: could not remove link $rel$c_reset" >&2
+            return 1
+        end
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Removed link $rel$c_reset"
+    end
+
+    #   ─────────────────────── Phase 5: remove AGENTS/ ─────────────────────
+    if test $has_agents -eq 1
+        if not rm -rf "$agents_dir"
+            echo "$c_err""Error: could not remove AGENTS/$c_reset" >&2
+            return 1
+        end
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Removed AGENTS/$c_reset"
+        # agents-init creates these; drop them only if nothing else lives there.
+        for d in "$root/docs/superpowers" "$root/docs"
+            if test -d "$d"; and rmdir "$d" 2>/dev/null
+                test $verbose -eq 1; and echo "$c_ok→ Removed empty "(string replace -- "$root/" "" "$d")"/$c_reset"
+            end
+        end
+    end
+
+    #   ───────────────────────── Phase 6: .gitignore ───────────────────────
+    # Matched by pattern, not the exact strings _agents_init_ensure_gitignore
+    # writes, so blocks from older header variants go too. A header with no
+    # footer before the next header is left in place (and reported).
+    if test -f "$gitignore"; and grep -q 'Added by agents-init' "$gitignore"
+        set -l kept (awk '
+            { line[NR] = $0 }
+            END {
+                n = 0
+                for (i = 1; i <= NR; i++) {
+                    if (line[i] ~ /^#.*Added by agents-init/) {
+                        for (j = i + 1; j <= NR; j++) {
+                            if (line[j] ~ /Added by agents-init/) { j = NR + 1; break }
+                            if (line[j] ~ /^#[ \t]*(─)+[ \t]*$/) break
+                        }
+                        if (j <= NR) {
+                            if (n > 0 && out[n] ~ /^[ \t]*$/) n--
+                            i = j
+                            continue
+                        }
+                        print "agents-cleanup: unterminated agents-init block in .gitignore left in place" > "/dev/stderr"
+                    }
+                    out[++n] = line[i]
+                }
+                for (i = 1; i <= n; i++) print out[i]
+            }' "$gitignore")
+        if test $status -ne 0
+            echo "$c_err""Error: could not rewrite .gitignore$c_reset" >&2
+            return 1
+        end
+        if set -q kept[1]; and string match -qr -- '\S' $kept
+            printf '%s\n' $kept >"$gitignore"
+        else if test $in_git -eq 1; and git -C "$root" ls-files --error-unmatch -- .gitignore >/dev/null 2>&1
+            # Tracked: someone committed it, so it is not agents-init's to
+            # delete. Leave it empty; the change shows in git status.
+            true >"$gitignore"
+        else
+            # Untracked and nothing but agents-init's blocks: agents-init
+            # created it.
+            rm -f "$gitignore"
+        end
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Removed agents-init blocks from .gitignore$c_reset"
+    end
+
     #   ────────────────────────────── Summary ───────────────────────────────
     if test $changed -eq 0
         test $verbose -eq 1; and echo "$c_dim→ Nothing to clean up; agents-init is already disabled here$c_reset"

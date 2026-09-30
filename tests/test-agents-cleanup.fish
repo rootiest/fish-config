@@ -191,5 +191,107 @@ check "glob path: dry-run exits 0" 0 "$grc"
 check "glob path: plan removes AGENTS/" true (string match -q -- '*remove AGENTS/*' "$gout"; and echo true; or echo false)
 check "glob path: plan never lists .git/" false (string match -q -- '*.git/*' "$gout"; and echo true; or echo false)
 
+section "agents-cleanup: full cleanup"
+fresh_state
+set -l c1 (scaffolded_repo)
+pushd $c1 >/dev/null
+set -l crc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "full: exits 0" 0 "$crc"
+check "full: AGENTS/ removed" false (test -e $c1/AGENTS; and echo true; or echo false)
+check "full: root AGENTS.md is a real file" false (test -L $c1/AGENTS.md; and echo true; or echo false)
+check "full: root content kept" user-root (string collect <$c1/AGENTS.md)
+check "full: subdir AGENTS.md real, content kept" user-scoped (test -L $c1/functions/AGENTS.md; or string collect <$c1/functions/AGENTS.md)
+check "full: docs/plans restored as a real dir" a-plan (test -L $c1/docs/plans; or string collect <$c1/docs/plans/p.md)
+check "full: no .gitkeep in docs/plans" false (test -e $c1/docs/plans/.gitkeep; and echo true; or echo false)
+check "full: docs/superpowers removed" false (test -e $c1/docs/superpowers -o -L $c1/docs/superpowers; and echo true; or echo false)
+check "full: git key set" true (git -C $c1 config --type=bool --get agents-init.disabled)
+check "full: .gitignore keeps only user lines" keep-me (string collect <$c1/.gitignore)
+check "full: nothing committed to the outer repo" "" (git -C $c1 rev-list --all 2>/dev/null)
+set -l cb $XDG_STATE_HOME/agents-cleanup/*.bundle
+check "full: one bundle written" 1 (count $cb)
+set -l restored (mktemp -d)
+set -a TMPDIRS $restored
+git clone -q $cb[1] $restored/AGENTS 2>/dev/null
+check "full: bundle restores the history" user-root (string collect <$restored/AGENTS/AGENTS.md)
+
+pushd $c1 >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "full: agents-init no longer scaffolds" false (test -e $c1/AGENTS; and echo true; or echo false)
+
+pushd $c1 >/dev/null
+set -l c2out (agents-cleanup --quiet 2>&1)
+set -l c2rc $status
+popd >/dev/null
+check "rerun: exits 0" 0 "$c2rc"
+check "rerun: quiet prints nothing" "" "$c2out"
+
+section "agents-cleanup: stub AGENTS.md"
+fresh_state
+set -l s1 (new_repo)
+pushd $s1 >/dev/null
+agents-init --silent 2>/dev/null
+agents-cleanup --silent 2>/dev/null
+popd >/dev/null
+check "stub: deleted" false (test -e $s1/AGENTS.md -o -L $s1/AGENTS.md; and echo true; or echo false)
+check "stub: untracked blocks-only .gitignore deleted" false (test -e $s1/.gitignore; and echo true; or echo false)
+
+section "agents-cleanup: tracked blocks-only .gitignore is emptied, not deleted"
+fresh_state
+set -l g1 (new_repo)
+pushd $g1 >/dev/null
+agents-init --silent 2>/dev/null
+git add .gitignore
+git commit -qm gi
+agents-cleanup --silent 2>/dev/null
+popd >/dev/null
+check "tracked .gitignore: still exists" true (test -f $g1/.gitignore; and echo true; or echo false)
+check "tracked .gitignore: emptied" "" (string collect <$g1/.gitignore)
+check "tracked .gitignore: index untouched (unstaged change only)" " M .gitignore" (git -C $g1 status --porcelain -- .gitignore)
+
+section "agents-cleanup: directive stripped from a user AGENTS.md"
+fresh_state
+set -l t1 (new_repo)
+printf '%s\n' '# Title' '' '> ⚠️ **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> write to AGENTS/AGENTS.md' '' body >$t1/AGENTS.md
+pushd $t1 >/dev/null
+agents-init --silent 2>/dev/null
+agents-cleanup --silent 2>/dev/null
+popd >/dev/null
+check "directive: blockquote and its trailing blank line removed" (printf '%s\n' '# Title' '' body | string collect) (string collect <$t1/AGENTS.md)
+
+section "agents-cleanup: --drop-extras"
+fresh_state
+set -l x2 (scaffolded_repo)
+echo notes >$x2/AGENTS/notes.md
+pushd $x2 >/dev/null
+set -l x2rc (agents-cleanup --drop-extras --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "drop-extras: exits 0" 0 "$x2rc"
+check "drop-extras: AGENTS/ removed" false (test -e $x2/AGENTS; and echo true; or echo false)
+set -l xb $XDG_STATE_HOME/agents-cleanup/*.bundle
+set -l xr (mktemp -d)
+set -a TMPDIRS $xr
+git clone -q $xb[1] $xr/AGENTS 2>/dev/null
+check "drop-extras: dropped file is in the bundle" notes (string collect <$xr/AGENTS/notes.md)
+
+section "agents-cleanup: rejected final commit"
+fresh_state
+set -l f1 (scaffolded_repo)
+set -l hooks (mktemp -d)
+set -a TMPDIRS $hooks
+printf '%s\n' '#!/bin/sh' 'exit 1' >$hooks/pre-commit
+chmod +x $hooks/pre-commit
+git -C $f1/AGENTS config core.hooksPath $hooks
+echo change >>$f1/AGENTS/AGENTS.md
+pushd $f1 >/dev/null
+set -l frc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "rejected commit: exits 1" 1 "$frc"
+check "rejected commit: AGENTS/ kept" true (test -d $f1/AGENTS/.git; and echo true; or echo false)
+check "rejected commit: root link untouched" AGENTS/AGENTS.md (readlink $f1/AGENTS.md)
+set -l fb $XDG_STATE_HOME/agents-cleanup/*.bundle
+check "rejected commit: no bundle" 0 (count $fb)
+
 cleanup
 report
