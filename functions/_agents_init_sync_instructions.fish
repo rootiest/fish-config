@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # DEPENDENCIES
-#   _agents_init_path_is_protected
+#   _agents_init_path_is_protected, _agents_init_stub
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir), bypasses-shadow(mv)
@@ -169,17 +169,7 @@ function _agents_init_sync_instructions --argument-names root agents_dir rel
             end
             echo "→ Moved $disp_claude → $mirror_rel/AGENTS.md"
         else if test "$rel" = "."
-            printf '%s\n' \
-                '# AGENTS.md' \
-                '' \
-                '> ⚠️ **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' \
-                '> You may be reading this file via a symlink (`AGENTS.md`) in' \
-                '> the root of the project. Your environment'\''s file-editing tools cannot write' \
-                '> through symlinks and will throw an error.' \
-                '>' \
-                '> **DO NOT** attempt to write to or edit `AGENTS.md` in the' \
-                '> project root. If you need to update these instructions, you **MUST write' \
-                '> directly to `AGENTS/AGENTS.md`**.' >"$mirror_agents"
+            _agents_init_stub >"$mirror_agents"
             echo "→ Created AGENTS/AGENTS.md with agent directive"
         end
     end

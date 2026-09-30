@@ -55,6 +55,7 @@ check "fresh root: mirror AGENTS.md created" true (test -f $r1/AGENTS/AGENTS.md;
 check "fresh root: no mirror CLAUDE.md" false (test -e $r1/AGENTS/CLAUDE.md; and echo true; or echo false)
 check "fresh root: project AGENTS.md links to mirror" AGENTS/AGENTS.md (readlink $r1/AGENTS.md)
 check "fresh root: no project CLAUDE.md" false (test -e $r1/CLAUDE.md; and echo true; or echo false)
+check "fresh root: mirror AGENTS.md is exactly the shared stub" (_agents_init_stub | string collect) (string collect <$r1/AGENTS/AGENTS.md)
 
 echo ""
 echo "== _agents_init_sync_instructions: idempotent second run =="
