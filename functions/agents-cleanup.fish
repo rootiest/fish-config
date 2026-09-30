@@ -182,7 +182,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         for t in $keep_tgt
             set -a cover_re '^'(string escape --style=regex -- "$t")'(/|$)'
         end
-        for f in (find "$agents_dir" -path "$agents_dir/.git" -prune -o ! -type d -print)
+        for f in (find "$agents_dir" -name .git -prune -o ! -type d -print)
             set -l rel (string replace -- "$agents_dir/" "" "$f")
             switch "$rel"
                 case .version '.agents-tools/*' .gitkeep '*/.gitkeep'
@@ -250,7 +250,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     set -l changed 0
     set -l archived
     if test $in_git -eq 1
-        set -l cur (git -C "$root" config --type=bool --get agents-init.disabled 2>/dev/null)
+        set -l cur (git -C "$root" config --local --type=bool --get agents-init.disabled 2>/dev/null)
         if test "$cur" != true
             if not git -C "$root" config --local agents-init.disabled true
                 echo "$c_err""Error: could not set git config agents-init.disabled$c_reset" >&2

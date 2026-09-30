@@ -125,7 +125,71 @@ check "dry-run: tree unchanged" "$dbefore" (tree_hash $d1)
 check "dry-run: git key not set" 1 (git -C $d1 config --get agents-init.disabled >/dev/null; echo $status)
 check "dry-run: plans restoring docs/plans" true (string match -q -- '*restore docs/plans from AGENTS/plans*' "$dout"; and echo true; or echo false)
 check "dry-run: plans dropping the duplicate link" true (string match -q -- '*remove link docs/superpowers/plans*' "$dout"; and echo true; or echo false)
+check "dry-run: plans dropping the .gitkeep-only link" true (string match -q -- '*remove link docs/superpowers/specs*' "$dout"; and echo true; or echo false)
 check "dry-run: plans removing AGENTS/" true (string match -q -- '*remove AGENTS/*' "$dout"; and echo true; or echo false)
+
+section "agents-cleanup: unresolved rebase refuses"
+fresh_state
+set -l r1 (scaffolded_repo)
+mkdir $r1/AGENTS/.git/rebase-merge
+set -l rbefore (tree_hash $r1)
+pushd $r1 >/dev/null
+agents-cleanup >/dev/null 2>&1
+set -l rrc $status
+popd >/dev/null
+check "rebase: exits 1" 1 "$rrc"
+check "rebase: tree unchanged" "$rbefore" (tree_hash $r1)
+check "rebase: git key not set" 1 (git -C $r1 config --get agents-init.disabled >/dev/null; echo $status)
+
+section "agents-cleanup: --marker-file inside git"
+fresh_state
+set -l m1 (scaffolded_repo)
+pushd $m1 >/dev/null
+set -l mout (agents-cleanup --dry-run --marker-file 2>/dev/null)
+popd >/dev/null
+check "marker dry-run: plans writing the file" true (string match -q -- '*write .agents-disabled*' "$mout"; and echo true; or echo false)
+set -l m2 (new_repo)
+pushd $m2 >/dev/null
+set -l mrc (agents-cleanup --marker-file --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "marker run: exits 0" 0 "$mrc"
+check "marker run: .agents-disabled written" true (test -f $m2/.agents-disabled; and echo true; or echo false)
+check "marker run: git key set" true (git -C $m2 config --type=bool --get agents-init.disabled)
+
+section "agents-cleanup: --dry-run --drop-extras"
+fresh_state
+set -l e1 (scaffolded_repo)
+echo notes >$e1/AGENTS/notes.md
+set -l ebefore (tree_hash $e1)
+pushd $e1 >/dev/null
+set -l eout (agents-cleanup --dry-run --drop-extras 2>/dev/null)
+set -l erc $status
+popd >/dev/null
+check "drop-extras dry-run: exits 0" 0 "$erc"
+check "drop-extras dry-run: plans discarding the file" true (string match -q -- '*discard AGENTS/notes.md*' "$eout"; and echo true; or echo false)
+check "drop-extras dry-run: tree unchanged" "$ebefore" (tree_hash $e1)
+
+section "agents-cleanup: glob characters in the project path"
+fresh_state
+set -l g0 (mktemp -d)
+set -a TMPDIRS $g0
+set -l g1 "$g0/p[x]"
+mkdir $g1
+git -C $g1 init -q
+git -C $g1 config user.email t@t
+git -C $g1 config user.name t
+git -C $g1 config commit.gpgsign false
+git -C $g1 config core.hooksPath /dev/null
+echo a-plan >$g1/README.md
+pushd $g1 >/dev/null
+agents-init --silent 2>/dev/null
+set -l gout (agents-cleanup --dry-run 2>/dev/null)
+set -l grc $status
+popd >/dev/null
+check "glob path: AGENTS/ scaffolded" true (test -d $g1/AGENTS/.git; and echo true; or echo false)
+check "glob path: dry-run exits 0" 0 "$grc"
+check "glob path: plan removes AGENTS/" true (string match -q -- '*remove AGENTS/*' "$gout"; and echo true; or echo false)
+check "glob path: plan never lists .git/" false (string match -q -- '*.git/*' "$gout"; and echo true; or echo false)
 
 cleanup
 report
