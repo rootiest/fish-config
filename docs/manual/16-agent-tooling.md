@@ -6,6 +6,7 @@ sidebar:
 helpKeywords:
 - agent
 - agents-init
+- agents-cleanup
 - agents-vault
 - AGENTS.md
 - claude-code
@@ -17,7 +18,7 @@ Antigravity/agy) working in a project checked out from this configuration:
 where their instructions live, how they get there, and the safety rules
 that keep an agent's launch-time bookkeeping from touching a repository's
 own tracked history. Command-line usage for the functions named here
-(`agents-init`, `agents-vault`) is generated from their own doc headers —
+(`agents-init`, `agents-cleanup`, `agents-vault`) is generated from their own doc headers —
 see Section 5.
 
 
@@ -280,6 +281,82 @@ expect to find them there by default. `docs/plans`, `docs/specs`, and
 `docs/devlogs` are only created as symlinks when a project already had a
 real directory by that name — nothing forces those paths to exist for a
 project that never used them.
+
+
+## Opting a project out: agents-cleanup
+
+`agents-cleanup` reverses everything `agents-init` did in a project and
+stops it from happening again. Run it from anywhere inside the project
+(from the project root when it is not a git repository):
+
+    agents-cleanup --dry-run
+    agents-cleanup
+
+Every symlink that points into `AGENTS/` is replaced by the real file or
+directory it points to, so the project ends up with ordinary files where
+the links were. Where two links shared one directory (`docs/plans` and
+`docs/superpowers/plans`), the shallower one — the location that existed
+before `agents-init` — gets the content and the other link is removed. A
+link to a directory holding nothing but `.gitkeep`, a dangling link, and a
+link to `AGENTS/` itself are simply removed; dangling links go even if you
+already deleted `AGENTS/` by hand. No `CLAUDE.md` is recreated.
+
+A root `AGENTS.md` that is exactly the seed file `agents-init` writes for
+a fresh project is deleted, since it never held anything of yours. Any
+other `AGENTS.md` keeps its content and loses only the "SYSTEM DIRECTIVE"
+blockquote telling agents to edit `AGENTS/AGENTS.md` — a directory that no
+longer exists. If the directive was all it held, the file is deleted.
+
+Before anything moves, pending changes in `AGENTS/` are committed and the
+whole history is written to a verified git bundle under
+`~/.local/state/agents-cleanup/` (or `$XDG_STATE_HOME/agents-cleanup/`).
+Then `AGENTS/` is removed, along with `docs/superpowers/` and `docs/` if
+they are left empty, and every `Added by agents-init` block is stripped
+from `.gitignore`. A `.gitignore` that held only those blocks is deleted,
+unless it is tracked, in which case it is emptied and the change shows in
+`git status`. Nothing is committed to the project itself: the restored
+files show up as ordinary changes for you to commit or not.
+
+WARNING: Files inside `AGENTS/` that no project link points to — notes,
+scratch files, anything you put there by hand — stop the cleanup before
+it changes anything, and are listed. Move them out yourself, or pass
+`--drop-extras` to discard them. `--dry-run` refuses the same way, unless
+you also give it `--drop-extras`. A git repository nested inside `AGENTS/`
+is always refused, even with `--drop-extras`: the bundle records only a
+pointer to it, so move it out first. `agents-cleanup` also refuses to run
+when `AGENTS/` is itself a symlink to a directory elsewhere, since removing
+it would remove that directory; replace the link with a real directory
+first. Discarded files survive only in the bundle, and files
+`AGENTS/.gitignore` ignores are not in the bundle at all; the listing marks
+those. An `AGENTS/` that is not a git repository has no bundle, so
+`--drop-extras` there deletes the files for good.
+
+### The disabled marker
+
+`agents-init` skips a project, silently on every `claude`/`agy` launch,
+when either marker is present:
+
+- The git config key `agents-init.disabled`, which `agents-cleanup` always
+  sets. It lives in `.git/config`: it is never committed, applies to this
+  clone only, and survives moving or renaming the project. A fresh clone
+  is scaffolded again on its first launch.
+- A `.agents-disabled` file in the project root, written by
+  `agents-cleanup --marker-file`. It is not committed for you; commit it
+  to opt every clone out. Outside a git repository it is the only marker
+  available, so there `--marker-file` is required.
+
+Running `agents-cleanup` in a project that was never scaffolded only sets
+the marker — a way to opt a project out in advance.
+
+### Undoing a cleanup
+
+    git clone ~/.local/state/agents-cleanup/<slug>-<stamp>.bundle AGENTS
+    agents-init --enable
+
+`agents-init --enable` clears the git key and scaffolds as usual,
+re-linking the files restored from the bundle. It refuses while
+`.agents-disabled` exists: that file is a decision shared with every
+clone, so delete it (and commit the deletion) by hand.
 
 
 ## The launch lifecycle

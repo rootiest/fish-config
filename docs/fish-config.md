@@ -2470,10 +2470,89 @@ functions). They are active in all interactive sessions.
 
 ## 5.12 AI and Developer Tools
 
+### agents-cleanup
+
+    Synopsis:  agents-cleanup [-n | --dry-run] [--drop-extras] [--marker-file]
+                              [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
+
+    Reverses agents-init in the current project, and marks the project so
+    agents-init -- and therefore every claude/agy launch -- leaves it
+    alone from then on.
+
+    Every symlink that resolves into AGENTS/ is replaced by the real file
+    or directory it points to. When two links share a target (docs/plans
+    and docs/superpowers/plans), the shallower one receives the content
+    and the other is removed; a link to a target holding only .gitkeep, a
+    dangling link, or a link to AGENTS/ itself is removed with nothing put
+    in its place. Dangling links are removed even when AGENTS/ is already
+    gone. An AGENTS.md that is exactly
+    the stub agents-init writes is deleted; any other AGENTS.md loses only
+    the SYSTEM DIRECTIVE blockquote that pointed agents at AGENTS/AGENTS.md.
+    No CLAUDE.md is recreated.
+
+    Before anything is moved, pending AGENTS/ changes are committed and
+    the full history is written to a verified git bundle under
+    $XDG_STATE_HOME/agents-cleanup/ (default ~/.local/state). AGENTS/ is
+    then removed, along with docs/superpowers/ and docs/ if left empty,
+    and every "Added by agents-init" block is stripped from .gitignore.
+    Nothing is committed to the outer repository.
+
+    Files inside AGENTS/ that no project symlink points to -- other than
+    agents-init's own .version, .agents-tools/ and .gitkeep files -- stop
+    the cleanup before anything changes. They are listed; --drop-extras
+    discards them instead. A nested git repository inside AGENTS/ is always
+    refused, --drop-extras or not: the bundle keeps only a pointer to it, so
+    move it out first.
+
+    The disabled marker is the per-clone git config key
+    agents-init.disabled, set on every run. --marker-file also writes
+    .agents-disabled in the project root, which agents-init honors too and
+    which may be committed to opt every clone out; it is the only marker
+    available outside a git repository, where the project root is taken to
+    be the current directory -- run it from there. In a project with no
+    AGENTS/, only the marker is set -- a pre-emptive opt-out. agents-init --enable
+    clears the git key again.
+
+    Re-running is safe: an interrupted cleanup resumes where it stopped,
+    and a finished one only confirms the marker.
+
+    Arguments:
+      -n, --dry-run    Print the plan and change nothing
+      --drop-extras    Discard unlinked files in AGENTS/ instead of refusing
+      --marker-file    Also write .agents-disabled (required outside git)
+      -v, --verbose    Print all per-step output (default)
+      -q, --quiet      Print one summary line only if changes were made
+      -s, --silent     Suppress all output; errors only
+      -h, --help       Show this help message and exit
+
+    Exit Status:
+      0  Cleanup finished, or nothing was left to do
+      1  Refused (outside git without --marker-file, unresolved rebase in
+         AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
+         failed
+
+    Notes:
+      Restore an archived AGENTS/ with: git clone <bundle> AGENTS, then
+      agents-init --enable. The full write-up -- what is kept, what is
+      removed, and how the markers interact -- is in
+      docs/manual/16-agent-tooling.md. Update that section in the same
+      change whenever this function's behavior changes.
+
+    Example:
+    agents-cleanup --dry-run
+    agents-cleanup
+    agents-cleanup --marker-file
+
+**Dependencies:** `_agents_init_find`, `_agents_init_stub`, `_agents_repo_slug`, `_agents_repo_sync`
+
+**Classification:** `destructive`, `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(16-agent-tooling)`
+
+**See also:** 16. AI AGENT TOOLING (`docs/manual/16-agent-tooling.md`)
+
 ### agents-init
 
-    Synopsis:  agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
-                           [-q | --quiet] [-s | --silent] [-h | --help]
+    Synopsis:  agents-init [-a | --agents] [-p | --plugins] [-e | --enable]
+                           [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 
     Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
     a self-contained git repo for agent specifications, moves any existing
@@ -2494,6 +2573,13 @@ functions). They are active in all interactive sessions.
     already has an AGENTS.md, CLAUDE.md, or AGENTS/. Elsewhere it is a
     no-op, so running an agent CLI in an arbitrary directory does not
     create a repository there.
+
+    A project marked disabled is skipped entirely. agents-cleanup sets the
+    per-clone git config key agents-init.disabled; a .agents-disabled file
+    in the project root, which a team may commit, has the same effect.
+    Either one turns every wrapper launch into a silent no-op there.
+    --enable clears the git key and scaffolds; the file has to be deleted
+    by hand, because it is a decision shared with every clone.
 
     File layout after setup:
       AGENTS/AGENTS.md          canonical root agent spec (real file)
@@ -2555,6 +2641,8 @@ functions). They are active in all interactive sessions.
       -a, --agents   Set up AGENTS/ repo + AGENTS.md symlinks (root and every
                      discovered subdirectory) only
       -p, --plugins  Set up AGENTS/ repo + plans/specs/devlogs dirs + docs/ symlinks only
+      -e, --enable   Clear the git key agents-cleanup set, then scaffold as
+                     normal (refused while .agents-disabled exists)
       -v, --verbose  Print all per-step output (default)
       -q, --quiet    Print one summary line only if changes were made
       -s, --silent   Suppress all output; errors only (standard UNIX convention)
@@ -2563,7 +2651,8 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Setup completed successfully
       1  Fatal error (git init failed, move failed, the AGENTS/ commit was
-         rejected, or an unresolved rebase blocked it)
+         rejected, or an unresolved rebase blocked it), or --enable refused
+         because .agents-disabled exists
 
     Notes:
       This header covers usage only. The full concept/behavior/purpose
@@ -2580,7 +2669,7 @@ functions). They are active in all interactive sessions.
     agents-init --plugins
     agents-init --quiet
 
-**Dependencies:** `_agents_init_sync_instructions`, `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
+**Dependencies:** `_agents_init_find`, `_agents_init_sync_instructions`, `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
 
 **Classification:** `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(16-agent-tooling)`
 
@@ -5214,7 +5303,7 @@ Antigravity/agy) working in a project checked out from this configuration:
 where their instructions live, how they get there, and the safety rules
 that keep an agent's launch-time bookkeeping from touching a repository's
 own tracked history. Command-line usage for the functions named here
-(`agents-init`, `agents-vault`) is generated from their own doc headers —
+(`agents-init`, `agents-cleanup`, `agents-vault`) is generated from their own doc headers —
 see Section 5.
 
 
@@ -5477,6 +5566,82 @@ expect to find them there by default. `docs/plans`, `docs/specs`, and
 `docs/devlogs` are only created as symlinks when a project already had a
 real directory by that name — nothing forces those paths to exist for a
 project that never used them.
+
+
+## Opting a project out: agents-cleanup
+
+`agents-cleanup` reverses everything `agents-init` did in a project and
+stops it from happening again. Run it from anywhere inside the project
+(from the project root when it is not a git repository):
+
+    agents-cleanup --dry-run
+    agents-cleanup
+
+Every symlink that points into `AGENTS/` is replaced by the real file or
+directory it points to, so the project ends up with ordinary files where
+the links were. Where two links shared one directory (`docs/plans` and
+`docs/superpowers/plans`), the shallower one — the location that existed
+before `agents-init` — gets the content and the other link is removed. A
+link to a directory holding nothing but `.gitkeep`, a dangling link, and a
+link to `AGENTS/` itself are simply removed; dangling links go even if you
+already deleted `AGENTS/` by hand. No `CLAUDE.md` is recreated.
+
+A root `AGENTS.md` that is exactly the seed file `agents-init` writes for
+a fresh project is deleted, since it never held anything of yours. Any
+other `AGENTS.md` keeps its content and loses only the "SYSTEM DIRECTIVE"
+blockquote telling agents to edit `AGENTS/AGENTS.md` — a directory that no
+longer exists. If the directive was all it held, the file is deleted.
+
+Before anything moves, pending changes in `AGENTS/` are committed and the
+whole history is written to a verified git bundle under
+`~/.local/state/agents-cleanup/` (or `$XDG_STATE_HOME/agents-cleanup/`).
+Then `AGENTS/` is removed, along with `docs/superpowers/` and `docs/` if
+they are left empty, and every `Added by agents-init` block is stripped
+from `.gitignore`. A `.gitignore` that held only those blocks is deleted,
+unless it is tracked, in which case it is emptied and the change shows in
+`git status`. Nothing is committed to the project itself: the restored
+files show up as ordinary changes for you to commit or not.
+
+WARNING: Files inside `AGENTS/` that no project link points to — notes,
+scratch files, anything you put there by hand — stop the cleanup before
+it changes anything, and are listed. Move them out yourself, or pass
+`--drop-extras` to discard them. `--dry-run` refuses the same way, unless
+you also give it `--drop-extras`. A git repository nested inside `AGENTS/`
+is always refused, even with `--drop-extras`: the bundle records only a
+pointer to it, so move it out first. `agents-cleanup` also refuses to run
+when `AGENTS/` is itself a symlink to a directory elsewhere, since removing
+it would remove that directory; replace the link with a real directory
+first. Discarded files survive only in the bundle, and files
+`AGENTS/.gitignore` ignores are not in the bundle at all; the listing marks
+those. An `AGENTS/` that is not a git repository has no bundle, so
+`--drop-extras` there deletes the files for good.
+
+### The disabled marker
+
+`agents-init` skips a project, silently on every `claude`/`agy` launch,
+when either marker is present:
+
+- The git config key `agents-init.disabled`, which `agents-cleanup` always
+  sets. It lives in `.git/config`: it is never committed, applies to this
+  clone only, and survives moving or renaming the project. A fresh clone
+  is scaffolded again on its first launch.
+- A `.agents-disabled` file in the project root, written by
+  `agents-cleanup --marker-file`. It is not committed for you; commit it
+  to opt every clone out. Outside a git repository it is the only marker
+  available, so there `--marker-file` is required.
+
+Running `agents-cleanup` in a project that was never scaffolded only sets
+the marker — a way to opt a project out in advance.
+
+### Undoing a cleanup
+
+    git clone ~/.local/state/agents-cleanup/<slug>-<stamp>.bundle AGENTS
+    agents-init --enable
+
+`agents-init --enable` clears the git key and scaffolds as usual,
+re-linking the files restored from the bundle. It refuses while
+`.agents-disabled` exists: that file is a decision shared with every
+clone, so delete it (and commit the deletion) by hand.
 
 
 ## The launch lifecycle

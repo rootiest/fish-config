@@ -5,14 +5,14 @@
 #   12-ai-and-developer-tools
 #
 # DEPENDENCIES
-#   _agents_init_sync_instructions, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
+#   _agents_init_find, _agents_init_sync_instructions, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
 #
 # SYNOPSIS
-#   agents-init [-a | --agents] [-p | --plugins] [-v | --verbose]
-#               [-q | --quiet] [-s | --silent] [-h | --help]
+#   agents-init [-a | --agents] [-p | --plugins] [-e | --enable]
+#               [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 #
 # DESCRIPTION
 #   Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
@@ -34,6 +34,13 @@
 #   already has an AGENTS.md, CLAUDE.md, or AGENTS/. Elsewhere it is a
 #   no-op, so running an agent CLI in an arbitrary directory does not
 #   create a repository there.
+#
+#   A project marked disabled is skipped entirely. agents-cleanup sets the
+#   per-clone git config key agents-init.disabled; a .agents-disabled file
+#   in the project root, which a team may commit, has the same effect.
+#   Either one turns every wrapper launch into a silent no-op there.
+#   --enable clears the git key and scaffolds; the file has to be deleted
+#   by hand, because it is a decision shared with every clone.
 #
 #   File layout after setup:
 #     AGENTS/AGENTS.md          canonical root agent spec (real file)
@@ -95,6 +102,8 @@
 #   -a, --agents   Set up AGENTS/ repo + AGENTS.md symlinks (root and every
 #                  discovered subdirectory) only
 #   -p, --plugins  Set up AGENTS/ repo + plans/specs/devlogs dirs + docs/ symlinks only
+#   -e, --enable   Clear the git key agents-cleanup set, then scaffold as
+#                  normal (refused while .agents-disabled exists)
 #   -v, --verbose  Print all per-step output (default)
 #   -q, --quiet    Print one summary line only if changes were made
 #   -s, --silent   Suppress all output; errors only (standard UNIX convention)
@@ -103,7 +112,8 @@
 # EXIT STATUS
 #   0  Setup completed successfully
 #   1  Fatal error (git init failed, move failed, the AGENTS/ commit was
-#      rejected, or an unresolved rebase blocked it)
+#      rejected, or an unresolved rebase blocked it), or --enable refused
+#      because .agents-disabled exists
 #
 # EXAMPLE
 #   agents-init
@@ -122,11 +132,11 @@
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
     __fish_palette
 
-    argparse h/help a/agents p/plugins v/verbose q/quiet s/silent -- $argv
+    argparse h/help a/agents p/plugins e/enable v/verbose q/quiet s/silent -- $argv
     or return 1
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-v] [-q] [-s] [-h | --help]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-e] [-v] [-q] [-s] [-h | --help]$c_reset"
         echo
         echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
         echo
@@ -134,6 +144,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset      Show this help message"
         echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md symlinks only"
         echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plans/specs/devlogs dirs and docs/ symlinks only"
+        echo "  $c_flag-e$c_reset, $c_flag--enable$c_reset    Re-enable a project agents-cleanup disabled"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset   Print all per-step output (default)"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset     Print one summary line only if changes were made"
         echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset    Suppress all output; only errors are printed"
@@ -177,6 +188,34 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             and echo "$c_dim→ Not a git repository; skipping AGENTS/ scaffolding$c_reset"
             return 0
         end
+    end
+
+    #   ─────────────────────────── Opt-out marker ───────────────────────────
+    # agents-cleanup marks a project it has undone so launches stop
+    # re-scaffolding it: a per-clone git config key, or a .agents-disabled
+    # file a team may commit. The file is a shared decision, so --enable
+    # refuses rather than silently overriding it.
+    set -l marker_file "$root/.agents-disabled"
+    set -l key_set 0
+    if test $in_git -eq 1
+        set -l key (git -C "$root" config --type=bool --get agents-init.disabled 2>/dev/null)
+        test "$key" = true; and set key_set 1
+    end
+    if set -q _flag_enable
+        if test -e "$marker_file"
+            echo "$c_err""Error: .agents-disabled disables agents-init for every clone; delete it (and commit the deletion) to re-enable$c_reset" >&2
+            return 1
+        end
+        if test $in_git -eq 1; and git -C "$root" config --local --get agents-init.disabled >/dev/null 2>&1
+            git -C "$root" config --local --unset agents-init.disabled
+            test $verbose -eq 1; and echo "$c_ok→ Re-enabled agents-init (unset git config agents-init.disabled)$c_reset"
+        end
+    else if test -e "$marker_file"
+        test $verbose -eq 1; and echo "$c_dim→ agents-init is disabled here by .agents-disabled; delete that file to re-enable$c_reset"
+        return 0
+    else if test $key_set -eq 1
+        test $verbose -eq 1; and echo "$c_dim→ agents-init is disabled here (git config agents-init.disabled); run agents-init --enable to re-enable$c_reset"
+        return 0
     end
 
     set -l agents_dir "$root/AGENTS"
@@ -238,22 +277,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         #
         # Discovery stays inside this project: a non-git root (a lone
         # agent file in, say, ~) syncs only itself -- walking it would
-        # reach into every unrelated tree below. In a git root, pruned:
-        # any AGENTS/ (a mirror, never a source), dot-directories (.git,
-        # .claude, .github: tool state, not scoped project dirs),
-        # node_modules, generated-output directories (build, dist, out,
-        # target: an instruction file there is a build artifact, never a
-        # source -- pruned outright, before tracked-file protection would
-        # even be consulted), and nested repos/submodules/worktrees (their
-        # own .git marks another project). -mindepth 1 keeps the root
-        # itself, which has a .git, from pruning the whole walk.
+        # reach into every unrelated tree below. In a git root the walk
+        # uses the shared prune set; see _agents_init_find.
         set -l found
         if test $in_git -eq 1
-            set found (find "$root" -mindepth 1 \
-                -type d \( -name '.*' -o -name AGENTS -o -name node_modules \
-                -o -name build -o -name dist -o -name out -o -name target \
-                -o -exec test -e '{}/.git' \; \) -prune -o \
-                \( -name AGENTS.md -o -name CLAUDE.md \) -print)
+            set found (_agents_init_find "$root" \( -name AGENTS.md -o -name CLAUDE.md \) -print)
         end
         set -l rels "."
         for f in $found

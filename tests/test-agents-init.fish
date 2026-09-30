@@ -55,6 +55,7 @@ check "fresh root: mirror AGENTS.md created" true (test -f $r1/AGENTS/AGENTS.md;
 check "fresh root: no mirror CLAUDE.md" false (test -e $r1/AGENTS/CLAUDE.md; and echo true; or echo false)
 check "fresh root: project AGENTS.md links to mirror" AGENTS/AGENTS.md (readlink $r1/AGENTS.md)
 check "fresh root: no project CLAUDE.md" false (test -e $r1/CLAUDE.md; and echo true; or echo false)
+check "fresh root: mirror AGENTS.md is exactly the shared stub" (_agents_init_stub | string collect) (string collect <$r1/AGENTS/AGENTS.md)
 
 echo ""
 echo "== _agents_init_sync_instructions: idempotent second run =="
@@ -460,6 +461,65 @@ git -C $g1 commit -qm add-ignore
 _agents_init_path_is_protected $g1 "$g1/a[1]/AGENTS.md"
 set -l protected $status
 check "glob false-match: untracked a[1]/AGENTS.md is not protected" 1 "$protected"
+
+echo ""
+echo "== _agents_init_find: shared prune set =="
+
+set -l pf (new_repo)
+mkdir -p $pf/src $pf/node_modules/pkg $pf/.claude $pf/AGENTS $pf/build $pf/nested
+git -C $pf/nested init -q
+ln -s ../x $pf/src/link
+ln -s x $pf/node_modules/pkg/link
+ln -s x $pf/.claude/link
+ln -s x $pf/AGENTS/link
+ln -s x $pf/build/link
+ln -s x $pf/nested/link
+check "find: only the unpruned symlink" $pf/src/link (_agents_init_find $pf -type l -print | string join ,)
+check "find: no root -> status 1" 1 (_agents_init_find ""; echo $status)
+
+echo ""
+echo "== agents-init: opt-out marker =="
+
+set -l m1 (new_repo)
+git -C $m1 config agents-init.disabled true
+pushd $m1 >/dev/null
+set -l mrc1 (agents-init --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "git key: exits 0" 0 "$mrc1"
+check "git key: nothing scaffolded" false (test -e $m1/AGENTS -o -L $m1/AGENTS.md; and echo true; or echo false)
+
+set -l m2 (new_repo)
+touch $m2/.agents-disabled
+pushd $m2 >/dev/null
+set -l mrc2 (agents-init --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "marker file: exits 0" 0 "$mrc2"
+check "marker file: nothing scaffolded" false (test -e $m2/AGENTS -o -L $m2/AGENTS.md; and echo true; or echo false)
+
+set -l m3 (new_repo)
+git -C $m3 config agents-init.disabled true
+pushd $m3 >/dev/null
+set -l mrc3 (agents-init --enable --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "--enable: exits 0" 0 "$mrc3"
+check "--enable: git key unset" 1 (git -C $m3 config --get agents-init.disabled >/dev/null; echo $status)
+check "--enable: scaffold created" AGENTS/AGENTS.md (readlink $m3/AGENTS.md)
+
+set -l m4 (new_repo)
+touch $m4/.agents-disabled
+pushd $m4 >/dev/null
+set -l mrc4 (agents-init --enable --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "--enable with marker file: exits 1" 1 "$mrc4"
+check "--enable with marker file: nothing scaffolded" false (test -e $m4/AGENTS -o -L $m4/AGENTS.md; and echo true; or echo false)
+check "--enable with marker file: file kept" true (test -e $m4/.agents-disabled; and echo true; or echo false)
+
+set -l m5 (new_repo)
+git -C $m5 config agents-init.disabled true
+pushd $m5 >/dev/null
+set -l mout5 (agents-init 2>/dev/null)
+popd >/dev/null
+check "git key, verbose: note names the marker" true (string match -q -- '*agents-init.disabled*' "$mout5"; and echo true; or echo false)
 
 cleanup
 report

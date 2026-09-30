@@ -6,7 +6,9 @@
 #
 # DESCRIPTION
 #   Stages everything in <dir> and commits it with <message>. Shared by
-#   agents-init and agents-vault.
+#   agents-init, agents-vault and agents-cleanup. <dir> must be the root of
+#   its own repository: a .git directory that is not a valid gitdir is
+#   refused, because git would otherwise commit the enclosing repository.
 #
 #   It never touches the network, and that is the point rather than an
 #   omission. Both callers run on every agent launch, synchronously, ahead
@@ -36,7 +38,8 @@
 #
 # EXIT STATUS
 #   0  Committed, or nothing needed committing
-#   1  <dir> is not a git repository, arguments were missing, or the commit
+#   1  <dir> is not the root of its own git repository (a broken .git
+#      directory inside another repository counts as not), arguments were missing, or the commit
 #      itself failed (e.g. a pre-commit/commit-msg hook rejected it)
 #   2  A rebase is in progress; nothing committed, nothing touched
 #
@@ -48,9 +51,12 @@
 #   _agents_repo_sync /path/to/AGENTS "chore: sync AGENTS repository"
 function _agents_repo_sync --argument-names dir msg
     test -n "$dir" -a -n "$msg"; or return 1
-    test -d "$dir/.git"; or return 1
+    # Not `test -d "$dir/.git"`: a half-deleted .git directory passes that, and
+    # git then walks up, finds the enclosing repository and commits *that*.
+    # A valid repository rooted at <dir> reports its git dir as plain ".git".
+    test "$(git -C "$dir" rev-parse --git-dir 2>/dev/null)" = .git; or return 1
 
-    # The guard above proved .git is a directory, so these are the same two
+    # The guard above proved <dir> has its own .git, so these are the same two
     # paths `agents-vault --status` reports an unresolved rebase from.
     if test -d "$dir/.git/rebase-merge"; or test -d "$dir/.git/rebase-apply"
         echo "_agents_repo_sync: unresolved rebase in $dir; nothing committed" >&2
