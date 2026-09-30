@@ -127,6 +127,10 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     set -l agents_dir "$root/AGENTS"
     set -l has_agents 0
     set -l has_repo 0
+    if test -L "$agents_dir"
+        echo "$c_err""Error: AGENTS is a symlink to "(readlink "$agents_dir")"; replace it with a real directory (or remove the link) first$c_reset" >&2
+        return 1
+    end
     if test -d "$agents_dir"
         set has_agents 1
         # Resolved, because link targets are compared after realpath, which
@@ -208,11 +212,17 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         for e in $extras
             if contains -- "$e" $extras_ignored
                 echo "  AGENTS/$e  (ignored -- not in bundle)" >&2
+            else if test $has_repo -eq 0
+                echo "  AGENTS/$e  (not in bundle)" >&2
             else
                 echo "  AGENTS/$e" >&2
             end
         end
-        echo "Move them out of AGENTS/ by hand, or re-run with --drop-extras (the history bundle keeps every file not marked ignored)." >&2
+        if test $has_repo -eq 1
+            echo "Move them out of AGENTS/ by hand, or re-run with --drop-extras (the history bundle keeps every file not marked ignored)." >&2
+        else
+            echo "Move them out of AGENTS/ by hand, or re-run with --drop-extras (AGENTS/ is not a git repository, so there is no bundle and they are lost)." >&2
+        end
         return 1
     end
 
@@ -319,8 +329,20 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     for i in (seq (count $keep))
         set -l link $keep[$i]
         set -l rel (string replace -- "$root/" "" "$link")
-        if not rm -f "$link"; or not command mv "$keep_tgt[$i]" "$link"
+        set -l was (readlink "$link")
+        if not test -e "$keep_tgt[$i]"
+            echo "$c_err""Error: AGENTS/ target for $rel is missing; nothing changed for it$c_reset" >&2
+            return 1
+        end
+        if not rm -f "$link"
             echo "$c_err""Error: could not restore $rel from AGENTS/; re-run to resume$c_reset" >&2
+            return 1
+        end
+        if not command mv "$keep_tgt[$i]" "$link"
+            # Put the link back: without it the target looks like an unlinked
+            # extra and a re-run would refuse.
+            ln -s -- "$was" "$link"
+            echo "$c_err""Error: could not restore $rel from AGENTS/; link left in place$c_reset" >&2
             return 1
         end
         set changed 1
@@ -357,8 +379,13 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
                     return 1
                 end
                 if set -q body[1]; and string match -qr -- '\S' $body
-                    printf '%s\n' $body >"$link"
-                    test $verbose -eq 1; and echo "$c_ok→ Removed the AGENTS/ directive from $rel$c_reset"
+                    if test "$(printf '%s\n' $body | string collect)" != "$(string collect <"$link")"
+                        if not printf '%s\n' $body >"$link"
+                            echo "$c_err""Error: could not rewrite $rel$c_reset" >&2
+                            return 1
+                        end
+                        test $verbose -eq 1; and echo "$c_ok→ Removed the AGENTS/ directive from $rel$c_reset"
+                    end
                 else
                     rm -f "$link"
                     test $verbose -eq 1; and echo "$c_ok→ Removed $rel (only the directive, no user content)$c_reset"
@@ -398,6 +425,10 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     # writes, so blocks from older header variants go too. A header with no
     # footer before the next header is left in place (and reported).
     if test -f "$gitignore"; and grep -q 'Added by agents-init' "$gitignore"
+        # The unterminated-block warning is verbose-only, so a quiet or silent
+        # re-run stays silent.
+        set -l awk_err /dev/stderr
+        test $verbose -eq 1; or set awk_err /dev/null
         set -l kept (awk '
             { line[NR] = $0 }
             END {
@@ -418,24 +449,34 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
                     out[++n] = line[i]
                 }
                 for (i = 1; i <= n; i++) print out[i]
-            }' "$gitignore")
+            }' "$gitignore" 2>$awk_err)
         if test $status -ne 0
             echo "$c_err""Error: could not rewrite .gitignore$c_reset" >&2
             return 1
         end
-        if set -q kept[1]; and string match -qr -- '\S' $kept
-            printf '%s\n' $kept >"$gitignore"
-        else if test $in_git -eq 1; and git -C "$root" ls-files --error-unmatch -- .gitignore >/dev/null 2>&1
-            # Tracked: someone committed it, so it is not agents-init's to
-            # delete. Leave it empty; the change shows in git status.
-            true >"$gitignore"
-        else
-            # Untracked and nothing but agents-init's blocks: agents-init
-            # created it.
-            rm -f "$gitignore"
+        # Identical output means only unterminated blocks were found: nothing
+        # to write, nothing to report, and a re-run stays silent.
+        if test "$(printf '%s\n' $kept | string collect)" != "$(string collect <"$gitignore")"
+            if set -q kept[1]; and string match -qr -- '\S' $kept
+                if not printf '%s\n' $kept >"$gitignore"
+                    echo "$c_err""Error: could not rewrite .gitignore$c_reset" >&2
+                    return 1
+                end
+            else if test $in_git -eq 1; and git -C "$root" ls-files --error-unmatch -- .gitignore >/dev/null 2>&1
+                # Tracked: someone committed it, so it is not agents-init's to
+                # delete. Leave it empty; the change shows in git status.
+                if not true >"$gitignore"
+                    echo "$c_err""Error: could not rewrite .gitignore$c_reset" >&2
+                    return 1
+                end
+            else
+                # Untracked and nothing but agents-init's blocks: agents-init
+                # created it.
+                rm -f "$gitignore"
+            end
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Removed agents-init blocks from .gitignore$c_reset"
         end
-        set changed 1
-        test $verbose -eq 1; and echo "$c_ok→ Removed agents-init blocks from .gitignore$c_reset"
     end
 
     #   ────────────────────────────── Summary ───────────────────────────────

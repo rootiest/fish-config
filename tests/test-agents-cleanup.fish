@@ -293,5 +293,91 @@ check "rejected commit: root link untouched" AGENTS/AGENTS.md (readlink $f1/AGEN
 set -l fb $XDG_STATE_HOME/agents-cleanup/*.bundle
 check "rejected commit: no bundle" 0 (count $fb)
 
+section "agents-cleanup: failed move keeps the link, re-run resumes"
+fresh_state
+set -l w1 (scaffolded_repo)
+chmod a-w $w1/AGENTS/functions
+pushd $w1 >/dev/null
+set -l w1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "failed mv: exits 1" 1 "$w1rc"
+check "failed mv: link still a symlink" true (test -L $w1/functions/AGENTS.md; and echo true; or echo false)
+chmod u+w $w1/AGENTS/functions
+pushd $w1 >/dev/null
+set -l w2rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "failed mv re-run: exits 0" 0 "$w2rc"
+check "failed mv re-run: real file, content kept" user-scoped (test -L $w1/functions/AGENTS.md; or string collect <$w1/functions/AGENTS.md)
+
+section "agents-cleanup: failed directive rewrite keeps AGENTS/"
+fresh_state
+set -l k1 (new_repo)
+printf '%s\n' '# Title' '' '> **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> x' '' body >$k1/AGENTS.md
+pushd $k1 >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+chmod a-w $k1/AGENTS/AGENTS.md
+pushd $k1 >/dev/null
+set -l k1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+chmod u+w $k1/AGENTS/AGENTS.md $k1/AGENTS.md 2>/dev/null
+check "failed rewrite: exits 1" 1 "$k1rc"
+check "failed rewrite: AGENTS/ kept" true (test -d $k1/AGENTS; and echo true; or echo false)
+
+section "agents-cleanup: unterminated .gitignore block is left alone, quietly"
+fresh_state
+set -l u1 (new_repo)
+printf '%s\n' user-line '' '#   ──── Added by agents-init ────' AGENTS/ >$u1/.gitignore
+set -l ubefore (string collect <$u1/.gitignore)
+pushd $u1 >/dev/null
+set -l u1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "unterminated: exits 0" 0 "$u1rc"
+check "unterminated: file byte-identical" "$ubefore" (string collect <$u1/.gitignore)
+pushd $u1 >/dev/null
+set -l u2out (agents-cleanup --quiet 2>&1)
+popd >/dev/null
+check "unterminated: quiet re-run prints nothing" "" "$u2out"
+
+section "agents-cleanup: symlinked AGENTS refuses"
+fresh_state
+set -l l1 (new_repo)
+set -l ext (mktemp -d)
+set -a TMPDIRS $ext
+echo precious >$ext/file
+ln -s $ext $l1/AGENTS
+pushd $l1 >/dev/null
+set -l l1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "symlinked AGENTS: exits 1" 1 "$l1rc"
+check "symlinked AGENTS: target file survives" precious (string collect <$ext/file)
+
+section "agents-cleanup: extras without a bundle"
+fresh_state
+set -l n2 (new_repo)
+mkdir $n2/AGENTS
+echo stray >$n2/AGENTS/stray.md
+pushd $n2 >/dev/null
+set -l n2err (agents-cleanup 2>&1 >/dev/null)
+popd >/dev/null
+check "no-repo extras: labelled not in bundle" true (string match -q -- '*stray.md  (not in bundle)*' "$n2err"; and echo true; or echo false)
+check "no-repo extras: hint does not promise a bundle" false (string match -q -- '*bundle keeps*' "$n2err"; and echo true; or echo false)
+
+section "agents-cleanup: user AGENTS.md variants"
+fresh_state
+set -l v1 (new_repo)
+printf '%s\n' '> ⚠️ **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> x' >$v1/AGENTS.md
+set -l v2 (new_repo)
+printf '%s\n' '# Mine' '' 'no directive here' >$v2/AGENTS.md
+set -l v2before (string collect <$v2/AGENTS.md)
+for v in $v1 $v2
+    pushd $v >/dev/null
+    agents-init --silent 2>/dev/null
+    agents-cleanup --silent 2>/dev/null
+    popd >/dev/null
+end
+check "directive-only: deleted" false (test -e $v1/AGENTS.md -o -L $v1/AGENTS.md; and echo true; or echo false)
+check "no directive: content identical" "$v2before" (string collect <$v2/AGENTS.md)
+
 cleanup
 report
