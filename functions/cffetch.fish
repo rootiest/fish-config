@@ -5,36 +5,21 @@
 #   14-miscellaneous
 #
 # DEPENDENCIES
-#   fastfetch, neofetch
-#
-# CLASSIFICATION
-#   uses-shadow(ls)
+#   ffetch
 #
 # SYNOPSIS
 #   cffetch [args...]
 #
 # DESCRIPTION
-#   Clears the screen and displays system information using fastfetch with a
-#   custom config if available. Falls back to neofetch if fastfetch is not installed.
+#   Clears the screen, then runs ffetch (fastfetch with a custom config if
+#   available, falling back to neofetch).
 #
 # ARGUMENTS
-#   args...  Additional arguments forwarded to fastfetch or neofetch
+#   args...  Additional arguments forwarded to ffetch
 #
 # EXAMPLE
 #   cffetch
-function cffetch --description 'alias cffetch=clear;fastfetch'
+function cffetch --wraps=ffetch --description 'Clear the screen, then ffetch'
     clear
-    if which fastfetch >/dev/null 2>&1
-        if ls ~/.fastfetch.jsonc >/dev/null 2>&1
-            fastfetch --config ~/.fastfetch.jsonc $argv
-        else
-            fastfetch $argv
-        end
-    else
-        if which neofetch >/dev/null 2>&1
-            command neofetch $argv
-        else
-            echo "fetch not found"
-        end
-    end
+    ffetch $argv
 end
