@@ -184,7 +184,7 @@ fallback: `systemd-inhibit` (`wake-lock`), `zramctl`/`swapon` (`swapstat`),
 `stat -c`/`numfmt` (`sudo-toggle`, `dng2avif`), which differ or don't exist
 under a BSD userland.
 
-Clipboard access (`y`, `p`, `paste`, `hist`) is the exception: it falls back
+Clipboard access (`y`, `p`, `hist`) is the exception: it falls back
 through `wl-copy`/`wl-paste` (Wayland), `xclip` (X11), and `win32yank.exe`
 (WSL2), so it works on all three — there's still no `pbcopy`/`pbpaste`
 fallback for macOS.
