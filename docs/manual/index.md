@@ -52,8 +52,6 @@ The configuration uses a structured file tree:
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
     ├── functions/                  Custom functions, one per file
     ├── completions/                Tab completion scripts, autoloaded on demand
-    ├── integrations/
-    │   └── fzf.fish                FZF Catppuccin theme and key bindings
     ├── scripts/
     │   ├── clean_progress_log.py   Strips typescript animations for clean logs
     │   └── agents-tools/           AGENTS.md scripts and git hooks

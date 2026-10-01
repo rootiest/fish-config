@@ -71,7 +71,7 @@ body:
         - Docs (docs/manual/, man page, docs site)
         - Tests (tests/)
         - CI (.github/workflows/)
-        - Integrations (integrations/)
+        - Integrations (third-party tools: fzf, zoxide, direnv, ...)
         - Prompt and theme (themes/)
         - Opinionated components (C1-C6 toggles)
         - Scripts (scripts/)
