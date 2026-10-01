@@ -1329,7 +1329,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Cleanup complete
-      1  Argument parsing failed
+      1  Argument parsing failed, or an orphaned branch could not be deleted
 
     Example:
     git-clean --force
