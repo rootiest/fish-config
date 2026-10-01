@@ -278,7 +278,6 @@ completions, and a manual entry gets all three.
 | `Area/Docs` | `docs/manual/` and the generated manual, man page, and site |
 | `Area/Tests` | `tests/` |
 | `Area/CI` | `.github/workflows/` and repository automation |
-| `Area/Integrations` | Third-party tool integration setup (fzf, zoxide, direnv, …) |
 | `Area/Prompt & Theme` | `themes/` and prompt appearance |
 | `Area/Components` | The opinionated-component system (C1-C6) |
 | `Area/Scripts` | `scripts/` |
