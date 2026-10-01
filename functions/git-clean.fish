@@ -24,7 +24,7 @@
 #
 # EXIT STATUS
 #   0  Cleanup complete
-#   1  Argument parsing failed
+#   1  Argument parsing failed, or an orphaned branch could not be deleted
 #
 # EXAMPLE
 #   git-clean --force
@@ -37,6 +37,10 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
     if set -q _flag_help
         __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""git-clean$c_reset $c_arg""[OPTIONS]$c_reset"
+        echo
+        echo "$c_head""Options:$c_reset"
+        echo "  $c_flag""-f, --force$c_reset  Force-delete unmerged orphaned branches (git branch -D)"
+        echo "  $c_flag""-h, --help$c_reset   Show this help message"
         echo
         echo "$c_head""Steps taken:$c_reset"
         echo "  1. Fetches and prunes to find deleted remote branches."
@@ -74,17 +78,22 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
 
     # 5. Final cleanup
     if test -n "$gone_branches"
+        # No -l here: inside the if block, `set -l` would declare a new
+        # block-scoped variable and leave the outer -d in place.
         set -l delete_flag -d
         if set -q _flag_force
-            set -l delete_flag -D
+            set delete_flag -D
         end
 
+        set -l failed 0
         echo (set_color red)"Deleting orphaned local branches ($delete_flag):"(set_color normal)
         for branch in $gone_branches
             # We keep this output so you can see confirmation of which hashes were deleted
             git branch $delete_flag $branch
+            or set failed 1
         end
-    else
-        echo (set_color green)"Everything is tidy. No orphaned branches found."(set_color normal)
+        return $failed
     end
+
+    echo (set_color green)"Everything is tidy. No orphaned branches found."(set_color normal)
 end
