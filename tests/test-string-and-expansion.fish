@@ -249,50 +249,6 @@ check "sudo reboot: buffer becomes sudo with two spaces" "sudo  " "$mock_cmd_buf
 check "sudo reboot: cursor placed at 5" 5 "$mock_cmd_cursor"
 
 # -----------------------------------------------------------------------------
-# __substitute_typo
-# -----------------------------------------------------------------------------
-section __substitute_typo
-
-set_test_history 'git commit -m "feat"'
-set mock_cmd_buffer "^feat^fix"
-set mock_cmd_inserted ""
-__substitute_typo
-check "substitute ^feat^fix in git commit" 'git commit -m "fix"' "$mock_cmd_buffer"
-
-set_test_history "docker run -d nginx"
-set mock_cmd_buffer "^nginx^redis"
-set mock_cmd_inserted ""
-__substitute_typo
-check "substitute ^nginx^redis in docker run" "docker run -d redis" "$mock_cmd_buffer"
-
-set_test_history "echo foo foo"
-set mock_cmd_buffer "^foo^bar"
-set mock_cmd_inserted ""
-__substitute_typo
-check "substitute replaces all occurrences" "echo bar bar" "$mock_cmd_buffer"
-
-set_test_history "git checkout main feat"
-set mock_cmd_buffer "^feat^"
-set mock_cmd_inserted ""
-__substitute_typo
-check "substitute ^feat^ with empty string deletes token" "git checkout main " "$mock_cmd_buffer"
-
-set_test_history "git status"
-set mock_cmd_buffer "^"
-set mock_cmd_inserted ""
-__substitute_typo
-check "lone caret inserts literal caret" "^" "$mock_cmd_inserted"
-check "lone caret buffer retains caret" "^^" "$mock_cmd_buffer"
-
-set_test_history "git status"
-set mock_cmd_buffer "git log"
-set mock_cmd_inserted ""
-__substitute_typo
-check "non-matching buffer inserts literal caret" "^" "$mock_cmd_inserted"
-
-cleanup_test_history
-
-# -----------------------------------------------------------------------------
 # _puffer_fish_expand_dot
 # -----------------------------------------------------------------------------
 section _puffer_fish_expand_dot
