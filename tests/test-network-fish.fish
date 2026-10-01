@@ -646,6 +646,45 @@ begin
     builtin cd $prev_pwd
 end
 
+# Regression: `set -l delete_flag -D` inside the `if` declared a block-scoped
+# variable that died at `end`, so -f/--force always ran `git branch -d`.
+# Uses a real local bare remote so `: gone]` and the merge check are genuine.
+# `was-merged` sorts after `unmerged`, so the refused deletion is not the last
+# `git branch` call and the exit-status check cannot pass by status leakage.
+begin
+    reset_mocks
+    set -l prev_pwd $PWD
+    set -l bare (mktemp -d)
+    set -ga TMPDIRS $bare
+    git init -q --bare $bare
+    set -l r (new_repo)
+    builtin cd $r
+    echo a >a && git add a && git commit -q -m a
+    git remote add origin $bare
+    git push -q -u origin main 2>/dev/null
+    git branch was-merged
+    git switch -q -c unmerged
+    echo b >b && git add b && git commit -q -m b
+    git switch -q main
+    git push -q -u origin was-merged unmerged 2>/dev/null
+    git push -q origin --delete was-merged unmerged 2>/dev/null
+
+    set -l soft_out (git-clean 2>&1)
+    set -l soft_status $status
+    check "git-clean: without -f prints (-d)" true (string match -q '*Deleting orphaned local branches (-d)*' -- $soft_out; and echo true; or echo false)
+    check "git-clean: without -f deletes a merged gone branch" false (git rev-parse --verify --quiet was-merged >/dev/null 2>&1; and echo true; or echo false)
+    check "git-clean: without -f keeps an unmerged gone branch" true (git rev-parse --verify --quiet unmerged >/dev/null 2>&1; and echo true; or echo false)
+    check "git-clean: refused deletion exits 1" 1 $soft_status
+
+    set -l force_out (git-clean --force 2>&1)
+    set -l force_status $status
+    check "git-clean: -f prints (-D)" true (string match -q '*Deleting orphaned local branches (-D)*' -- $force_out; and echo true; or echo false)
+    check "git-clean: -f deletes an unmerged gone branch" false (git rev-parse --verify --quiet unmerged >/dev/null 2>&1; and echo true; or echo false)
+    check "git-clean: -f with all deletions succeeding exits 0" 0 $force_status
+
+    builtin cd $prev_pwd
+end
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. config-update (configuration repository sync)
 # ─────────────────────────────────────────────────────────────────────────────
