@@ -50,8 +50,8 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     end
 
     # Delegate paru/yay wrapper (re)generation and removal to the canonical
-    # generators. They resolve the real binary via __fish_real_command
-    # (never /usr/bin-assumed) and independently gate on their own C2/C5
+    # generator. It resolves the real binary via __fish_real_command
+    # (never /usr/bin-assumed) and gates each wrapper on its own C2/C5
     # keys, so sourcing them here covers both the enabled-regenerate and
     # disabled-remove cases without duplicating that logic. Previously this
     # function carried its own inferior copy (tee instead of a PTY, no
@@ -59,10 +59,8 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     # the canonical generator for the wrapper file on every version-marker
     # mismatch.
     #
-    # Routed through _fish_source_scoped: both files `return` early on
-    # several guard checks, and a sourced `return` exits the *calling*
-    # function, which would otherwise abort this function and skip
-    # whichever of paru/yay hadn't run yet.
-    _fish_source_scoped "$__fish_config_dir/conf.d/paru-wrapper.fish"
-    _fish_source_scoped "$__fish_config_dir/conf.d/yay-wrapper.fish"
+    # Routed through _fish_source_scoped: the file `return`s early in a
+    # non-interactive shell, and a sourced `return` exits the *calling*
+    # function, which would otherwise abort this function.
+    _fish_source_scoped "$__fish_config_dir/conf.d/pkg-wrappers.fish"
 end

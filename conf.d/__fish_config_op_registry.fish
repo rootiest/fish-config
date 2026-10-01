@@ -52,9 +52,11 @@ set -g __fish_config_op_registry_keys \
     "ls:" \
     "mkdir:" \
     "mv:" \
-    "paru-wrapper:paru-autoexec" \
-    "paru-wrapper:paru-logging" \
     "ping:" \
+    "pkg-wrappers:paru-autoexec" \
+    "pkg-wrappers:paru-logging" \
+    "pkg-wrappers:yay-autoexec" \
+    "pkg-wrappers:yay-logging" \
     "puffer:" \
     "rg:" \
     "rm:" \
@@ -74,8 +76,6 @@ set -g __fish_config_op_registry_keys \
     "upgrade:" \
     "wakatime:wakatime-autoexec" \
     "wakatime:wakatime-hook" \
-    "yay-wrapper:yay-autoexec" \
-    "yay-wrapper:yay-logging" \
     "yt-dlp:" \
     "zoxide:"
 
@@ -119,9 +119,11 @@ set -g __fish_config_op_registry_values \
     aliases/filesystem \
     aliases/filesystem \
     aliases/filesystem \
+    aliases/network \
     autoexec/pkg-wrappers \
     logging/pkg-logs \
-    aliases/network \
+    autoexec/pkg-wrappers \
+    logging/pkg-logs \
     overrides/key-bindings \
     aliases/search \
     aliases/filesystem \
@@ -141,7 +143,5 @@ set -g __fish_config_op_registry_values \
     integrations/pkg-upgrade \
     autoexec/telemetry \
     integrations/notifications \
-    autoexec/pkg-wrappers \
-    logging/pkg-logs \
     aliases/network \
     aliases/filesystem

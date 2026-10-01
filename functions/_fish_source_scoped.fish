@@ -19,7 +19,7 @@
 #   Exit status of the sourced file otherwise
 #
 # EXAMPLE
-#   _fish_source_scoped $__fish_config_dir/conf.d/paru-wrapper.fish
+#   _fish_source_scoped $__fish_config_dir/conf.d/pkg-wrappers.fish
 function _fish_source_scoped --argument-names file
     test -f $file; or return 0
     source $file
