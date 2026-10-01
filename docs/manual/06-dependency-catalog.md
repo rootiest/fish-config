@@ -18,7 +18,7 @@ Terminal Emulators tiers.
 | Tool | Description |
 |---|---|
 | `fish` | Fish shell >= 4.0 |
-| `fzf` | Fuzzy finder |
+| `fzf` | Fuzzy finder; >= 0.48 for its key bindings (`fzf-update` installs the latest) |
 
 ## Recommended
 
