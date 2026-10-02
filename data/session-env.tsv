@@ -1,0 +1,80 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Catalog of variables session-env can export to the whole login session
+# through systemd's environment.d. Tab-separated columns:
+#
+#   group  default  name  value  description
+#
+# default 1 means the group is installed when session-env install is given
+# no groups. value is environment.d syntax (${VAR} and ${VAR:-default}
+# expand; "$$" is a literal dollar sign); "-" copies the value fish exports
+# at install time, so redirects config.fish already applies stay in one place.
+# session-env writes each entry as NAME=${NAME:-value}, so a value already in
+# the session wins; a value that references its own name (PATH) is left as
+# is, and a copied "-" value is written as fish's resolved value.
+xdg	1	XDG_CONFIG_HOME	${HOME}/.config	User configuration files (~/.config)
+xdg	1	XDG_DATA_HOME	${HOME}/.local/share	User data files (~/.local/share)
+xdg	1	XDG_STATE_HOME	${HOME}/.local/state	User state such as history and logs (~/.local/state)
+xdg	1	XDG_CACHE_HOME	${HOME}/.cache	Non-essential cached data (~/.cache)
+xdg-tools	0	RANDFILE	-	OpenSSL random seed file, as fish sets it
+xdg-tools	0	WGETRC	-	wget config file, as fish sets it
+xdg-tools	0	WGET_HSTS_FILE	-	wget HSTS database, as fish sets it
+xdg-tools	0	NPM_CONFIG_PREFIX	-	npm global install prefix, as fish sets it
+xdg-tools	0	NPM_CONFIG_USERCONFIG	-	npm user config file, as fish sets it
+xdg-tools	0	ANDROID_USER_HOME	-	Android SDK user data, as fish sets it
+xdg-tools	0	CARGO_HOME	-	Rust cargo home, as fish sets it
+xdg-tools	0	RUSTUP_HOME	-	rustup toolchains, as fish sets it
+xdg-tools	0	GOPATH	-	Go workspace, as fish sets it
+xdg-tools	0	BUN_INSTALL	-	Bun install dir, as fish sets it
+xdg-tools	0	GNUPGHOME	-	GnuPG home, as fish sets it; gpg-agent sockets follow it
+xdg-tools	0	WAKATIME_HOME	-	WakaTime config dir, as fish sets it
+xdg-tools	0	NVIDIA_SETTINGS_RW_CONFIG_FILE	-	nvidia-settings config file, as fish sets it
+xdg-tools	0	CODEIUM_HOME	-	Codeium data dir, as fish sets it
+xdg-tools	0	WORDLIST	-	Spell-check word list, as fish sets it
+xdg-extra	0	DOCKER_CONFIG	${XDG_CONFIG_HOME:-${HOME}/.config}/docker	Docker client config; move ~/.docker first
+xdg-extra	0	GRADLE_USER_HOME	${XDG_DATA_HOME:-${HOME}/.local/share}/gradle	Gradle home; move ~/.gradle first
+xdg-extra	0	GOMODCACHE	${XDG_CACHE_HOME:-${HOME}/.cache}/go/mod	Go module cache
+xdg-extra	0	CUDA_CACHE_PATH	${XDG_CACHE_HOME:-${HOME}/.cache}/nv	CUDA kernel cache; move ~/.nv first
+xdg-extra	0	NUGET_PACKAGES	${XDG_CACHE_HOME:-${HOME}/.cache}/NuGetPackages	NuGet package cache
+xdg-extra	0	PYTHONPYCACHEPREFIX	${XDG_CACHE_HOME:-${HOME}/.cache}/python	Python bytecode cache, out of source trees
+xdg-extra	0	PYTHON_HISTORY	${XDG_STATE_HOME:-${HOME}/.local/state}/python_history	Python 3.13+ REPL history
+xdg-extra	0	NODE_REPL_HISTORY	${XDG_STATE_HOME:-${HOME}/.local/state}/node_repl_history	Node.js REPL history
+xdg-extra	0	SQLITE_HISTORY	${XDG_STATE_HOME:-${HOME}/.local/state}/sqlite_history	sqlite3 shell history
+xdg-extra	0	PARALLEL_HOME	${XDG_CONFIG_HOME:-${HOME}/.config}/parallel	GNU parallel config; move ~/.parallel first
+xdg-extra	0	GTK2_RC_FILES	${XDG_CONFIG_HOME:-${HOME}/.config}/gtk-2.0/gtkrc	GTK 2 theme config
+privacy	0	DO_NOT_TRACK	1	Generic telemetry opt-out; also disables claude-code feature flags
+privacy	0	DISABLE_TELEMETRY	1	Generic telemetry opt-out; also disables claude-code feature flags
+telemetry	0	DOTNET_CLI_TELEMETRY_OPTOUT	1	.NET SDK
+telemetry	0	POWERSHELL_TELEMETRY_OPTOUT	1	PowerShell
+telemetry	0	FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT	1	Azure Functions Core Tools
+telemetry	0	AZURE_CORE_COLLECT_TELEMETRY	0	Azure CLI
+telemetry	0	SAM_CLI_TELEMETRY	0	AWS SAM CLI
+telemetry	0	CHECKPOINT_DISABLE	1	HashiCorp tools (Terraform, Packer, Vagrant)
+telemetry	0	HOMEBREW_NO_ANALYTICS	1	Homebrew / Linuxbrew
+telemetry	0	NEXT_TELEMETRY_DISABLED	1	Next.js
+telemetry	0	NUXT_TELEMETRY_DISABLED	1	Nuxt
+telemetry	0	GATSBY_TELEMETRY_DISABLED	1	Gatsby
+telemetry	0	ASTRO_TELEMETRY_DISABLED	1	Astro
+telemetry	0	STORYBOOK_DISABLE_TELEMETRY	1	Storybook
+telemetry	0	NG_CLI_ANALYTICS	false	Angular CLI
+telemetry	0	TURBO_TELEMETRY_DISABLED	1	Turborepo
+telemetry	0	YARN_ENABLE_TELEMETRY	0	Yarn 2+
+telemetry	0	WRANGLER_SEND_METRICS	false	Cloudflare Wrangler
+telemetry	0	STRIPE_CLI_TELEMETRY_OPTOUT	1	Stripe CLI
+telemetry	0	HF_HUB_DISABLE_TELEMETRY	1	Hugging Face Hub
+telemetry	0	VCPKG_DISABLE_METRICS	1	vcpkg
+telemetry	0	SCARF_ANALYTICS	false	Packages that report through Scarf
+telemetry	0	CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC	1	claude-code; also disables auto-update, feature flags and Remote Control
+editor	0	EDITOR	-	Default editor, as fish sets it
+editor	0	VISUAL	-	Default visual editor, as fish sets it
+editor	0	PAGER	-	Default pager, as fish sets it
+editor	0	MANPAGER	-	man page pager, as fish sets it
+editor	0	BROWSER	-	Default browser command, as fish sets it
+wayland	0	MOZ_ENABLE_WAYLAND	1	Firefox/Thunderbird native Wayland
+wayland	0	ELECTRON_OZONE_PLATFORM_HINT	auto	Electron apps pick Wayland when available
+wayland	0	QT_QPA_PLATFORM	wayland;xcb	Qt prefers Wayland, falls back to X11
+wayland	0	SDL_VIDEODRIVER	wayland,x11	SDL prefers Wayland, falls back to X11
+wayland	0	_JAVA_AWT_WM_NONREPARENTING	1	Fix blank Java windows on non-reparenting compositors
+path	0	PATH	${HOME}/.local/bin:${PATH}	Put ~/.local/bin on PATH for GUI-launched apps
+ssh	0	SSH_AUTH_SOCK	${XDG_RUNTIME_DIR}/ssh-agent.socket	Socket of openssh's systemd ssh-agent.service

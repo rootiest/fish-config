@@ -329,6 +329,19 @@ To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots li
 |---|---|
 | `allow-telemetry.fish` | Wrap one command and remove environment variables (default: `DO_NOT_TRACK`, `DISABLE_TELEMETRY`) from that command's process only |
 
+### Session-wide variables
+
+Variables set in `config.fish` only reach programs started from fish. Apps launched from the desktop (IDEs, the Claude desktop app, systemd user services) never see them. `session-env` writes chosen groups from `data/session-env.tsv` to `~/.config/environment.d/fish-config.conf`, which systemd applies to your whole session at the next login.
+
+| Command | Action |
+|---|---|
+| `session-env install [GROUP...]` | Write the groups; with none, the default `xdg` group (XDG base directories) |
+| `session-env preview [GROUP...]` | Print what `install` would write |
+| `session-env list` | Show every group and variable: `xdg-tools`, `editor`, `privacy`, `telemetry`, `wayland`, and more |
+| `session-env status` / `uninstall` | Show or remove the managed file |
+
+`privacy` is opt-in: claude-code turns off its feature flags (and Remote Control) when `DO_NOT_TRACK` or `DISABLE_TELEMETRY` is set, and a desktop-launched claude has no wrapper to strip them.
+
 ---
 
 ## Minimal Mode
