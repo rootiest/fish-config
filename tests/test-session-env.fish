@@ -72,7 +72,10 @@ if test -x $generator
     session-env install xdg editor path >/dev/null 2>&1
     check "copied value survives systemd unchanged" $EDITOR (_generated EDITOR)
     check "fallback default expands" /home/u/.local/state (_generated XDG_STATE_HOME)
-    check "PATH is extended, not replaced" /home/u/.local/bin:/usr/bin (_generated PATH)
+    # The base PATH is host-dependent (/etc/environment may replace it), so
+    # only the prefix is checked here; the case below pins the ordering.
+    check "PATH gains the ~/.local/bin prefix" true \
+        (string match -q '/home/u/.local/bin:*' -- (_generated PATH); and echo true; or echo false)
     # Ubuntu's /etc/environment (read via 99-environment.conf) sets an
     # absolute PATH; the managed file must sort after it to keep its prefix.
     echo PATH=/sim/bin >$XDG_CONFIG_HOME/environment.d/99-environment.conf
