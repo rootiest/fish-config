@@ -38,6 +38,13 @@
 #   on a feature flag, so the global opt-out otherwise disables it. This
 #   applies even when the C1 wrapper behavior is disabled.
 #
+#   The commands claude runs still get the opt-out: the wrapper points
+#   CLAUDE_CODE_SHELL_PREFIX at scripts/claude-shell-prefix, which puts
+#   both variables back for every Bash tool command. An existing
+#   CLAUDE_CODE_SHELL_PREFIX is left alone, and those commands then run
+#   without the opt-out. Hooks and MCP servers are not covered by the
+#   prefix and run without it either way.
+#
 #   Opinionated component (C1): when disabled via __fish_config_op_aliases
 #   (or the __fish_config_opinionated master), the command is passed through
 #   to the real claude binary unchanged.
@@ -57,6 +64,9 @@ function claude --wraps=claude --description 'claude wrapper: ensures AGENTS/ is
     set -l strip
     if __fish_config_op_enabled config.fish privacy
         set strip -u DO_NOT_TRACK -u DISABLE_TELEMETRY
+        # ...but the commands claude runs should keep the opt-out
+        set -q CLAUDE_CODE_SHELL_PREFIX
+        or set -a strip CLAUDE_CODE_SHELL_PREFIX=$__fish_config_dir/scripts/claude-shell-prefix
     end
 
     if __fish_config_op_enabled (status current-function)
