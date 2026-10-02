@@ -16,8 +16,10 @@
 #   anything launched from the desktop (IDEs, the Claude desktop app,
 #   systemd user services) never sees them. install writes the selected
 #   groups from data/session-env.tsv to
-#   ~/.config/environment.d/10-fish-config.conf, which systemd applies to
-#   the user session at the next login. uninstall removes that file.
+#   ~/.config/environment.d/fish-config.conf, which systemd applies to
+#   the user session at the next login. uninstall removes that file. The
+#   name has no numeric prefix so it sorts after numbered files such as
+#   99-environment.conf (/etc/environment, which may set an absolute PATH).
 #
 #   With no groups, install uses the catalog's default groups (only xdg,
 #   the XDG base directories). Each install replaces the whole file, so
@@ -67,7 +69,7 @@ function session-env --description 'Export fish-config variables to the login se
     set -l catalog $__fish_config_dir/data/session-env.tsv
     set -l config_home $XDG_CONFIG_HOME
     test -n "$config_home"; or set config_home $HOME/.config
-    set -l file $config_home/environment.d/10-fish-config.conf
+    set -l file $config_home/environment.d/fish-config.conf
 
     switch $cmd
         case uninstall

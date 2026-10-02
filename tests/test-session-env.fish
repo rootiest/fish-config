@@ -17,7 +17,7 @@ set -p fish_function_path $repo_root/functions
 mkdir -p $__fish_config_dir
 ln -sfn $repo_root/data $__fish_config_dir/data
 
-set -l file $XDG_CONFIG_HOME/environment.d/10-fish-config.conf
+set -l file $XDG_CONFIG_HOME/environment.d/fish-config.conf
 set -g generator /usr/lib/systemd/user-environment-generators/30-systemd-environment-d-generator
 
 # Print one variable as systemd would export it, given only HOME and PATH.
@@ -73,6 +73,11 @@ if test -x $generator
     check "copied value survives systemd unchanged" $EDITOR (_generated EDITOR)
     check "fallback default expands" /home/u/.local/state (_generated XDG_STATE_HOME)
     check "PATH is extended, not replaced" /home/u/.local/bin:/usr/bin (_generated PATH)
+    # Ubuntu's /etc/environment (read via 99-environment.conf) sets an
+    # absolute PATH; the managed file must sort after it to keep its prefix.
+    echo PATH=/sim/bin >$XDG_CONFIG_HOME/environment.d/99-environment.conf
+    check "PATH prefix survives a numbered file setting PATH" /home/u/.local/bin:/sim/bin (_generated PATH)
+    rm $XDG_CONFIG_HOME/environment.d/99-environment.conf
 end
 
 section "session-env: errors and removal"

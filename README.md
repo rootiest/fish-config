@@ -331,7 +331,7 @@ To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots li
 
 ### Session-wide variables
 
-Variables set in `config.fish` only reach programs started from fish. Apps launched from the desktop (IDEs, the Claude desktop app, systemd user services) never see them. `session-env` writes chosen groups from `data/session-env.tsv` to `~/.config/environment.d/10-fish-config.conf`, which systemd applies to your whole session at the next login.
+Variables set in `config.fish` only reach programs started from fish. Apps launched from the desktop (IDEs, the Claude desktop app, systemd user services) never see them. `session-env` writes chosen groups from `data/session-env.tsv` to `~/.config/environment.d/fish-config.conf`, which systemd applies to your whole session at the next login.
 
 | Command | Action |
 |---|---|

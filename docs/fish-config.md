@@ -1878,8 +1878,10 @@ functions). They are active in all interactive sessions.
     anything launched from the desktop (IDEs, the Claude desktop app,
     systemd user services) never sees them. install writes the selected
     groups from data/session-env.tsv to
-    ~/.config/environment.d/10-fish-config.conf, which systemd applies to
-    the user session at the next login. uninstall removes that file.
+    ~/.config/environment.d/fish-config.conf, which systemd applies to
+    the user session at the next login. uninstall removes that file. The
+    name has no numeric prefix so it sorts after numbered files such as
+    99-environment.conf (/etc/environment, which may set an absolute PATH).
 
     With no groups, install uses the catalog's default groups (only xdg,
     the XDG base directories). Each install replaces the whole file, so
