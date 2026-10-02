@@ -21,7 +21,7 @@ check "privacy variables set" true (test "$DO_NOT_TRACK" = 1 -a "$DISABLE_TELEME
 section "session: functions"
 
 set -l missing
-for f in cat logs config-help fish-deps check_fish_deps config-settings
+for f in cat logs config-help fish-deps config-settings
     functions -q $f; or set -a missing $f
 end
 check "core functions defined" "" "$missing"

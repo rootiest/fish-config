@@ -211,8 +211,8 @@ end
 # contract, where the bare tool is supposed to answer.
 set -g __help_exempt \
     agy antigravity-ide bash cat cdi cffetch cheat claude clone clonet \
-    config-toggle copy docker du dusize fast-cli ffetch gitui gitup jr \
-    joplin less ls mkdir mv paste ping rawfish rg rm search ssh top \
+    copy docker du dusize fast-cli ffetch gitui gitup jr \
+    joplin less ls mkdir mv ping rawfish rg rm search ssh top \
     view yt-dlp
 # EXEMPT-B -- invoked by fish, never typed by a user.
 set -a __help_exempt fish_prompt fish_right_prompt fish_mode_prompt \

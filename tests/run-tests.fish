@@ -27,7 +27,7 @@ set -l overall_failed 0
 # ---- Phase 1: syntax & indent lint ---------------------------------------
 echo "== Syntax & indent lint =="
 set -l lint_files $repo_root/config.fish
-for dir in functions conf.d completions integrations templates tests
+for dir in functions conf.d completions templates tests
     set -a lint_files (find $repo_root/$dir -name '*.fish' | sort)
 end
 
@@ -231,7 +231,7 @@ if test (count $session_suites) -gt 0
     command cp $repo_root/config.fish $sandbox_cfg/
     test -f $repo_root/fish_plugins
     and command cp $repo_root/fish_plugins $sandbox_cfg/
-    for d in functions conf.d completions integrations themes data
+    for d in functions conf.d completions themes data
         test -d $repo_root/$d
         and command cp -r $repo_root/$d $sandbox_cfg/
     end

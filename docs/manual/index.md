@@ -40,7 +40,7 @@ The configuration uses a structured file tree:
     │   ├── key_bindings.fish       Custom key bindings and Vi mode
     │   ├── logging-events.fish     C5 event handlers; syncs logging state
     │   ├── kitty-watcher-reminder.fish  C5 per-session Kitty watcher reminder
-    │   ├── paru-wrapper.fish       Auto-generates paru logging wrapper
+    │   ├── pkg-wrappers.fish       Auto-generates paru/yay logging wrappers
     │   ├── puffer.fish             !! / !$ / ./ expansion
     │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
@@ -49,12 +49,9 @@ The configuration uses a structured file tree:
     │   ├── theme.fish              Catppuccin syntax highlight colors
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
     │   ├── wakatime.fish           WakaTime shell hook
-    │   ├── yay-wrapper.fish        Auto-generates yay logging wrapper
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
     ├── functions/                  Custom functions, one per file
     ├── completions/                Tab completion scripts, autoloaded on demand
-    ├── integrations/
-    │   └── fzf.fish                FZF Catppuccin theme and key bindings
     ├── scripts/
     │   ├── clean_progress_log.py   Strips typescript animations for clean logs
     │   └── agents-tools/           AGENTS.md scripts and git hooks

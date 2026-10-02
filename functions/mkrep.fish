@@ -5,7 +5,7 @@
 #   04-git-and-version-control
 #
 # DEPENDENCIES
-#   _fish_mkdir_p, __fish_palette, _mkrep_say, _mkrep_verbose,
+#   _fish_mkdir_p, __fish_palette, _mkrep_say,
 #   _mkrep_add_origin, _mkrep_default_remote_cmd, _mkrep_remote_url,
 #   _mkrep_repo_exists, git
 #
@@ -297,7 +297,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     set -l orig_pwd $PWD
 
     if test $do_clean -eq 1; and test -d $dir
-        _mkrep_verbose $silent $verbose "$c_dim""Removing existing $dir$c_reset"
+        test $verbose = 1; and _mkrep_say $silent "$c_dim""Removing existing $dir$c_reset"
         rm -rf -- $dir
         or begin
             echo "$c_err""✘$c_reset  Failed to remove existing $c_arg$dir$c_reset" >&2
@@ -346,7 +346,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         set -q _flag_template; and set -a git_init_args --template=$_flag_template
         set -q _flag_branch; and set -a git_init_args -b $_flag_branch
 
-        _mkrep_verbose $silent $verbose "$c_dim""Running: git init $git_init_args$c_reset"
+        test $verbose = 1; and _mkrep_say $silent "$c_dim""Running: git init $git_init_args$c_reset"
         if test $silent -eq 1
             git init $git_init_args >/dev/null 2>&1
         else
@@ -366,7 +366,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     end
 
     if set -q _flag_remote
-        _mkrep_verbose $silent $verbose "$c_dim""Running: git remote add origin $_flag_remote$c_reset"
+        test $verbose = 1; and _mkrep_say $silent "$c_dim""Running: git remote add origin $_flag_remote$c_reset"
         _mkrep_add_origin $silent $_flag_remote
         or begin
             builtin cd $orig_pwd
@@ -388,7 +388,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         set cmd (string replace -a '{name}' $name -- $cmd)
         set cmd (string replace -a '{user}' $USER -- $cmd)
 
-        _mkrep_verbose $silent $verbose "$c_dim""Running: $cmd$c_reset"
+        test $verbose = 1; and _mkrep_say $silent "$c_dim""Running: $cmd$c_reset"
         if test $silent -eq 1
             eval $cmd >/dev/null 2>&1
         else
@@ -457,7 +457,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                     set cmd (string replace -a '{name}' $name -- $cmd)
                     set cmd (string replace -a '{user}' $USER -- $cmd)
 
-                    _mkrep_verbose $silent $verbose "$c_dim""Running: $cmd$c_reset"
+                    test $verbose = 1; and _mkrep_say $silent "$c_dim""Running: $cmd$c_reset"
                     if test $silent -eq 1
                         eval $cmd >/dev/null 2>&1
                     else

@@ -216,17 +216,16 @@ if status is-interactive
     end
 
     #   ──────────────────────── Source FZF integration ────────────────────────
-    #   Prefer fzf's own fish integration (fzf --fish, available since fzf 0.48)
-    #   which is always version-matched to the installed binary. Fall back to our
-    #   bundled integrations/fzf.fish for older builds.
+    #   Use fzf's own fish integration (fzf --fish, available since fzf 0.48),
+    #   which is always version-matched to the installed binary. Older builds
+    #   (e.g. Ubuntu 24.04, Debian 12) get no fzf key bindings, just a hint.
     #   Run `fzf-update` to install/upgrade fzf from git HEAD.
     if type -q fzf
-        set -l _fzf_minor (fzf --version | string match -r '^\d+\.(\d+)')[2]
-        if test -n "$_fzf_minor" -a "$_fzf_minor" -ge 48
-            fzf --fish | source
+        set -l _fzf_ver (fzf --version | string match -r '^(\d+)\.(\d+)')
+        if test -n "$_fzf_ver[1]"; and test "$_fzf_ver[2]" -eq 0 -a "$_fzf_ver[3]" -lt 48
+            echo (set_color yellow)"fzf $_fzf_ver[1] is older than 0.48: fzf key bindings are off. Run `fzf-update` to upgrade."(set_color normal) >&2
         else
-            test -f "$__fish_config_dir/integrations/fzf.fish"
-            and source "$__fish_config_dir/integrations/fzf.fish"
+            fzf --fish | source
         end
     else
         #   conf.d/fzf.fish is managed by Fisher and may be restored on fisher

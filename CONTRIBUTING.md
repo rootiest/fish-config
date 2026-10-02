@@ -278,7 +278,6 @@ completions, and a manual entry gets all three.
 | `Area/Docs` | `docs/manual/` and the generated manual, man page, and site |
 | `Area/Tests` | `tests/` |
 | `Area/CI` | `.github/workflows/` and repository automation |
-| `Area/Integrations` | `integrations/` |
 | `Area/Prompt & Theme` | `themes/` and prompt appearance |
 | `Area/Components` | The opinionated-component system (C1-C6) |
 | `Area/Scripts` | `scripts/` |
@@ -626,7 +625,7 @@ fish tests/run-tests.fish
 Runs before every push and gates the documentation build in CI. Two phases:
 
 1. **Syntax lint** — every tracked `.fish` file (`config.fish`, `functions/`,
-   `conf.d/`, `completions/`, `integrations/`) is checked with `fish -n`.
+   `conf.d/`, `completions/`, `templates/`, `tests/`) is checked with `fish -n`.
 2. **Sandboxed functional checks** — the config is copied into a throwaway
    `HOME`/`XDG_CONFIG_HOME` sandbox (never this checkout itself, since it
    doubles as a real `~/.config/fish`) and loaded as an isolated interactive

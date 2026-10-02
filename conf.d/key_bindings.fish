@@ -63,17 +63,9 @@ function fish_user_key_bindings
 
     #   ───────────────────────────── Set Bindings ─────────────────────────────
     #
-    # Set Emacs mode bindings:
-    bind ctrl-g __insert_previous_path_head
-    bind ctrl-f __interactive_history_sub
-    bind ctrl-alt-u _replace_command_token
-    type -q qalc && bind ctrl-alt-= _qalc_eval
-    bind ctrl-enter _smart_execute
-    bind ctrl-right nextd-or-forward-word
-    bind \e\[1\;5C nextd-or-forward-word
-
-    # Set bindings for all Vi modes:
-    # 'default' is Vi-Command, 'insert' is Vi-Insert, 'visual' is Vi-Visual
+    # Set bindings for Emacs mode and all Vi modes:
+    # 'default' is both Emacs mode and Vi-Command (a mode-less `bind` is
+    # `--mode default`), 'insert' is Vi-Insert, 'visual' is Vi-Visual
     for mode in default insert visual
         bind --mode $mode ctrl-g __insert_previous_path_head
         bind --mode $mode ctrl-f __interactive_history_sub

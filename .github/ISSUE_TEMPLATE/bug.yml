@@ -71,7 +71,6 @@ body:
         - Docs (docs/manual/, man page, docs site)
         - Tests (tests/)
         - CI (.github/workflows/)
-        - Integrations (integrations/)
         - Prompt and theme (themes/)
         - Opinionated components (C1-C6 toggles)
         - Scripts (scripts/)
