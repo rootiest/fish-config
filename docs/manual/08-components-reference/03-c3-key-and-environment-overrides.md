@@ -64,5 +64,7 @@ NOTE:
 The `claude` wrapper removes both variables from the claude process
 only. claude-code turns off feature-flag evaluation when either is set,
 and Remote Control (`/remote-control`, `--remote-control`) depends on a
-feature flag. Every other tool still receives the opt-out.
+feature flag. Commands claude runs through its Bash tool get both
+variables back via `CLAUDE_CODE_SHELL_PREFIX` (unless you set that
+yourself); claude's hooks and MCP servers run without them.
 
