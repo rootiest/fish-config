@@ -1,0 +1,20 @@
+#!/bin/sh
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# CLAUDE_CODE_SHELL_PREFIX helper, set by functions/claude.fish.
+#
+# The claude wrapper strips DO_NOT_TRACK and DISABLE_TELEMETRY from the
+# claude process so its feature flags (and Remote Control) keep working.
+# Without this helper, everything claude runs would inherit that stripped
+# environment too. Claude Code invokes the prefix as `<prefix> <script>`,
+# where <script> is the full command it would otherwise hand to its shell
+# with -c, so this restores the opt-out and runs that script in the same
+# shell claude would have picked ($SHELL when it is zsh or bash, else bash).
+
+export DO_NOT_TRACK=1 DISABLE_TELEMETRY=1
+
+case $SHELL in
+    */zsh | */bash) exec "$SHELL" -c "$@" ;;
+esac
+exec bash -c "$@"

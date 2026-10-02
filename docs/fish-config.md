@@ -2939,6 +2939,13 @@ functions). They are active in all interactive sessions.
     on a feature flag, so the global opt-out otherwise disables it. This
     applies even when the C1 wrapper behavior is disabled.
 
+    The commands claude runs still get the opt-out: the wrapper points
+    CLAUDE_CODE_SHELL_PREFIX at scripts/claude-shell-prefix, which puts
+    both variables back for every Bash tool command. An existing
+    CLAUDE_CODE_SHELL_PREFIX is left alone, and those commands then run
+    without the opt-out. Hooks and MCP servers are not covered by the
+    prefix and run without it either way.
+
     Opinionated component (C1): when disabled via __fish_config_op_aliases
     (or the __fish_config_opinionated master), the command is passed through
     to the real claude binary unchanged.
@@ -4457,7 +4464,9 @@ NOTE:
 The `claude` wrapper removes both variables from the `claude` process
 only. claude-code turns off feature-flag evaluation when either is set,
 and Remote Control (`/remote-control`, `--remote-control`) depends on a
-feature flag. Every other tool still receives the opt-out.
+feature flag. Commands `claude` runs through its Bash tool get both
+variables back via `CLAUDE_CODE_SHELL_PREFIX` (unless you set that
+yourself); `claude`'s hooks and MCP servers run without them.
 
 ## C4 — Terminal and Tool Integration
 
