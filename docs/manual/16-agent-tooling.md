@@ -350,13 +350,31 @@ the marker — a way to opt a project out in advance.
 
 ### Undoing a cleanup
 
+From the project root:
+
+    rm -f .agents-disabled
     git clone ~/.local/state/agents-cleanup/<slug>-<stamp>.bundle AGENTS
+    git -C AGENTS remote remove origin
+    rm AGENTS.md    # and every other path the cleanup reported as "Restored"
     agents-init --enable
 
-`agents-init --enable` clears the git key and scaffolds as usual,
-re-linking the files restored from the bundle. It refuses while
-`.agents-disabled` exists: that file is a decision shared with every
-clone, so delete it (and commit the deletion) by hand.
+The steps work the same inside and outside a git repository:
+
+- `.agents-disabled` has to go first: `agents-init --enable` refuses while
+  it exists, because that file is a decision shared with every clone. If
+  it was committed, commit the deletion too.
+- The clone's `origin` points at the bundle file. The archived repository
+  had no such remote, and nothing pushes or pulls `AGENTS/`, so it is only
+  a dead pointer.
+- The files the cleanup put back in place of links are now real files,
+  and `agents-init` will not replace a real file that differs from its
+  `AGENTS/` copy: it leaves both and warns. A restored `AGENTS.md` always
+  differs, since the cleanup stripped its SYSTEM DIRECTIVE blockquote.
+  The bundle holds the content as it was at cleanup time, so delete the
+  restored copies. Move over any edits you made to them since the cleanup
+  first.
+- `agents-init --enable` clears the git key, if one is set, and scaffolds
+  as usual, re-creating the links.
 
 
 ## The launch lifecycle
