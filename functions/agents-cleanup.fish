@@ -77,9 +77,13 @@
 #   agents-cleanup --marker-file
 #
 # NOTES
-#   Restore an archived AGENTS/ with: git clone <bundle> AGENTS, then
-#   agents-init --enable. The full write-up -- what is kept, what is
-#   removed, and how the markers interact -- is in
+#   Restore an archived AGENTS/ from the project root: delete
+#   .agents-disabled if present, git clone <bundle> AGENTS, drop the clone's
+#   origin (git -C AGENTS remote remove origin), delete every path the
+#   cleanup reported as "Restored" -- agents-init will not replace a real
+#   file that differs from its AGENTS/ copy, and a restored AGENTS.md always
+#   differs -- then agents-init --enable. The full write-up -- what is
+#   kept, what is removed, and how the markers interact -- is in
 #   docs/manual/16-agent-tooling.md. Update that section in the same
 #   change whenever this function's behavior changes.
 function agents-cleanup --description 'undo agents-init: restore real files, archive and remove AGENTS/, disable agents-init'
