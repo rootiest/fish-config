@@ -3059,9 +3059,13 @@ Exit Status:
      failed
 
 Notes:
-  Restore an archived AGENTS/ with: git clone <bundle> AGENTS, then
-  agents-init --enable. The full write-up -- what is kept, what is
-  removed, and how the markers interact -- is in
+  Restore an archived AGENTS/ from the project root: delete
+  .agents-disabled if present, git clone <bundle> AGENTS, drop the clone\[aq]s
+  origin (git -C AGENTS remote remove origin), delete every path the
+  cleanup reported as \[dq]Restored\[dq] -- agents-init will not replace a real
+  file that differs from its AGENTS/ copy, and a restored AGENTS.md always
+  differs -- then agents-init --enable. The full write-up -- what is
+  kept, what is removed, and how the markers interact -- is in
   docs/manual/16-agent-tooling.md. Update that section in the same
   change whenever this function\[aq]s behavior changes.
 
@@ -6998,19 +7002,41 @@ Outside a git repository it is the only marker available, so there
 Running \f[V]agents-cleanup\f[R] in a project that was never scaffolded
 only sets the marker \[em] a way to opt a project out in advance.
 .SS Undoing a cleanup
+.PP
+From the project root:
 .IP
 .nf
 \f[C]
+rm -f .agents-disabled
 git clone \[ti]/.local/state/agents-cleanup/<slug>-<stamp>.bundle AGENTS
+git -C AGENTS remote remove origin
+rm AGENTS.md    # and every other path the cleanup reported as \[dq]Restored\[dq]
 agents-init --enable
 \f[R]
 .fi
 .PP
-\f[V]agents-init --enable\f[R] clears the git key and scaffolds as
-usual, re-linking the files restored from the bundle.
-It refuses while \f[V].agents-disabled\f[R] exists: that file is a
-decision shared with every clone, so delete it (and commit the deletion)
-by hand.
+The steps work the same inside and outside a git repository:
+.IP \[bu] 2
+\f[V].agents-disabled\f[R] has to go first:
+\f[V]agents-init --enable\f[R] refuses while it exists, because that
+file is a decision shared with every clone.
+If it was committed, commit the deletion too.
+.IP \[bu] 2
+The clone\[cq]s \f[V]origin\f[R] points at the bundle file.
+The archived repository had no such remote, and nothing pushes or pulls
+\f[V]AGENTS/\f[R], so it is only a dead pointer.
+.IP \[bu] 2
+The files the cleanup put back in place of links are now real files, and
+\f[V]agents-init\f[R] will not replace a real file that differs from its
+\f[V]AGENTS/\f[R] copy: it leaves both and warns.
+A restored \f[V]AGENTS.md\f[R] always differs, since the cleanup
+stripped its SYSTEM DIRECTIVE blockquote.
+The bundle holds the content as it was at cleanup time, so delete the
+restored copies.
+Move over any edits you made to them since the cleanup first.
+.IP \[bu] 2
+\f[V]agents-init --enable\f[R] clears the git key, if one is set, and
+scaffolds as usual, re-creating the links.
 .SS The launch lifecycle
 .PP
 The \f[V]claude\f[R] and \f[V]agy\f[R] wrapper functions each run
