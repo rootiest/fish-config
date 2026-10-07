@@ -45,14 +45,46 @@ check "8-char secret ignored" 1 $status
 sponge_filter_secrets "echo short"
 check "short secret ignored" 1 $status
 
-# Path-like secret (starts with / or ~) -> ignored, returns 1 (kept)
-set -gx SECRET_FILE_PATH "/home/rootiest/.token"
-set -gx HOME_SECRET_PATH "~/secrets/token.txt"
-sponge_filter_secrets "cat /home/rootiest/.token"
-check "path-like secret starting with / ignored" 1 $status
+# Path-valued secrets: skipped only when the value really is an existing
+# filesystem path (#221). Real files/dirs, never made-up paths.
+set -l sf_dir (mktemp -d)
+echo x >$sf_dir/token-file.txt
+set -gx SECRET_FILE_PATH "$sf_dir/token-file.txt"
+set -gx DIR_SECRET_PATH "$sf_dir"
+sponge_filter_secrets "cat $sf_dir/token-file.txt"
+check "existing absolute path value ignored" 1 $status
+sponge_filter_secrets "ls $sf_dir"
+check "existing directory value ignored" 1 $status
 
-sponge_filter_secrets "source ~/secrets/token.txt"
-check "path-like secret starting with ~ ignored" 1 $status
+# A leading ~/ is expanded against $HOME before the existence test.
+set -l sf_home $HOME
+set -gx HOME $sf_dir
+set -gx HOME_SECRET_PATH "~/token-file.txt"
+sponge_filter_secrets "source ~/token-file.txt"
+check "existing ~/ path value ignored" 1 $status
+set -gx HOME $sf_home
+set -e HOME_SECRET_PATH SECRET_FILE_PATH DIR_SECRET_PATH
+
+# Non-existent values that merely start with / or ~ are real credentials.
+set -gx PW_PASSWORD '~s3cretValue!'
+sponge_filter_secrets "login ~s3cretValue!"
+check "~-prefixed password filtered" 0 $status
+set -gx PW_PASSWORD '/s3cretValue!xyz'
+sponge_filter_secrets "login /s3cretValue!xyz"
+check "/-prefixed password filtered" 0 $status
+set -e PW_PASSWORD
+
+# List-valued sensitive variable: no error output, every element is checked.
+set -gx A_LIST_TOKEN first_value_123 second_value_456
+set -l list_out (sponge_filter_secrets "echo hi" 2>&1)
+check "list var: no error output" "" "$list_out"
+sponge_filter_secrets "echo hi" 2>/dev/null
+check "list var: unrelated command retained" 1 $status
+sponge_filter_secrets "use first_value_123 now"
+check "list var: first element filtered" 0 $status
+sponge_filter_secrets "use second_value_456 now"
+check "list var: later element filtered" 0 $status
+set -e A_LIST_TOKEN
 
 # Empty or unset variable -> handled without error, returns 1
 set -gx DUMMY_API_KEY ""
@@ -66,8 +98,73 @@ set -e KOPIA_PASSWORD
 set -e SHORT_API_KEY
 set -e SHORT_SECRET
 set -e SECRET_FILE_PATH
-set -e HOME_SECRET_PATH
 set -e DUMMY_API_KEY
+command rm -rf $sf_dir
+
+# =============================================================================
+# 1b. conf.d/sponge_privacy.fish: Layer 1 patterns and Layer 2 registration
+# =============================================================================
+section sponge_privacy
+
+# Run the conf.d file in a throwaway interactive fish (XDG_CONFIG_HOME is already
+# a scratch dir in isolated suites, so its `set -U` writes cannot reach the real
+# universals), fire the one-shot fish_prompt registration, then report MATCH or
+# NOMATCH per command: does any registered pattern match it? $argv[1] is a
+# fragment of setup code (made-up credentials only); the rest are commands.
+function __sponge_probe --argument-names setup
+    set -l body "
+        set -g sponge_version 1
+        set -g sponge_regex_patterns
+        set -g sponge_filters
+        $setup
+        source $repo_root/conf.d/sponge_privacy.fish
+        emit fish_prompt
+        for c in \$argv
+            set -l hit NOMATCH
+            for p in \$sponge_regex_patterns
+                if string match --quiet --regex -- \$p \$c
+                    set hit MATCH
+                    break
+                end
+            end
+            echo \$hit
+        end"
+    fish --no-config --interactive -c $body -- $argv[2..] 2>&1
+end
+
+set -l sp_dir (mktemp -d)
+echo x >$sp_dir/token-file.txt
+
+# Layer 2: dynamic values from exported credential variables.
+set -l got (__sponge_probe "set -gx PW_PASSWORD '~s3cretValue!'; set -gx LIST_TOKEN first_value_123 second_value_456; set -gx FILE_SECRET_PATH $sp_dir/token-file.txt" \
+    "login ~s3cretValue!" "use first_value_123" "use second_value_456" "cat $sp_dir/token-file.txt" "echo hello")
+check "layer 2: ~-prefixed password registered" MATCH $got[1]
+check "layer 2: list var first element registered" MATCH $got[2]
+check "layer 2: list var later element registered" MATCH $got[3]
+check "layer 2: existing path value not registered" NOMATCH $got[4]
+check "layer 2: unrelated command not matched" NOMATCH $got[5]
+check "layer 2: no stray output with list var" 5 (count $got)
+
+set -l got (__sponge_probe "set -gx SL_SECRET '/s3cretValue!xyz'" "login /s3cretValue!xyz")
+check "layer 2: /-prefixed password registered" MATCH $got[1]
+command rm -rf $sp_dir
+
+# Layer 1: static patterns (#221 finding c).
+set -l got (__sponge_probe "" \
+    "git clone https://ghp_abcdefghij0123456789@github.com/o/r.git" \
+    "git clone https://user@github.com/o/r.git" \
+    "curl -H 'X-API-Key: abcd1234' https://example.com" \
+    "curl -H 'AUTHORIZATION: Bearer abcd1234' https://example.com" \
+    "curl -H 'Authorization: Bearer abcd1234' https://example.com" \
+    "git status")
+check "pattern: token-only URL userinfo" MATCH $got[1]
+check "pattern: short username-only URL not matched" NOMATCH $got[2]
+check "pattern: X-API-Key header" MATCH $got[3]
+check "pattern: uppercase AUTHORIZATION header" MATCH $got[4]
+check "pattern: Authorization header still matched" MATCH $got[5]
+check "pattern: clean command not matched" NOMATCH $got[6]
+
+functions -e __sponge_probe
 
 # =============================================================================
 # 2. _fish_mkdir_p: Directory Creation with Feedback
