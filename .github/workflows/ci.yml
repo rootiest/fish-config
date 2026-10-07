@@ -50,6 +50,10 @@ jobs:
       github.server_url != 'https://github.com' &&
       (github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'test')
     runs-on: racknerd-mini
+    # Prebuilt image (fish 4.x, pandoc, node 24, ...) from the fish-config-ci
+    # repo: replaces the per-run apt/PPA install steps.
+    container:
+      image: git.rootiest.dev/rootiest/fish-ci:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -88,24 +92,6 @@ jobs:
             echo "run=false" >>"$GITHUB_OUTPUT"
           fi
 
-      - name: Install fish
-        if: steps.relevance.outputs.run == 'true'
-        run: |
-          sudo apt-get -o Acquire::Retries=3 update -qq
-          # apt-utils, so debconf has a target for the "delaying package
-          # configuration" notice's OWN follow-up run (irrelevant to
-          # anything else in this job). That notice still fires exactly
-          # once here regardless -- verified live against two orderings
-          # (bundled with another package, and installed fully alone,
-          # first) -- because it fires *during* apt-utils' own first
-          # install, before debconf considers it "installed". Nothing
-          # this workflow controls can pre-seed that; accepted as
-          # unavoidable, same as the runs-on/checkout hint noise below.
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y apt-utils software-properties-common
-          sudo add-apt-repository -y ppa:fish-shell/release-4
-          sudo apt-get -o Acquire::Retries=3 update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y fish
-
       - name: Run fish config tests
         if: steps.relevance.outputs.run == 'true'
         run: fish tests/run-tests.fish
@@ -129,10 +115,14 @@ jobs:
       github.server_url != 'https://github.com' &&
       (github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'docs')
     runs-on: racknerd-mini
+    # Prebuilt image (fish 4.x, pandoc, node 24, ...) from the fish-config-ci
+    # repo: replaces the per-run apt/PPA install steps.
+    container:
+      image: git.rootiest.dev/rootiest/fish-ci:latest
     env:
       # Silences Node's internal "punycode module is deprecated" notice
       # (astro's toolchain still requires it transitively) on every node
-      # invocation in this job, setup-node's own included.
+      # invocation in this job.
       NODE_OPTIONS: --no-deprecation
     steps:
       - name: Checkout
@@ -173,18 +163,6 @@ jobs:
             echo "run=false" >>"$GITHUB_OUTPUT"
           fi
 
-      - name: Install dependencies
-        if: steps.relevance.outputs.run == 'true'
-        run: |
-          sudo apt-get -o Acquire::Retries=3 update -qq
-          # apt-utils: see the "Install fish" step's identical comment in
-          # the test job for why its own debconf notice is accepted, not
-          # chased further.
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y apt-utils software-properties-common
-          sudo add-apt-repository -y ppa:fish-shell/release-4
-          sudo apt-get -o Acquire::Retries=3 update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y pandoc python3-yaml fish
-
       - name: Generate concatenated markdown
         if: steps.relevance.outputs.run == 'true'
         run: python3 docs/build-manual.py --concat -o docs/fish-config.md
@@ -219,12 +197,6 @@ jobs:
       # generated files straight to the checked-out branch. Never runs
       # from a pull_request -- PR content isn't main yet, and a
       # fork/branch push shouldn't touch prod.
-      - name: Set up Node
-        if: github.event_name != 'pull_request'
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
       - name: Generate site content
         if: github.event_name != 'pull_request'
         run: python3 docs/build-manual.py --site
@@ -268,7 +240,7 @@ jobs:
           chmod 700 "$GNUPGHOME"
           echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
           echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
-          command -v gpg >/dev/null || sudo apt-get install -y --no-install-recommends gnupg
+          command -v gpg >/dev/null || { echo "gpg missing from the CI image" >&2; exit 1; }
           echo "$BOT_GPG_KEY" | base64 -d | gpg --batch --quiet --import
           git config user.name  "Gitea Actions Bot"
           git config user.email "fishconfig-bot@git.rootiest.dev"
