@@ -907,7 +907,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Files created
-      1  No file argument provided
+      2  No file argument provided
 
     Example:
     poke ~/projects/new/src/main.fish
@@ -986,7 +986,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Sweep completed (or dry run shown)
-      1  fd not found, or unknown argument provided
+      1  fd not found
+      2  Unknown argument
 
     Example:
     scrub
@@ -1083,7 +1084,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Editor launched successfully
-      1  Conflicting flags, no editor found, or clipboard read failed
+      1  No editor found, or clipboard read failed
+      2  Unknown option, or conflicting flags
 
     Example:
     edit notes.txt
@@ -1299,6 +1301,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Patterns appended, or resolved with -o/--stdout or -l/--list
       1  Not in a git repository or API fetch failed
+      2  Unknown option
 
     Returns:
       With -o/--stdout, the fetched .gitignore pattern text, printed to stdout.
@@ -1329,7 +1332,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Cleanup complete
-      1  Argument parsing failed, or an orphaned branch could not be deleted
+      1  An orphaned branch could not be deleted
+      2  Unknown option
 
     Example:
     git-clean --force
@@ -1368,6 +1372,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Clean, or a prompt/force run was handled
       1  Not a git repository, or (-w only) unconfirmed matches were found
+      2  Unknown option, or more than one of -w, -f and -i
 
     Example:
     gitignore-scrub
@@ -1436,6 +1441,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Command selected and inserted, or fzf was cancelled
       1  Disabled by __fish_config_op_integrations
+      2  Unexpected argument (takes none)
 
     Example:
     hist
@@ -1557,7 +1563,9 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  All requested steps completed, or a $GIT_SERVER remote-create was
          declined at the prompt (the local repo is still set up)
-      1  Bad arguments, or a step (mkdir, cd, git init, remote) failed
+      1  A step (mkdir, cd, git init, remote) failed
+      2  Bad arguments: unknown option, not exactly one directory,
+         conflicting flags, or an unknown --server type
 
     Example:
     mkrep ~/projects/my-new-repo
@@ -1601,6 +1609,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0        No orphans found, or orphans removed successfully
+      2        Unexpected argument (takes none)
       Nonzero  sudo pacman -Rns failed
 
     Example:
@@ -1621,6 +1630,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Packages removed or none selected
       1  No AUR helper (paru or yay) found
+      2  Unexpected argument (takes none)
 
     Example:
     parur
@@ -1654,7 +1664,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Operation completed
-      1  No supported package manager found, unknown flag, or package operation failed
+      1  No supported package manager found, or package operation failed
+      2  Unknown flag
 
     Example:
     pkg firefox
@@ -1696,6 +1707,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Upgrade completed successfully
       1  No AUR helper (paru or yay) found
+      2  Unexpected argument (takes none)
 
     Example:
     upgrade
@@ -1772,6 +1784,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0        fzf installed or updated successfully
+      2        Unexpected argument (takes none)
       Nonzero  git or the fzf install script failed
 
     Example:
@@ -1793,7 +1806,8 @@ functions). They are active in all interactive sessions.
     command.
 
     Exit Status:
-      0  Always (individual step failures are not propagated)
+      0  Individual step failures are not propagated
+      2  Unexpected argument (takes none)
 
     Example:
     limine-edit
@@ -1808,6 +1822,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       1  loginctl is not installed
+      2  Unexpected argument (takes none)
       *  Exit status of loginctl lock-session otherwise
 
     Example:
@@ -1824,6 +1839,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       1  lsof is not installed
+      2  Unexpected argument (takes none)
       *  Exit status of lsof otherwise
 
     Example:
@@ -1846,6 +1862,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  All binaries verified (or summary shown)
       1  sbctl is not installed
+      2  Any argument other than --brief
 
     Example:
     sbver
@@ -1864,6 +1881,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       1  busctl is not installed
+      2  Unexpected argument (takes none)
       *  Exit status of busctl otherwise
 
     Example:
@@ -1925,6 +1943,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Rule toggled
+      2  Unexpected argument (takes none)
 
     Example:
     sudo-toggle
@@ -1938,7 +1957,8 @@ functions). They are active in all interactive sessions.
     active swap priority (via swapon).
 
     Exit Status:
-      0  Always
+      0  Report shown
+      2  Unexpected argument (takes none)
 
     Example:
     swapstat
@@ -1976,7 +1996,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Command launched successfully
-      1  No command provided
+      1  nohup is not installed
+      2  No command provided
 
     Example:
     bkg firefox
@@ -2001,7 +2022,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Command launched or help/version shown
-      1  No command provided or unknown option
+      1  nohup is not installed
+      2  No command provided, or unknown option
 
     Example:
     detach rsync -a ./data remote:/backup/
@@ -2281,7 +2303,8 @@ functions). They are active in all interactive sessions.
     icanhazip.com. Shows "Not detected" for any address that times out.
 
     Exit Status:
-      0  Always (network failures print "Not detected" instead of failing)
+      0  Network failures print "Not detected" instead of failing
+      2  Unexpected argument (takes none)
 
     Example:
     gip
@@ -2297,7 +2320,8 @@ functions). They are active in all interactive sessions.
     Fetches and prints the machine's public IPv4 address using icanhazip.com.
 
     Exit Status:
-      Exit status of curl
+      2  Unexpected argument (takes none)
+      *  Exit status of curl otherwise
 
     Example:
     gip4
@@ -2316,6 +2340,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  IPv6 address resolved
       1  IPv6 unavailable or not supported on this network
+      2  Unexpected argument (takes none)
 
     Returns:
       The machine's public IPv6 address, printed to stdout
@@ -2395,6 +2420,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  File viewed or no file selected
       1  No log files found
+      2  Unknown option
 
     Example:
     logs -c paru
@@ -2420,7 +2446,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Shell session exited
-      1  Argument parsing failed
+      2  Unknown option
 
     Notes:
       The exit builtin is wired to smart_exit for interactive sessions. Typing
@@ -2533,6 +2559,7 @@ functions). They are active in all interactive sessions.
       1  Refused (outside git without --marker-file, unresolved rebase in
          AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
          failed
+      2  Unknown option
 
     Notes:
       Restore an archived AGENTS/ from the project root: delete
@@ -2688,7 +2715,8 @@ functions). They are active in all interactive sessions.
       1  Fatal error (git init failed, move failed, the AGENTS/ commit was
          rejected, or an unresolved rebase blocked it), --enable refused
          because .agents-disabled exists, a migration precondition failed,
-         --private given for a public project, or both mode flags given
+         or --private given for a public project
+      2  Unknown option, or both --public and --private given
 
     Notes:
       This header covers usage only. The full concept/behavior/purpose
@@ -2818,8 +2846,8 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Completed successfully
       1  Fatal error (vault unavailable, git failure, ambiguous migration,
-         invalid --adopt slug, nothing committed, or a push that did not
-         reach the remote)
+         nothing committed, or a push that did not reach the remote)
+      2  Unknown option, --remote without a URL, or an invalid --adopt slug
 
     Returns:
       --status prints its report on stdout: the vault path, the remote and
@@ -3024,7 +3052,8 @@ functions). They are active in all interactive sessions.
     obsolete content.
 
     Exit Status:
-      Exit status of the claude invocation
+      2  Unexpected argument (takes none)
+      *  Exit status of the claude invocation otherwise
 
     Example:
     claude-docs
@@ -3040,7 +3069,8 @@ functions). They are active in all interactive sessions.
     pull request with a manual verification checklist.
 
     Exit Status:
-      Exit status of the claude invocation
+      2  Unexpected argument (takes none)
+      *  Exit status of the claude invocation otherwise
 
     Example:
     claude-pr
@@ -3167,6 +3197,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Conversion complete
       1  File not found, missing dependency, or encode step failed
+      2  Unknown option
 
     Example:
     dng2avif photo.dng
@@ -3252,6 +3283,7 @@ functions). They are active in all interactive sessions.
       0  Player launched (or the picker was cancelled)
       1  No media files found, invalid --player/$play_media_player, or no
          player found
+      2  Unknown option
 
     Example:
     play-media
@@ -3288,6 +3320,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       1  systemd-inhibit or steam is not installed
+      2  Unexpected argument (takes none)
       *  Exit status of steam (via systemd-inhibit) otherwise
 
     Example:
@@ -3351,7 +3384,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Issues linked and synced (or no unlinked issues found)
-      1  Missing required argument or environment variables
+      1  GITEA_TOKEN or GITEA_URL not set
+      2  Missing repository argument
 
     Example:
     bd-pull myuser/myproject
@@ -3424,6 +3458,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Manual displayed
       1  Documentation file not found, or required tool not available
+      2  Unknown option
 
     Returns:
       With -h/--help, the usage and navigation reference, printed to stdout.
@@ -3515,7 +3550,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Exited normally
-      1  Unknown flag, no TTY, or python3/curses unavailable
+      1  No TTY, or python3/curses unavailable
+      2  Unknown flag
 
     Example:
     config-settings
@@ -3541,6 +3577,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Config updated (or already up to date)
       1  Update failed (network error, merge conflict, or not a git repo)
+      2  Unknown option
 
     Example:
     config-update
@@ -3610,7 +3647,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Bindings installed or help shown
-      22 Invalid option or positional argument provided
+      2  Invalid option or positional argument provided
 
     Example:
     fzf_configure_bindings --history=ctrl-h
@@ -3683,6 +3720,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       1  docker or lazydocker is not installed
+      2  Unexpected argument (takes none)
 
     Example:
     ld
@@ -3717,7 +3755,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Browser launched
-      1  No URL given, invalid $BROWSER, or no browser found
+      1  Invalid $BROWSER, or no browser found
+      2  Unknown option, or no URL given
 
     Notes:
       Typo abbreviation: url-open (expands to open-url on space/enter).
@@ -3753,7 +3792,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  String generated successfully
-      1  Unknown category or missing word list file
+      1  Word lists directory not found
+      2  Unknown category
 
     Notes:
       Falls back to random choice if GNU shuf is missing, but shuf is
@@ -3822,6 +3862,7 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  URL opened, or resolved with -p/--print
       1  Not a git repo, no origin remote, or browser launch failed
+      2  Unknown option, or an unexpected argument
 
     Returns:
       With -p/--print, the resolved repository URL, printed to stdout
@@ -3844,7 +3885,8 @@ functions). They are active in all interactive sessions.
     attached sessions running.
 
     Exit Status:
-      0  Always
+      0  Detached sessions killed, or none found
+      2  Unexpected argument (takes none)
 
     Example:
     tmux-clean
@@ -3864,7 +3906,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Command ran and completed
-      1  No command provided, or systemd-inhibit is not installed
+      1  systemd-inhibit is not installed
+      2  No command provided
 
     Example:
     wake-lock rsync -avz src/ dest/

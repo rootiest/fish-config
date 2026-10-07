@@ -1257,7 +1257,7 @@ Arguments:
 
 Exit Status:
   0  Files created
-  1  No file argument provided
+  2  No file argument provided
 
 Example:
 poke \[ti]/projects/new/src/main.fish
@@ -1346,7 +1346,8 @@ Arguments:
 
 Exit Status:
   0  Sweep completed (or dry run shown)
-  1  fd not found, or unknown argument provided
+  1  fd not found
+  2  Unknown argument
 
 Example:
 scrub
@@ -1454,7 +1455,8 @@ Arguments:
 
 Exit Status:
   0  Editor launched successfully
-  1  Conflicting flags, no editor found, or clipboard read failed
+  1  No editor found, or clipboard read failed
+  2  Unknown option, or conflicting flags
 
 Example:
 edit notes.txt
@@ -1695,6 +1697,7 @@ Arguments:
 Exit Status:
   0  Patterns appended, or resolved with -o/--stdout or -l/--list
   1  Not in a git repository or API fetch failed
+  2  Unknown option
 
 Returns:
   With -o/--stdout, the fetched .gitignore pattern text, printed to stdout.
@@ -1730,7 +1733,8 @@ Arguments:
 
 Exit Status:
   0  Cleanup complete
-  1  Argument parsing failed, or an orphaned branch could not be deleted
+  1  An orphaned branch could not be deleted
+  2  Unknown option
 
 Example:
 git-clean --force
@@ -1772,6 +1776,7 @@ Arguments:
 Exit Status:
   0  Clean, or a prompt/force run was handled
   1  Not a git repository, or (-w only) unconfirmed matches were found
+  2  Unknown option, or more than one of -w, -f and -i
 
 Example:
 gitignore-scrub
@@ -1849,6 +1854,7 @@ or win32yank (WSL2).
 Exit Status:
   0  Command selected and inserted, or fzf was cancelled
   1  Disabled by __fish_config_op_integrations
+  2  Unexpected argument (takes none)
 
 Example:
 hist
@@ -1973,7 +1979,9 @@ Arguments:
 Exit Status:
   0  All requested steps completed, or a $GIT_SERVER remote-create was
      declined at the prompt (the local repo is still set up)
-  1  Bad arguments, or a step (mkdir, cd, git init, remote) failed
+  1  A step (mkdir, cd, git init, remote) failed
+  2  Bad arguments: unknown option, not exactly one directory,
+     conflicting flags, or an unknown --server type
 
 Example:
 mkrep \[ti]/projects/my-new-repo
@@ -2023,6 +2031,7 @@ package names and versions to \[ti]/.removed_orphans before removal.
 
 Exit Status:
   0        No orphans found, or orphans removed successfully
+  2        Unexpected argument (takes none)
   Nonzero  sudo pacman -Rns failed
 
 Example:
@@ -2046,6 +2055,7 @@ Arch Linux only.
 Exit Status:
   0  Packages removed or none selected
   1  No AUR helper (paru or yay) found
+  2  Unexpected argument (takes none)
 
 Example:
 parur
@@ -2083,7 +2093,8 @@ Arguments:
 
 Exit Status:
   0  Operation completed
-  1  No supported package manager found, unknown flag, or package operation failed
+  1  No supported package manager found, or package operation failed
+  2  Unknown flag
 
 Example:
 pkg firefox
@@ -2132,6 +2143,7 @@ back to yay if paru is not installed. Arch Linux only.
 Exit Status:
   0  Upgrade completed successfully
   1  No AUR helper (paru or yay) found
+  2  Unexpected argument (takes none)
 
 Example:
 upgrade
@@ -2214,6 +2226,7 @@ changes if \[ti]/.fzf already exists, or clones the repository if not.
 
 Exit Status:
   0        fzf installed or updated successfully
+  2        Unexpected argument (takes none)
   Nonzero  git or the fzf install script failed
 
 Example:
@@ -2237,7 +2250,8 @@ files tracked by sbctl. Combines the edit and sign steps into a single
 command.
 
 Exit Status:
-  0  Always (individual step failures are not propagated)
+  0  Individual step failures are not propagated
+  2  Unexpected argument (takes none)
 
 Example:
 limine-edit
@@ -2255,6 +2269,7 @@ Locks the current desktop session using loginctl lock-session.
 
 Exit Status:
   1  loginctl is not installed
+  2  Unexpected argument (takes none)
   *  Exit status of loginctl lock-session otherwise
 
 Example:
@@ -2274,6 +2289,7 @@ port numbers and addresses without hostname resolution.
 
 Exit Status:
   1  lsof is not installed
+  2  Unexpected argument (takes none)
   *  Exit status of lsof otherwise
 
 Example:
@@ -2299,6 +2315,7 @@ Arguments:
 Exit Status:
   0  All binaries verified (or summary shown)
   1  sbctl is not installed
+  2  Any argument other than --brief
 
 Example:
 sbver
@@ -2320,6 +2337,7 @@ PowerDevil \[dq]Turn Off Screen\[dq] global shortcut via busctl.
 
 Exit Status:
   1  busctl is not installed
+  2  Unexpected argument (takes none)
   *  Exit status of busctl otherwise
 
 Example:
@@ -2387,6 +2405,7 @@ when re-enabling, so the lockdown takes effect immediately.
 
 Exit Status:
   0  Rule toggled
+  2  Unexpected argument (takes none)
 
 Example:
 sudo-toggle
@@ -2403,7 +2422,8 @@ zRAM compression ratio, zRAM device details (via zramctl), and
 active swap priority (via swapon).
 
 Exit Status:
-  0  Always
+  0  Report shown
+  2  Unexpected argument (takes none)
 
 Example:
 swapstat
@@ -2446,7 +2466,8 @@ Arguments:
 
 Exit Status:
   0  Command launched successfully
-  1  No command provided
+  1  nohup is not installed
+  2  No command provided
 
 Example:
 bkg firefox
@@ -2474,7 +2495,8 @@ Arguments:
 
 Exit Status:
   0  Command launched or help/version shown
-  1  No command provided or unknown option
+  1  nohup is not installed
+  2  No command provided, or unknown option
 
 Example:
 detach rsync -a ./data remote:/backup/
@@ -2794,7 +2816,8 @@ Fetches and prints both the public IPv4 and IPv6 addresses using
 icanhazip.com. Shows \[dq]Not detected\[dq] for any address that times out.
 
 Exit Status:
-  0  Always (network failures print \[dq]Not detected\[dq] instead of failing)
+  0  Network failures print \[dq]Not detected\[dq] instead of failing
+  2  Unexpected argument (takes none)
 
 Example:
 gip
@@ -2813,7 +2836,8 @@ Synopsis:  gip4
 Fetches and prints the machine\[aq]s public IPv4 address using icanhazip.com.
 
 Exit Status:
-  Exit status of curl
+  2  Unexpected argument (takes none)
+  *  Exit status of curl otherwise
 
 Example:
 gip4
@@ -2835,6 +2859,7 @@ Prints an error message if IPv6 is unavailable on the current network.
 Exit Status:
   0  IPv6 address resolved
   1  IPv6 unavailable or not supported on this network
+  2  Unexpected argument (takes none)
 
 Returns:
   The machine\[aq]s public IPv6 address, printed to stdout
@@ -2923,6 +2948,7 @@ Arguments:
 Exit Status:
   0  File viewed or no file selected
   1  No log files found
+  2  Unknown option
 
 Example:
 logs -c paru
@@ -2953,7 +2979,7 @@ Arguments:
 
 Exit Status:
   0  Shell session exited
-  1  Argument parsing failed
+  2  Unknown option
 
 Notes:
   The exit builtin is wired to smart_exit for interactive sessions. Typing
@@ -3073,6 +3099,7 @@ Exit Status:
   1  Refused (outside git without --marker-file, unresolved rebase in
      AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
      failed
+  2  Unknown option
 
 Notes:
   Restore an archived AGENTS/ from the project root: delete
@@ -3236,7 +3263,8 @@ Exit Status:
   1  Fatal error (git init failed, move failed, the AGENTS/ commit was
      rejected, or an unresolved rebase blocked it), --enable refused
      because .agents-disabled exists, a migration precondition failed,
-     --private given for a public project, or both mode flags given
+     or --private given for a public project
+  2  Unknown option, or both --public and --private given
 
 Notes:
   This header covers usage only. The full concept/behavior/purpose
@@ -3377,8 +3405,8 @@ Arguments:
 Exit Status:
   0  Completed successfully
   1  Fatal error (vault unavailable, git failure, ambiguous migration,
-     invalid --adopt slug, nothing committed, or a push that did not
-     reach the remote)
+     nothing committed, or a push that did not reach the remote)
+  2  Unknown option, --remote without a URL, or an invalid --adopt slug
 
 Returns:
   --status prints its report on stdout: the vault path, the remote and
@@ -3600,7 +3628,8 @@ README.md, ensuring all features and examples are accurate and pruning
 obsolete content.
 
 Exit Status:
-  Exit status of the claude invocation
+  2  Unexpected argument (takes none)
+  *  Exit status of the claude invocation otherwise
 
 Example:
 claude-docs
@@ -3619,7 +3648,8 @@ branch, write a Conventional Commit, run verification, push, and open a
 pull request with a manual verification checklist.
 
 Exit Status:
-  Exit status of the claude invocation
+  2  Unexpected argument (takes none)
+  *  Exit status of the claude invocation otherwise
 
 Example:
 claude-pr
@@ -3761,6 +3791,7 @@ Arguments:
 Exit Status:
   0  Conversion complete
   1  File not found, missing dependency, or encode step failed
+  2  Unknown option
 
 Example:
 dng2avif photo.dng
@@ -3854,6 +3885,7 @@ Exit Status:
   0  Player launched (or the picker was cancelled)
   1  No media files found, invalid --player/$play_media_player, or no
      player found
+  2  Unknown option
 
 Example:
 play-media
@@ -3898,6 +3930,7 @@ or sleeping during active downloads.
 
 Exit Status:
   1  systemd-inhibit or steam is not installed
+  2  Unexpected argument (takes none)
   *  Exit status of steam (via systemd-inhibit) otherwise
 
 Example:
@@ -3969,7 +4002,8 @@ Arguments:
 
 Exit Status:
   0  Issues linked and synced (or no unlinked issues found)
-  1  Missing required argument or environment variables
+  1  GITEA_TOKEN or GITEA_URL not set
+  2  Missing repository argument
 
 Example:
 bd-pull myuser/myproject
@@ -4051,6 +4085,7 @@ Arguments:
 Exit Status:
   0  Manual displayed
   1  Documentation file not found, or required tool not available
+  2  Unknown option
 
 Returns:
   With -h/--help, the usage and navigation reference, printed to stdout.
@@ -4147,7 +4182,8 @@ Arguments:
 
 Exit Status:
   0  Exited normally
-  1  Unknown flag, no TTY, or python3/curses unavailable
+  1  No TTY, or python3/curses unavailable
+  2  Unknown flag
 
 Example:
 config-settings
@@ -4178,6 +4214,7 @@ Arguments:
 Exit Status:
   0  Config updated (or already up to date)
   1  Update failed (network error, merge conflict, or not a git repo)
+  2  Unknown option
 
 Example:
 config-update
@@ -4256,7 +4293,7 @@ Arguments:
 
 Exit Status:
   0  Bindings installed or help shown
-  22 Invalid option or positional argument provided
+  2  Invalid option or positional argument provided
 
 Example:
 fzf_configure_bindings --history=ctrl-h
@@ -4342,6 +4379,7 @@ resolving the host endpoint from docker context inspect.
 
 Exit Status:
   1  docker or lazydocker is not installed
+  2  Unexpected argument (takes none)
 
 Example:
 ld
@@ -4379,7 +4417,8 @@ Arguments:
 
 Exit Status:
   0  Browser launched
-  1  No URL given, invalid $BROWSER, or no browser found
+  1  Invalid $BROWSER, or no browser found
+  2  Unknown option, or no URL given
 
 Notes:
   Typo abbreviation: url-open (expands to open-url on space/enter).
@@ -4418,7 +4457,8 @@ Arguments:
 
 Exit Status:
   0  String generated successfully
-  1  Unknown category or missing word list file
+  1  Word lists directory not found
+  2  Unknown category
 
 Notes:
   Falls back to random choice if GNU shuf is missing, but shuf is
@@ -4493,6 +4533,7 @@ Arguments:
 Exit Status:
   0  URL opened, or resolved with -p/--print
   1  Not a git repo, no origin remote, or browser launch failed
+  2  Unknown option, or an unexpected argument
 
 Returns:
   With -p/--print, the resolved repository URL, printed to stdout
@@ -4518,7 +4559,8 @@ Kills all detached (unattached) tmux sessions, leaving any currently
 attached sessions running.
 
 Exit Status:
-  0  Always
+  0  Detached sessions killed, or none found
+  2  Unexpected argument (takes none)
 
 Example:
 tmux-clean
@@ -4541,7 +4583,8 @@ Arguments:
 
 Exit Status:
   0  Command ran and completed
-  1  No command provided, or systemd-inhibit is not installed
+  1  systemd-inhibit is not installed
+  2  No command provided
 
 Example:
 wake-lock rsync -avz src/ dest/
