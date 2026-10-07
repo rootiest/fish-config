@@ -93,8 +93,8 @@ functions/sponge_*.fish
 [Aa][nN][Tt][Ii][Gg][Rr][Aa][Vv][Ii][Tt][Yy].[Mm][Dd]
 .[Aa][Nn][Tt][Ii][Gg][Rr][Aa][Vv]*
 
-# Matches AGENTS.md, .agents/ (agy), .remember, etc.
-[Aa][Gg][Ee][Nn][Tt][Ss].[Mm][Dd]
+# Matches .agents/ (agy), .remember, etc. AGENTS.md is tracked: it is the
+# public agent instructions file (private ones are in AGENTS.local.md, below).
 .[Aa][Gg][Ee][Nn][Tt][Ss]*
 .[Rr][Ee][Mm][Ee][Mm][Bb][Ee][Rr]
 
@@ -309,3 +309,8 @@ docs/site/.astro/
 docs/site/src/content/docs/
 docs/site/src/sidebar.json
 /conf.d/uv.env.fish
+
+#   ──────────────── Added by agents-init ──────────────────
+#   agents-init --agents
+AGENTS.local.md
+#   ────────────────────────────────────────────────────────

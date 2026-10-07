@@ -36,6 +36,12 @@ If you're touching anything under `docs/manual/`, you'll also want `pandoc`,
 (see [Documentation Pipeline](#documentation-pipeline)) — otherwise CI will
 catch problems on push.
 
+**Working with an AI coding agent?** `AGENTS.md` at the root (plus the
+scoped `functions/AGENTS.md` and `docs/AGENTS.md`) condenses these rules for
+agents; this document stays the authority. Put your own, personal agent
+instructions in `AGENTS.local.md`: it is gitignored, and `AGENTS.md` tells
+agents to read it when it exists.
+
 **Point your clone at the tracked git hooks.** `.githooks/pre-push` rejects a
 push carrying an unsigned or bad-signature commit — GUI git clients (Gittyup
 included) commonly commit via libgit2 and skip `commit.gpgsign` silently.
