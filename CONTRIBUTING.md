@@ -538,6 +538,15 @@ Give every function a `--description`, since it's what shows up in `fish -c
 function my_function --description 'Short, imperative description'
 ```
 
+### The `help` subcommand
+
+A function whose first argument is a subcommand (`session-env install`,
+`kitty-logging status`, `fish-deps sync`, ...) also accepts a bare `help`
+there, printing exactly what `-h`/`--help` prints. Only the first word
+counts, so `auto-pull add help` still registers a repo named `help`. Add
+the function to `__help_subcommand_fns` in `tests/test-help.fish`, which
+checks that `<fn> help` matches `<fn> --help`.
+
 ### Colored `--help` output
 
 Every function with a `-h`/`--help` flag uses this standardized color

@@ -267,6 +267,29 @@ function test_every_user_facing_function_has_help
     test $failed -eq 0
 end
 
+# Functions whose first argument is a subcommand. These also take a bare
+# `help` subcommand, the common convention for this CLI shape, and it must
+# print exactly what --help prints. Add new subcommand-style functions here.
+set -g __help_subcommand_fns \
+    auto-pull fish-deps jobrunner kitty-logging session-env superpowers
+
+function test_help_subcommand_matches_help_flag
+    set -l failed 0
+    for fn in $__help_subcommand_fns
+        set -l want (_help_probe /nonexistent $fn --help 2>&1 | string collect)
+        set -l got (_help_probe /nonexistent $fn help 2>&1 | string collect)
+        set -l code $pipestatus[1]
+        if test $code -ne 0
+            echo "    $fn help: exit $code"
+            set failed 1
+        else if test "$got" != "$want"
+            echo "    $fn help: output differs from $fn --help"
+            set failed 1
+        end
+    end
+    test $failed -eq 0
+end
+
 section "help: renderer"
 check "full render: headings, indentation, multi-paragraph description" true (test_help_renderer; and echo true; or echo false)
 
@@ -278,5 +301,6 @@ check "eight functions never execute their destructive path on --help" true (tes
 
 section "help: coverage"
 check "every user-facing function has --help or is exempt" true (test_every_user_facing_function_has_help; and echo true; or echo false)
+check "subcommand functions accept a bare help, same as --help" true (test_help_subcommand_matches_help_flag; and echo true; or echo false)
 
 report

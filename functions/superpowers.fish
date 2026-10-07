@@ -11,7 +11,7 @@
 #   uses-shadow(claude)
 #
 # SYNOPSIS
-#   superpowers [on|off] [-g]
+#   superpowers [on|off|help] [-g]
 #
 # DESCRIPTION
 #   Enables or disables the superpowers plugin for both antigravity-cli
@@ -22,7 +22,7 @@
 #   on            Enable superpowers for both tools
 #   off           Disable superpowers for both tools
 #   -g, --global  Apply at user/global scope instead of workspace/project
-#   -h, --help    Show usage help
+#   help, -h, --help  Show usage help
 #
 # EXIT STATUS
 #   0  Mode applied successfully
@@ -44,7 +44,7 @@ Commands:
 
 Options:
   -g, --global    Apply settings to the user/global scope
-  -h, --help      Show this help message
+  help, -h, --help  Show this help message
 "
 
     # Parse arguments
@@ -57,7 +57,7 @@ Options:
             case -g --global
                 set scope_agy user
                 set scope_claude user
-            case -h --help
+            case help -h --help
                 echo $help_text
                 return 0
         end

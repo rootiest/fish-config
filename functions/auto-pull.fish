@@ -33,7 +33,7 @@
 #   add [PATH]         Register PATH's git root; defaults to the current repo
 #   remove <NAME|PATH> Unregister by basename or exact path
 #   status             Show enabled/disabled state, repo count, and registry path
-#   -h, --help         Show this help message
+#   help, -h, --help   Show this help message
 #
 # EXIT STATUS
 #   0  Subcommand succeeded
@@ -54,7 +54,7 @@ function auto-pull --description 'Manage the auto-pull repository registry'
     set -l cmd $argv[1]
     set -e argv[1]
 
-    if test "$cmd" = -h; or test "$cmd" = --help; or contains -- -h $argv; or contains -- --help $argv
+    if contains -- "$cmd" help -h --help; or contains -- -h $argv; or contains -- --help $argv
         echo "$c_head""Usage:$c_reset $c_cmd""auto-pull$c_reset $c_flag""[list | add | remove | status]$c_reset $c_dim""[PATH|NAME]$c_reset"
         echo
         echo "  Manage the registry of repos that are background fast-forwarded on entry."
@@ -64,7 +64,7 @@ function auto-pull --description 'Manage the auto-pull repository registry'
         echo "  $c_flag""add$c_reset $c_dim""[PATH]$c_reset        Register PATH's git root (default: current repo)"
         echo "  $c_flag""remove$c_reset $c_dim""<NAME|PATH>$c_reset  Unregister by basename or exact path"
         echo "  $c_flag""status$c_reset            Show enabled/disabled state and registry path"
-        echo "  $c_flag-h$c_reset, $c_flag--help$c_reset        Show this help message"
+        echo "  $c_flag""help$c_reset, $c_flag-h$c_reset, $c_flag--help$c_reset  Show this help message"
         return 0
     end
 

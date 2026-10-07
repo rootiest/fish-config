@@ -15,7 +15,7 @@
 #   bypasses-shadow(grep,mkdir,rm)
 #
 # SYNOPSIS
-#   kitty-logging [install | uninstall | status | dismiss] [-h]
+#   kitty-logging [install | uninstall | status | dismiss | help]
 #
 # DESCRIPTION
 #   Manages the fish-config Kitty scrollback watcher that powers C5 logging.
@@ -35,7 +35,7 @@
 #   uninstall  Remove the managed block and the watcher symlink
 #   status     Report wiring, watcher version, and C5 logging state
 #   dismiss    Stop the per-session reminder
-#   -h, --help Show this help
+#   help, -h, --help  Show this help
 #
 # EXIT STATUS
 #   0  Success
@@ -49,7 +49,7 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
 
     set -l cmd $argv[1]
 
-    if test -z "$cmd"; or contains -- "$cmd" -h --help
+    if test -z "$cmd"; or contains -- "$cmd" help -h --help
         echo "$c_head""Usage:$c_reset $c_cmd""kitty-logging$c_reset $c_flag""[install|uninstall|status|dismiss]$c_reset $c_flag""[-h]$c_reset"
         echo
         echo "  Manage the fish-config Kitty scrollback watcher (C5 logging)."
@@ -59,7 +59,7 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
         echo "  $c_flag""uninstall$c_reset  Remove the managed block and the watcher file"
         echo "  $c_flag""status$c_reset     Show wiring, watcher version, and C5 state"
         echo "  $c_flag""dismiss$c_reset    Stop the per-session reminder"
-        echo "  $c_flag""-h$c_reset, $c_flag""--help$c_reset  Show this help message"
+        echo "  $c_flag""help$c_reset       Show this help message (also $c_flag""-h$c_reset, $c_flag""--help$c_reset)"
         return 0
     end
 
