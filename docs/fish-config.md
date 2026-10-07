@@ -4465,7 +4465,10 @@ into them. The fish-config repo is always covered; other repos are added with
 the `auto-pull` command (see its entry in the functions reference). It only
 ever fast-forwards a clean repo whose branch has an upstream — never rebases,
 merges, or overwrites work — so it is a no-op on dirty trees, divergent
-branches, or repos without a remote. The handler fires once per repo entry
+branches, or repos without a remote. Its fetch never prompts for
+credentials, passphrases or host keys; a remote that needs them, or cannot
+be reached, is skipped quietly (within 10s for `ssh`, 60s overall where
+`timeout` is installed). The handler fires once per repo entry
 (not on every sub-directory `cd`). The registry is machine-local at
 `$__fish_user_dots_path/auto-pull.list` (defaults to `~/.config/.user-dots/fish/auto-pull.list`) and is never committed.
 
