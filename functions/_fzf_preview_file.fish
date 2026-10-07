@@ -15,8 +15,9 @@ function _fzf_preview_file --description "Print a preview for the given file bas
         _fzf_preview_file "$target_path"
     else if test -f "$file_path" # regular file
         if set --query fzf_preview_file_cmd
-            # need to escape quotes to make sure eval receives file_path as a single arg
-            eval "$fzf_preview_file_cmd '$file_path'"
+            # The configured command may carry its own arguments (e.g. "bat --style=numbers"),
+            # so it goes through eval; the path is escaped so it stays one inert argument.
+            eval $fzf_preview_file_cmd (string escape -- $file_path)
         else if command -q file; and string match -q 'image/*' -- (command file --brief --mime-type -- "$file_path" 2>/dev/null)
             _fzf_preview_image "$file_path"
         else
@@ -25,7 +26,7 @@ function _fzf_preview_file --description "Print a preview for the given file bas
     else if test -d "$file_path" # directory
         if set --query fzf_preview_dir_cmd
             # see above
-            eval "$fzf_preview_dir_cmd '$file_path'"
+            eval $fzf_preview_dir_cmd (string escape -- $file_path)
         else
             # -A list hidden files as well, except for . and ..
             # -F helps classify files by appending symbols after the file name
