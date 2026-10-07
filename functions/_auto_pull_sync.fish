@@ -13,6 +13,10 @@
 #   It never rebases, never creates a merge commit, and never overwrites
 #   committed or uncommitted work — worst case it does nothing.
 #
+#   The fetch is non-interactive: it never prompts for credentials,
+#   passphrases or host keys, and gives up on an unreachable remote within
+#   a bounded time (10s for ssh, 60s overall where timeout(1) exists).
+#
 #   Intended to be invoked in the background by the auto-pull PWD handler
 #   (conf.d/auto-pull.fish), but safe to call directly.
 #
@@ -41,7 +45,23 @@ function _auto_pull_sync --description 'Fast-forward a repo when clean and a ff 
     command git -C "$d" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
     or return 1
 
+    # Running in the background, the fetch must never prompt: no git
+    # credential prompt, no askpass dialog, no ssh passphrase or host-key
+    # question. The ssh options extend the user's own ssh command
+    # (GIT_SSH_COMMAND, else core.sshCommand) instead of replacing it.
+    set -l ssh_cmd $GIT_SSH_COMMAND
+    test -n "$ssh_cmd"; or set ssh_cmd (command git -C "$d" config core.sshCommand 2>/dev/null)
+    test -n "$ssh_cmd"; or set ssh_cmd ssh
+
+    # Bound the wait on an unreachable remote. ssh's ConnectTimeout covers ssh
+    # remotes everywhere; git exposes no connect timeout for https, so the
+    # whole fetch runs under timeout(1) where it exists.
+    set -l bound
+    type -q timeout; and set bound timeout 60
+
     # Fetch, then fast-forward only. --ff-only aborts (no-op) on any divergence.
-    command git -C "$d" fetch -q 2>/dev/null; or return 1
+    $bound env GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true SSH_ASKPASS=true \
+        GIT_SSH_COMMAND="$ssh_cmd -o BatchMode=yes -o ConnectTimeout=10" \
+        git -C "$d" fetch -q 2>/dev/null; or return 1
     command git -C "$d" merge -q --ff-only '@{u}' >/dev/null 2>&1
 end
