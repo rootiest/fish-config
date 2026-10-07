@@ -2472,8 +2472,12 @@ functions). They are active in all interactive sessions.
     case that static regex patterns cannot cover.
 
     Any variable whose name matches the sensitive-name heuristic and whose
-    value is longer than 8 characters (excluding bare paths) is checked.
-    The value is escaped for literal regex matching before comparison.
+    value is longer than 8 characters is checked.  List-valued variables are
+    handled: every element is checked.  Values that are an existing file or
+    directory path (a leading ~/ is expanded) are skipped; a value that merely
+    starts with / or ~ but is not an existing path is still treated as a
+    credential.  The value is escaped for literal regex matching before
+    comparison.
 
     Arguments:
       command                 The exact command that was entered
@@ -4809,8 +4813,9 @@ Commands matching any of these structural signatures are never recorded:
 - `--password` / `--token` / `--passphrase` / `--api-key` flags with values
 - Inline env assignments: `GITHUB_TOKEN=xxx`, `MY_API_KEY=abc`
 - Fish set with sensitive names: `set -gx GITHUB_TOKEN xxx`
-- URLs with embedded credentials: `https://user:pass@host`
-- HTTP Authorization headers: `curl -H "Authorization: ..."`
+- URLs with embedded credentials: `https://user:pass@host`, or a token-only `https://TOKEN@host`
+- HTTP Authorization headers (any case): `curl -H "Authorization: ..."`
+- API-key style headers: `X-API-Key: ...`, `X-Auth-Token: ...`
 - Basic auth flags: `curl -u user:pass`
 - `sshpass`, `docker login -p`, `openssl -passin/-passout`
 
@@ -4819,8 +4824,11 @@ On the first prompt, after `secrets.fish` has loaded, the literal values of
 all exported variables whose names suggest credentials (TOKEN, PASSWORD,
 SECRET, `API_KEY`, etc.) are collected, regex-escaped, and added as a
 session-scoped overlay.  Because globals shadow universals in Fish, the
-combined list is what sponge sees.  Rotating a token takes effect on the
-next login automatically.
+combined list is what sponge sees.  Every element of a list-valued variable
+is collected.  Values of 8 characters or fewer, and values that are an
+existing file or directory path, are skipped; a password that merely starts
+with / or ~ is still collected.  Rotating a token takes effect on the next
+login automatically.
 
 Layer 3 — Per-command filter (`sponge_filter_secrets`):
 Catches credentials in variables exported after login, such as tokens
