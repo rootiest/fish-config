@@ -59,6 +59,16 @@ section "_fzf_search_directory: token expansion is not an eval"
 # Stub the interactive pieces so the function runs headless: the token under
 # the cursor, the fzf wrapper (records its arguments, selects nothing), and
 # the commit-back builtin calls.
+#
+# _fzf_search_directory also runs `fd` itself ahead of the stubbed wrapper, and
+# CI images do not ship it, so put a no-op `fd` first on PATH: the test then
+# behaves the same whether or not the host has fd/fdfind installed.
+mkdir -p stubbin
+printf '#!/bin/sh\nexit 0\n' >stubbin/fd
+chmod +x stubbin/fd
+set -l saved_path $PATH
+set -gx PATH $sandbox/stubbin $PATH
+
 set -g __stub_token ''
 function commandline
     if contains -- --current-token $argv; and not contains -- --replace $argv
@@ -103,6 +113,7 @@ set -l got (fish --no-config -c "function _fzf_preview_file; count \$argv; print
 check "quote-bearing directory token reaches the preview as one path" "1 $sandbox/home/it's here/x" "$got[1] $got[2]"
 
 set -gx HOME $saved_home
+set -gx PATH $saved_path
 set -e FZF_TEST_DIR
 functions -e commandline _fzf_wrapper
 
