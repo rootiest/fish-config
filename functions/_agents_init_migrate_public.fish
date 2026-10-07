@@ -5,7 +5,7 @@
 #   _agents_init_stub, _agents_init_sync_public
 #
 # CLASSIFICATION
-#   self-limiting(rm), bypasses-shadow(mv)
+#   self-limiting(rm,mkdir,grep), bypasses-shadow(mv)
 #
 # SYNOPSIS
 #   _agents_init_migrate_public <root> <agents_dir>
