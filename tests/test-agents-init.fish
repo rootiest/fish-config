@@ -165,7 +165,7 @@ echo root-real >$e1/CLAUDE.md
 mkdir -p $e1/functions
 echo scoped-real >$e1/functions/CLAUDE.md
 pushd $e1 >/dev/null
-set -l ercA (agents-init --agents --silent 2>/dev/null; echo $status)
+set -l ercA (agents-init --private --agents --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "e2e: exits 0" 0 "$ercA"
 check "e2e: root CLAUDE.md gone" false (test -e $e1/CLAUDE.md; and echo true; or echo false)
@@ -229,7 +229,7 @@ echo tool-agents >$e4/.gemini/AGENTS.md
 echo foreign-mirror >$e4/vendor/other/AGENTS/CLAUDE.md
 echo own-docs >$e4/vendor/CLAUDE.md
 pushd $e4 >/dev/null
-set -l ercE (agents-init --agents --silent 2>/dev/null; echo $status)
+set -l ercE (agents-init --private --agents --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "containment: exits 0" 0 "$ercE"
 check "containment: nested repo got no AGENTS.md" false (test -e $e4/sub/AGENTS.md -o -L $e4/sub/AGENTS.md; and echo true; or echo false)
@@ -427,7 +427,7 @@ end
 git -C $e5 add .gitignore team/CLAUDE.md build/AGENTS.md
 git -C $e5 commit -qm init
 pushd $e5 >/dev/null
-set -l ercG (agents-init --agents --silent 2>/dev/null; echo $status)
+set -l ercG (agents-init --private --agents --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "subdir protection: exits 0" 0 "$ercG"
 check "subdir protection: team/CLAUDE.md still real" team-shared (test -L $e5/team/CLAUDE.md; or cat $e5/team/CLAUDE.md)
@@ -499,7 +499,7 @@ check "marker file: nothing scaffolded" false (test -e $m2/AGENTS -o -L $m2/AGEN
 set -l m3 (new_repo)
 git -C $m3 config agents-init.disabled true
 pushd $m3 >/dev/null
-set -l mrc3 (agents-init --enable --silent 2>/dev/null; echo $status)
+set -l mrc3 (agents-init --private --enable --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "--enable: exits 0" 0 "$mrc3"
 check "--enable: git key unset" 1 (git -C $m3 config --get agents-init.disabled >/dev/null; echo $status)
@@ -520,6 +520,204 @@ pushd $m5 >/dev/null
 set -l mout5 (agents-init 2>/dev/null)
 popd >/dev/null
 check "git key, verbose: note names the marker" true (string match -q -- '*agents-init.disabled*' "$mout5"; and echo true; or echo false)
+
+#   ───────────────────────────── public mode ─────────────────────────────
+function _is_link --argument-names p want
+    test -L $p; and test (readlink $p) = $want; and echo true; or echo false
+end
+function _ignored --argument-names root path
+    git -C $root check-ignore -q --no-index -- $path; and echo true; or echo false
+end
+
+echo ""
+echo "== agents-init: public mode is the default for a new project =="
+
+set -l p1 (new_repo)
+pushd $p1 >/dev/null
+set -l prc1 (agents-init --silent 2>/dev/null; echo $status)
+set -l pout1b (agents-init --quiet 2>&1)
+popd >/dev/null
+check "public: exits 0" 0 "$prc1"
+check "public: AGENTS/.mode is public" public (cat $p1/AGENTS/.mode)
+check "public: root AGENTS.md is a real file" true (test -f $p1/AGENTS.md -a ! -L $p1/AGENTS.md; and echo true; or echo false)
+check "public: root AGENTS.md is the public starter" (_agents_init_stub --public | string collect) (string collect <$p1/AGENTS.md)
+check "public: starter imports @AGENTS.local.md outside backticks" true (grep -qE '(^|[^`])@AGENTS\.local\.md' $p1/AGENTS.md; and echo true; or echo false)
+check "public: private file is real in AGENTS/" true (test -f $p1/AGENTS/AGENTS.local.md -a ! -L $p1/AGENTS/AGENTS.local.md; and echo true; or echo false)
+check "public: private file is the local stub" (_agents_init_stub --local | string collect) (string collect <$p1/AGENTS/AGENTS.local.md)
+check "public: AGENTS.local.md links into AGENTS/" true (_is_link $p1/AGENTS.local.md AGENTS/AGENTS.local.md)
+check "public: AGENTS/AGENTS.md links back to the public file" true (_is_link $p1/AGENTS/AGENTS.md ../AGENTS.md)
+check "public: AGENTS.md is NOT ignored" false (_ignored $p1 AGENTS.md)
+check "public: AGENTS.local.md is ignored" true (_ignored $p1 AGENTS.local.md)
+check "public: AGENTS/ is ignored" true (_ignored $p1 AGENTS/x)
+check "public: the private file is committed in AGENTS/" true (git -C $p1/AGENTS ls-files --error-unmatch AGENTS.local.md >/dev/null 2>&1; and echo true; or echo false)
+check "public: nothing committed in the project" 1 (git -C $p1 rev-parse -q --verify HEAD >/dev/null; echo $status)
+check "public: idempotent second run prints nothing" "" "$pout1b"
+
+echo ""
+echo "== agents-init: public mode never moves a real AGENTS.md =="
+
+# Tracked, in a repo with NO .gitignore: the old protection rule needs a
+# non-empty .gitignore, so private mode would adopt this file.
+set -l p2 (new_repo)
+echo team-public >$p2/AGENTS.md
+mkdir -p $p2/lib
+echo lib-public >$p2/lib/AGENTS.md
+git -C $p2 add AGENTS.md lib/AGENTS.md
+git -C $p2 commit -qm init
+pushd $p2 >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "keep: tracked root AGENTS.md untouched" team-public (test -L $p2/AGENTS.md; or cat $p2/AGENTS.md)
+check "keep: tracked child AGENTS.md untouched" lib-public (test -L $p2/lib/AGENTS.md; or cat $p2/lib/AGENTS.md)
+check "keep: no change in git status" "" (git -C $p2 status --porcelain -- AGENTS.md lib/AGENTS.md)
+check "keep: child mirror links back" true (_is_link $p2/AGENTS/lib/AGENTS.md ../../lib/AGENTS.md)
+check "keep: no child local file invented" false (test -e $p2/AGENTS/lib/AGENTS.local.md -o -L $p2/lib/AGENTS.local.md; and echo true; or echo false)
+
+set -l p3 (new_repo)
+echo untracked-public >$p3/AGENTS.md
+pushd $p3 >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "keep: untracked real AGENTS.md untouched" untracked-public (test -L $p3/AGENTS.md; or cat $p3/AGENTS.md)
+
+echo ""
+echo "== agents-init: public mode links, adopts and hints =="
+
+set -l p4 (new_repo)
+mkdir -p $p4/docs
+echo docs-public >$p4/docs/AGENTS.md
+pushd $p4 >/dev/null
+agents-init --silent 2>/dev/null
+echo docs-private >$p4/AGENTS/docs/AGENTS.local.md
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "child: user-created private file is linked in" true (_is_link $p4/docs/AGENTS.local.md ../AGENTS/docs/AGENTS.local.md)
+check "child: private content reachable through the link" docs-private (cat $p4/docs/AGENTS.local.md)
+check "child: child AGENTS.local.md ignored" true (_ignored $p4 docs/AGENTS.local.md)
+
+pushd $p4 >/dev/null
+set -l hint (agents-init 2>&1 | string replace -ra '\e\[[0-9;]*m' '')
+popd >/dev/null
+check "hint: missing @AGENTS.local.md reference is reported" true (string match -q '*docs/AGENTS.md does not reference @AGENTS.local.md*' -- $hint; and echo true; or echo false)
+pushd $p4 >/dev/null
+set -l quiet_hint (agents-init --quiet 2>&1)
+popd >/dev/null
+check "hint: not printed by a quiet (wrapper) run" "" "$quiet_hint"
+
+set -l p5 (new_repo)
+pushd $p5 >/dev/null
+agents-init --silent 2>/dev/null
+rm $p5/AGENTS.local.md
+echo agent-wrote-this >$p5/AGENTS.local.md
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "adopt: a real base AGENTS.local.md differing from the mirror is left alone" agent-wrote-this (test -L $p5/AGENTS.local.md; or cat $p5/AGENTS.local.md)
+
+set -l p6 (new_repo)
+mkdir -p $p6/sub
+echo sub-public >$p6/sub/AGENTS.md
+echo sub-written >$p6/sub/AGENTS.local.md
+echo stray-claude >$p6/CLAUDE.md
+pushd $p6 >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "adopt: real child AGENTS.local.md moved into AGENTS/" sub-written (cat $p6/AGENTS/sub/AGENTS.local.md)
+check "adopt: and linked back" true (_is_link $p6/sub/AGENTS.local.md ../AGENTS/sub/AGENTS.local.md)
+check "CLAUDE.md: untracked content goes private, not public" false (grep -rqF stray-claude $p6/AGENTS.md; and echo true; or echo false)
+check "CLAUDE.md: untracked CLAUDE.md removed from the project" false (test -e $p6/CLAUDE.md; and echo true; or echo false)
+
+echo ""
+echo "== agents-init: mode flags =="
+
+set -l f1 (new_repo)
+pushd $f1 >/dev/null
+set -l frc1 (agents-init --public --private --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "both flags: usage error" 1 "$frc1"
+check "both flags: nothing scaffolded" false (test -e $f1/AGENTS; and echo true; or echo false)
+
+pushd $p1 >/dev/null
+set -l frc2 (agents-init --private --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "--private on a public project: refused" 1 "$frc2"
+check "--private on a public project: still public" public (cat $p1/AGENTS/.mode)
+
+set -l f3 (new_repo)
+pushd $f3 >/dev/null
+agents-init --private --silent 2>/dev/null
+popd >/dev/null
+check "--private on a new project: private layout" AGENTS/AGENTS.md (readlink $f3/AGENTS.md)
+check "--private on a new project: .mode is private" private (cat $f3/AGENTS/.mode)
+check "--private: AGENTS.md ignored, as before" true (_ignored $f3 AGENTS.md)
+
+set -l f4 (new_repo)
+mkdir -p $f4/AGENTS
+echo legacy >$f4/AGENTS/AGENTS.md
+ln -s AGENTS/AGENTS.md $f4/AGENTS.md
+pushd $f4 >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+check "legacy (no .mode): stays private on a plain run" AGENTS/AGENTS.md (readlink $f4/AGENTS.md)
+check "legacy (no .mode): no .mode written" false (test -e $f4/AGENTS/.mode; and echo true; or echo false)
+
+echo ""
+echo "== agents-init --public: migrating a private project =="
+
+set -l g1 (new_repo)
+echo before >$g1/.gitignore
+mkdir -p $g1/sub
+echo sub-secret >$g1/sub/AGENTS.md
+pushd $g1 >/dev/null
+agents-init --private --silent 2>/dev/null
+popd >/dev/null
+echo root-secret >>$g1/AGENTS/AGENTS.md
+git -C $g1 add .gitignore
+git -C $g1 commit -qm base
+set -l base_head (git -C $g1 rev-parse HEAD)
+pushd $g1 >/dev/null
+set -l grc (agents-init --public --silent 2>/dev/null; echo $status)
+set -l grc2 (agents-init --quiet 2>&1)
+popd >/dev/null
+check "migrate: exits 0" 0 "$grc"
+check "migrate: .mode is public" public (cat $g1/AGENTS/.mode)
+check "migrate: root private content moved to AGENTS.local.md" true (grep -qF root-secret $g1/AGENTS/AGENTS.local.md; and echo true; or echo false)
+check "migrate: child private content moved to its AGENTS.local.md" sub-secret (cat $g1/AGENTS/sub/AGENTS.local.md)
+check "migrate: no private content in any public file" "" (grep -lE 'root-secret|sub-secret' $g1/AGENTS.md $g1/sub/AGENTS.md)
+check "migrate: root gets the public starter" (_agents_init_stub --public | string collect) (string collect <$g1/AGENTS.md)
+check "migrate: child gets the child starter" (_agents_init_stub --public sub | string collect) (string collect <$g1/sub/AGENTS.md)
+check "migrate: history follows the rename" true (test (git -C $g1/AGENTS log --follow --oneline -- AGENTS.local.md | count) -ge 3; and echo true; or echo false)
+check "migrate: stub directive retargeted" true (grep -qF '`AGENTS/AGENTS.local.md`' $g1/AGENTS/AGENTS.local.md; and echo true; or echo false)
+check "migrate: old directive path gone" false (grep -qF '`AGENTS/AGENTS.md`' $g1/AGENTS/AGENTS.local.md; and echo true; or echo false)
+check "migrate: links both ways (root)" "true true" (_is_link $g1/AGENTS.local.md AGENTS/AGENTS.local.md)" "(_is_link $g1/AGENTS/AGENTS.md ../AGENTS.md)
+check "migrate: links both ways (child)" "true true" (_is_link $g1/sub/AGENTS.local.md ../AGENTS/sub/AGENTS.local.md)" "(_is_link $g1/AGENTS/sub/AGENTS.md ../../sub/AGENTS.md)
+check "migrate: AGENTS.md no longer ignored" false (_ignored $g1 AGENTS.md)
+check "migrate: AGENTS.local.md ignored" true (_ignored $g1 AGENTS.local.md)
+check "migrate: user .gitignore line kept" true (grep -qx before $g1/.gitignore; and echo true; or echo false)
+check "migrate: nothing committed in the project" $base_head (git -C $g1 rev-parse HEAD)
+check "migrate: AGENTS/ committed clean" "" (git -C $g1/AGENTS status --porcelain)
+check "migrate: re-run is silent" "" "$grc2"
+
+set -l g2 (new_repo)
+pushd $g2 >/dev/null
+agents-init --private --silent 2>/dev/null
+popd >/dev/null
+git -C $g2 add -f AGENTS.md 2>/dev/null
+pushd $g2 >/dev/null
+set -l grc3 (agents-init --public --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "migrate refused: staged AGENTS.md change" 1 "$grc3"
+check "migrate refused: still private" AGENTS/AGENTS.md (readlink $g2/AGENTS.md)
+
+set -l g3 (new_repo)
+pushd $g3 >/dev/null
+agents-init --private --silent 2>/dev/null
+popd >/dev/null
+printf '%s\n' '# user rules' 'AGENTS.md' >>$g3/.gitignore
+pushd $g3 >/dev/null
+set -l gwarn (agents-init --public 2>&1 >/dev/null | string replace -ra '\e\[[0-9;]*m' '')
+popd >/dev/null
+check "migrate: a user rule still ignoring AGENTS.md is reported" true (string match -q '*still ignored by a rule outside*' -- $gwarn; and echo true; or echo false)
+check "migrate: the user rule is not edited" true (grep -qx 'AGENTS.md' $g3/.gitignore; and echo true; or echo false)
 
 cleanup
 report

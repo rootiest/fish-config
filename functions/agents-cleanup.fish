@@ -30,6 +30,15 @@
 #   the SYSTEM DIRECTIVE blockquote that pointed agents at AGENTS/AGENTS.md.
 #   No CLAUDE.md is recreated.
 #
+#   In a public-mode project the public AGENTS.md files are the project's
+#   own and are never touched. Each AGENTS.local.md link is restored like
+#   any other (deleted instead when it is exactly agents-init's local stub,
+#   and stripped of its directive otherwise), and because the agents-init
+#   .gitignore blocks are removed, a restored AGENTS.local.md is kept
+#   ignored by a standalone line: it holds private instructions. The
+#   AGENTS/<dir>/AGENTS.md links that point back out at the public files
+#   are not counted as unlinked files.
+#
 #   Before anything is moved, pending AGENTS/ changes are committed and
 #   the full history is written to a verified git bundle under
 #   $XDG_STATE_HOME/agents-cleanup/ (default ~/.local/state). AGENTS/ is
@@ -203,6 +212,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     set -l extras
     set -l extras_ignored
     set -l nested
+    set -l agents_re '^'(string escape --style=regex -- "$agents_dir")'(/|$)'
     if test $has_agents -eq 1
         set -l cover_re
         for t in $keep_tgt
@@ -224,8 +234,13 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         for f in (find "$agents_dir" -mindepth 1 \( -name .git -o -type d -exec test -e '{}/.git' \; \) -prune -o ! -type d -print)
             set -l rel (string replace -- "$agents_dir/" "" "$f")
             switch "$rel"
-                case .version '.agents-tools/*' .gitkeep '*/.gitkeep'
+                case .version .mode '.agents-tools/*' .gitkeep '*/.gitkeep'
                     continue
+            end
+            # Public mode links AGENTS/<dir>/AGENTS.md back out at the
+            # project's public file: nothing in AGENTS/ to restore.
+            if test -L "$f"; and not string match -qr -- $agents_re (realpath -m -- "$f")
+                continue
             end
             set -l covered 0
             for re in $cover_re
@@ -300,6 +315,12 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         test $has_agents -eq 1; and echo "  remove AGENTS/"
         if test -f "$gitignore"; and grep -q 'Added by agents-init' "$gitignore"
             echo "  remove agents-init blocks from .gitignore"
+        end
+        for l in $keep
+            if test (path basename -- "$l") = AGENTS.local.md
+                echo "  keep AGENTS.local.md ignored in .gitignore (private instructions)"
+                break
+            end
         end
         return 0
     end
@@ -377,6 +398,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
 
     #   ──────────────────────── Phase 4: materialize ───────────────────────
     set -l directive 'SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING'
+    set -l restored_local
     for i in (seq (count $keep))
         set -l link $keep[$i]
         set -l rel (string replace -- "$root/" "" "$link")
@@ -406,8 +428,14 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
 
         if test -d "$link"
             rm -f "$link/.gitkeep"
-        else if test (path basename "$link") = AGENTS.md
-            if _agents_init_stub | cmp -s - "$link"
+        else if contains -- (path basename "$link") AGENTS.md AGENTS.local.md
+            set -l stub_args
+            if test (path basename "$link") = AGENTS.local.md
+                set -l dir_rel (path dirname -- "$rel")
+                set stub_args --local $dir_rel
+                set -a restored_local "$link"
+            end
+            if _agents_init_stub $stub_args | cmp -s - "$link"
                 rm -f "$link"
                 test $verbose -eq 1; and echo "$c_ok→ Removed $rel (agents-init stub, no user content)$c_reset"
             else if grep -qF -- "$directive" "$link"
@@ -535,6 +563,24 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
             end
             set changed 1
             test $verbose -eq 1; and echo "$c_ok→ Removed agents-init blocks from .gitignore$c_reset"
+        end
+    end
+
+    # A restored AGENTS.local.md holds private instructions, and the blocks
+    # that ignored it are gone: keep it out of the project with a line of
+    # its own, outside any agents-init block.
+    if test $in_git -eq 1
+        for l in $restored_local
+            test -e "$l"; or continue
+            set -l lrel (string replace -- "$root/" "" "$l")
+            git -C "$root" check-ignore -q --no-index -- "$lrel" 2>/dev/null; and continue
+            if not printf '\n%s\n%s\n' '# Private agent instructions, restored by agents-cleanup: keep unpublished' AGENTS.local.md >>"$gitignore"
+                echo "$c_err""Error: could not add AGENTS.local.md to .gitignore; it holds private instructions -- do not commit it$c_reset" >&2
+                return 1
+            end
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Kept AGENTS.local.md ignored in .gitignore$c_reset"
+            break
         end
     end
 

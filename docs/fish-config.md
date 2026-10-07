@@ -2478,6 +2478,15 @@ functions). They are active in all interactive sessions.
     the SYSTEM DIRECTIVE blockquote that pointed agents at AGENTS/AGENTS.md.
     No CLAUDE.md is recreated.
 
+    In a public-mode project the public AGENTS.md files are the project's
+    own and are never touched. Each AGENTS.local.md link is restored like
+    any other (deleted instead when it is exactly agents-init's local stub,
+    and stripped of its directive otherwise), and because the agents-init
+    .gitignore blocks are removed, a restored AGENTS.local.md is kept
+    ignored by a standalone line: it holds private instructions. The
+    AGENTS/<dir>/AGENTS.md links that point back out at the public files
+    are not counted as unlinked files.
+
     Before anything is moved, pending AGENTS/ changes are committed and
     the full history is written to a verified git bundle under
     $XDG_STATE_HOME/agents-cleanup/ (default ~/.local/state). AGENTS/ is
@@ -2544,6 +2553,7 @@ functions). They are active in all interactive sessions.
 ### agents-init
 
     Synopsis:  agents-init [-a | --agents] [-p | --plugins] [-e | --enable]
+                           [--public | --private]
                            [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 
     Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
@@ -2573,7 +2583,30 @@ functions). They are active in all interactive sessions.
     --enable clears the git key and scaffolds; the file has to be deleted
     by hand, because it is a decision shared with every clone.
 
-    File layout after setup:
+    Two modes, recorded in AGENTS/.mode. In both, each real file lives in
+    the repository whose visibility matches it, and the other side holds a
+    symlink:
+
+      public (default for a new project inside git)
+        <root>/AGENTS.md                 real, tracked by the project
+        <root>/AGENTS.local.md           → AGENTS/AGENTS.local.md (gitignored)
+        AGENTS/AGENTS.local.md           private instructions (real file)
+        AGENTS/AGENTS.md                 → ../AGENTS.md
+      private (every project scaffolded before modes existed)
+        the layout below, unchanged.
+
+    The public starter AGENTS.md points agents at AGENTS.local.md, both as
+    an @ import (Claude Code expands it) and as a plain sentence (agents
+    that do not expand imports still follow it). A real public AGENTS.md is
+    never moved or rewritten. A project with no AGENTS/.mode is private.
+    --public on a private project migrates it: each private AGENTS.md is
+    renamed to AGENTS.local.md inside AGENTS/ (history kept) and replaced in
+    the project by a public starter, so nothing private is published.
+    Nothing is committed in the project; review and commit it yourself.
+    --private on a public project is refused: what was published is already
+    in history. Wrapper launches pass no mode flag and never change modes.
+
+    File layout after setup (private mode):
       AGENTS/AGENTS.md          canonical root agent spec (real file)
       AGENTS/<subdir>/AGENTS.md canonical spec for any subdir with its own
                                 scoped instructions (real file, discovered
@@ -2635,6 +2668,10 @@ functions). They are active in all interactive sessions.
       -p, --plugins  Set up AGENTS/ repo + plans/specs/devlogs dirs + docs/ symlinks only
       -e, --enable   Clear the git key agents-cleanup set, then scaffold as
                      normal (refused while .agents-disabled exists)
+      --public       New project: scaffold public mode (the default inside git).
+                     Private project: migrate it to public mode.
+      --private      New project: scaffold private mode. Refused on a public
+                     project.
       -v, --verbose  Print all per-step output (default)
       -q, --quiet    Print one summary line only if changes were made
       -s, --silent   Suppress all output; errors only (standard UNIX convention)
@@ -2643,8 +2680,9 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Setup completed successfully
       1  Fatal error (git init failed, move failed, the AGENTS/ commit was
-         rejected, or an unresolved rebase blocked it), or --enable refused
-         because .agents-disabled exists
+         rejected, or an unresolved rebase blocked it), --enable refused
+         because .agents-disabled exists, a migration precondition failed,
+         --private given for a public project, or both mode flags given
 
     Notes:
       This header covers usage only. The full concept/behavior/purpose
@@ -2660,8 +2698,9 @@ functions). They are active in all interactive sessions.
     agents-init --agents
     agents-init --plugins
     agents-init --quiet
+    agents-init --public
 
-**Dependencies:** `_agents_init_find`, `_agents_init_sync_instructions`, `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
+**Dependencies:** `_agents_init_find`, `_agents_init_sync_instructions`, `_agents_init_sync_public`, `_agents_init_migrate_public`, `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
 
 **Classification:** `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(16-agent-tooling)`
 
@@ -5383,6 +5422,85 @@ Downstream tooling that wants to know whether a project's `AGENTS/`
 `.version` file's MINOR field directly rather than diffing the tree.
 
 
+## Public and private modes
+
+A project's `AGENTS.md` can serve two audiences: anyone working on the
+project (contributors and their agents), and you alone (your own tools,
+servers, workflow habits). `agents-init` supports both through two modes,
+recorded in `AGENTS/.mode`. In both, each real file lives in the
+repository whose visibility matches it, and the other side holds a
+symlink:
+
+    Public mode (the default for a new project inside git)
+      $PROJECT/AGENTS.md               real file, tracked by the project
+      $PROJECT/AGENTS.local.md         -> AGENTS/AGENTS.local.md (gitignored)
+      $PROJECT/AGENTS/AGENTS.local.md  your private instructions (real file)
+      $PROJECT/AGENTS/AGENTS.md        -> ../AGENTS.md
+
+    Private mode (every project scaffolded before modes existed)
+      $PROJECT/AGENTS.md               -> AGENTS/AGENTS.md (gitignored)
+      $PROJECT/AGENTS/AGENTS.md        all instructions (real file)
+
+Subdirectories follow the same pattern. In public mode a subdirectory gets
+an `AGENTS.local.md` link only when you create
+`AGENTS/<dir>/AGENTS.local.md` yourself.
+
+The public starter `AGENTS.md` that `agents-init` writes ends with a
+"Context & Sub-rules" section pointing agents at `AGENTS.local.md`. It is
+written both as an `@AGENTS.local.md` import, which Claude Code expands
+and loads up front, and as an ordinary sentence, which agents that do not
+expand imports (`agy`, Codex) read and follow by opening the file
+themselves. Either way a missing `AGENTS.local.md` is simply skipped, so
+the line is safe in a published file. Keep the `@AGENTS.local.md` out of
+backticks: Claude Code does not expand an import inside a code span.
+
+NOTE: Claude Code does not read `AGENTS.local.md` on its own, and a
+`CLAUDE.local.md` would stop it from reading `AGENTS.md` at all. That is
+why the reference lives in `AGENTS.md` itself.
+
+A real public `AGENTS.md` is never moved, rewritten or adopted, tracked or
+not. `agents-init` will not add the "Context & Sub-rules" line to one you
+wrote, either; a verbose run tells you when it is missing.
+
+Choosing a mode:
+
+    agents-init              # new project: public; existing: unchanged
+    agents-init --private    # new project: private, the pre-mode layout
+    agents-init --public     # existing private project: migrate it
+
+A project with no `AGENTS/.mode` is private. The `claude` and `agy`
+wrappers pass no mode flag, so a launch never changes a project's mode.
+Outside a git repository a new project is private, since there is nothing
+to publish. `--private` on a public project is refused: whatever was
+published is already in the project's history, so going back is a manual
+decision.
+
+### Migrating a private project
+
+`agents-init --public` on a private project converts it without
+publishing anything:
+
+  - Each private `AGENTS/<dir>/AGENTS.md` is renamed to
+    `AGENTS/<dir>/AGENTS.local.md` with `git mv`, so it stays private and
+    its history follows (`git log --follow`). If it carries the SYSTEM
+    DIRECTIVE pointing at its old path, the path is updated.
+  - The project-level link is replaced by a public starter. None of your
+    private text is copied into it.
+  - The `AGENTS.md` line in the `agents-init` `.gitignore` block becomes
+    `AGENTS.local.md`. Lines you wrote yourself are never edited; if one
+    of them still ignores `AGENTS.md`, a warning names it.
+  - `AGENTS/` is committed. Nothing is committed in the project.
+
+Then review the new `AGENTS.md` files and `.gitignore`, move whatever
+should be public out of `AGENTS.local.md`, and commit. Before that
+commit, the migration is undone by:
+
+    git -C AGENTS revert HEAD
+    git checkout -- .gitignore
+    rm AGENTS.md    # and each new <dir>/AGENTS.md starter
+    agents-init
+
+
 ## Per-directory discovery
 
 The convention is not limited to a project's root. Any directory that
@@ -5486,6 +5604,11 @@ When a directory is skipped for this reason, `agents-init` prints a
 warning naming the file and explaining why, rather than staying silent
 about a directory it chose not to touch.
 
+This rule, and the scenario tables below, describe private mode. Public
+mode never adopts a real `AGENTS.md` at all, whatever `.gitignore` holds.
+A real `CLAUDE.md` it finds is left alone when tracked; an untracked one
+is treated as private and becomes that directory's `AGENTS.local.md`.
+
 
 ## Scenario reference
 
@@ -5572,6 +5695,14 @@ a fresh project is deleted, since it never held anything of yours. Any
 other `AGENTS.md` keeps its content and loses only the "SYSTEM DIRECTIVE"
 blockquote telling agents to edit `AGENTS/AGENTS.md` — a directory that no
 longer exists. If the directive was all it held, the file is deleted.
+
+In a public-mode project, the public `AGENTS.md` files are the project's
+own and are left exactly as they are. Each `AGENTS.local.md` link is
+restored like any other: deleted when it is exactly the stub
+`agents-init` wrote, otherwise kept with its directive removed. Because
+the `agents-init` `.gitignore` blocks go away, a restored `AGENTS.local.md`
+is kept ignored by a separate, commented line, so your private
+instructions never show up as a file ready to commit.
 
 Before anything moves, pending changes in `AGENTS/` are committed and the
 whole history is written to a verified git bundle under
