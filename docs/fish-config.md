@@ -4777,6 +4777,14 @@ prints a one-time welcome message (gated by `__fish_config_op_greeting`; set
 it to 0 to suppress). Subsequent sessions skip all first-run logic with zero
 overhead.
 
+Fisher itself is downloaded from a pinned release tag (`_fisher_ref` in
+`conf.d/first_run.fish`), never the floating `main` branch. If the download
+fails (offline, HTTP error, empty or invalid body), first-run prints an error
+to stderr and does not report success. The first-run flag is still set, so the
+bootstrap is not retried automatically; re-trigger it with the command below
+once you are online. Until Fisher and the sponge plugin are installed, history
+secret filtering is inactive, and a notice on stderr says so.
+
 To re-trigger first-run initialization (e.g., after a fresh install or for
 testing), run:
 
