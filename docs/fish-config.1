@@ -5853,6 +5853,16 @@ welcome message (gated by \f[V]__fish_config_op_greeting\f[R]; set it to
 0 to suppress).
 Subsequent sessions skip all first-run logic with zero overhead.
 .PP
+Fisher itself is downloaded from a pinned release tag
+(\f[V]_fisher_ref\f[R] in \f[V]conf.d/first_run.fish\f[R]), never the
+floating \f[V]main\f[R] branch.
+If the download fails (offline, HTTP error, empty or invalid body),
+first-run prints an error to stderr and does not report success.
+The first-run flag is still set, so the bootstrap is not retried
+automatically; re-trigger it with the command below once you are online.
+Until Fisher and the sponge plugin are installed, history secret
+filtering is inactive, and a notice on stderr says so.
+.PP
 To re-trigger first-run initialization (e.g., after a fresh install or
 for testing), run:
 .IP
