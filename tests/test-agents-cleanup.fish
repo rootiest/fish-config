@@ -67,7 +67,7 @@ function scaffolded_repo
     echo user-scoped >$d/functions/AGENTS.md
     echo a-plan >$d/docs/plans/p.md
     pushd $d >/dev/null
-    agents-init --silent 2>/dev/null
+    agents-init --private --silent 2>/dev/null
     popd >/dev/null
     printf '%s\n' $d
 end
@@ -186,7 +186,7 @@ git -C $g1 config commit.gpgsign false
 git -C $g1 config core.hooksPath /dev/null
 echo a-plan >$g1/README.md
 pushd $g1 >/dev/null
-agents-init --silent 2>/dev/null
+agents-init --private --silent 2>/dev/null
 set -l gout (agents-cleanup --dry-run 2>/dev/null)
 set -l grc $status
 popd >/dev/null
@@ -220,7 +220,7 @@ git clone -q $cb[1] $restored/AGENTS 2>/dev/null
 check "full: bundle restores the history" user-root (string collect <$restored/AGENTS/AGENTS.md)
 
 pushd $c1 >/dev/null
-agents-init --silent 2>/dev/null
+agents-init --private --silent 2>/dev/null
 popd >/dev/null
 check "full: agents-init no longer scaffolds" false (test -e $c1/AGENTS; and echo true; or echo false)
 
@@ -235,7 +235,7 @@ section "agents-cleanup: stub AGENTS.md"
 fresh_state
 set -l s1 (new_repo)
 pushd $s1 >/dev/null
-agents-init --silent 2>/dev/null
+agents-init --private --silent 2>/dev/null
 agents-cleanup --silent 2>/dev/null
 popd >/dev/null
 check "stub: deleted" false (test -e $s1/AGENTS.md -o -L $s1/AGENTS.md; and echo true; or echo false)
@@ -245,7 +245,7 @@ section "agents-cleanup: tracked blocks-only .gitignore is emptied, not deleted"
 fresh_state
 set -l g1 (new_repo)
 pushd $g1 >/dev/null
-agents-init --silent 2>/dev/null
+agents-init --private --silent 2>/dev/null
 git add .gitignore
 git commit -qm gi
 agents-cleanup --silent 2>/dev/null
@@ -259,7 +259,7 @@ fresh_state
 set -l t1 (new_repo)
 printf '%s\n' '# Title' '' '> ⚠️ **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> write to AGENTS/AGENTS.md' '' body >$t1/AGENTS.md
 pushd $t1 >/dev/null
-agents-init --silent 2>/dev/null
+agents-init --private --silent 2>/dev/null
 agents-cleanup --silent 2>/dev/null
 popd >/dev/null
 check "directive: blockquote and its trailing blank line removed" (printf '%s\n' '# Title' '' body | string collect) (string collect <$t1/AGENTS.md)
@@ -325,7 +325,7 @@ else
     set -l k1 (new_repo)
     printf '%s\n' '# Title' '' '> **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> x' '' body >$k1/AGENTS.md
     pushd $k1 >/dev/null
-    agents-init --silent 2>/dev/null
+    agents-init --private --silent 2>/dev/null
     popd >/dev/null
     chmod a-w $k1/AGENTS/AGENTS.md
     pushd $k1 >/dev/null
@@ -384,7 +384,7 @@ printf '%s\n' '# Mine' '' 'no directive here' >$v2/AGENTS.md
 set -l v2before (string collect <$v2/AGENTS.md)
 for v in $v1 $v2
     pushd $v >/dev/null
-    agents-init --silent 2>/dev/null
+    agents-init --private --silent 2>/dev/null
     agents-cleanup --silent 2>/dev/null
     popd >/dev/null
 end
@@ -482,7 +482,7 @@ section "agents-cleanup: user .gitignore lines around two agents-init blocks"
 fresh_state
 set -l w9 (new_repo)
 pushd $w9 >/dev/null
-agents-init --silent 2>/dev/null
+agents-init --private --silent 2>/dev/null
 popd >/dev/null
 set -l blk (string collect <$w9/.gitignore)
 printf '%s\n' before1 before2 >$w9/.gitignore
@@ -494,6 +494,41 @@ pushd $w9 >/dev/null
 agents-cleanup --silent 2>/dev/null
 popd >/dev/null
 check "gitignore: exactly the user lines remain, in order" (printf '%s\n' before1 before2 between after1 after2 | string collect) (string collect <$w9/.gitignore)
+
+section "agents-cleanup: public mode keeps public files and private ones unpublished"
+fresh_state
+set -l pub (new_repo)
+mkdir -p $pub/sub
+echo sub-public >$pub/sub/AGENTS.md
+pushd $pub >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+echo root-secret >>$pub/AGENTS/AGENTS.local.md
+echo sub-secret >$pub/AGENTS/sub/AGENTS.local.md
+pushd $pub >/dev/null
+agents-init --silent 2>/dev/null
+set -l prc (agents-cleanup --silent 2>&1; echo $status)
+popd >/dev/null
+check "public cleanup: exits 0 (outward links and .mode are not extras)" 0 "$prc"
+check "public cleanup: AGENTS/ removed" false (test -e $pub/AGENTS; and echo true; or echo false)
+check "public cleanup: root public file untouched" (_agents_init_stub --public | string collect) (string collect <$pub/AGENTS.md)
+check "public cleanup: child public file untouched" sub-public (cat $pub/sub/AGENTS.md)
+check "public cleanup: root private file restored as a real file" true (test -f $pub/AGENTS.local.md -a ! -L $pub/AGENTS.local.md; and grep -qF root-secret $pub/AGENTS.local.md; and echo true; or echo false)
+check "public cleanup: its directive stripped" false (grep -qF 'SYSTEM DIRECTIVE' $pub/AGENTS.local.md; and echo true; or echo false)
+check "public cleanup: child private file restored" sub-secret (cat $pub/sub/AGENTS.local.md)
+check "public cleanup: root private file still ignored" 0 (git -C $pub check-ignore -q --no-index AGENTS.local.md; echo $status)
+check "public cleanup: child private file still ignored" 0 (git -C $pub check-ignore -q --no-index sub/AGENTS.local.md; echo $status)
+check "public cleanup: no agents-init block left" false (grep -q 'Added by agents-init' $pub/.gitignore; and echo true; or echo false)
+check "public cleanup: private files never offered to git" "" (git -C $pub status --porcelain --untracked-files=all | string match '*AGENTS.local.md')
+
+fresh_state
+set -l pub2 (new_repo)
+pushd $pub2 >/dev/null
+agents-init --silent 2>/dev/null
+agents-cleanup --silent 2>/dev/null
+popd >/dev/null
+check "public cleanup: an untouched local stub is deleted, not restored" false (test -e $pub2/AGENTS.local.md; and echo true; or echo false)
+check "public cleanup: no ignore line needed then" false (test -f $pub2/.gitignore; and grep -qx AGENTS.local.md $pub2/.gitignore; and echo true; or echo false)
 
 cleanup
 report

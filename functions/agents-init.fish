@@ -673,7 +673,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
     end
 
-    if test $migrate -eq 1; and test $failed -eq 0
+    if test $migrate -eq 1; and test $failed -eq 0; and not set -q _flag_silent
         echo "$c_head→ Migrated to public mode.$c_reset Nothing is committed in the project. Review the new public AGENTS.md file(s) and .gitignore, move anything worth publishing out of AGENTS.local.md, then commit."
     end
 
