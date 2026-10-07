@@ -126,7 +126,9 @@ function session-env --description 'Export fish-config variables to the login se
                 contains -- $g $seen; and continue
                 set -a seen $g
                 set -l tags
-                test "$defaults[(contains -i -- $g $groups)]" = 1; and set -a tags default
+                # Hoisted: a command substitution inside a quoted index fails.
+                set -l first (contains -i -- $g $groups)
+                test "$defaults[$first]" = 1; and set -a tags default
                 contains -- $g $installed; and set -a tags installed
                 echo
                 echo "$c_head$g$c_reset $c_dim$tags$c_reset"
