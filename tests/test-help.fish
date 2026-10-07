@@ -267,11 +267,65 @@ function test_every_user_facing_function_has_help
     test $failed -eq 0
 end
 
-# Functions whose first argument is a subcommand. These also take a bare
-# `help` subcommand, the common convention for this CLI shape, and it must
-# print exactly what --help prints. Add new subcommand-style functions here.
+# Functions whose first argument is a subcommand. These follow the help
+# convention in CONTRIBUTING.md (Help requests): a bare `help` in the
+# subcommand slot, -h/--help anywhere before --, never a side effect. Add
+# new subcommand-style functions here AND to __help_subcommands below;
+# test_help_subcommand_list_is_complete fails if either is forgotten.
 set -g __help_subcommand_fns \
     auto-pull fish-deps jobrunner kitty-logging session-env superpowers
+
+# Each function's documented subcommands, one "fn sub sub ..." row each.
+set -g __help_subcommands \
+    'auto-pull list add remove status' \
+    'fish-deps status install update sync' \
+    'jobrunner run list attach kill logs' \
+    'kitty-logging install uninstall status dismiss' \
+    'session-env install preview uninstall status list' \
+    'superpowers on off'
+
+# A sandbox for running those functions for real. Every external binary
+# they can reach is a recording stub, and HOME and XDG_CONFIG_HOME point
+# inside it, so a side effect shows up in the recorder or as a changed file.
+function _help_sandbox_new
+    set -l tmp (mktemp -d)
+    # __fish_config_dir is read-only, derived from XDG_CONFIG_HOME, so the
+    # sandbox carries its own copy of the data the functions read.
+    mkdir -p $tmp/bin $tmp/home $tmp/cfg/fish
+    cp -r $repo_root/data $tmp/cfg/fish/
+    touch $tmp/invoked.log
+    for b in agy apt apt-get brew cargo claude curl dnf git kitty pacman \
+        paru pipx screen sudo tmux uv yay
+        printf '#!/bin/sh\necho "$(basename "$0") $*" >> %s\n' $tmp/invoked.log >$tmp/bin/$b
+        chmod +x $tmp/bin/$b
+    end
+    echo $tmp
+end
+
+function _help_sandbox_run --argument-names tmp
+    env TERM=dumb PATH="$tmp/bin:$PATH" HOME=$tmp/home XDG_CONFIG_HOME=$tmp/cfg \
+        fish --no-config -c \
+        "set -g fish_function_path $repo_root/functions; $argv[2..]"
+end
+
+# Fingerprint of every file under the sandbox's HOME and config dirs.
+function _help_sandbox_state --argument-names tmp
+    find $tmp/home $tmp/cfg -type f -exec md5sum '{}' + 2>/dev/null | sort
+end
+
+# Run CMDLINE in the sandbox and expect exit CODE with NEEDLE in the output.
+function _help_expect --argument-names tmp code needle cmdline
+    set -l out (_help_sandbox_run $tmp $cmdline 2>&1 | string collect)
+    set -l got $pipestatus[1]
+    if test $got -ne $code
+        echo "    $cmdline: exit $got, expected $code"
+        return 1
+    end
+    if not string match -q -- "*$needle*" "$out"
+        echo "    $cmdline: output lacks \"$needle\""
+        return 1
+    end
+end
 
 function test_help_subcommand_matches_help_flag
     set -l failed 0
@@ -290,6 +344,125 @@ function test_help_subcommand_matches_help_flag
     test $failed -eq 0
 end
 
+function test_help_after_subcommand_runs_nothing
+    # Rule 3: users append --help when unsure what a command does, so it
+    # must print the help and do nothing, wherever it sits before --.
+    set -l tmp (_help_sandbox_new)
+    set -l log $tmp/invoked.log
+    set -l failed 0
+    for row in $__help_subcommands
+        set -l words (string split ' ' -- $row)
+        set -l fn $words[1]
+        set -l want (_help_sandbox_run $tmp "$fn --help" 2>&1 | string collect)
+        set -l clean (_help_sandbox_state $tmp | string collect)
+        for sub in $words[2..]
+            for form in "$fn $sub --help" "$fn $sub -h" "$fn $sub x --help" "$fn --help $sub"
+                set -l got (_help_sandbox_run $tmp $form 2>&1 | string collect)
+                set -l code $pipestatus[1]
+                if test $code -ne 0
+                    echo "    $form: exit $code, expected 0"
+                    set failed 1
+                else if test "$got" != "$want"
+                    echo "    $form: output differs from $fn --help"
+                    set failed 1
+                end
+                set -l ran (string trim -- (command cat $log))
+                if test -n "$ran"
+                    echo "    $form EXECUTED: $ran"
+                    set failed 1
+                    echo -n "" >$log
+                end
+                if test "$(_help_sandbox_state $tmp | string collect)" != "$clean"
+                    echo "    $form changed files under HOME or XDG_CONFIG_HOME"
+                    set failed 1
+                end
+            end
+        end
+    end
+    rm -rf $tmp
+    test $failed -eq 0
+end
+
+function test_help_words_after_subcommand_are_data
+    # Rules 4 and 5: after the subcommand a bare help is data, and -- makes
+    # even --help data.
+    set -l tmp (_help_sandbox_new)
+    set -l failed 0
+    _help_expect $tmp 2 "unknown group 'help'" "session-env install help"; or set failed 1
+    _help_expect $tmp 2 "unknown group '--help'" "session-env install -- --help"; or set failed 1
+    _help_expect $tmp 1 "not a git repository: help" "auto-pull add help"; or set failed 1
+    _help_expect $tmp 1 "not a git repository: --help" "auto-pull add -- --help"; or set failed 1
+    _help_expect $tmp 0 "Started job" "jobrunner run -n job -- make --help"; or set failed 1
+    if not string match -q '*tmux new-session -d -s job make --help*' -- (command cat $tmp/invoked.log)
+        echo "    jobrunner run -n job -- make --help: make did not receive --help"
+        set failed 1
+    end
+    # The subcommand slot itself: -- makes --help an unknown subcommand.
+    for fn in $__help_subcommand_fns
+        _help_expect $tmp 2 "Run $fn help for usage." "$fn -- --help"; or set failed 1
+    end
+    rm -rf $tmp
+    test $failed -eq 0
+end
+
+function test_help_bare_invocation
+    # Decision 8: with a read-only default subcommand, run it; otherwise
+    # print the help on stdout and exit 0.
+    set -l tmp (_help_sandbox_new)
+    set -l failed 0
+    for fn in kitty-logging session-env superpowers
+        set -l want (_help_sandbox_run $tmp "$fn --help" 2>/dev/null | string collect)
+        set -l got (_help_sandbox_run $tmp $fn 2>/dev/null | string collect)
+        set -l code $pipestatus[1]
+        if test $code -ne 0; or test "$got" != "$want"
+            echo "    $fn (no args): exit $code, or help not on stdout"
+            set failed 1
+        end
+    end
+    _help_expect $tmp 0 "Auto-pull registry" auto-pull; or set failed 1
+    _help_expect $tmp 0 "No background jobs running." jobrunner; or set failed 1
+    rm -rf $tmp
+    test $failed -eq 0
+end
+
+function test_help_spelling_is_exact
+    # Rules 6 and 9: only exact spellings are help; anything else is a
+    # usage error (exit 2) that names the right spelling.
+    set -l tmp (_help_sandbox_new)
+    set -l failed 0
+    for fn in $__help_subcommand_fns
+        for word in HELP -help bogus-subcommand
+            _help_expect $tmp 2 "Run $fn help for usage." "$fn $word"; or set failed 1
+        end
+    end
+    rm -rf $tmp
+    test $failed -eq 0
+end
+
+function test_help_subcommand_list_is_complete
+    # A function with a subcommand dispatch or a documented bare `help`
+    # must be listed, or none of the checks above would cover it.
+    set -l failed 0
+    set -l listed (string replace -r ' .*' '' -- $__help_subcommands)
+    if test "$listed" != "$__help_subcommand_fns"
+        echo "    __help_subcommands and __help_subcommand_fns name different functions"
+        set failed 1
+    end
+    for f in $repo_root/functions/*.fish
+        set -l text (command cat $f | string collect)
+        string match -q '*# CATEGORY*' -- $text; or continue
+        set -l name (path change-extension '' (path basename $f))
+        contains -- $name $__help_exempt; and continue
+        if string match -qr '(?m)^\s*set -l (cmd|subcmd) "?\$argv\[1\]|(?m)^#\s+help, -h, --help' -- $text
+            if not contains -- $name $__help_subcommand_fns
+                echo "    $name looks subcommand-style but is not in \$__help_subcommand_fns"
+                set failed 1
+            end
+        end
+    end
+    test $failed -eq 0
+end
+
 section "help: renderer"
 check "full render: headings, indentation, multi-paragraph description" true (test_help_renderer; and echo true; or echo false)
 
@@ -302,5 +475,12 @@ check "eight functions never execute their destructive path on --help" true (tes
 section "help: coverage"
 check "every user-facing function has --help or is exempt" true (test_every_user_facing_function_has_help; and echo true; or echo false)
 check "subcommand functions accept a bare help, same as --help" true (test_help_subcommand_matches_help_flag; and echo true; or echo false)
+check "subcommand-style functions are all listed" true (test_help_subcommand_list_is_complete; and echo true; or echo false)
+
+section "help: convention for subcommand-style functions"
+check "SUB --help prints help and runs nothing" true (test_help_after_subcommand_runs_nothing; and echo true; or echo false)
+check "help after the subcommand, and anything after --, is data" true (test_help_words_after_subcommand_are_data; and echo true; or echo false)
+check "bare invocation runs a read-only default or prints help" true (test_help_bare_invocation; and echo true; or echo false)
+check "only exact spellings are help; others exit 2 naming it" true (test_help_spelling_is_exact; and echo true; or echo false)
 
 report

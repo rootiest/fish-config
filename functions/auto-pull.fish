@@ -36,8 +36,9 @@
 #   help, -h, --help   Show this help message
 #
 # EXIT STATUS
-#   0  Subcommand succeeded
-#   1  Bad usage, target is not a git repo, or target not registered
+#   0  Subcommand succeeded, or help was shown
+#   1  Target is not a git repo, or target not registered
+#   2  Unknown subcommand, or remove without a NAME|PATH
 #
 # EXAMPLE
 #   cd ~/src/qmk_firmware; and auto-pull add
@@ -51,10 +52,7 @@ function auto-pull --description 'Manage the auto-pull repository registry'
     set -q __fish_user_dots_path; or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
     set -l list "$__fish_user_dots_path/auto-pull.list"
 
-    set -l cmd $argv[1]
-    set -e argv[1]
-
-    if contains -- "$cmd" help -h --help; or contains -- -h $argv; or contains -- --help $argv
+    if test "$argv[1]" = help; or __fish_help_requested $argv
         echo "$c_head""Usage:$c_reset $c_cmd""auto-pull$c_reset $c_flag""[list | add | remove | status]$c_reset $c_dim""[PATH|NAME]$c_reset"
         echo
         echo "  Manage the registry of repos that are background fast-forwarded on entry."
@@ -67,6 +65,11 @@ function auto-pull --description 'Manage the auto-pull repository registry'
         echo "  $c_flag""help$c_reset, $c_flag-h$c_reset, $c_flag--help$c_reset  Show this help message"
         return 0
     end
+
+    # -- ends option parsing: what follows is data, never a help request.
+    set -l dd (contains -i -- -- $argv); and set -e argv[$dd]
+    set -l cmd $argv[1]
+    set -e argv[1]
 
     switch "$cmd"
         case '' list
@@ -106,7 +109,7 @@ function auto-pull --description 'Manage the auto-pull repository registry'
             set -l target $argv[1]
             if test -z "$target"
                 echo "$c_err""auto-pull: usage: auto-pull remove <NAME|PATH>$c_reset" >&2
-                return 1
+                return 2
             end
             if not test -r "$list"
                 echo "$c_dim""auto-pull: registry is empty$c_reset"
@@ -147,8 +150,8 @@ function auto-pull --description 'Manage the auto-pull repository registry'
             return 0
 
         case '*'
-            echo "$c_err""auto-pull: unknown subcommand: $cmd$c_reset" >&2
-            echo "$c_dim""try: auto-pull --help$c_reset" >&2
-            return 1
+            echo "$c_err""auto-pull: unknown subcommand '$cmd'$c_reset" >&2
+            echo "Run $c_cmd""auto-pull help$c_reset for usage." >&2
+            return 2
     end
 end

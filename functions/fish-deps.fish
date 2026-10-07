@@ -50,8 +50,8 @@
 #   help, -h, --help  Show this help
 #
 # EXIT STATUS
-#   0  Subcommand completed
-#   1  Unknown subcommand
+#   0  Subcommand completed, or help was shown
+#   2  Unknown subcommand
 #
 # EXAMPLE
 #   fish-deps sync
@@ -62,6 +62,15 @@
 #   fish-deps install --all
 #   fish-deps update
 function fish-deps --description 'Manage fish shell dependencies'
+    # Checked before dispatch so `fish-deps install --help` never installs.
+    # The menu is richer than the header renderer's, so it stays.
+    if test "$argv[1]" = help; or __fish_help_requested $argv
+        __fish_deps_help
+        return 0
+    end
+
+    # -- ends option parsing: what follows is data, never a help request.
+    set -l dd (contains -i -- -- $argv); and set -e argv[$dd]
     set -l subcmd $argv[1]
     set -l flags $argv[2..]
 
@@ -70,13 +79,6 @@ function fish-deps --description 'Manage fish shell dependencies'
             _fish_deps_status
         case install
             _fish_deps_install $flags
-        case help -h --help
-            # Reuse the existing menu rather than the header renderer: it
-            # is richer, and it is already the text the unknown-subcommand
-            # path prints. Previously --help fell into `case '*'` and
-            # exited 1 with "Unknown subcommand: --help".
-            __fish_deps_help
-            return 0
         case update
             _fish_deps_update
         case sync
@@ -86,12 +88,10 @@ function fish-deps --description 'Manage fish shell dependencies'
             echo "=== Updating installed deps ==="
             _fish_deps_update
         case '*'
-            set_color red
-            echo "Unknown subcommand: $subcmd"
-            set_color normal
-            echo ""
-            __fish_deps_help
-            return 1
+            __fish_palette
+            echo "$c_err""fish-deps: unknown subcommand '$subcmd'$c_reset" >&2
+            echo "Run $c_cmd""fish-deps help$c_reset for usage." >&2
+            return 2
     end
 end
 

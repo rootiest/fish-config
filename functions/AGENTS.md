@@ -15,7 +15,7 @@ Labels, in order: `CATEGORY`, `DEPENDENCIES`, `CLASSIFICATION`, `SYNOPSIS`, `DES
 - `SYNOPSIS`, `DESCRIPTION`, and `EXAMPLE` are enforced by `verify-manual.py`.
 - `EXIT STATUS` documents fish's `$status` after the call (the exit-code table). `RETURNS` is reserved for genuine stdout/printed output — omit it entirely for functions that print nothing on success.
 
-**Help Flags:** User-facing functions must accept `-h`/`--help` and print a formatted help menu to `stdout` unless it strictly wraps another tool's help. Functions whose first argument is a subcommand also accept a bare `help` subcommand with identical output; list them in `__help_subcommand_fns` (`tests/test-help.fish`).
+**Help Flags:** User-facing functions must accept `-h`/`--help` and print a formatted help menu to `stdout` unless it strictly wraps another tool's help. Functions whose first argument is a subcommand follow the help convention in `CONTRIBUTING.md` (§ Help requests): a bare `help` in the subcommand slot only, `-h`/`--help` anywhere before `--` with no side effects (use `__fish_help_requested`), help on stdout with exit 0 when run bare (unless the default subcommand is read-only), and exit 2 for usage errors. List them in `__help_subcommand_fns` and `__help_subcommands` (`tests/test-help.fish`).
 
 ## Context & Sub-rules
 

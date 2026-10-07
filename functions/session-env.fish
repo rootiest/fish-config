@@ -38,8 +38,9 @@
 #   help, -h, --help    Show this help
 #
 # EXIT STATUS
-#   0  Success
-#   1  Unknown subcommand or group, missing catalog, or a write failure
+#   0  Success, or help was shown
+#   1  Missing catalog, or a write failure
+#   2  Unknown command or group
 #
 # EXAMPLE
 #   session-env install
@@ -49,9 +50,7 @@
 function session-env --description 'Export fish-config variables to the login session via environment.d'
     __fish_palette
 
-    set -l cmd $argv[1]
-
-    if test -z "$cmd"; or contains -- "$cmd" help -h --help
+    if not set -q argv[1]; or test "$argv[1]" = help; or __fish_help_requested $argv
         echo "$c_head""Usage:$c_reset $c_cmd""session-env$c_reset $c_flag""[install|preview|uninstall|status|list]$c_reset $c_flag""[GROUP...]$c_reset $c_flag""[-h]$c_reset"
         echo
         echo "  Export fish-config variables to the whole login session (environment.d)."
@@ -65,6 +64,10 @@ function session-env --description 'Export fish-config variables to the login se
         echo "  $c_flag""help$c_reset, $c_flag""-h$c_reset, $c_flag""--help$c_reset    Show this help message"
         return 0
     end
+
+    # -- ends option parsing: what follows is data, never a help request.
+    set -l dd (contains -i -- -- $argv); and set -e argv[$dd]
+    set -l cmd $argv[1]
 
     set -l catalog $__fish_config_dir/data/session-env.tsv
     set -l config_home $XDG_CONFIG_HOME
@@ -155,7 +158,7 @@ function session-env --description 'Export fish-config variables to the login se
                 if not contains -- $g $groups
                     echo "$c_err""session-env: unknown group '$g'$c_reset" >&2
                     echo "Run $c_cmd""session-env list$c_reset to see the groups." >&2
-                    return 1
+                    return 2
                 end
             end
 
@@ -206,7 +209,7 @@ function session-env --description 'Export fish-config variables to the login se
 
         case '*'
             echo "$c_err""session-env: unknown command '$cmd'$c_reset" >&2
-            echo "Run $c_cmd""session-env --help$c_reset for usage." >&2
-            return 1
+            echo "Run $c_cmd""session-env help$c_reset for usage." >&2
+            return 2
     end
 end

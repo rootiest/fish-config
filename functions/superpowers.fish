@@ -25,13 +25,14 @@
 #   help, -h, --help  Show usage help
 #
 # EXIT STATUS
-#   0  Mode applied successfully
-#   1  No on/off mode specified
+#   0  Mode applied successfully, or help was shown
+#   2  Unknown command or option, or more than one command
 #
 # EXAMPLE
 #   superpowers on
 #   superpowers off -g
 function superpowers --description 'Toggle superpowers extension for antigravity-cli and Claude'
+    __fish_palette
     set -l scope_agy workspace
     set -l scope_claude project
     set -l mode ""
@@ -47,26 +48,52 @@ Options:
   help, -h, --help  Show this help message
 "
 
-    # Parse arguments
-    for arg in $argv
+    # Checked before parsing so `superpowers on --help` changes nothing.
+    if test "$argv[1]" = help; or __fish_help_requested $argv
+        echo $help_text
+        return 0
+    end
+
+    set -l cmd
+    while set -q argv[1]
+        set -l arg $argv[1]
+        set -e argv[1]
         switch $arg
-            case on
-                set mode enable
-            case off
-                set mode disable
+            case --
+                # Ends option parsing: what follows is data, never a flag.
+                set -a cmd $argv
+                break
             case -g --global
                 set scope_agy user
                 set scope_claude user
-            case help -h --help
-                echo $help_text
-                return 0
+            case '-*'
+                echo "$c_err""superpowers: unknown option '$arg'$c_reset" >&2
+                echo "Run $c_cmd""superpowers help$c_reset for usage." >&2
+                return 2
+            case '*'
+                set -a cmd $arg
         end
     end
 
-    # Handle no arguments or invalid mode
-    if test -z "$mode"
+    # Bare invocation is how a command is discovered: help, not an error.
+    if not set -q cmd[1]
         echo $help_text
-        return 1
+        return 0
+    end
+    if set -q cmd[2]
+        echo "$c_err""superpowers: expected one command, got '$cmd'$c_reset" >&2
+        echo "Run $c_cmd""superpowers help$c_reset for usage." >&2
+        return 2
+    end
+    switch $cmd
+        case on
+            set mode enable
+        case off
+            set mode disable
+        case '*'
+            echo "$c_err""superpowers: unknown command '$cmd'$c_reset" >&2
+            echo "Run $c_cmd""superpowers help$c_reset for usage." >&2
+            return 2
     end
 
     echo "Setting superpowers to: $mode (Scope: antigravity-cli=$scope_agy, Claude=$scope_claude)..."

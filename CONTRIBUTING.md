@@ -544,14 +544,71 @@ Give every function a `--description`, since it's what shows up in `fish -c
 function my_function --description 'Short, imperative description'
 ```
 
-### The `help` subcommand
+### Help requests
 
-A function whose first argument is a subcommand (`session-env install`,
-`kitty-logging status`, `fish-deps sync`, ...) also accepts a bare `help`
-there, printing exactly what `-h`/`--help` prints. Only the first word
-counts, so `auto-pull add help` still registers a repo named `help`. Add
-the function to `__help_subcommand_fns` in `tests/test-help.fish`, which
-checks that `<fn> help` matches `<fn> --help`.
+Three kinds of function handle help differently:
+
+- A **subcommand-style function** takes an action as its first positional
+  argument (`session-env install`, `kitty-logging status`, `fish-deps sync`,
+  `auto-pull add`, `superpowers on`, `jobrunner list`).
+- A **plain function** takes data as its positionals (`mkcd <dir>`,
+  `open-url <url>`).
+- A **wrapper** forwards `$argv` to one tool that owns its help (`docker`,
+  `rg`, `ls`). These are the `EXEMPT-A` set in `tests/test-help.fish`.
+
+The rules:
+
+1. **Every user-facing function accepts `-h` and `--help`**, printing help
+   to stdout with exit 0. Wrappers are exempt.
+2. **A bare `help` works only in a subcommand-style function, and only in
+   the subcommand slot.** In a plain function `help` is data: `mkcd help`
+   makes a directory named `help`.
+3. **`-h`/`--help` anywhere before `--` print the help and run nothing.**
+   `fn SUB --help`, `fn SUB ARG --help` and `fn --help SUB` all print help
+   and change nothing, because people add `--help` when they are unsure
+   what a command does. Wrappers are exempt, so `docker run --help` still
+   reaches docker.
+4. **Data after the subcommand is never read as help.** `auto-pull add
+   help` registers a repo at `./help`, and `session-env install help` asks
+   for a group named `help`. Only the dash forms are special there.
+5. **`--` ends option parsing**, so a literal `--help` can still be passed
+   as data: `jobrunner run -- make --help` runs `make --help`.
+6. **Matching is exact and case-sensitive.** `HELP`, `Help` and `-help`
+   are not help requests. They fall through to the unknown-command error,
+   which names the right spelling: `Run session-env help for usage.`
+7. **`fn SUB --help` prints the whole function's help**, the same text as
+   `fn --help`. Per-subcommand help may come later as an opt-in.
+8. **No arguments:** a function whose documented default subcommand is
+   read-only runs it (`auto-pull` lists, `fish-deps` reports status,
+   `jobrunner` lists jobs). Any other prints its help to stdout and exits
+   0, since running a command bare is how people discover it.
+9. **Usage errors exit 2**: an unknown subcommand, option or group, or a
+   missing argument. Exit 1 stays for runtime failures (not a git repo, a
+   failed write, no such job), so a script can tell misuse from failure.
+   Document both in the `EXIT STATUS` header.
+
+In a subcommand-style function, check for help before dispatching, then
+drop the `--` so what follows reads as data:
+
+```fish
+if not set -q argv[1]; or test "$argv[1]" = help; or __fish_help_requested $argv
+    # print the help
+    return 0
+end
+set -l dd (contains -i -- -- $argv); and set -e argv[$dd]
+set -l cmd $argv[1]
+```
+
+`__fish_help_requested` succeeds when `-h` or `--help` appears before
+`--`. Leave out the `not set -q argv[1]` test when the function has a
+read-only default subcommand.
+
+Add every subcommand-style function to `__help_subcommand_fns` and its
+documented subcommands to `__help_subcommands`, both in
+`tests/test-help.fish`. The suite runs each subcommand with `--help`
+against recording stubs and fails if anything executes or a file changes.
+It also fails when a published function looks subcommand-style (a `set -l
+cmd $argv[1]` or a documented bare `help`) but is not listed.
 
 ### Colored `--help` output
 
