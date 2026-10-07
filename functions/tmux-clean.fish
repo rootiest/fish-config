@@ -15,12 +15,14 @@
 #   attached sessions running.
 #
 # EXIT STATUS
-#   0  Always
+#   0  Detached sessions killed, or none found
+#   2  Unexpected argument (takes none)
 #
 # EXAMPLE
 #   tmux-clean
 function tmux-clean --description 'Kill all tmux sessions except the current one'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     # Get a list of all session names that are NOT currently attached
     set sessions (tmux list-sessions -F '#{session_name} #{session_attached}' | string match -rv ' 1$' | string split -f1 ' ')

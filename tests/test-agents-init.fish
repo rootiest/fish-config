@@ -633,7 +633,7 @@ set -l f1 (new_repo)
 pushd $f1 >/dev/null
 set -l frc1 (agents-init --public --private --silent 2>/dev/null; echo $status)
 popd >/dev/null
-check "both flags: usage error" 1 "$frc1"
+check "both flags: usage error" 2 "$frc1"
 check "both flags: nothing scaffolded" false (test -e $f1/AGENTS; and echo true; or echo false)
 
 pushd $p1 >/dev/null

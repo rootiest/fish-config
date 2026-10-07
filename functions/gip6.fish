@@ -20,6 +20,7 @@
 # EXIT STATUS
 #   0  IPv6 address resolved
 #   1  IPv6 unavailable or not supported on this network
+#   2  Unexpected argument (takes none)
 #
 # RETURNS
 #   The machine's public IPv6 address, printed to stdout
@@ -28,6 +29,7 @@
 #   gip6
 function gip6 --description 'Get public IPv6 address'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     # Use -6 to force IPv6 and --fail to catch network errors
     set -l ip (curl -6 -s --fail https://icanhazip.com 2>/dev/null)

@@ -15,12 +15,14 @@
 #
 # EXIT STATUS
 #   1  loginctl is not installed
+#   2  Unexpected argument (takes none)
 #   *  Exit status of loginctl lock-session otherwise
 #
 # EXAMPLE
 #   lock
 function lock --wraps='loginctl' --description 'alias lock=loginctl'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     if not type -q loginctl
         echo (set_color red)"Error: loginctl is not installed."(set_color normal) >&2

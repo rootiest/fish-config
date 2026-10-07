@@ -40,6 +40,7 @@
 # EXIT STATUS
 #   0  URL opened, or resolved with -p/--print
 #   1  Not a git repo, no origin remote, or browser launch failed
+#   2  Unknown option, or an unexpected argument
 #
 # RETURNS
 #   With -p/--print, the resolved repository URL, printed to stdout
@@ -55,7 +56,7 @@ function repo-open --description 'Open the origin remote of the current repo in 
     __fish_palette
 
     argparse -X 0 h/help p/print r/root -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""repo-open$c_reset $c_flag""[-p|--print] [-r|--root]$c_reset"

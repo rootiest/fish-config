@@ -77,7 +77,8 @@
 #
 # EXIT STATUS
 #   0  Exited normally
-#   1  Unknown flag, no TTY, or python3/curses unavailable
+#   1  No TTY, or python3/curses unavailable
+#   2  Unknown flag
 #
 # EXAMPLE
 #   config-settings
@@ -114,7 +115,7 @@ function config-settings --description 'Interactive TUI for managing fish config
             case '*'
                 echo "$c_err""Unknown option: $arg$c_reset" >&2
                 echo "Run $c_cmd""config-settings --help$c_reset for usage." >&2
-                return 1
+                return 2
         end
     end
 

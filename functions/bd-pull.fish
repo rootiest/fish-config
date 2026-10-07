@@ -20,7 +20,8 @@
 #
 # EXIT STATUS
 #   0  Issues linked and synced (or no unlinked issues found)
-#   1  Missing required argument or environment variables
+#   1  GITEA_TOKEN or GITEA_URL not set
+#   2  Missing repository argument
 #
 # EXAMPLE
 #   bd-pull myuser/myproject
@@ -30,7 +31,7 @@ function bd-pull --description 'Pull new Gitea issues into local Beads and link 
 
     if not set -q argv[1]
         echo "Need repo owner/name"
-        return 1
+        return 2
     end
     if not set -q GITEA_TOKEN
         echo "\$GITEA_TOKEN not set"

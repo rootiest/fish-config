@@ -35,7 +35,8 @@
 #
 # EXIT STATUS
 #   0  Operation completed
-#   1  No supported package manager found, unknown flag, or package operation failed
+#   1  No supported package manager found, or package operation failed
+#   2  Unknown flag
 #
 # EXAMPLE
 #   pkg firefox
@@ -105,7 +106,7 @@ function pkg --description 'Install or remove packages via the system package ma
             case '-*'
                 echo "$c_err""error:$c_reset unknown flag $c_flag$arg$c_reset" >&2
                 functions -e __pkg_is_installed
-                return 1
+                return 2
             case '*'
                 set packages $packages $arg
         end

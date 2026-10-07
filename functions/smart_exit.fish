@@ -29,7 +29,7 @@
 #
 # EXIT STATUS
 #   0  Shell session exited
-#   1  Argument parsing failed
+#   2  Unknown option
 #
 # EXAMPLE
 #   smart_exit
@@ -48,7 +48,7 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
 
     set -l options h/help n/no-log
     argparse $options -- $argv
-    or return 1
+    or return
 
     __fish_palette
 

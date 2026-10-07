@@ -17,12 +17,14 @@
 #   Fetches and prints the machine's public IPv4 address using icanhazip.com.
 #
 # EXIT STATUS
-#   Exit status of curl
+#   2  Unexpected argument (takes none)
+#   *  Exit status of curl otherwise
 #
 # EXAMPLE
 #   gip4
 function gip4 --wraps='curl' --description 'Get public IPv4 address'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     curl -4 -s https://icanhazip.com
 end

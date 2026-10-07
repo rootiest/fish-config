@@ -79,6 +79,7 @@
 #   1  Refused (outside git without --marker-file, unresolved rebase in
 #      AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
 #      failed
+#   2  Unknown option
 #
 # EXAMPLE
 #   agents-cleanup --dry-run
@@ -99,7 +100,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     __fish_palette
 
     argparse h/help n/dry-run drop-extras marker-file v/verbose q/quiet s/silent -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""agents-cleanup$c_reset $c_flag""[-n] [--drop-extras] [--marker-file] [-v] [-q] [-s] [-h | --help]$c_reset"

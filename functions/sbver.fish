@@ -25,12 +25,21 @@
 # EXIT STATUS
 #   0  All binaries verified (or summary shown)
 #   1  sbctl is not installed
+#   2  Any argument other than --brief
 #
 # EXAMPLE
 #   sbver
 #   sbver --brief
 function sbver --description 'Verifies Secure Boot status of EFI binaries using sbctl'
     __fish_help_header (status current-function) $argv; and return 0
+
+    # Takes only --brief: anything else is a usage error, not a full scan.
+    if not contains -- "$argv" '' --brief
+        __fish_palette
+        echo "$c_err""sbver: unexpected argument '$argv'$c_reset" >&2
+        echo "Run $c_cmd""sbver --help$c_reset for usage." >&2
+        return 2
+    end
 
     if not type -q sbctl
         echo "Error: 'sbctl' is not installed."

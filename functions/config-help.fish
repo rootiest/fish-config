@@ -41,6 +41,7 @@
 # EXIT STATUS
 #   0  Manual displayed
 #   1  Documentation file not found, or required tool not available
+#   2  Unknown option
 #
 # RETURNS
 #   With -h/--help, the usage and navigation reference, printed to stdout.
@@ -68,11 +69,17 @@ function config-help --description 'Open the offline fish shell configuration ma
     set -l site_url "https://fish.rootiest.fyi/"
 
     # ── Extract section keyword (first non-flag argument) ────────
+    # An unknown flag is a usage error, unless help was asked for as well.
     set -l section_kw ""
     for arg in $argv
         if not string match -q -- '-*' $arg
-            set section_kw $arg
-            break
+            test -z "$section_kw"; and set section_kw $arg
+        else if not contains -- $arg -h --help -w --html -m --man
+            __fish_help_requested $argv; and continue
+            __fish_palette
+            echo "$c_err""config-help: unknown option '$arg'$c_reset" >&2
+            echo "Run $c_cmd""config-help --help$c_reset for usage." >&2
+            return 2
         end
     end
 

@@ -201,7 +201,7 @@ section "mkrep: --remote and --new-remote are exclusive"
 set -l base (_mkrep_sandbox)
 set -l target $base/repo
 mkrep --remote https://example.invalid/x.git --new-remote $target >/dev/null 2>/tmp/mkrep-test-err
-check "--remote + --new-remote exits 1" 1 $status
+check "--remote + --new-remote exits 2" 2 $status
 check "conflicting remote flags create nothing" false (test -d $target; and echo true; or echo false)
 rm -f /tmp/mkrep-test-err
 rm -rf $base
@@ -211,7 +211,7 @@ section "mkrep: --new-remote requires --git"
 set -l base (_mkrep_sandbox)
 set -l target $base/repo
 mkrep --no-git --new-remote $target >/dev/null 2>/tmp/mkrep-test-err
-check "--no-git + --new-remote exits 1" 1 $status
+check "--no-git + --new-remote exits 2" 2 $status
 check "rejected combo creates nothing" false (test -d $target; and echo true; or echo false)
 rm -f /tmp/mkrep-test-err
 rm -rf $base
@@ -242,9 +242,9 @@ section "mkrep: --server conflicts with --remote/--new-remote"
 set -l base (_mkrep_sandbox)
 set -l target $base/repo
 mkrep --server gitea --remote https://example.invalid/x.git $target >/dev/null 2>/tmp/mkrep-test-err
-check "--server + --remote exits 1" 1 $status
+check "--server + --remote exits 2" 2 $status
 mkrep --server gitea --new-remote $target >/dev/null 2>/tmp/mkrep-test-err
-check "--server + --new-remote exits 1" 1 $status
+check "--server + --new-remote exits 2" 2 $status
 check "conflicting server flags create nothing" false (test -d $target; and echo true; or echo false)
 rm -f /tmp/mkrep-test-err
 rm -rf $base
@@ -254,7 +254,7 @@ section "mkrep: --check-existing conflicts with --remote/--new-remote"
 set -l base (_mkrep_sandbox)
 set -l target $base/repo
 mkrep --check-existing --remote https://example.invalid/x.git $target >/dev/null 2>/tmp/mkrep-test-err
-check "--check-existing + --remote exits 1" 1 $status
+check "--check-existing + --remote exits 2" 2 $status
 rm -f /tmp/mkrep-test-err
 rm -rf $base
 
@@ -284,7 +284,7 @@ section "mkrep: --server requires --git"
 set -l base (_mkrep_sandbox)
 set -l target $base/repo
 mkrep --no-git --server gitea $target >/dev/null 2>/tmp/mkrep-test-err
-check "--no-git + --server exits 1" 1 $status
+check "--no-git + --server exits 2" 2 $status
 rm -f /tmp/mkrep-test-err
 rm -rf $base
 
@@ -293,7 +293,7 @@ section "mkrep: --server rejects an unknown type"
 set -l base (_mkrep_sandbox)
 set -l target $base/repo
 mkrep --server bitbucket $target >/dev/null 2>/tmp/mkrep-test-err
-check "unknown --server type exits 1" 1 $status
+check "unknown --server type exits 2" 2 $status
 rm -f /tmp/mkrep-test-err
 rm -rf $base
 

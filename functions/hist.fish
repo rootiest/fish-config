@@ -21,11 +21,13 @@
 # EXIT STATUS
 #   0  Command selected and inserted, or fzf was cancelled
 #   1  Disabled by __fish_config_op_integrations
+#   2  Unexpected argument (takes none)
 #
 # EXAMPLE
 #   hist
 function hist --description 'Search fish history and put it in the prompt'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     # Opinionated guard (C4): integrations disabled
     if not __fish_config_op_enabled (status current-function)

@@ -19,12 +19,14 @@
 #
 # EXIT STATUS
 #   0        fzf installed or updated successfully
+#   2        Unexpected argument (takes none)
 #   Nonzero  git or the fzf install script failed
 #
 # EXAMPLE
 #   fzf-update
 function fzf-update --description 'Install or upgrade fzf from git HEAD'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     if test -d ~/.fzf
         echo "Updating fzf..."

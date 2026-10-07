@@ -127,7 +127,9 @@
 # EXIT STATUS
 #   0  All requested steps completed, or a $GIT_SERVER remote-create was
 #      declined at the prompt (the local repo is still set up)
-#   1  Bad arguments, or a step (mkdir, cd, git init, remote) failed
+#   1  A step (mkdir, cd, git init, remote) failed
+#   2  Bad arguments: unknown option, not exactly one directory,
+#      conflicting flags, or an unknown --server type
 #
 # EXAMPLE
 #   mkrep ~/projects/my-new-repo
@@ -162,7 +164,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         l/local v/verbose s/silent y/yes template= branch= remote= new-remote=? server= \
         check-existing name= \
         -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""mkrep$c_reset $c_flag""[options]$c_reset $c_arg""<dir>$c_reset"
@@ -198,7 +200,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
 
     if test (count $argv) -ne 1
         echo "$c_err""✘$c_reset  mkrep takes exactly one directory argument" >&2
-        return 1
+        return 2
     end
     set -l dir $argv[1]
 
@@ -212,28 +214,28 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
 
     if set -q _flag_remote; and set -q _flag_new_remote
         echo "$c_err""✘$c_reset  --remote and --new-remote are mutually exclusive" >&2
-        return 1
+        return 2
     end
     if set -q _flag_server; and set -q _flag_remote
         echo "$c_err""✘$c_reset  --server and --remote are mutually exclusive" >&2
-        return 1
+        return 2
     end
     if set -q _flag_server; and set -q _flag_new_remote
         echo "$c_err""✘$c_reset  --server and --new-remote are mutually exclusive" >&2
-        return 1
+        return 2
     end
     if set -q _flag_check_existing; and set -q _flag_remote
         echo "$c_err""✘$c_reset  --check-existing and --remote are mutually exclusive" >&2
-        return 1
+        return 2
     end
     if set -q _flag_check_existing; and set -q _flag_new_remote
         echo "$c_err""✘$c_reset  --check-existing and --new-remote are mutually exclusive" >&2
-        return 1
+        return 2
     end
     if set -q _flag_no_git
         if set -q _flag_remote; or set -q _flag_new_remote; or set -q _flag_server
             echo "$c_err""✘$c_reset  --remote/--new-remote/--server require --git" >&2
-            return 1
+            return 2
         end
     end
 
@@ -268,7 +270,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                     # gh defaults to github.com; no base url needed
                 case '*'
                     echo "$c_err""✘$c_reset  Unrecognized server type $c_arg$srv_type$c_reset (expected gitea, gitlab, or github)" >&2
-                    return 1
+                    return 2
             end
         end
     end

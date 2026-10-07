@@ -142,7 +142,8 @@
 #   1  Fatal error (git init failed, move failed, the AGENTS/ commit was
 #      rejected, or an unresolved rebase blocked it), --enable refused
 #      because .agents-disabled exists, a migration precondition failed,
-#      --private given for a public project, or both mode flags given
+#      or --private given for a public project
+#   2  Unknown option, or both --public and --private given
 #
 # EXAMPLE
 #   agents-init
@@ -163,7 +164,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     __fish_palette
 
     argparse h/help a/agents p/plugins e/enable public private v/verbose q/quiet s/silent -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-e] [--public | --private] [-v] [-q] [-s] [-h | --help]$c_reset"
@@ -260,7 +261,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # nothing to publish, so a new project there is private.
     if set -q _flag_public; and set -q _flag_private
         echo "$c_err""Error: --public and --private are mutually exclusive$c_reset" >&2
-        return 1
+        return 2
     end
     set -l fresh 0
     test -d "$agents_dir"; or set fresh 1

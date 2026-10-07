@@ -28,6 +28,7 @@
 # EXIT STATUS
 #   0  Conversion complete
 #   1  File not found, missing dependency, or encode step failed
+#   2  Unknown option
 #
 # EXAMPLE
 #   dng2avif photo.dng

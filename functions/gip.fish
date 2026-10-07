@@ -18,12 +18,14 @@
 #   icanhazip.com. Shows "Not detected" for any address that times out.
 #
 # EXIT STATUS
-#   0  Always (network failures print "Not detected" instead of failing)
+#   0  Network failures print "Not detected" instead of failing
+#   2  Unexpected argument (takes none)
 #
 # EXAMPLE
 #   gip
 function gip --description 'Show all public IP addresses'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     echo -n "IPv4: "
     curl -4 -s --max-time 2 https://icanhazip.com || echo "Not detected"

@@ -38,6 +38,7 @@
 # EXIT STATUS
 #   0  Patterns appended, or resolved with -o/--stdout or -l/--list
 #   1  Not in a git repository or API fetch failed
+#   2  Unknown option
 #
 # RETURNS
 #   With -o/--stdout, the fetched .gitignore pattern text, printed to stdout.
@@ -51,7 +52,7 @@
 #   gi -c ~/my-template.gitignore
 function gi --description 'Generate .gitignore files using the gitignore.io API'
     argparse h/help d/description l/list b/boilerplate p/prompt o/stdout s/silent f/force c/custom= -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         __fish_palette

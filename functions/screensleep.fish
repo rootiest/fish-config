@@ -16,12 +16,14 @@
 #
 # EXIT STATUS
 #   1  busctl is not installed
+#   2  Unexpected argument (takes none)
 #   *  Exit status of busctl otherwise
 #
 # EXAMPLE
 #   screensleep
 function screensleep --description 'Turn off the display using KDE PowerDevil'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     if not type -q busctl
         echo (set_color red)"Error: busctl is not installed."(set_color normal) >&2

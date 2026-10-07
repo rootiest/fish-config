@@ -582,10 +582,16 @@ The rules:
    read-only runs it (`auto-pull` lists, `fish-deps` reports status,
    `jobrunner` lists jobs). Any other prints its help to stdout and exits
    0, since running a command bare is how people discover it.
-9. **Usage errors exit 2**: an unknown subcommand, option or group, or a
-   missing argument. Exit 1 stays for runtime failures (not a git repo, a
-   failed write, no such job), so a script can tell misuse from failure.
-   Document both in the `EXIT STATUS` header.
+9. **Usage errors exit 2**: an unknown subcommand, option or group,
+   conflicting options, or a missing or extra argument. Exit 1 stays for
+   runtime failures (not a git repo, a failed write, no such job), so a
+   script can tell misuse from failure. When it's unclear which one a case
+   is, ask whether the same command line could succeed on another machine
+   or in another project. If it could, it's a runtime failure (exit 1):
+   `play-media --player` naming an uninstalled player, or `agents-init
+   --private` in a public project. If it never could, it's a usage error
+   (exit 2): `mkrep --server bitbucket`, or an unknown `rand_string`
+   category. Document both codes in the `EXIT STATUS` header.
 
 In a subcommand-style function, check for help before dispatching, then
 drop the `--` so what follows reads as data:
@@ -600,7 +606,18 @@ set -l cmd $argv[1]
 ```
 
 `__fish_help_requested` succeeds when `-h` or `--help` appears before
-`--`. Leave out the `not set -q argv[1]` test when the function has a
+`--`.
+
+With `argparse`, end the call with a bare `or return`, which passes on
+its exit 2; `or return 1` would turn it into a runtime failure. A function
+that takes no arguments must still refuse them, so a typo like `upgrade
+--dry-run` doesn't run the upgrade. Call `__fish_no_args` right after the
+help check:
+
+```fish
+__fish_help_header (status current-function) $argv; and return 0
+__fish_no_args (status current-function) $argv; or return
+``` Leave out the `not set -q argv[1]` test when the function has a
 read-only default subcommand.
 
 Add every subcommand-style function to `__help_subcommand_fns` and its
@@ -609,6 +626,11 @@ documented subcommands to `__help_subcommands`, both in
 against recording stubs and fails if anything executes or a file changes.
 It also fails when a published function looks subcommand-style (a `set -l
 cmd $argv[1]` or a documented bare `help`) but is not listed.
+
+The same suite calls every published function with an unknown option and
+expects exit 2 with nothing executed. Functions whose positionals are data
+(`mkcd`) or are passed to another tool (`lt`) are listed in
+`__usage_exempt`, with the reason for each group.
 
 ### Colored `--help` output
 

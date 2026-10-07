@@ -15,11 +15,13 @@
 #
 # EXIT STATUS
 #   0  Rule toggled
+#   2  Unexpected argument (takes none)
 #
 # EXAMPLE
 #   sudo-toggle
 function sudo-toggle --description 'Toggle sudo password requirement on/off'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     # Check the file size using sudo stat to see if our bypass rule is active
     set -l file_size (sudo stat -c %s /etc/sudoers.d/nofail-toggle 2>/dev/null)

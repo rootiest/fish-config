@@ -16,11 +16,13 @@
 #
 # EXIT STATUS
 #   1  docker or lazydocker is not installed
+#   2  Unexpected argument (takes none)
 #
 # EXAMPLE
 #   ld
 function ld --description 'Run lazydocker on the current Docker context'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     if not type -q docker
         echo "ld: docker is not installed" >&2

@@ -39,6 +39,7 @@
 # EXIT STATUS
 #   0  Clean, or a prompt/force run was handled
 #   1  Not a git repository, or (-w only) unconfirmed matches were found
+#   2  Unknown option, or more than one of -w, -f and -i
 #
 # EXAMPLE
 #   gitignore-scrub
@@ -48,7 +49,7 @@
 #   gitignore-scrub --reset
 function gitignore-scrub --description 'Find and optionally untrack files newly matched by .gitignore'
     argparse --exclusive w,f,i h/help r/reset w/warn f/force i/individual -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         __fish_palette

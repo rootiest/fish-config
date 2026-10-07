@@ -21,7 +21,8 @@
 #
 # EXIT STATUS
 #   0  Command launched successfully
-#   1  No command provided
+#   1  nohup is not installed
+#   2  No command provided
 #
 # EXAMPLE
 #   bkg firefox
@@ -32,7 +33,7 @@ function bkg --description 'Execute bkg'
     if test -z "$argv[1]"
         __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""bkg$c_reset $c_arg""<command> [arguments...]$c_reset"
-        return 1
+        return 2
     end
 
     if not type -q nohup

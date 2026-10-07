@@ -24,7 +24,8 @@
 #
 # EXIT STATUS
 #   0  Cleanup complete
-#   1  Argument parsing failed, or an orphaned branch could not be deleted
+#   1  An orphaned branch could not be deleted
+#   2  Unknown option
 #
 # EXAMPLE
 #   git-clean --force

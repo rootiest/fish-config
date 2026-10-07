@@ -21,11 +21,13 @@
 # EXIT STATUS
 #   0  Packages removed or none selected
 #   1  No AUR helper (paru or yay) found
+#   2  Unexpected argument (takes none)
 #
 # EXAMPLE
 #   parur
 function parur --description 'Interactively search and remove an installed package using fzf'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     set -l aur ""
     if type -q paru
