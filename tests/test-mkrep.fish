@@ -310,6 +310,24 @@ check "metachar \$USER arrives intact in {user}" 'u;touch PWNED_user' (cat $targ
 cd $start
 rm -rf $base
 
+set -l base (_mkrep_sandbox)
+set -l target "$base/x"
+mkrep --new-remote='echo {name} >created.txt' --name '{user}' $target >/dev/null 2>&1
+check "placeholder-shaped --name exits 0" 0 $status
+check "placeholder-shaped --name is not substituted twice" '{user}' (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
+section "mkrep: --new-remote misuse points at the working forms"
+
+set -l base (_mkrep_sandbox)
+mkrep --new-remote --name n $base/a $base/b >/dev/null 2>/tmp/mkrep-test-err
+check "bare --new-remote + two operands (no command next) exits 2" 2 $status
+check "error names the --new-remote=<cmd> form" true (string match -q -- '*--new-remote=<cmd>*' (cat /tmp/mkrep-test-err); and echo true; or echo false)
+check "misuse creates nothing" false (test -d $base/a; and echo true; or echo false)
+rm -f /tmp/mkrep-test-err
+rm -rf $base
+
 section "mkrep: --server substitutions cannot inject commands"
 
 set -l base (_mkrep_sandbox)
