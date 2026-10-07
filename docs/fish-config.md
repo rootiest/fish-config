@@ -1240,8 +1240,9 @@ functions). They are active in all interactive sessions.
       help, -h, --help   Show this help message
 
     Exit Status:
-      0  Subcommand succeeded
-      1  Bad usage, target is not a git repo, or target not registered
+      0  Subcommand succeeded, or help was shown
+      1  Target is not a git repo, or target not registered
+      2  Unknown subcommand, or remove without a NAME|PATH
 
     Example:
     cd ~/src/qmk_firmware; and auto-pull add
@@ -1748,8 +1749,8 @@ functions). They are active in all interactive sessions.
       help, -h, --help  Show this help
 
     Exit Status:
-      0  Subcommand completed
-      1  Unknown subcommand
+      0  Subcommand completed, or help was shown
+      2  Unknown subcommand
 
     Example:
     fish-deps sync
@@ -1901,8 +1902,9 @@ functions). They are active in all interactive sessions.
       help, -h, --help    Show this help
 
     Exit Status:
-      0  Success
-      1  Unknown subcommand or group, missing catalog, or a write failure
+      0  Success, or help was shown
+      1  Missing catalog, or a write failure
+      2  Unknown command or group
 
     Example:
     session-env install
@@ -2072,8 +2074,9 @@ functions). They are active in all interactive sessions.
     a memorable, random name (like sleepy-badger) will be generated.
 
     Exit Status:
-      0    Command succeeded, or no jobs are running
-      1    Invalid arguments, or the named job does not exist
+      0    Command succeeded, help was shown, or no jobs are running
+      1    The named job does not exist, is already running, or failed
+      2    Unknown subcommand or job, invalid tool or name, or missing argument
       127  neither tmux nor screen is installed
 
     Notes:
@@ -2081,6 +2084,9 @@ functions). They are active in all interactive sessions.
       Commands are executed directly rather than through a shell, so pipes and
       redirections must be wrapped explicitly, e.g.
       jobrunner run sync fish -c 'a | b'.
+      A -h or --help anywhere shows this help instead of starting a job, so
+      separate a command that takes one with --, e.g.
+      jobrunner run -- make --help.
 
     Example:
     jobrunner run -n build make -j8
@@ -3130,8 +3136,8 @@ functions). They are active in all interactive sessions.
       help, -h, --help  Show usage help
 
     Exit Status:
-      0  Mode applied successfully
-      1  No on/off mode specified
+      0  Mode applied successfully, or help was shown
+      2  Unknown command or option, or more than one command
 
     Example:
     superpowers on
@@ -3656,8 +3662,9 @@ functions). They are active in all interactive sessions.
       help, -h, --help  Show this help
 
     Exit Status:
-      0  Success
-      1  Unknown subcommand/flag, kitty missing, or a write failure
+      0  Success, or help was shown
+      1  kitty missing, or a write failure
+      2  Unknown command
 
     Example:
     kitty-logging install
