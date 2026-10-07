@@ -42,7 +42,8 @@
 #
 # EXIT STATUS
 #   0  Editor launched successfully
-#   1  Conflicting flags, no editor found, or clipboard read failed
+#   1  No editor found, or clipboard read failed
+#   2  Unknown option, or conflicting flags
 #
 # EXAMPLE
 #   edit notes.txt
@@ -69,7 +70,7 @@ function edit --description 'Open files in a terminal or GUI editor with fallbac
 
     argparse h/help V/visual t/terminal 'e/editor=' c/clipboard 'x/text=' \
         n/new v/verbose s/silent -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""edit$c_reset $c_flag""[-V|-t] [-e EDITOR] [-c] [-x TEXT] [-n] [-v|-s]$c_reset $c_dim""[FILE...]$c_reset"
@@ -92,11 +93,11 @@ function edit --description 'Open files in a terminal or GUI editor with fallbac
     # Mutually exclusive flag pairs.
     if set -q _flag_visual; and set -q _flag_terminal
         echo "$c_err""edit: --visual and --terminal are mutually exclusive$c_reset" >&2
-        return 1
+        return 2
     end
     if set -q _flag_verbose; and set -q _flag_silent
         echo "$c_err""edit: --verbose and --silent are mutually exclusive$c_reset" >&2
-        return 1
+        return 2
     end
 
     #   ──────────────────────── Resolve editor mode ────────────────────────

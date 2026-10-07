@@ -19,7 +19,7 @@
 #
 # EXIT STATUS
 #   0  Files created
-#   1  No file argument provided
+#   2  No file argument provided
 #
 # EXAMPLE
 #   poke ~/projects/new/src/main.fish
@@ -28,7 +28,7 @@ function poke --description 'touch with automatic parent directory creation'
 
     if test (count $argv) -eq 0
         echo (set_color red)"poke: no file specified"(set_color normal) >&2
-        return 1
+        return 2
     end
     for _path in $argv
         set -l _dir (dirname $_path)

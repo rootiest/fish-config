@@ -23,7 +23,8 @@
 #
 # EXIT STATUS
 #   0  Command launched or help/version shown
-#   1  No command provided or unknown option
+#   1  nohup is not installed
+#   2  No command provided, or unknown option
 #
 # EXAMPLE
 #   detach rsync -a ./data remote:/backup/
@@ -43,7 +44,7 @@ function detach --description 'Execute detach'
             case '-*' '--*'
                 echo "❌ Unknown option: $arg"
                 echo "Run 'detach --help' for usage."
-                return 1
+                return 2
             case '*'
                 set args $args $arg
         end
@@ -66,7 +67,7 @@ function detach --description 'Execute detach'
     if test (count $args) -eq 0
         echo "❌ No command provided."
         echo "Run 'detach --help' for usage."
-        return 1
+        return 2
     end
 
     if not type -q nohup

@@ -501,9 +501,9 @@ function __kc_body
     set -q _flag_input; and set -g input $_flag_input
     set -q _flag_output; and set -g output $_flag_output
     if test -n "$input"
-        test (count $argv) -le 1; or __kc_die "too many arguments (see --help)"; or return 1
+        test (count $argv) -le 1; or __kc_die "too many arguments (see --help)"; or return 2
         if test (count $argv) -eq 1
-            test -z "$output"; or __kc_die "output given twice (see --help)"; or return 1
+            test -z "$output"; or __kc_die "output given twice (see --help)"; or return 2
             set -g output $argv[1]
         end
     else
@@ -513,7 +513,7 @@ function __kc_body
         end
         set -g input $argv[1]
         if test (count $argv) -eq 2
-            test -z "$output"; or __kc_die "output given twice (see --help)"; or return 1
+            test -z "$output"; or __kc_die "output given twice (see --help)"; or return 2
             set -g output $argv[2]
         end
     end

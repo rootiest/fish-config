@@ -24,6 +24,7 @@
 # EXIT STATUS
 #   0  Config updated (or already up to date)
 #   1  Update failed (network error, merge conflict, or not a git repo)
+#   2  Unknown option
 #
 # EXAMPLE
 #   config-update
@@ -59,7 +60,7 @@ function config-update --description 'Pull latest fish config from upstream'
             case '*'
                 echo "$c_err""Unknown option: $arg$c_reset" >&2
                 echo "Run $c_cmd""config-update --help$c_reset for usage." >&2
-                return 1
+                return 2
         end
     end
 

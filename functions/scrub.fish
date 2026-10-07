@@ -27,7 +27,8 @@
 #
 # EXIT STATUS
 #   0  Sweep completed (or dry run shown)
-#   1  fd not found, or unknown argument provided
+#   1  fd not found
+#   2  Unknown argument
 #
 # EXAMPLE
 #   scrub
@@ -108,7 +109,7 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
             case '*'
                 echo (set_color red)"Error: Unknown argument '$arg'"(set_color normal)
                 _scrub_help
-                return 1
+                return 2
         end
     end
 

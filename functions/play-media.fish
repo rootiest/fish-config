@@ -34,6 +34,7 @@
 #   0  Player launched (or the picker was cancelled)
 #   1  No media files found, invalid --player/$play_media_player, or no
 #      player found
+#   2  Unknown option
 #
 # EXAMPLE
 #   play-media
@@ -42,7 +43,7 @@ function play-media --description 'Pick audio/video files with fzf and play them
     __fish_palette
 
     argparse h/help p/player= -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""play-media$c_reset $c_flag""[-p|--player$c_reset $c_arg<cmd>$c_reset""$c_flag]$c_reset"

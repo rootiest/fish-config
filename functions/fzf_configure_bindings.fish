@@ -28,7 +28,7 @@
 #
 # EXIT STATUS
 #   0  Bindings installed or help shown
-#   22 Invalid option or positional argument provided
+#   2  Invalid option or positional argument provided
 #
 # EXAMPLE
 #   fzf_configure_bindings --history=ctrl-h
@@ -41,7 +41,7 @@ function fzf_configure_bindings --description "Installs the default key bindings
     if test $status -ne 0
         echo "Invalid option or a positional argument was provided." >&2
         _fzf_configure_bindings_help
-        return 22
+        return 2
     else if set --query _flag_help
         _fzf_configure_bindings_help
         return

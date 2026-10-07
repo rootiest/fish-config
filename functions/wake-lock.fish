@@ -20,7 +20,8 @@
 #
 # EXIT STATUS
 #   0  Command ran and completed
-#   1  No command provided, or systemd-inhibit is not installed
+#   1  systemd-inhibit is not installed
+#   2  No command provided
 #
 # EXAMPLE
 #   wake-lock rsync -avz src/ dest/
@@ -30,7 +31,7 @@ function wake-lock --description 'Run a command while inhibiting system sleep'
     if test (count $argv) -eq 0
         __fish_palette
         echo "$c_head""Usage:$c_reset $c_cmd""wake-lock$c_reset $c_arg""[command] [args...]$c_reset"
-        return 1
+        return 2
     end
 
     if not type -q systemd-inhibit

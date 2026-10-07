@@ -33,7 +33,8 @@
 #
 # EXIT STATUS
 #   0  String generated successfully
-#   1  Unknown category or missing word list file
+#   1  Word lists directory not found
+#   2  Unknown category
 #
 # EXAMPLE
 #   rand_string adjective animal
@@ -147,7 +148,13 @@ function rand_string --description 'Generate random, memorable strings from cura
             case '*'
                 set -l db "$words_dir/$arg.txt"
                 if not test -f "$db"
-                    echo "rand_string: unknown category or file missing for '$arg'" >&2
+                    # The word lists ship with the config, so a name missing
+                    # from an intact directory is a typo, not a broken install.
+                    if test -d "$words_dir"
+                        echo "rand_string: unknown category '$arg'" >&2
+                        return 2
+                    end
+                    echo "rand_string: word lists not found in $words_dir" >&2
                     return 1
                 end
 

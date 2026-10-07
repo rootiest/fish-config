@@ -35,7 +35,8 @@
 #
 # EXIT STATUS
 #   0  Browser launched
-#   1  No URL given, invalid $BROWSER, or no browser found
+#   1  Invalid $BROWSER, or no browser found
+#   2  Unknown option, or no URL given
 #
 # EXAMPLE
 #   open-url https://git.rootiest.dev/rootiest/fish-config
@@ -47,7 +48,7 @@ function open-url --description 'Open a URL in the best available web browser'
     __fish_palette
 
     argparse h/help s/silent v/verbose -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""open-url$c_reset $c_flag""[-s|--silent] [-v|--verbose]$c_reset $c_arg""<url>$c_reset"
@@ -66,7 +67,7 @@ function open-url --description 'Open a URL in the best available web browser'
         set_color red
         echo "error: open-url requires a URL argument" >&2
         set_color normal
-        return 1
+        return 2
     end
 
     # Browser detection — mirrors fish's help.fish priority order but

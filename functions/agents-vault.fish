@@ -116,8 +116,8 @@
 # EXIT STATUS
 #   0  Completed successfully
 #   1  Fatal error (vault unavailable, git failure, ambiguous migration,
-#      invalid --adopt slug, nothing committed, or a push that did not
-#      reach the remote)
+#      nothing committed, or a push that did not reach the remote)
+#   2  Unknown option, --remote without a URL, or an invalid --adopt slug
 #
 # RETURNS
 #   --status prints its report on stdout: the vault path, the remote and
@@ -200,7 +200,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
 
     argparse h/help link push restore status 'adopt=' 'remote=' \
         v/verbose q/quiet s/silent -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         echo "$c_head""Usage:$c_reset $c_cmd""agents-vault$c_reset $c_flag""[--link] [--push] [--restore] [--status] [--adopt=SLUG] [--remote=URL] [-v] [-q] [-s] [-h]$c_reset"
@@ -406,7 +406,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     if set -q _flag_remote
         if test -z "$_flag_remote"
             echo "$c_err""agents-vault: --remote needs a URL$c_reset" >&2
-            return 1
+            return 2
         end
         # The result is captured explicitly rather than chained off the
         # block terminator with `or`. `end` does carry the taken branch's
@@ -449,7 +449,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         if test $bad_slug -eq 1
             echo "$c_err""agents-vault: invalid slug '$_flag_adopt'$c_reset" >&2
             echo "$c_err""  A slug is [a-z0-9._-]+, is not '.' or '..', and holds no slash.$c_reset" >&2
-            return 1
+            return 2
         end
 
         set -l root (git rev-parse --show-toplevel 2>/dev/null)

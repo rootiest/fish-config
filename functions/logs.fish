@@ -37,6 +37,7 @@
 # EXIT STATUS
 #   0  File viewed or no file selected
 #   1  No log files found
+#   2  Unknown option
 #
 # EXAMPLE
 #   logs -c paru
@@ -52,7 +53,7 @@ function logs --description 'Browse terminal log files interactively with fzf'
 
     set -l options h/help c/category=
     argparse $options -- $argv
-    or return 1
+    or return
 
     if set -q _flag_help
         __fish_palette
