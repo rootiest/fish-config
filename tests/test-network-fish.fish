@@ -545,6 +545,68 @@ _auto_pull_sync $sync_repo >/dev/null 2>&1
 check "_auto_pull_sync: clean fast-forward returns 0" 0 $status
 check "_auto_pull_sync: changes merged into working tree" true (test -f $sync_repo/new.txt; and echo true; or echo false)
 
+# Background fetch must never prompt (#205). A handler records the environment
+# git's fetch sees. The suite-wide GIT_TERMINAL_PROMPT is dropped so only the
+# function under test can supply it.
+reset_mocks
+set -l env_log (mktemp)
+set -l env_handler (mktemp)
+set -ga TMPDIRS $env_log $env_handler
+printf '%s\n' \
+    '#!/bin/sh' \
+    'case " $* " in *" fetch "*)' \
+    '  printf "PROMPT=%s\nASKPASS=%s\nSSH_ASKPASS=%s\nSSH_CMD=%s\nARGS=%s\n" \\' \
+    '    "$GIT_TERMINAL_PROMPT" "$GIT_ASKPASS" "$SSH_ASKPASS" "$GIT_SSH_COMMAND" "$*" >>"$MOCK_ENV_LOG" ;;' \
+    esac \
+    "exec $real_git \"\$@\"" >$env_handler
+chmod +x $env_handler
+set -gx MOCK_GIT_HANDLER $env_handler
+set -gx MOCK_ENV_LOG $env_log
+
+set -e -g GIT_TERMINAL_PROMPT
+set -e GIT_SSH_COMMAND
+# A logging timeout(1) stub shows whether the fetch runs under a hard bound.
+set -l timeout_dir (mktemp -d)
+set -ga TMPDIRS $timeout_dir
+printf '%s\n' \
+    '#!/bin/sh' \
+    'printf "TIMEOUT=%s\n" "$1" >>"$MOCK_ENV_LOG"' \
+    shift \
+    'exec "$@"' >$timeout_dir/timeout
+chmod +x $timeout_dir/timeout
+begin
+    set -lx PATH $timeout_dir $PATH
+    _auto_pull_sync $sync_repo >/dev/null 2>&1
+end
+check "_auto_pull_sync: fetch runs with GIT_TERMINAL_PROMPT=0" PROMPT=0 (string match 'PROMPT=*' <$env_log)
+check "_auto_pull_sync: fetch runs with a no-op GIT_ASKPASS" ASKPASS=true (string match 'ASKPASS=*' <$env_log)
+check "_auto_pull_sync: fetch runs with a no-op SSH_ASKPASS" SSH_ASKPASS=true (string match 'SSH_ASKPASS=*' <$env_log)
+check "_auto_pull_sync: ssh runs in batch mode with a connect timeout" \
+    "SSH_CMD=ssh -o BatchMode=yes -o ConnectTimeout=10" (string match 'SSH_CMD=*' <$env_log)
+check "_auto_pull_sync: fetch runs under timeout(1)" TIMEOUT=60 (string match 'TIMEOUT=*' <$env_log)
+
+# A user-set GIT_SSH_COMMAND is extended, not replaced.
+command truncate -s 0 $env_log
+begin
+    set -lx GIT_SSH_COMMAND 'ssh -i /tmp/key'
+    _auto_pull_sync $sync_repo >/dev/null 2>&1
+end
+check "_auto_pull_sync: user GIT_SSH_COMMAND is preserved" \
+    "SSH_CMD=ssh -i /tmp/key -o BatchMode=yes -o ConnectTimeout=10" (string match 'SSH_CMD=*' <$env_log)
+
+# So is a repo's core.sshCommand, which GIT_SSH_COMMAND would otherwise override.
+command truncate -s 0 $env_log
+git -C $sync_repo config core.sshCommand 'ssh -p 2222'
+begin
+    set -e GIT_SSH_COMMAND
+    _auto_pull_sync $sync_repo >/dev/null 2>&1
+end
+check "_auto_pull_sync: core.sshCommand is preserved" \
+    "SSH_CMD=ssh -p 2222 -o BatchMode=yes -o ConnectTimeout=10" (string match 'SSH_CMD=*' <$env_log)
+git -C $sync_repo config --unset core.sshCommand
+set -e MOCK_GIT_HANDLER MOCK_ENV_LOG
+set -gx GIT_TERMINAL_PROMPT 0
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 6. gitup (fetch and status)
 # ─────────────────────────────────────────────────────────────────────────────
