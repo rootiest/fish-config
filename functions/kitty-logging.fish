@@ -38,8 +38,9 @@
 #   help, -h, --help  Show this help
 #
 # EXIT STATUS
-#   0  Success
-#   1  Unknown subcommand/flag, kitty missing, or a write failure
+#   0  Success, or help was shown
+#   1  kitty missing, or a write failure
+#   2  Unknown command
 #
 # EXAMPLE
 #   kitty-logging install
@@ -47,9 +48,7 @@
 function kitty-logging --description 'Install/manage the fish-config Kitty scrollback watcher'
     __fish_palette
 
-    set -l cmd $argv[1]
-
-    if test -z "$cmd"; or contains -- "$cmd" help -h --help
+    if not set -q argv[1]; or test "$argv[1]" = help; or __fish_help_requested $argv
         echo "$c_head""Usage:$c_reset $c_cmd""kitty-logging$c_reset $c_flag""[install|uninstall|status|dismiss]$c_reset $c_flag""[-h]$c_reset"
         echo
         echo "  Manage the fish-config Kitty scrollback watcher (C5 logging)."
@@ -62,6 +61,10 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
         echo "  $c_flag""help$c_reset       Show this help message (also $c_flag""-h$c_reset, $c_flag""--help$c_reset)"
         return 0
     end
+
+    # -- ends option parsing: what follows is data, never a help request.
+    set -l dd (contains -i -- -- $argv); and set -e argv[$dd]
+    set -l cmd $argv[1]
 
     # dismiss only sets a universal variable — it must work even where kitty is
     # absent (e.g. shared dotfiles on a non-kitty machine), so handle it before
@@ -171,7 +174,7 @@ function kitty-logging --description 'Install/manage the fish-config Kitty scrol
 
         case '*'
             echo "$c_err""kitty-logging: unknown command '$cmd'$c_reset" >&2
-            echo "Run $c_cmd""kitty-logging --help$c_reset for usage." >&2
-            return 1
+            echo "Run $c_cmd""kitty-logging help$c_reset for usage." >&2
+            return 2
     end
 end

@@ -35,8 +35,9 @@
 #   help, -h, --help                 Show usage help
 #
 # EXIT STATUS
-#   0    Command succeeded, or no jobs are running
-#   1    Invalid arguments, or the named job does not exist
+#   0    Command succeeded, help was shown, or no jobs are running
+#   1    The named job does not exist, is already running, or failed
+#   2    Unknown subcommand or job, invalid tool or name, or missing argument
 #   127  neither tmux nor screen is installed
 #
 # EXAMPLE
@@ -53,19 +54,27 @@
 #   Commands are executed directly rather than through a shell, so pipes and
 #   redirections must be wrapped explicitly, e.g.
 #   jobrunner run sync fish -c 'a | b'.
+#   A -h or --help anywhere shows this help instead of starting a job, so
+#   separate a command that takes one with --, e.g.
+#   jobrunner run -- make --help.
 function jobrunner --description 'Manage detached background jobs with tmux or GNU screen'
     __fish_palette
 
-    set -l subcmds run list attach kill logs help \
-        -r --run -l --list -a --attach -k --kill -o --output -h --help
+    set -l subcmds run list attach kill logs \
+        -r --run -l --list -a --attach -k --kill -o --output
 
     # ╭──────────────────────────────────────────────────────────╮
     # │ Tool Extraction                                          │
     # ╰──────────────────────────────────────────────────────────╯
     set -l tool ""
     set -l global_name ""
+    set -l opts_done 0
     while test (count $argv) -gt 0
         switch $argv[1]
+            case --
+                set -e argv[1]
+                set opts_done 1
+                break
             case -t
                 set tool $argv[2]
                 set -e argv[1..2]
@@ -98,8 +107,11 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
     # ╭──────────────────────────────────────────────────────────╮
     # │ Help                                                     │
     # ╰──────────────────────────────────────────────────────────╯
-    # Answered before the dependency check so usage is readable anywhere.
-    if set -q argv[1]; and contains -- $argv[1] help -h --help
+    # Answered before the dependency check so usage is readable anywhere,
+    # and before dispatch so `jobrunner run cmd --help` starts nothing.
+    if test $opts_done -eq 0; and begin
+            test "$argv[1]" = help; or __fish_help_requested $argv
+        end
         echo "$c_head""Usage:$c_reset $c_cmd""jobrunner$c_reset $c_arg""[<subcommand>] [<name>] [<command>...]$c_reset"
         echo
         echo "  Run and manage named background jobs backed by tmux or GNU screen."
@@ -137,7 +149,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
     if test -n "$tool"
         if not contains -- $tool tmux screen
             echo "$c_err""jobrunner:$c_reset invalid tool '$c_arg$tool$c_reset', must be 'tmux' or 'screen'." >&2
-            return 1
+            return 2
         end
         if not command -q $tool
             echo "$c_err""jobrunner:$c_reset '$tool' is required but was not found in PATH." >&2
@@ -168,8 +180,8 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
                 set cmd attach
             else
                 echo "$c_err""jobrunner:$c_reset unknown subcommand or job '$c_arg$cmd$c_reset'." >&2
-                echo "Run $c_cmd""jobrunner --help$c_reset for usage." >&2
-                return 1
+                echo "Run $c_cmd""jobrunner help$c_reset for usage." >&2
+                return 2
             end
         else
             # A name plus a command line is an implicit run.
@@ -188,6 +200,9 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
 
             while test (count $argv) -gt 1
                 switch $argv[2]
+                    case --
+                        set -e argv[2]
+                        break
                     case -n --name
                         set name $argv[3]
                         set -e argv[2..3]
@@ -204,7 +219,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
 
             if test (count $argv) -lt 2
                 echo "$c_head""Usage:$c_reset $c_cmd""jobrunner run$c_reset $c_arg""[-n <name>] <command>...$c_reset" >&2
-                return 1
+                return 2
             end
 
             if test -z "$name"
@@ -215,7 +230,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
             # screen stores each session as a socket file named after it.
             if string match -q '*/*' -- $name
                 echo "$c_err""jobrunner:$c_reset job name may not contain '/'." >&2
-                return 1
+                return 2
             end
             if contains -- $name (__jobrunner_sessions $tool | string replace -r '\t.*$' '')
                 echo "$c_err""jobrunner:$c_reset job '$c_arg$name$c_reset' is already running." >&2
@@ -262,7 +277,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
         case attach -a --attach
             if test (count $argv) -ne 2
                 echo "$c_head""Usage:$c_reset $c_cmd""jobrunner attach$c_reset $c_arg""<name>$c_reset" >&2
-                return 1
+                return 2
             end
             set -l name $argv[2]
             if not contains -- $name (__jobrunner_sessions $tool | string replace -r '\t.*$' '')
@@ -279,7 +294,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
         case kill -k --kill
             if test (count $argv) -ne 2
                 echo "$c_head""Usage:$c_reset $c_cmd""jobrunner kill$c_reset $c_arg""<name>$c_reset" >&2
-                return 1
+                return 2
             end
             set -l name $argv[2]
             if not contains -- $name (__jobrunner_sessions $tool | string replace -r '\t.*$' '')
@@ -300,7 +315,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
         case logs -o --output
             if test (count $argv) -ne 2
                 echo "$c_head""Usage:$c_reset $c_cmd""jobrunner logs$c_reset $c_arg""<name>$c_reset" >&2
-                return 1
+                return 2
             end
             set -l name $argv[2]
             if not contains -- $name (__jobrunner_sessions $tool | string replace -r '\t.*$' '')
@@ -344,7 +359,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
 
         case '*'
             echo "$c_err""jobrunner:$c_reset invalid subcommand '$c_arg$cmd$c_reset'." >&2
-            echo "Run $c_cmd""jobrunner --help$c_reset for usage." >&2
-            return 1
+            echo "Run $c_cmd""jobrunner help$c_reset for usage." >&2
+            return 2
     end
 end
