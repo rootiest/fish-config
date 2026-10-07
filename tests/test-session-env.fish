@@ -93,14 +93,14 @@ end
 section "session-env: errors and removal"
 set -l before (string collect <$file)
 session-env install xdg nope >/dev/null 2>&1
-check "unknown group exits 1" 1 $status
+check "unknown group exits 2" 2 $status
 check "unknown group leaves the file untouched" "$before" (string collect <$file)
 check "preview prints without writing" "$before" (session-env preview wayland >/dev/null; string collect <$file)
 check "preview output" 'MOZ_ENABLE_WAYLAND=${MOZ_ENABLE_WAYLAND:-1}' (session-env preview wayland | string match 'MOZ*')
 session-env install help >/dev/null 2>&1
-check "help is only a subcommand, not a group name" 1 $status
+check "help is only a subcommand, not a group name" 2 $status
 session-env bogus >/dev/null 2>&1
-check "unknown command exits 1" 1 $status
+check "unknown command exits 2" 2 $status
 session-env uninstall >/dev/null
 check "uninstall removes the file" false (test -e $file; and echo true; or echo false)
 session-env uninstall >/dev/null
