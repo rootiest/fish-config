@@ -1237,7 +1237,7 @@ functions). They are active in all interactive sessions.
       add [PATH]         Register PATH's git root; defaults to the current repo
       remove <NAME|PATH> Unregister by basename or exact path
       status             Show enabled/disabled state, repo count, and registry path
-      -h, --help         Show this help message
+      help, -h, --help   Show this help message
 
     Exit Status:
       0  Subcommand succeeded
@@ -1707,7 +1707,7 @@ functions). They are active in all interactive sessions.
 
 ### fish-deps
 
-    Synopsis:  fish-deps [status|install|update|sync] [--optional] [--terminals] [--all]
+    Synopsis:  fish-deps [status|install|update|sync|help] [--optional] [--terminals] [--all]
 
     Unified command for managing all tools this configuration depends on,
     dispatching to subcommand handlers. Defaults to status when no subcommand
@@ -1745,6 +1745,7 @@ functions). They are active in all interactive sessions.
       --optional   With install/sync: also offer Optional-tier deps
       --terminals  With install/sync: also offer Terminal-Emulator-tier deps
       --all        With install/sync: shorthand for --optional --terminals
+      help, -h, --help  Show this help
 
     Exit Status:
       0  Subcommand completed
@@ -1871,7 +1872,7 @@ functions). They are active in all interactive sessions.
 
 ### session-env
 
-    Synopsis:  session-env [install [GROUP...] | preview [GROUP...] | uninstall | status | list] [-h]
+    Synopsis:  session-env [install [GROUP...] | preview [GROUP...] | uninstall | status | list | help]
 
     Exports fish-config variables to the whole login session, not just fish.
     Variables set in config.fish only reach processes started from fish;
@@ -1897,7 +1898,7 @@ functions). They are active in all interactive sessions.
       uninstall           Remove the managed file
       status              Show the managed file and the groups it holds
       list                Show every group and variable in the catalog
-      -h, --help          Show this help
+      help, -h, --help    Show this help
 
     Exit Status:
       0  Success
@@ -3077,7 +3078,7 @@ functions). They are active in all interactive sessions.
 
 ### superpowers
 
-    Synopsis:  superpowers [on|off] [-g]
+    Synopsis:  superpowers [on|off|help] [-g]
 
     Enables or disables the superpowers plugin for both antigravity-cli
     (workspace scope) and Claude (project scope). Use -g/--global to apply
@@ -3087,7 +3088,7 @@ functions). They are active in all interactive sessions.
       on            Enable superpowers for both tools
       off           Disable superpowers for both tools
       -g, --global  Apply at user/global scope instead of workspace/project
-      -h, --help    Show usage help
+      help, -h, --help  Show usage help
 
     Exit Status:
       0  Mode applied successfully
@@ -3594,7 +3595,7 @@ functions). They are active in all interactive sessions.
 
 ### kitty-logging
 
-    Synopsis:  kitty-logging [install | uninstall | status | dismiss] [-h]
+    Synopsis:  kitty-logging [install | uninstall | status | dismiss | help]
 
     Manages the fish-config Kitty scrollback watcher that powers C5 logging.
     install symlinks the canonical watcher into the Kitty config dir (so it
@@ -3613,7 +3614,7 @@ functions). They are active in all interactive sessions.
       uninstall  Remove the managed block and the watcher symlink
       status     Report wiring, watcher version, and C5 logging state
       dismiss    Stop the per-session reminder
-      -h, --help Show this help
+      help, -h, --help  Show this help
 
     Exit Status:
       0  Success

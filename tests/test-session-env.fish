@@ -43,6 +43,13 @@ check "only xdg is a default group" xdg \
 
 section "session-env: install and status"
 check "help exits 0" 0 (session-env --help >/dev/null; echo $status)
+# fish reports script errors on its own stderr, which `2>&1` inside this
+# process cannot capture, so list runs in a child fish for the error check.
+set -l errs (fish --no-config -c "set -p fish_function_path $repo_root/functions; session-env list" 2>&1 >/dev/null)
+check "list prints no fish errors" "" "$errs"
+set -l listing (session-env list)
+check "list tags the default group" true \
+    (string match -q '*xdg*default*' -- (string replace -ra '\e\[[0-9;]*m' '' -- $listing); and echo true; or echo false)
 check "status before install" true (session-env status | string match -q '*Not installed*'; and echo true; or echo false)
 
 session-env install >/dev/null
@@ -90,6 +97,8 @@ check "unknown group exits 1" 1 $status
 check "unknown group leaves the file untouched" "$before" (string collect <$file)
 check "preview prints without writing" "$before" (session-env preview wayland >/dev/null; string collect <$file)
 check "preview output" 'MOZ_ENABLE_WAYLAND=${MOZ_ENABLE_WAYLAND:-1}' (session-env preview wayland | string match 'MOZ*')
+session-env install help >/dev/null 2>&1
+check "help is only a subcommand, not a group name" 1 $status
 session-env bogus >/dev/null 2>&1
 check "unknown command exits 1" 1 $status
 session-env uninstall >/dev/null

@@ -8,7 +8,7 @@
 #   bypasses-shadow(mkdir,mv,rm)
 #
 # SYNOPSIS
-#   session-env [install [GROUP...] | preview [GROUP...] | uninstall | status | list] [-h]
+#   session-env [install [GROUP...] | preview [GROUP...] | uninstall | status | list | help]
 #
 # DESCRIPTION
 #   Exports fish-config variables to the whole login session, not just fish.
@@ -35,7 +35,7 @@
 #   uninstall           Remove the managed file
 #   status              Show the managed file and the groups it holds
 #   list                Show every group and variable in the catalog
-#   -h, --help          Show this help
+#   help, -h, --help    Show this help
 #
 # EXIT STATUS
 #   0  Success
@@ -51,7 +51,7 @@ function session-env --description 'Export fish-config variables to the login se
 
     set -l cmd $argv[1]
 
-    if test -z "$cmd"; or contains -- "$cmd" -h --help
+    if test -z "$cmd"; or contains -- "$cmd" help -h --help
         echo "$c_head""Usage:$c_reset $c_cmd""session-env$c_reset $c_flag""[install|preview|uninstall|status|list]$c_reset $c_flag""[GROUP...]$c_reset $c_flag""[-h]$c_reset"
         echo
         echo "  Export fish-config variables to the whole login session (environment.d)."
@@ -62,7 +62,7 @@ function session-env --description 'Export fish-config variables to the login se
         echo "  $c_flag""uninstall$c_reset           Remove the managed file"
         echo "  $c_flag""status$c_reset              Show the managed file and its groups"
         echo "  $c_flag""list$c_reset                Show every group and variable"
-        echo "  $c_flag""-h$c_reset, $c_flag""--help$c_reset          Show this help message"
+        echo "  $c_flag""help$c_reset, $c_flag""-h$c_reset, $c_flag""--help$c_reset    Show this help message"
         return 0
     end
 
@@ -126,7 +126,9 @@ function session-env --description 'Export fish-config variables to the login se
                 contains -- $g $seen; and continue
                 set -a seen $g
                 set -l tags
-                test "$defaults[(contains -i -- $g $groups)]" = 1; and set -a tags default
+                # Hoisted: a command substitution inside a quoted index fails.
+                set -l first (contains -i -- $g $groups)
+                test "$defaults[$first]" = 1; and set -a tags default
                 contains -- $g $installed; and set -a tags installed
                 echo
                 echo "$c_head$g$c_reset $c_dim$tags$c_reset"

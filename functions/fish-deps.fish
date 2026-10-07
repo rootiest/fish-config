@@ -8,7 +8,7 @@
 #   _fish_deps_status, _fish_deps_install, _fish_deps_update
 #
 # SYNOPSIS
-#   fish-deps [status|install|update|sync] [--optional] [--terminals] [--all]
+#   fish-deps [status|install|update|sync|help] [--optional] [--terminals] [--all]
 #
 # DESCRIPTION
 #   Unified command for managing all tools this configuration depends on,
@@ -47,6 +47,7 @@
 #   --optional   With install/sync: also offer Optional-tier deps
 #   --terminals  With install/sync: also offer Terminal-Emulator-tier deps
 #   --all        With install/sync: shorthand for --optional --terminals
+#   help, -h, --help  Show this help
 #
 # EXIT STATUS
 #   0  Subcommand completed
@@ -69,7 +70,7 @@ function fish-deps --description 'Manage fish shell dependencies'
             _fish_deps_status
         case install
             _fish_deps_install $flags
-        case -h --help
+        case help -h --help
             # Reuse the existing menu rather than the header renderer: it
             # is richer, and it is already the text the unknown-subcommand
             # path prints. Previously --help fell into `case '*'` and
@@ -112,6 +113,7 @@ function __fish_deps_help
     echo "  $c_cmd""fish-deps$c_reset install     Install missing deps interactively"
     echo "  $c_cmd""fish-deps$c_reset update      Update all installed deps"
     echo "  $c_cmd""fish-deps$c_reset sync        Install missing, then update all"
+    echo "  $c_cmd""fish-deps$c_reset help        Show this help (also -h, --help)"
     echo ""
     echo "  install/sync accept:"
     echo "    $c_flag--optional$c_reset   Also offer Optional-tier deps (skipped by default)"
