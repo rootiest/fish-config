@@ -40,16 +40,20 @@ on:
           - docs
 
 jobs:
-  # This workflow file is mirrored to GitHub as-is, but the runner label
-  # below (racknerd-mini) only exists on the Gitea instance -- on GitHub
-  # the job just sits queued forever with no matching runner, so the
-  # mirror never gets a completed status. Gate the real jobs to Gitea and
-  # let the github-mirror job below stand in on GitHub instead.
+  # This workflow file is mirrored to GitHub as-is. The real jobs below
+  # depend on Gitea-only things (the fish-ci image in the Gitea registry,
+  # the repo secrets, pushing back to Gitea), so they are gated to Gitea
+  # and the github-mirror job at the bottom stands in on GitHub instead.
+  #
+  # They run on ubuntu-latest, which every Gitea runner serves, so a job
+  # takes whichever runner is free instead of queueing behind one host.
+  # Because the toolchain comes from the container image, the runner's own
+  # image no longer matters.
   test:
     if: |
       github.server_url != 'https://github.com' &&
       (github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'test')
-    runs-on: racknerd-mini
+    runs-on: ubuntu-latest
     # Prebuilt image (fish 4.x, pandoc, node 24, ...) from the fish-config-ci
     # repo: replaces the per-run apt/PPA install steps.
     container:
@@ -114,7 +118,7 @@ jobs:
     if: |
       github.server_url != 'https://github.com' &&
       (github.event_name != 'workflow_dispatch' || github.event.inputs.job == 'all' || github.event.inputs.job == 'docs')
-    runs-on: racknerd-mini
+    runs-on: ubuntu-latest
     # Prebuilt image (fish 4.x, pandoc, node 24, ...) from the fish-config-ci
     # repo: replaces the per-run apt/PPA install steps.
     container:
