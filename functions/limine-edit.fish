@@ -17,12 +17,14 @@
 #   command.
 #
 # EXIT STATUS
-#   0  Always (individual step failures are not propagated)
+#   0  Individual step failures are not propagated
+#   2  Unexpected argument (takes none)
 #
 # EXAMPLE
 #   limine-edit
 function limine-edit --description 'Safely edit and re-verify Limine configuration'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     # 1. Open the config with sudoedit
     sudoedit /boot/limine.conf

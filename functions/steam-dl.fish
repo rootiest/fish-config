@@ -16,12 +16,14 @@
 #
 # EXIT STATUS
 #   1  systemd-inhibit or steam is not installed
+#   2  Unexpected argument (takes none)
 #   *  Exit status of steam (via systemd-inhibit) otherwise
 #
 # EXAMPLE
 #   steam-dl
 function steam-dl --description 'Run Steam while inhibiting system sleep'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     for cmd in systemd-inhibit steam
         if not type -q $cmd

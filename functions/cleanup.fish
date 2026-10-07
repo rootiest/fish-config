@@ -19,12 +19,14 @@
 #
 # EXIT STATUS
 #   0        No orphans found, or orphans removed successfully
+#   2        Unexpected argument (takes none)
 #   Nonzero  sudo pacman -Rns failed
 #
 # EXAMPLE
 #   cleanup
 function cleanup --description 'Log orphans to ~/.removed_orphans and remove them'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     set -l orphans (pacman -Qtdq)
     if test -n "$orphans"

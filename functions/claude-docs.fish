@@ -16,12 +16,14 @@
 #   obsolete content.
 #
 # EXIT STATUS
-#   Exit status of the claude invocation
+#   2  Unexpected argument (takes none)
+#   *  Exit status of the claude invocation otherwise
 #
 # EXAMPLE
 #   claude-docs
 function claude-docs --description 'Claude-code: Sync README with recent changes'
     __fish_help_header (status current-function) $argv; and return 0
+    __fish_no_args (status current-function) $argv; or return
 
     claude "Analyze the recent changes and update the README.md to ensure all features, setup instructions, and examples are 100% accurate. Prune any obsolete information."
 end
