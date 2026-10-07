@@ -294,8 +294,10 @@ function _help_sandbox_new
     mkdir -p $tmp/bin $tmp/home $tmp/cfg/fish
     cp -r $repo_root/data $tmp/cfg/fish/
     touch $tmp/invoked.log
-    for b in agy apt apt-get brew cargo claude curl dnf git kitty pacman \
-        paru pipx screen sudo tmux uv yay
+    for b in agy apt apt-get brew busctl cargo claude curl dnf docker fzf git \
+        gpg kitty konsole lazydocker limine-enroll-config limine-mkinitcpio \
+        loginctl lsof mpv nohup pacman paru pipx sbctl screen steam sudo \
+        sudoedit systemd-inhibit tmux uv vlc wezterm wget xdg-open yay
         printf '#!/bin/sh\necho "$(basename "$0") $*" >> %s\n' $tmp/invoked.log >$tmp/bin/$b
         chmod +x $tmp/bin/$b
     end
@@ -463,6 +465,61 @@ function test_help_subcommand_list_is_complete
     test $failed -eq 0
 end
 
+# Published functions for which an unknown option is not a usage error,
+# so test_usage_errors_exit_2 skips them. Rationale per group below.
+#
+# EXEMPT-DATA -- their positionals are data, so --definitely-not-an-option
+# is read as a file, command, name or search term (mkcd would make a
+# directory by that name, bkg would run it as a command).
+set -g __usage_exempt bd-pull bkg branch dockup fc mkcd poke qr \
+    rand_string replay spark split wake-lock y
+# EXEMPT-PASS -- forward their arguments to one other tool, which owns the
+# error (lt hands it to eza, md to marktext).
+set -a __usage_exempt dops lD lsr lss lstree lt ltr lx md p qc spwin tab \
+    zoxide
+
+function test_usage_errors_exit_2
+    # Rule 9: misuse exits 2, so scripts can tell it from a failure. An
+    # unknown option must also never reach a function's real work, which
+    # the recording stubs catch if a function starts ignoring it.
+    set -l tmp (_help_sandbox_new)
+    set -l failed 0
+    set -l published
+    for f in $repo_root/functions/*.fish
+        string match -q '*# CATEGORY*' -- (command cat $f | string collect); or continue
+        set -l name (path change-extension '' (path basename $f))
+        string match -q '_*' -- $name; and continue
+        set -a published $name
+        contains -- $name $__help_exempt $__usage_exempt; and continue
+        # CI=true lets fzf_configure_bindings parse its arguments outside
+        # an interactive shell.
+        _help_sandbox_run $tmp "set -gx CI true; cd $tmp/home; $name --definitely-not-an-option" >/dev/null 2>&1
+        set -l code $status
+        if test $code -ne 2
+            echo "    $name --definitely-not-an-option: exit $code, expected 2"
+            set failed 1
+        end
+        # Read-only lookups are fine: jobrunner asks tmux/screen whether
+        # the word names a running job before calling it unknown.
+        set -l ran (string trim -- (command cat $tmp/invoked.log) \
+            | string match -rv '^(tmux list-sessions|screen -ls)\b')
+        if test -n "$ran"
+            echo "    $name --definitely-not-an-option EXECUTED: $ran"
+            set failed 1
+            echo -n "" >$tmp/invoked.log
+        end
+    end
+    # Guard against a stale opt-out list, as for $__help_exempt.
+    for e in $__usage_exempt
+        if not contains -- $e $published
+            echo "    \$__usage_exempt lists '$e', which is no longer published"
+            set failed 1
+        end
+    end
+    rm -rf $tmp
+    test $failed -eq 0
+end
+
 section "help: renderer"
 check "full render: headings, indentation, multi-paragraph description" true (test_help_renderer; and echo true; or echo false)
 
@@ -482,5 +539,8 @@ check "SUB --help prints help and runs nothing" true (test_help_after_subcommand
 check "help after the subcommand, and anything after --, is data" true (test_help_words_after_subcommand_are_data; and echo true; or echo false)
 check "bare invocation runs a read-only default or prints help" true (test_help_bare_invocation; and echo true; or echo false)
 check "only exact spellings are help; others exit 2 naming it" true (test_help_spelling_is_exact; and echo true; or echo false)
+
+section "usage errors"
+check "every function exits 2 on an unknown option, running nothing" true (test_usage_errors_exit_2; and echo true; or echo false)
 
 report

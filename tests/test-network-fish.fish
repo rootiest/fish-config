@@ -432,7 +432,7 @@ section "network isolation: bd-pull"
 reset_mocks
 # Missing required arguments & env vars
 bd-pull >/dev/null 2>&1
-check "bd-pull: missing repo argument exits 1" 1 $status
+check "bd-pull: missing repo argument exits 2" 2 $status
 
 begin
     set -e GITEA_TOKEN

@@ -1156,7 +1156,7 @@ for bad in $bad_slugs
     set -l berr (mktemp)
     set -ga TMPDIRS $berr
     set -l brc (agents-vault --adopt=$bad --silent 2>$berr; echo $status)
-    check "adopt refuses '$bad'" 1 "$brc"
+    check "adopt refuses '$bad'" 2 "$brc"
     check "adopt refuses '$bad' out loud" true (string match -q '*invalid*' -- (cat $berr); and echo true; or echo false)
 end
 popd >/dev/null

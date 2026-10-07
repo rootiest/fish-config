@@ -91,7 +91,7 @@ check "literal preserves casing with --case=title" foo (rand_string --case=title
 section "rand_string: errors and help"
 
 rand_string nonexistent_cat_xyz >/dev/null 2>&1
-check "missing category returns 1" 1 $status
+check "missing category returns 2" 2 $status
 
 set -l err_msg (rand_string nonexistent_cat_xyz 2>&1 >/dev/null)
 check "missing category reports error on stderr" true (string match -qr 'unknown category' -- "$err_msg"; and echo true; or echo false)

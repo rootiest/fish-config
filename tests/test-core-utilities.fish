@@ -342,9 +342,9 @@ set -l out_pkg_empty (pkg)
 check "pkg with no arguments returns 0" 0 $status
 check "pkg with no arguments outputs Usage" true (string match -q "*Usage:*pkg*" -- "$out_pkg_empty"; and echo true; or echo false)
 
-# Unknown flag -> returns 1 and prints error to stderr
+# Unknown flag -> returns 2 (usage error) and prints error to stderr
 set -l err_pkg_flag (pkg --unrecognized-option 2>&1 >/dev/null)
-check "pkg unknown flag returns 1" 1 $status
+check "pkg unknown flag returns 2" 2 $status
 check "pkg unknown flag outputs error on stderr" true (string match -q "*error:*unknown flag*--unrecognized-option*" -- "$err_pkg_flag"; and echo true; or echo false)
 
 # Cleanup
