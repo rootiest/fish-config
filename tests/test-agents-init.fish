@@ -165,7 +165,7 @@ echo root-real >$e1/CLAUDE.md
 mkdir -p $e1/functions
 echo scoped-real >$e1/functions/CLAUDE.md
 pushd $e1 >/dev/null
-set -l ercA (agents-init --agents --silent 2>/dev/null; echo $status)
+set -l ercA (agents-init --private --agents --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "e2e: exits 0" 0 "$ercA"
 check "e2e: root CLAUDE.md gone" false (test -e $e1/CLAUDE.md; and echo true; or echo false)
@@ -229,7 +229,7 @@ echo tool-agents >$e4/.gemini/AGENTS.md
 echo foreign-mirror >$e4/vendor/other/AGENTS/CLAUDE.md
 echo own-docs >$e4/vendor/CLAUDE.md
 pushd $e4 >/dev/null
-set -l ercE (agents-init --agents --silent 2>/dev/null; echo $status)
+set -l ercE (agents-init --private --agents --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "containment: exits 0" 0 "$ercE"
 check "containment: nested repo got no AGENTS.md" false (test -e $e4/sub/AGENTS.md -o -L $e4/sub/AGENTS.md; and echo true; or echo false)
@@ -427,7 +427,7 @@ end
 git -C $e5 add .gitignore team/CLAUDE.md build/AGENTS.md
 git -C $e5 commit -qm init
 pushd $e5 >/dev/null
-set -l ercG (agents-init --agents --silent 2>/dev/null; echo $status)
+set -l ercG (agents-init --private --agents --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "subdir protection: exits 0" 0 "$ercG"
 check "subdir protection: team/CLAUDE.md still real" team-shared (test -L $e5/team/CLAUDE.md; or cat $e5/team/CLAUDE.md)
@@ -499,7 +499,7 @@ check "marker file: nothing scaffolded" false (test -e $m2/AGENTS -o -L $m2/AGEN
 set -l m3 (new_repo)
 git -C $m3 config agents-init.disabled true
 pushd $m3 >/dev/null
-set -l mrc3 (agents-init --enable --silent 2>/dev/null; echo $status)
+set -l mrc3 (agents-init --private --enable --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "--enable: exits 0" 0 "$mrc3"
 check "--enable: git key unset" 1 (git -C $m3 config --get agents-init.disabled >/dev/null; echo $status)

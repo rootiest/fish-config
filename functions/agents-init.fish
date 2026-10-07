@@ -5,13 +5,14 @@
 #   12-ai-and-developer-tools
 #
 # DEPENDENCIES
-#   _agents_init_find, _agents_init_sync_instructions, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
+#   _agents_init_find, _agents_init_sync_instructions, _agents_init_sync_public, _agents_init_migrate_public, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
 #
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-e | --enable]
+#               [--public | --private]
 #               [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 #
 # DESCRIPTION
@@ -42,7 +43,30 @@
 #   --enable clears the git key and scaffolds; the file has to be deleted
 #   by hand, because it is a decision shared with every clone.
 #
-#   File layout after setup:
+#   Two modes, recorded in AGENTS/.mode. In both, each real file lives in
+#   the repository whose visibility matches it, and the other side holds a
+#   symlink:
+#
+#     public (default for a new project inside git)
+#       <root>/AGENTS.md                 real, tracked by the project
+#       <root>/AGENTS.local.md           → AGENTS/AGENTS.local.md (gitignored)
+#       AGENTS/AGENTS.local.md           private instructions (real file)
+#       AGENTS/AGENTS.md                 → ../AGENTS.md
+#     private (every project scaffolded before modes existed)
+#       the layout below, unchanged.
+#
+#   The public starter AGENTS.md points agents at AGENTS.local.md, both as
+#   an @ import (Claude Code expands it) and as a plain sentence (agents
+#   that do not expand imports still follow it). A real public AGENTS.md is
+#   never moved or rewritten. A project with no AGENTS/.mode is private.
+#   --public on a private project migrates it: each private AGENTS.md is
+#   renamed to AGENTS.local.md inside AGENTS/ (history kept) and replaced in
+#   the project by a public starter, so nothing private is published.
+#   Nothing is committed in the project; review and commit it yourself.
+#   --private on a public project is refused: what was published is already
+#   in history. Wrapper launches pass no mode flag and never change modes.
+#
+#   File layout after setup (private mode):
 #     AGENTS/AGENTS.md          canonical root agent spec (real file)
 #     AGENTS/<subdir>/AGENTS.md canonical spec for any subdir with its own
 #                               scoped instructions (real file, discovered
@@ -104,6 +128,10 @@
 #   -p, --plugins  Set up AGENTS/ repo + plans/specs/devlogs dirs + docs/ symlinks only
 #   -e, --enable   Clear the git key agents-cleanup set, then scaffold as
 #                  normal (refused while .agents-disabled exists)
+#   --public       New project: scaffold public mode (the default inside git).
+#                  Private project: migrate it to public mode.
+#   --private      New project: scaffold private mode. Refused on a public
+#                  project.
 #   -v, --verbose  Print all per-step output (default)
 #   -q, --quiet    Print one summary line only if changes were made
 #   -s, --silent   Suppress all output; errors only (standard UNIX convention)
@@ -112,14 +140,16 @@
 # EXIT STATUS
 #   0  Setup completed successfully
 #   1  Fatal error (git init failed, move failed, the AGENTS/ commit was
-#      rejected, or an unresolved rebase blocked it), or --enable refused
-#      because .agents-disabled exists
+#      rejected, or an unresolved rebase blocked it), --enable refused
+#      because .agents-disabled exists, a migration precondition failed,
+#      --private given for a public project, or both mode flags given
 #
 # EXAMPLE
 #   agents-init
 #   agents-init --agents
 #   agents-init --plugins
 #   agents-init --quiet
+#   agents-init --public
 #
 # NOTES
 #   This header covers usage only. The full concept/behavior/purpose
@@ -132,11 +162,11 @@
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
     __fish_palette
 
-    argparse h/help a/agents p/plugins e/enable v/verbose q/quiet s/silent -- $argv
+    argparse h/help a/agents p/plugins e/enable public private v/verbose q/quiet s/silent -- $argv
     or return 1
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-e] [-v] [-q] [-s] [-h | --help]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-e] [--public | --private] [-v] [-q] [-s] [-h | --help]$c_reset"
         echo
         echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
         echo
@@ -145,6 +175,8 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         echo "  $c_flag-a$c_reset, $c_flag--agents$c_reset    Set up AGENTS.md symlinks only"
         echo "  $c_flag-p$c_reset, $c_flag--plugins$c_reset   Set up plans/specs/devlogs dirs and docs/ symlinks only"
         echo "  $c_flag-e$c_reset, $c_flag--enable$c_reset    Re-enable a project agents-cleanup disabled"
+        echo "      $c_flag--public$c_reset    New project: public AGENTS.md (default); private project: migrate"
+        echo "      $c_flag--private$c_reset   New project: keep AGENTS.md private in AGENTS/"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset   Print all per-step output (default)"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset     Print one summary line only if changes were made"
         echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset    Suppress all output; only errors are printed"
@@ -221,6 +253,44 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l agents_dir "$root/AGENTS"
     set -l plugins_dir "$agents_dir/plugins"
 
+    #   ──────────────────────────────── Mode ────────────────────────────────
+    # AGENTS/.mode records public or private. A project scaffolded before
+    # modes existed has none and stays private until migrated explicitly; a
+    # new project inside git defaults to public. Outside git there is
+    # nothing to publish, so a new project there is private.
+    if set -q _flag_public; and set -q _flag_private
+        echo "$c_err""Error: --public and --private are mutually exclusive$c_reset" >&2
+        return 1
+    end
+    set -l fresh 0
+    test -d "$agents_dir"; or set fresh 1
+    set -l mode_file "$agents_dir/.mode"
+    set -l mode private
+    if test -f "$mode_file"
+        set mode (string trim -- (command head -n1 "$mode_file"))
+        if not contains -- "$mode" public private
+            echo "$c_warn""→ AGENTS/.mode holds '$mode', not public or private; treating as private$c_reset" >&2
+            set mode private
+        end
+    else if test $fresh -eq 1; and test $in_git -eq 1
+        set mode public
+    end
+    set -l migrate 0
+    if set -q _flag_private
+        if test "$mode" = public; and test $fresh -eq 0
+            echo "$c_err""Error: this project is in public mode; its AGENTS.md is meant to be published. Going back to private is done by hand -- see docs/manual/16-agent-tooling.md$c_reset" >&2
+            return 1
+        end
+        set mode private
+    else if set -q _flag_public
+        if test $in_git -eq 0
+            echo "$c_err""Error: public mode needs a git repository$c_reset" >&2
+            return 1
+        end
+        test $fresh -eq 0; and test "$mode" = private; and set migrate 1
+        set mode public
+    end
+
     # Track whether any action was taken this run (drives quiet-mode summary)
     set -l changed 0
 
@@ -260,11 +330,42 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         test $verbose -eq 1; and echo "$c_ok$_tools$c_reset"
     end
 
+    # A new project records its mode; a migration records it last, itself.
+    if test $fresh -eq 1; and not test -f "$mode_file"
+        printf '%s\n' $mode >"$mode_file"
+        set changed 1
+        test $verbose -eq 1; and echo "$c_ok→ Created AGENTS/.mode ($mode)$c_reset"
+    end
+
     set -l _hp (git -C "$agents_dir" config --local core.hooksPath 2>/dev/null)
     if test "$_hp" != .agents-tools/hooks
         git -C "$agents_dir" config --local core.hooksPath .agents-tools/hooks
         set changed 1
         test $verbose -eq 1; and echo "$c_ok→ Set core.hooksPath → .agents-tools/hooks$c_reset"
+    end
+
+    #   ───────────────────────── Migration to public ─────────────────────────
+    # Commit what is pending first, so the migration commit holds only the
+    # migration, then convert. Everything the migration changes in the
+    # project itself is left uncommitted for the user to review.
+    if test $migrate -eq 1
+        set -l pre_out (_agents_repo_sync "$agents_dir" "chore: sync AGENTS repository" 2>/dev/null)
+        if test $status -ne 0
+            echo "$c_err""Error: could not commit pending AGENTS/ changes before migrating; nothing migrated$c_reset" >&2
+            return 1
+        end
+        set -l mig_out (_agents_init_migrate_public "$root" "$agents_dir")
+        set -l mig_rc $status
+        if test $verbose -eq 1
+            for line in $mig_out
+                echo "$c_ok$line$c_reset"
+            end
+        end
+        if test $mig_rc -ne 0
+            echo "$c_err""Error: migration to public mode stopped; fix the error above and re-run agents-init --public$c_reset" >&2
+            return 1
+        end
+        set changed 1
     end
 
     #   ──────────────────────────── --agents mode ──────────────────────────────
@@ -281,7 +382,14 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         # uses the shared prune set; see _agents_init_find.
         set -l found
         if test $in_git -eq 1
-            set found (_agents_init_find "$root" \( -name AGENTS.md -o -name CLAUDE.md \) -print)
+            set found (_agents_init_find "$root" \( -name AGENTS.md -o -name CLAUDE.md -o -name AGENTS.local.md \) -print)
+        end
+        # Public mode: a private file the user created in the mirror marks
+        # its directory too, so it gets linked into the project.
+        if test "$mode" = public
+            for f in (find "$agents_dir" -name .git -prune -o -name AGENTS.local.md -print)
+                set -a found (string replace -- "$agents_dir" "$root" "$f")
+            end
         end
         set -l rels "."
         for f in $found
@@ -291,8 +399,10 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             contains -- "$rel" $rels; or set -a rels "$rel"
         end
 
+        set -l sync_fn _agents_init_sync_instructions
+        test "$mode" = public; and set sync_fn _agents_init_sync_public
         for rel in $rels
-            set -l out (_agents_init_sync_instructions "$root" "$agents_dir" "$rel")
+            set -l out ($sync_fn "$root" "$agents_dir" "$rel")
             set -l rc $status
             if test $rc -ne 0
                 echo "$c_err""Error: could not sync AGENTS.md for $rel$c_reset" >&2
@@ -335,10 +445,40 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         # Unanchored: matches AGENTS.md at every depth, so a newly
         # discovered subdirectory needs no additional gitignore entry.
         # CLAUDE.md is dropped entirely -- nothing creates one anymore.
-        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" "AGENTS.md")
+        # Public mode ignores the private AGENTS.local.md links, never the
+        # public AGENTS.md.
+        set -l _inst AGENTS.md
+        test "$mode" = public; and set _inst AGENTS.local.md
+        set -l _gi (_agents_init_ensure_gitignore "$root" "agents-init --agents" "AGENTS/" $_inst)
         if test -n "$_gi"
             set changed 1
             test $verbose -eq 1; and echo $_gi
+        end
+
+        if test "$mode" = public
+            # A rule outside agents-init's blocks can still hide the public
+            # file. Never edited here: those lines are the user's.
+            if test $migrate -eq 1; or test $verbose -eq 1
+                set -l why (git -C "$root" check-ignore -v --no-index AGENTS.md 2>/dev/null)
+                if test -n "$why"
+                    echo "$c_warn→ AGENTS.md is still ignored by a rule outside agents-init's blocks, so it cannot be committed: $why$c_reset" >&2
+                end
+            end
+            # A private file nothing points at is never read. Hint only:
+            # a public AGENTS.md is the project's, and is not edited here.
+            if test $verbose -eq 1
+                for rel in $rels
+                    set -l d "$root"
+                    test "$rel" != "."; and set d "$root/$rel"
+                    if test -e "$d/AGENTS.local.md"; and test -f "$d/AGENTS.md"; and not test -L "$d/AGENTS.md"
+                        if not grep -qF '@AGENTS.local.md' "$d/AGENTS.md"
+                            set -l shown AGENTS.md
+                            test "$rel" != "."; and set shown "$rel/AGENTS.md"
+                            echo "$c_dim→ $shown does not reference @AGENTS.local.md, so agents will not read the private file; add the line from: _agents_init_stub --public$c_reset"
+                        end
+                    end
+                end
+            end
         end
     end
 
@@ -514,6 +654,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # a hook-rejected commit fell straight through to a reported success.
     set -l msg "chore: sync AGENTS repository"
     test $did_init -eq 1; and set msg "chore: initialize AGENTS repository"
+    test $migrate -eq 1; and set msg "chore: migrate AGENTS to public mode"
     # 2>/dev/null: a command substitution's stderr does not inherit a
     # caller-scoped redirect on this call (fish quirk), so _agents_repo_sync's
     # own error message leaks past --silent regardless; it is redundant with
@@ -530,6 +671,10 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     else if test -n "$sync_out"
         set changed 1
         test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
+    end
+
+    if test $migrate -eq 1; and test $failed -eq 0
+        echo "$c_head→ Migrated to public mode.$c_reset Nothing is committed in the project. Review the new public AGENTS.md file(s) and .gitignore, move anything worth publishing out of AGENTS.local.md, then commit."
     end
 
     # Quiet summary: one line at the end, only if something actually changed
