@@ -23,7 +23,8 @@
 #
 # EXIT STATUS
 #   0  Services updated and running
-#   1  Directory not found or no docker-compose.yml present
+#   1  Directory not found, no docker-compose.yml present, or docker missing
+#   2  docker compose pull/up failed
 #
 # EXAMPLE
 #   dockup ~/myapp
@@ -45,6 +46,11 @@ function dockup --description 'Pull and restart docker compose containers'
         echo "$c_head""Arguments:$c_reset"
         echo "  $c_arg""DIRECTORY$c_reset     Optional path to the compose project (defaults to current dir)"
         return 0
+    end
+
+    if not type -q docker
+        echo $clr_error"Error: docker is not installed."$clr_off >&2
+        return 1
     end
 
     # Handle directory navigation
@@ -70,15 +76,19 @@ function dockup --description 'Pull and restart docker compose containers'
     # Execution
     echo $clr_info" UPDATING "$clr_off" Containers in "(set_color -o)(pwd)$clr_off"..."
 
+    set -l rc 0
     if docker compose pull && docker compose up -d --remove-orphans
         echo $clr_success"✔ Upgrade complete!"$clr_off
         docker image prune -f
     else
-        echo $clr_error"✘ Upgrade failed."$clr_off
+        echo $clr_error"✘ Upgrade failed."$clr_off >&2
+        set rc 2
     end
 
     # Cleanup directory state
     if count $argv >/dev/null
         popd >/dev/null
     end
+
+    return $rc
 end
