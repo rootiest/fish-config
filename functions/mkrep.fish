@@ -53,7 +53,10 @@
 #   (e.g. gh repo create {name} --source=. --remote=origin --push).
 #   Three placeholders are substituted in a template: {name} (--name, or
 #   the target directory's basename), {user} ($USER), and {server} (the
-#   resolved server base URL, gitea/gitlab only). Each value is
+#   resolved server base URL, gitea/gitlab only). Since --server cannot be
+#   combined with --new-remote, {server} there comes from $GIT_SERVER plus
+#   its _URL/_HOST variable; a template using {server} with no base URL
+#   resolved is an error rather than a literal {server}. Each value is
 #   shell-escaped as it is inserted, so a directory named a;touch X reaches
 #   the command as the literal text a;touch X and runs nothing extra; for the
 #   same reason a template must not put quotes around a placeholder. Pass a
@@ -426,7 +429,15 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
 
         set -l name $_flag_name
         test -z "$name"; and set name (path basename (path resolve $dir))
-        set cmd (_mkrep_expand_template "$cmd" $name $USER)
+        # --server is exclusive with --new-remote, so {server} here can only
+        # come from a $GIT_SERVER-resolved base URL. Refuse rather than eval a
+        # literal {server}.
+        if string match -q '*{server}*' -- $cmd; and test -z "$srv_url"
+            echo "$c_err""✘$c_reset  Template uses {server} but no base URL resolved (set \$GIT_SERVER to gitea/gitlab and \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
+            builtin cd $orig_pwd
+            return 1
+        end
+        set cmd (_mkrep_expand_template "$cmd" $name $USER $srv_url)
 
         test $verbose = 1; and _mkrep_say $silent "$c_dim""Running: $cmd$c_reset"
         if test $silent -eq 1

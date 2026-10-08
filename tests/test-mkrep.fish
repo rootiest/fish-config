@@ -237,6 +237,32 @@ check "env fallback template ran" repo (cat $target/created.txt)
 cd $start
 rm -rf $base
 
+section "mkrep: --new-remote substitutes {server} (#251)"
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    set -lx GIT_SERVER gitea
+    set -lx GITEA_HOST gitea.example.invalid
+    mkrep --new-remote='echo {server}/{name} >created.txt' $target >/dev/null
+    check "--new-remote with \$GIT_SERVER exits 0" 0 $status
+    check "--new-remote {server} substituted" https://gitea.example.invalid/repo (cat $target/created.txt)
+    cd $start
+    rm -rf $base
+end
+
+begin
+    set -l base (_mkrep_sandbox)
+    set -l target $base/repo
+    mkrep --new-remote='echo {server}/{name} >created.txt' $target >/dev/null 2>/tmp/mkrep-test-err
+    check "--new-remote {server} with no base URL exits 1" 1 $status
+    check "unresolved {server}: template did not run" false (test -f $target/created.txt; and echo true; or echo false)
+    check "unresolved {server}: error names {server}" true (string match -q -- '*{server}*' (cat /tmp/mkrep-test-err); and echo true; or echo false)
+    cd $start
+    rm -f /tmp/mkrep-test-err
+    rm -rf $base
+end
+
 section "mkrep: --new-remote <cmd> (space-separated, as documented)"
 
 set -l base (_mkrep_sandbox)
