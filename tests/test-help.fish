@@ -471,7 +471,7 @@ end
 # EXEMPT-DATA -- their positionals are data, so --definitely-not-an-option
 # is read as a file, command, name or search term (mkcd would make a
 # directory by that name, bkg would run it as a command).
-set -g __usage_exempt bd-pull bkg branch dockup fc mkcd poke qr \
+set -g __usage_exempt bd-pull bkg branch dockup fc mkcd poke \
     rand_string replay spark split wake-lock y
 # EXEMPT-PASS -- forward their arguments to one other tool, which owns the
 # error (lt hands it to eza, md to marktext).
