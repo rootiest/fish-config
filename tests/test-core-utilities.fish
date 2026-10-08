@@ -482,6 +482,36 @@ else
 end
 
 # =============================================================================
+# dockup: exit status reflects the upgrade result (#227)
+# =============================================================================
+section dockup
+
+# Stub docker as a function: `compose pull` fails when __dockup_stub_fail is
+# set, everything else succeeds.
+function docker
+    if set -q __dockup_stub_fail; and test "$argv[1..2]" = "compose pull"
+        return 1
+    end
+    return 0
+end
+
+set -l dk_dir (mktemp -d)
+echo 'services: {}' >$dk_dir/docker-compose.yml
+set -l dk_cwd $PWD
+
+dockup $dk_dir >/dev/null 2>&1
+check "dockup succeeds when compose succeeds" 0 $status
+
+set -g __dockup_stub_fail 1
+dockup $dk_dir >/dev/null 2>&1
+check "dockup returns 2 when compose pull fails" 2 $status
+check "dockup restores the directory after failure" $dk_cwd $PWD
+set -e __dockup_stub_fail
+
+functions -e docker
+rm -rf $dk_dir
+
+# =============================================================================
 # Report
 # =============================================================================
 report
