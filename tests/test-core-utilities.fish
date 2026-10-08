@@ -467,6 +467,7 @@ if type -q bash
     bash -c 'exit 0'
     check "bash -c 'exit 0' returns 0 (C1 enabled)" 0 $status
     check "SHELL is reset to fish afterwards" (which fish) "$SHELL"
+    check "bash sees SHELL pointing at bash" (which bash) (bash -c 'echo "$SHELL"')
 
     # Disabled path: falls back to bare `command bash`.
     set -g __fish_config_op_aliases 0
