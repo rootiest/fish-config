@@ -1300,7 +1300,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Patterns appended, or resolved with -o/--stdout or -l/--list
-      1  Not in a git repository or API fetch failed
+      1  Not in a git repository, API fetch failed, or curl is not installed
       2  Unknown option
 
     Returns:
@@ -1440,13 +1440,13 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Command selected and inserted, or fzf was cancelled
-      1  Disabled by __fish_config_op_integrations
+      1  Disabled by __fish_config_op_integrations, or fzf is not installed
       2  Unexpected argument (takes none)
 
     Example:
     hist
 
-**Dependencies:** `_fish_clipboard_copy`
+**Dependencies:** `fzf`, `_fish_clipboard_copy`
 
 ### mkrep
 
@@ -1640,7 +1640,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Packages removed or none selected
-      1  No AUR helper (paru or yay) found
+      1  No AUR helper (paru or yay) found, or fzf is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -2205,7 +2205,7 @@ functions). They are active in all interactive sessions.
     Wraps ssh with kitten ssh inside Kitty terminal for better terminal
     integration (terminfo forwarding, multiplexing, copy/paste support).
     Falls back to system ssh on
-    other terminals.
+    other terminals, or when kitten is not installed.
 
     Arguments:
       args...  Arguments forwarded to kitten ssh or system ssh
@@ -2315,6 +2315,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Network failures print "Not detected" instead of failing
+      1  curl is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -2331,6 +2332,7 @@ functions). They are active in all interactive sessions.
     Fetches and prints the machine's public IPv4 address using icanhazip.com.
 
     Exit Status:
+      1  curl is not installed
       2  Unexpected argument (takes none)
       *  Exit status of curl otherwise
 
@@ -2350,7 +2352,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  IPv6 address resolved
-      1  IPv6 unavailable or not supported on this network
+      1  IPv6 unavailable or not supported on this network, or curl is not installed
       2  Unexpected argument (takes none)
 
     Returns:
@@ -2445,7 +2447,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  File viewed or no file selected
-      1  No log files found
+      1  No log files found, or fzf is not installed
       2  Unknown option
 
     Example:
@@ -3378,6 +3380,10 @@ functions). They are active in all interactive sessions.
       args...  Arguments forwarded to yt-dlp (defaults prepended)
       --no-embed-thumbnail  Skip thumbnail embedding for this run
 
+    Exit Status:
+      1  yt-dlp is not installed
+      *  Exit status of yt-dlp otherwise
+
     Example:
     yt-dlp dQw4w9WgXcQ
     yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
@@ -3917,6 +3923,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Detached sessions killed, or none found
+      1  tmux is not installed
       2  Unexpected argument (takes none)
 
     Example:
