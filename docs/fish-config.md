@@ -192,8 +192,8 @@ automatically on exit. Use `logs` to browse them interactively.
 
 | Variable | Value | Notes |
 |---|---|---|
-| `GPG_TTY` | `$(tty)` | ensures GPG passphrase prompts work |
-| `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code |
+| `GPG_TTY` | `$(tty)` | ensures GPG passphrase prompts work; interactive shells with a tty only |
+| `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code (C3 overrides) |
 | `CDPATH` | `. ~/projects ~` | |
 
 Opinionated defaults (`CDPATH`, `PAGER`/`MANPAGER`, Vi mode, command shadows,
@@ -4550,7 +4550,8 @@ all of them.
     exit → smart_exit         exit wrapper that captures scrollback before closing
     PAGER=ov                  ov used by git, man, and all $PAGER-aware tools
     EDITOR=nvim               nvim fallback to vi for git commit, etc.
-    GPG_TTY                   Sets GPG_TTY to current terminal tty
+    GPG_TTY                   Sets GPG_TTY to current terminal tty (only when one exists)
+    CLAUDE_CODE_NO_FLICKER=1  Suppresses terminal flicker in Claude Code
     MANPAGER=bat pipeline     man pages rendered with syntax highlighting
     CDPATH=. ~/projects ~     bare dir names resolve against ~/projects and ~
     Bang-bang system          ! and $ keys expand history; !^, !*, !-N, !?str?,
@@ -4584,7 +4585,7 @@ and `smart_exit`'s plain-exit path.
 
 ### environment
 
-`$PATH`, `$PAGER`/`$EDITOR`/`$GPG_TTY`, and `$CDPATH`.
+`$PATH`, `$PAGER`/`$EDITOR`/`$GPG_TTY`, `$CLAUDE_CODE_NO_FLICKER`, and `$CDPATH`.
 
 ### prompt
 
