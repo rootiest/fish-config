@@ -18,8 +18,8 @@ section "log writers: _terminal_log_safe_name"
 
 check "plain name unchanged" my-work_1.2 (_terminal_log_safe_name my-work_1.2)
 check "space replaced" my_work (_terminal_log_safe_name 'my work')
-check "metacharacters replaced" 'my_work___x_' (_terminal_log_safe_name 'my work;$(x)')
-check "slashes and globs replaced" 'a_b__c_' (_terminal_log_safe_name 'a/b*?c[')
+check "metacharacters replaced" my_work___x_ (_terminal_log_safe_name 'my work;$(x)')
+check "slashes and globs replaced" a_b__c_ (_terminal_log_safe_name 'a/b*?c[')
 check "empty becomes unknown" unknown (_terminal_log_safe_name '')
 check "no args becomes unknown" unknown (_terminal_log_safe_name)
 check "result is a single line" 1 (_terminal_log_safe_name "a b	c" | count)
