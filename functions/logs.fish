@@ -36,7 +36,7 @@
 #
 # EXIT STATUS
 #   0  File viewed or no file selected
-#   1  No log files found
+#   1  No log files found, or fzf is not installed
 #   2  Unknown option
 #
 # EXAMPLE
@@ -72,6 +72,12 @@ function logs --description 'Browse terminal log files interactively with fzf'
         echo "  "$c_arg"Ctrl-D"$c_reset"    Delete selected log"
         echo "  "$c_arg"Ctrl-C"$c_reset"    Quit"
         return 0
+    end
+
+    if not type -q fzf
+        __fish_palette
+        echo "$c_err"'logs: fzf is not installed'"$c_reset" >&2
+        return 1
     end
 
     set -l log_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")

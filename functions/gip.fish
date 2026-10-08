@@ -19,6 +19,7 @@
 #
 # EXIT STATUS
 #   0  Network failures print "Not detected" instead of failing
+#   1  curl is not installed
 #   2  Unexpected argument (takes none)
 #
 # EXAMPLE
@@ -26,6 +27,12 @@
 function gip --description 'Show all public IP addresses'
     __fish_help_header (status current-function) $argv; and return 0
     __fish_no_args (status current-function) $argv; or return
+
+    if not type -q curl
+        __fish_palette
+        echo "$c_err"'gip: curl is not installed'"$c_reset" >&2
+        return 1
+    end
 
     echo -n "IPv4: "
     curl -4 -s --max-time 2 https://icanhazip.com || echo "Not detected"
