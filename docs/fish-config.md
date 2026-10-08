@@ -1489,7 +1489,10 @@ functions). They are active in all interactive sessions.
     (e.g. gh repo create {name} --source=. --remote=origin --push).
     Three placeholders are substituted in a template: {name} (--name, or
     the target directory's basename), {user} ($USER), and {server} (the
-    resolved server base URL, gitea/gitlab only). Each value is
+    resolved server base URL, gitea/gitlab only). Since --server cannot be
+    combined with --new-remote, {server} there comes from $GIT_SERVER plus
+    its _URL/_HOST variable; a template using {server} with no base URL
+    resolved is an error rather than a literal {server}. Each value is
     shell-escaped as it is inserted, so a directory named a;touch X reaches
     the command as the literal text a;touch X and runs nothing extra; for the
     same reason a template must not put quotes around a placeholder. Pass a
@@ -3611,7 +3614,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Services updated and running
-      1  Directory not found or no docker-compose.yml present
+      1  Directory not found, no docker-compose.yml present, or docker missing
+      2  docker compose pull/up failed
 
     Example:
     dockup ~/myapp
