@@ -27,6 +27,15 @@ mkdir -p $sandbox/stub
 printf '#!/bin/sh\necho "STUB-SSH $*"\n' >$sandbox/stub/ssh
 chmod +x $sandbox/stub/ssh
 ln -s (command -s cat) $sandbox/stub/cat
+# A fake kitten in its own dir, so a case can add it to PATH without any
+# further commands (the sandboxed PATHs below hold no chmod/rm).
+mkdir -p $sandbox/kitten
+printf '#!/bin/sh\necho "STUB-KITTEN $*"\n' >$sandbox/kitten/kitten
+chmod +x $sandbox/kitten/kitten
+# parur checks for an AUR helper before fzf, so give it one.
+mkdir -p $sandbox/aur
+printf '#!/bin/sh\nexit 0\n' >$sandbox/aur/paru
+chmod +x $sandbox/aur/paru
 
 # ---- ssh -------------------------------------------------------------------
 section "ssh: kitty TERM without kitten falls back to system ssh"
@@ -37,10 +46,9 @@ check "no kitten: system ssh runs" "STUB-SSH user@host" (ssh user@host 2>&1)
 ssh user@host >/dev/null 2>&1
 check "no kitten: exit status is ssh's" 0 $status
 
-printf '#!/bin/sh\necho "STUB-KITTEN $*"\n' >$sandbox/stub/kitten
-chmod +x $sandbox/stub/kitten
+set -gx PATH $sandbox/kitten $sandbox/stub
 check "kitten present: kitten ssh still used" "STUB-KITTEN ssh user@host" (ssh user@host 2>&1)
-rm $sandbox/stub/kitten
+set -gx PATH $sandbox/stub
 
 set -gx TERM xterm-256color
 check "non-kitty TERM: system ssh runs" "STUB-SSH user@host" (ssh user@host 2>&1)
@@ -64,7 +72,9 @@ end
 
 __probe_missing hist "hist: fzf is not installed" hist
 __probe_missing logs "logs: fzf is not installed" logs
+set -gx PATH $sandbox/aur
 __probe_missing parur "parur: fzf is not installed" parur
+set -gx PATH $sandbox/empty
 __probe_missing tmux-clean "tmux-clean: tmux is not installed" tmux-clean
 __probe_missing gip "gip: curl is not installed" gip
 __probe_missing gip4 "gip4: curl is not installed" gip4
