@@ -3019,8 +3019,12 @@ value is embedded directly in the command string at execution time \[em] a
 case that static regex patterns cannot cover.
 
 Any variable whose name matches the sensitive-name heuristic and whose
-value is longer than 8 characters (excluding bare paths) is checked.
-The value is escaped for literal regex matching before comparison.
+value is longer than 8 characters is checked.  List-valued variables are
+handled: every element is checked.  Values that are an existing file or
+directory path (a leading \[ti]/ is expanded) are skipped; a value that merely
+starts with / or \[ti] but is not an existing path is still treated as a
+credential.  The value is escaped for literal regex matching before
+comparison.
 
 Arguments:
   command                 The exact command that was entered
@@ -5916,10 +5920,14 @@ Inline env assignments: \f[V]GITHUB_TOKEN=xxx\f[R],
 .IP \[bu] 2
 Fish set with sensitive names: \f[V]set -gx GITHUB_TOKEN xxx\f[R]
 .IP \[bu] 2
-URLs with embedded credentials: \f[V]https://user:pass\[at]host\f[R]
+URLs with embedded credentials: \f[V]https://user:pass\[at]host\f[R], or
+a token-only \f[V]https://TOKEN\[at]host\f[R]
 .IP \[bu] 2
-HTTP Authorization headers:
+HTTP Authorization headers (any case):
 \f[V]curl -H \[dq]Authorization: ...\[dq]\f[R]
+.IP \[bu] 2
+API-key style headers: \f[V]X-API-Key: ...\f[R],
+\f[V]X-Auth-Token: ...\f[R]
 .IP \[bu] 2
 Basic auth flags: \f[V]curl -u user:pass\f[R]
 .IP \[bu] 2
@@ -5933,6 +5941,10 @@ credentials (TOKEN, PASSWORD, SECRET, \f[V]API_KEY\f[R], etc.)
 are collected, regex-escaped, and added as a session-scoped overlay.
 Because globals shadow universals in Fish, the combined list is what
 sponge sees.
+Every element of a list-valued variable is collected.
+Values of 8 characters or fewer, and values that are an existing file or
+directory path, are skipped; a password that merely starts with / or
+\[ti] is still collected.
 Rotating a token takes effect on the next login automatically.
 .PP
 Layer 3 \[em] Per-command filter (\f[V]sponge_filter_secrets\f[R]):
