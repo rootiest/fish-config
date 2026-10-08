@@ -1773,6 +1773,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Subcommand completed, or help was shown
+      1  update (or the update half of sync) had one or more failed updates
       2  Unknown subcommand
 
     Example:
