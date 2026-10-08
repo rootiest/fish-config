@@ -59,7 +59,7 @@ matter if you already use that specific tool. Skipped by
 | `screen` | GNU screen; fallback backend for `jobrunner` when `tmux` is unavailable. |
 | `marktext` | Markdown editor; backs the `md` wrapper, which is the only thing that references it. No distro packages it under a common name, so `fish-deps` offers the AUR package (`marktext-bin`) on Arch and otherwise installs upstream's AppImage to `~/.local/bin/marktext`. |
 | `firejail` | Sandbox; needed only by `md --read-only`, which uses it to make MarkText unable to save over the file it opened. Every other `md` invocation works without it. |
-| `win32yank.exe` | Clipboard bridge for WSL2; backs the `y`/`p`/`hist` clipboard fallback chain when neither `wl-copy`/`wl-paste` nor `xclip` are present. `fish-deps` only offers to install it when WSL2 is detected (`microsoft` in `/proc/sys/kernel/osrelease`), downloading the x86_64 binary from GitHub releases to `~/.local/bin`. |
+| `win32yank.exe` | Clipboard bridge for WSL2; backs the `y`/`p`/`hist` clipboard fallback chain when neither `wl-copy`/`wl-paste` nor `xclip` are present. `fish-deps` only offers to install it when WSL2 is detected (`microsoft` in `/proc/sys/kernel/osrelease`), downloading the pinned, checksum-verified x86_64 release from GitHub to `~/.local/bin`. |
 
 ## Terminal Emulators
 
@@ -93,5 +93,14 @@ The install priority for each tool:
 | system PM | `paru` / `apt` / `brew` / `dnf` / etc. — for tools without a crate or `go install` path |
 | `git clone` | `fzf` — installed from GitHub to `~/.fzf/` |
 | `curl` | `starship` installer, `fisher` bootstrap, `uv` installer |
+
+Installer scripts (`rustup`, `uv`, `starship`, `lazydocker`) are downloaded
+to a temporary file and run only after the download succeeds; they are never
+streamed into `sh`. Downloaded binaries (`wakatime-cli`, `win32yank.exe`, the
+MarkText AppImage) are checked against a SHA-256 digest before they are made
+executable: the release's published checksum file for `wakatime-cli`, the
+digest GitHub records for the MarkText asset, and a pinned digest for
+`win32yank.exe`, whose upstream publishes none. A failed download or checksum
+mismatch aborts that install and reports failure.
 
 ---

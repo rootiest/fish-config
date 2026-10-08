@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # CLASSIFICATION
-#   self-limiting(rm,mkdir,cat), bypasses-shadow(cp,bash), destructive, network, blocking-prompt
+#   self-limiting(rm,cat), destructive, network, blocking-prompt
 #
 # SYNOPSIS
 #   _fish_deps_install
@@ -130,7 +130,7 @@ function _fish_deps_install
                     end
                 case rustup-installer
                     set -a methods special-rustup
-                    set -a method_labels "rustup installer (curl | sh)"
+                    set -a method_labels "rustup installer (official script)"
                 case curl-lazydocker
                     set -a methods special-lazydocker
                     set -a method_labels "curl installer (official script)"
@@ -250,7 +250,8 @@ function _fish_deps_install
                 case pm
                     _fish_deps_pm_install $pm_pkg
                 case special-rustup
-                    curl https://sh.rustup.rs -sSf | sh
+                    _fish_deps_run_script https://sh.rustup.rs sh
+                    set -l _rustup_status $status
                     # Add cargo to PATH for the rest of this session without restarting.
                     # Try CARGO_HOME first (set in config.fish), then the rustup default.
                     for _d in "$CARGO_HOME/bin" "$HOME/.cargo/bin"
@@ -259,11 +260,12 @@ function _fish_deps_install
                             break
                         end
                     end
-                    if not type -q cargo
+                    if test $_rustup_status -eq 0; and not type -q cargo
                         set_color yellow
                         echo "  cargo not yet in PATH — restart your shell if subsequent installs fail."
                         set_color normal
                     end
+                    test $_rustup_status -eq 0
                 case special-go-ov
                     go install github.com/noborus/ov@latest
                     set -l _go_status $status
@@ -284,7 +286,7 @@ function _fish_deps_install
                     end
                     test $_go_status -eq 0
                 case special-lazydocker
-                    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | command bash
+                    _fish_deps_run_script https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh bash
                 case special-marktext-paru
                     paru -S --noconfirm marktext-bin
                 case special-marktext-yay
@@ -292,47 +294,16 @@ function _fish_deps_install
                 case special-marktext-appimage
                     _fish_deps_marktext_appimage
                 case special-wakatime
-                    set -l _arch (uname -m)
-                    switch $_arch
-                        case x86_64
-                            set _arch amd64
-                        case aarch64 arm64
-                            set _arch arm64
-                        case armv7l
-                            set _arch arm
-                        case '*'
-                            set _arch amd64
-                    end
-                    set -l _zip "wakatime-cli-linux-$_arch.zip"
-                    set -l _bin_src "wakatime-cli-linux-$_arch"
-                    set -l _wt_dir "$HOME/.config/wakatime"
-                    set -l _wt_bin "$_wt_dir/wakatime"
-                    set -l _tmpdir (mktemp -d)
-                    curl -L "https://github.com/wakatime/wakatime-cli/releases/latest/download/$_zip" \
-                        -o "$_tmpdir/$_zip"
-                    and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
-                    and mkdir -p "$_wt_dir" "$HOME/.local/bin"
-                    and command cp "$_tmpdir/$_bin_src" "$_wt_bin"
-                    and chmod +x "$_wt_bin"
-                    and ln -sf "$_wt_bin" "$HOME/.local/bin/wakatime"
-                    rm -rf "$_tmpdir"
+                    _fish_deps_wakatime_binary
                 case special-win32yank
-                    set -l _zip win32yank-x64.zip
-                    set -l _tmpdir (mktemp -d)
-                    mkdir -p "$HOME/.local/bin"
-                    and curl -fL "https://github.com/equalsraf/win32yank/releases/latest/download/$_zip" \
-                        -o "$_tmpdir/$_zip"
-                    and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
-                    and command cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
-                    and chmod +x "$HOME/.local/bin/win32yank.exe"
-                    set -l _dl_status $status
-                    rm -rf "$_tmpdir"
-                    test $_dl_status -eq 0
+                    _fish_deps_win32yank_binary
                 case special-fzf
                     fzf-update
                 case special-curl
                     if test "$bin" = starship
-                        curl -sS https://starship.rs/install.sh | sh
+                        _fish_deps_run_script https://starship.rs/install.sh sh
+                    else
+                        false
                     end
                 case special-yay-paru
                     yay -S --noconfirm paru
@@ -353,7 +324,8 @@ function _fish_deps_install
                     and popd
                     rm -rf $_build_dir
                 case special-uv
-                    curl -LsSf https://astral.sh/uv/install.sh | sh
+                    _fish_deps_run_script https://astral.sh/uv/install.sh sh
+                    set -l _uv_status $status
                     # Add uv to PATH for the rest of this session
                     for _d in "$HOME/.local/bin" "$HOME/.cargo/bin"
                         if test -d "$_d"
@@ -361,11 +333,12 @@ function _fish_deps_install
                             break
                         end
                     end
-                    if not type -q uv
+                    if test $_uv_status -eq 0; and not type -q uv
                         set_color yellow
                         echo "  uv not yet in PATH — restart your shell if subsequent installs fail."
                         set_color normal
                     end
+                    test $_uv_status -eq 0
                 case special-git-cargo-fish
                     set -l _tmpdir (mktemp -d)
                     set -l _build_ok 0

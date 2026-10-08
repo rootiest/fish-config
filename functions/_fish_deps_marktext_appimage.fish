@@ -16,13 +16,17 @@
 #
 #   The release assets embed their version in the filename, so there is no
 #   stable /releases/latest/download URL; the download URL is read from the
-#   GitHub API instead.
+#   GitHub API instead. The same API response carries the SHA-256 digest
+#   GitHub computed for the asset at upload; the AppImage is verified
+#   against it before it is made executable, and an asset with no digest
+#   is refused.
 #
 #   Upstream builds the Linux AppImage for x86_64 only.
 #
 # EXIT STATUS
 #   0  MarkText installed at ~/.local/bin/marktext
-#   1  Unsupported architecture, or the download or install failed
+#   1  Unsupported architecture, or the download, verification, or install
+#      failed
 #
 # EXAMPLE
 #   _fish_deps_marktext_appimage
@@ -42,17 +46,22 @@ function _fish_deps_marktext_appimage
         return 1
     end
 
-    set -l url (curl -fsSL https://api.github.com/repos/marktext/marktext/releases/latest |
-        string match -r '"browser_download_url":\s*"([^"]*-linux-[^"]*\.AppImage)"')[2]
+    # In the API's asset object "digest" precedes "browser_download_url"
+    # with no nested object between them, so [^{}]* keeps both captures
+    # inside one asset.
+    set -l release (curl -fsSL --proto '=https' https://api.github.com/repos/marktext/marktext/releases/latest | string collect)
+    set -l found (string match -rg -- '"digest":\s*"sha256:([0-9a-f]{64})"[^{}]*"browser_download_url":\s*"([^"]*-linux-[^"]*\.AppImage)"' $release)
+    set -l sha256 $found[1]
+    set -l url $found[2]
     if test -z "$url"
-        echo "  Could not find a Linux AppImage in the latest MarkText release." >&2
+        echo "  Could not find a verifiable Linux AppImage in the latest MarkText release." >&2
         return 1
     end
 
     set -l dest "$HOME/.local/bin/marktext"
     set -l tmp (mktemp -d)
     set -l ok 0
-    curl -fL "$url" -o "$tmp/marktext"
+    _fish_deps_fetch_verified "$url" "$tmp/marktext" $sha256
     and mkdir -p (dirname $dest)
     and chmod +x "$tmp/marktext"
     # Replace via mv, not a write into $dest: overwriting a running AppImage
