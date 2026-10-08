@@ -6,7 +6,7 @@
 # and failure edge-case testing:
 #   - gi (gitignore generation, API fetch, deduplication, error handling)
 #   - gip, gip4, gip6 (public IP resolution, timeouts, IPv4/IPv6 fallback, failure notices)
-#   - qr (terminal QR code generator, qrencode local bypass, curl fallback & network drop)
+#   - qr (terminal QR code generator, qrencode local bypass, opt-in --online curl fallback, URL encoding & network drop)
 #   - bd-pull (Gitea issues sync, missing tokens, API failures, malformed JSON, linking)
 #   - _auto_pull_sync (background safe fast-forward, dirty trees, network drop on fetch)
 #   - gitup (remote fetch & status, network drop handling)
@@ -406,21 +406,41 @@ function type
     builtin type $argv
 end
 
+# Without --online, nothing leaves the machine (#225)
+set -gx MOCK_CURL_LOG (mktemp)
+set -ga TMPDIRS $MOCK_CURL_LOG
+set -l qr_err (qr "secret" 2>&1 >/dev/null)
+check "qr: missing qrencode without --online exits 1" 1 $status
+check "qr: missing qrencode without --online explains itself" true (string match -q '*--online*' -- $qr_err; and echo true; or echo false)
+check "qr: curl is never called without --online" 0 (count (cat $MOCK_CURL_LOG))
+
 set -gx MOCK_CURL_BODY UTF8_QR_BODY
-set -l qr_curl (qr "hello-curl")
-check "qr: fallback to curl when qrencode is missing" UTF8_QR_BODY "$qr_curl"
+set -l qr_curl (qr --online "hello-curl")
+check "qr: --online falls back to curl when qrencode is missing" UTF8_QR_BODY "$qr_curl"
 
 # Network drop during curl fallback
 set -gx MOCK_CURL_STATUS 7
 set -gx MOCK_CURL_BODY ""
-qr fail >/dev/null 2>&1
+qr --online fail >/dev/null 2>&1
 check "qr: curl network drop returns non-zero" 7 $status
 
 # Argument-based curl fallback
 set -gx MOCK_CURL_STATUS 0
 set -gx MOCK_CURL_BODY TEXT_QR
-set -l qr_arg (qr "arg-text")
+set -l qr_arg (qr -o "arg-text")
 check "qr: argument works via curl fallback" TEXT_QR "$qr_arg"
+
+# Text is URL-encoded and arguments are joined into one request
+echo -n >$MOCK_CURL_LOG
+qr --online "a#b?c" d >/dev/null
+check "qr: --online makes exactly one request" 1 (count (cat $MOCK_CURL_LOG))
+check "qr: --online URL-encodes the text" true (string match -q '*https://qrenco.de/a%23b%3Fc%20d' -- (cat $MOCK_CURL_LOG); and echo true; or echo false)
+check "qr: --online fails on HTTP errors with a timeout" true (string match -q -- '-fsS --max-time *' (cat $MOCK_CURL_LOG); and echo true; or echo false)
+
+# Multi-line stdin is one encoded request
+echo -n >$MOCK_CURL_LOG
+printf 'line1\nline2\n' | qr --online >/dev/null
+check "qr: multi-line stdin URL-encodes the newline" true (string match -q '*/line1%0Aline2' -- (cat $MOCK_CURL_LOG); and echo true; or echo false)
 
 functions -e type
 
