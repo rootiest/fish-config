@@ -449,6 +449,38 @@ functions -e _fish_deps_detect_pm pacman sudo
 set -e _pacman_log
 
 # =============================================================================
+# 7. bash: Wrapper Exit Status (#247)
+# =============================================================================
+section bash
+
+if type -q bash
+    # The C1 guard resolves `bash` through the registry, so load it here.
+    source $repo_root/conf.d/__fish_config_op_registry.fish
+    set -l bash_xdg (mktemp -d)
+    set -l saved_xdg $XDG_CONFIG_HOME
+    set -gx XDG_CONFIG_HOME $bash_xdg
+
+    # Enabled path: the trailing `set SHELL` must not clobber bash's status.
+    set -g __fish_config_op_aliases 1
+    bash -c 'exit 3'
+    check "bash -c 'exit 3' returns 3 (C1 enabled)" 3 $status
+    bash -c 'exit 0'
+    check "bash -c 'exit 0' returns 0 (C1 enabled)" 0 $status
+    check "SHELL is reset to fish afterwards" (which fish) "$SHELL"
+
+    # Disabled path: falls back to bare `command bash`.
+    set -g __fish_config_op_aliases 0
+    bash -c 'exit 3'
+    check "bash -c 'exit 3' returns 3 (C1 disabled)" 3 $status
+
+    set -e __fish_config_op_aliases
+    set -gx XDG_CONFIG_HOME $saved_xdg
+    rm -rf $bash_xdg
+else
+    echo "  SKIP  bash not installed"
+end
+
+# =============================================================================
 # Report
 # =============================================================================
 report

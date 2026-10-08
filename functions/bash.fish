@@ -31,5 +31,7 @@ function bash --wraps='bash' --description 'bash switches to bash shell'
 
     set SHELL $(which bash) # Set shell to bash
     command bash --rcfile "$XDG_CONFIG_HOME/bash/bashrc" $argv # Run bash
+    set -l rc $status # Keep bash's status; the reset below would clobber it
     set SHELL $(which fish) # Reset shell
+    return $rc
 end
