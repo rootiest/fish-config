@@ -6,8 +6,8 @@
 #
 # DEPENDENCIES
 #   _fish_mkdir_p, __fish_palette, _mkrep_say,
-#   _mkrep_add_origin, _mkrep_default_remote_cmd, _mkrep_remote_url,
-#   _mkrep_repo_exists, git
+#   _mkrep_add_origin, _mkrep_default_remote_cmd, _mkrep_expand_template,
+#   _mkrep_remote_url, _mkrep_repo_exists, git
 #
 # CLASSIFICATION
 #   bypasses-shadow(cd), self-limiting(rm), destructive, network
@@ -53,10 +53,16 @@
 #   (e.g. gh repo create {name} --source=. --remote=origin --push).
 #   Three placeholders are substituted in a template: {name} (--name, or
 #   the target directory's basename), {user} ($USER), and {server} (the
-#   resolved server base URL, gitea/gitlab only). Pass a command after
-#   --new-remote to use it for this call only; with no value it falls
-#   back to $MKREP_REMOTE_CMD. --remote and --new-remote are mutually
-#   exclusive, and either requires --git.
+#   resolved server base URL, gitea/gitlab only). Each value is
+#   shell-escaped as it is inserted, so a directory named a;touch X reaches
+#   the command as the literal text a;touch X and runs nothing extra; for the
+#   same reason a template must not put quotes around a placeholder. Pass a
+#   command after --new-remote (--new-remote <cmd> or --new-remote=<cmd>) to
+#   use it for this call only; with no command it falls back to
+#   $MKREP_REMOTE_CMD. The space form is recognized when exactly two
+#   operands follow, the first being the command; a bare --new-remote
+#   followed by a single operand treats that operand as <dir>. --remote and
+#   --new-remote are mutually exclusive, and either requires --git.
 #
 #   --server <type> (gitea, gitlab, or github) picks a host without an
 #   explicit --remote/--new-remote: resolve its base URL from
@@ -138,6 +144,8 @@
 #   mkrep --remote git@git.example.com:me/foo.git ~/projects/foo
 #   set -Ux MKREP_REMOTE_CMD 'gh repo create {name} --private --source=. --remote=origin --push'
 #   mkrep --new-remote ~/projects/foo
+#   mkrep --new-remote 'gh repo create {name} --public --source=. --remote=origin' ~/projects/foo
+#   mkrep --new-remote='gh repo create {name} --public --source=. --remote=origin' ~/projects/foo
 #   set -gx GITEA_URL https://git.example.com
 #   set -gx GIT_SERVER gitea
 #   mkrep ~/projects/foo        # asks before creating the remote
@@ -159,6 +167,8 @@
 #     Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 function mkrep --description 'Create a directory, cd into it, and git init it'
     __fish_palette
+
+    set -l orig_argv $argv
 
     argparse h/help cd no-cd mkdir no-mkdir git no-git c/clean no-clean strict \
         l/local v/verbose s/silent y/yes template= branch= remote= new-remote=? server= \
@@ -184,7 +194,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         echo "  $c_flag--template$c_reset $c_arg<path>$c_reset       git init --template=<path>"
         echo "  $c_flag--branch$c_reset $c_arg<name>$c_reset         git init -b <name>"
         echo "  $c_flag--remote$c_reset $c_arg<url>$c_reset          Link an existing remote"
-        echo "  $c_flag--new-remote$c_reset $c_arg<cmd>$c_reset (optional)  Create + link a remote"
+        echo "  $c_flag--new-remote$c_reset [$c_arg<cmd>$c_reset]      Create + link a remote (cmd, or \$MKREP_REMOTE_CMD)"
         echo "  $c_flag--server$c_reset $c_arg<type>$c_reset          Auto-create/link a remote (gitea, gitlab, github)"
         echo "  $c_flag--check-existing$c_reset          Report whether the repo exists; creates nothing"
         echo "  $c_flag-y$c_reset, $c_flag--yes$c_reset              Skip the \$GIT_SERVER remote-create confirmation"
@@ -195,11 +205,40 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         echo "  $c_cmd""mkrep$c_reset $c_arg~/projects/my-new-repo$c_reset"
         echo "  $c_cmd""mkrep$c_reset $c_flag--clean --strict$c_reset $c_arg~/projects/scratch$c_reset"
         echo "  $c_cmd""mkrep$c_reset $c_flag--new-remote$c_reset $c_arg~/projects/foo$c_reset"
+        echo "  $c_cmd""mkrep$c_reset $c_flag--new-remote$c_reset $c_arg'gh repo create {name} --source=. --remote=origin'$c_reset $c_arg~/projects/foo$c_reset"
         return 0
+    end
+
+    # argparse accepts an optional value only glued on (--new-remote=<cmd>), so
+    # the documented `--new-remote <cmd> <dir>` leaves <cmd> behind as a second
+    # operand. A bare --new-remote with exactly two operands can only mean that:
+    # take the word right after the flag as the command. With one operand it is
+    # the bare form (command from $MKREP_REMOTE_CMD) and that operand is <dir>.
+    if set -q _flag_new_remote; and test -z "$_flag_new_remote"; and test (count $argv) -eq 2
+        set -l nr_cmd
+        set -l i 1
+        while test $i -lt (count $orig_argv)
+            test "$orig_argv[$i]" = --; and break
+            if test "$orig_argv[$i]" = --new-remote
+                set nr_cmd $orig_argv[(math $i + 1)]
+                break
+            end
+            set i (math $i + 1)
+        end
+        if test -n "$nr_cmd"; and not string match -q -- '-*' $nr_cmd
+            set -l nr_idx (contains -i -- $nr_cmd $argv)
+            if test -n "$nr_idx"
+                set _flag_new_remote $nr_cmd
+                set -e argv[$nr_idx]
+            end
+        end
     end
 
     if test (count $argv) -ne 1
         echo "$c_err""✘$c_reset  mkrep takes exactly one directory argument" >&2
+        if set -q _flag_new_remote; and test -z "$_flag_new_remote"
+            echo "   To pass a command, put it right after $c_flag--new-remote$c_reset (or use $c_flag--new-remote=<cmd>$c_reset)" >&2
+        end
         return 2
     end
     set -l dir $argv[1]
@@ -387,8 +426,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
 
         set -l name $_flag_name
         test -z "$name"; and set name (path basename (path resolve $dir))
-        set cmd (string replace -a '{name}' $name -- $cmd)
-        set cmd (string replace -a '{user}' $USER -- $cmd)
+        set cmd (_mkrep_expand_template "$cmd" $name $USER)
 
         test $verbose = 1; and _mkrep_say $silent "$c_dim""Running: $cmd$c_reset"
         if test $silent -eq 1
@@ -454,10 +492,8 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                             builtin cd $orig_pwd
                             return 1
                         end
-                        set cmd (string replace -a '{server}' $srv_url -- $cmd)
                     end
-                    set cmd (string replace -a '{name}' $name -- $cmd)
-                    set cmd (string replace -a '{user}' $USER -- $cmd)
+                    set cmd (_mkrep_expand_template "$cmd" $name $USER $srv_url)
 
                     test $verbose = 1; and _mkrep_say $silent "$c_dim""Running: $cmd$c_reset"
                     if test $silent -eq 1

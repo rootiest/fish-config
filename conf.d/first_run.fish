@@ -24,6 +24,10 @@ end
 
 # Set the flag immediately — before actions — so a mid-run crash doesn't
 # leave the shell in a state that re-triggers everything next session.
+# Trade-off: a failed Fisher bootstrap below is therefore NOT retried
+# automatically (an automatic retry would re-print the welcome banner and
+# block shell startup on the network every session while offline). The
+# failure message tells the user how to retry.
 set -U __fish_config_first_run_complete 1
 
 #   ──────────────────────────── Man page symlink ──────────────────────────
@@ -57,16 +61,35 @@ if not __fish_config_op_enabled (status basename) first-run-bootstrap
 end
 
 #   ──────────────────────────── Bootstrap Fisher ──────────────────────────
+# Fisher is fetched from a PINNED release tag, never the floating `main`
+# branch, because the downloaded script is executed. To bump it: pick a tag
+# from the Fisher releases page (jorgebucaran/fisher on GitHub), confirm that
+# <tag>/functions/fisher.fish resolves, and change _fisher_ref below.
+set -l _fisher_ref 4.4.8
+set -l _fisher_url https://raw.githubusercontent.com/jorgebucaran/fisher/$_fisher_ref/functions/fisher.fish
+
 if not type -q fisher
     echo "  [first-run] Installing Fisher plugin manager..."
-    if curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+    # Download to a file first: `curl | source` reports the status of `source`
+    # (0 for empty input), so a failed download looked like a success. Success
+    # means curl exited 0 (-f turns HTTP errors into failures), the body is
+    # non-empty, it sourced cleanly, and `fisher` is now actually defined.
+    set -l _fisher_tmp (mktemp)
+    if test -n "$_fisher_tmp"
+        and curl -fsSL --connect-timeout 10 --max-time 30 -o $_fisher_tmp $_fisher_url
+        and test -s $_fisher_tmp
+        and source $_fisher_tmp
+        and type -q fisher
         echo "  [first-run] Fisher installed."
         if not fisher update 2>/dev/null
             echo "  [first-run] Fisher update failed — run 'fisher update' manually." >&2
         end
     else
-        echo "  [first-run] Fisher install failed — run 'fisher update' manually." >&2
+        echo "  [first-run] Fisher install failed (download or load error)." >&2
+        echo "  [first-run] Plugins such as sponge (history secret filtering) are NOT installed." >&2
+        echo "  [first-run] To retry: set -Ue __fish_config_first_run_complete  # then restart fish" >&2
     end
+    test -n "$_fisher_tmp"; and command rm -f $_fisher_tmp
 end
 
 #   ───────────────────────────── Apply theme ──────────────────────────────

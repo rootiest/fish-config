@@ -32,6 +32,13 @@ end
 
 # Only register if sponge is loaded
 if not set -q sponge_version
+    # Say so when sponge is expected (listed in fish_plugins) but missing, e.g.
+    # after a failed first-run Fisher bootstrap: otherwise every privacy layer
+    # below is silently inactive.
+    if test -f $__fish_config_dir/fish_plugins
+        and string match -q '*meaningful-ooo/sponge*' <$__fish_config_dir/fish_plugins
+        echo "fish-config: sponge is not installed; history secret filtering is inactive (run 'fisher update')." >&2
+    end
     return
 end
 

@@ -237,6 +237,117 @@ check "env fallback template ran" repo (cat $target/created.txt)
 cd $start
 rm -rf $base
 
+section "mkrep: --new-remote <cmd> (space-separated, as documented)"
+
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+mkrep --new-remote 'echo {name} >created.txt' $target >/dev/null 2>&1
+check "space form exits 0" 0 $status
+check "space form ran the template" repo (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+mkrep $target --new-remote 'echo {name} >created.txt' >/dev/null 2>&1
+check "space form after <dir> exits 0" 0 $status
+check "space form after <dir> ran the template" repo (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
+# A bare --new-remote followed by exactly one operand is still the
+# $MKREP_REMOTE_CMD fallback with <dir> as that operand (tested above); two
+# operands is the only reading in which one of them is a command.
+set -l base (_mkrep_sandbox)
+set -l target $base/repo
+set -lx MKREP_REMOTE_CMD 'echo env >created.txt'
+mkrep --new-remote 'echo arg >created.txt' $target >/dev/null 2>&1
+check "space-form command beats \$MKREP_REMOTE_CMD" arg (cat $target/created.txt 2>/dev/null)
+set -e MKREP_REMOTE_CMD
+cd $start
+rm -rf $base
+
+section "mkrep: --new-remote substitutions cannot inject commands"
+
+# {name} comes from the directory basename or --name, {user} from $USER. They
+# land inside a template that runs through eval, so shell metacharacters in
+# them must arrive as literal text, not execute.
+set -l base (_mkrep_sandbox)
+set -l target "$base/a;touch PWNED_semi"
+mkrep --new-remote='echo {name} >created.txt' $target >/dev/null 2>&1
+check "metachar dir name exits 0" 0 $status
+check "';' in dir name: nothing executed" false (test -e "$target/PWNED_semi"; and echo true; or echo false)
+check "';' in dir name: arrives intact in {name}" "a;touch PWNED_semi" (cat "$target/created.txt" 2>/dev/null)
+cd $start
+rm -rf $base
+
+set -l base (_mkrep_sandbox)
+set -l target "$base/x"
+mkrep --new-remote='echo {name} >created.txt' --name 'a$(touch PWNED_sub)b' $target >/dev/null 2>&1
+check "'\$()' in --name exits 0" 0 $status
+check "'\$()' in --name: nothing executed" false (test -e $target/PWNED_sub; and echo true; or echo false)
+check "'\$()' in --name: arrives intact" 'a$(touch PWNED_sub)b' (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
+set -l base (_mkrep_sandbox)
+set -l target "$base/x"
+mkrep --new-remote='echo {name} >created.txt' --name "it's \"q\" two words" $target >/dev/null 2>&1
+check "quotes/spaces in --name exit 0" 0 $status
+check "quotes/spaces in --name arrive intact" "it's \"q\" two words" (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
+set -l base (_mkrep_sandbox)
+set -l target "$base/x"
+begin
+    set -lx USER 'u;touch PWNED_user'
+    mkrep --new-remote='echo {user} >created.txt' $target >/dev/null 2>&1
+end
+check "metachar \$USER exits 0" 0 $status
+check "metachar \$USER: nothing executed" false (test -e $target/PWNED_user; and echo true; or echo false)
+check "metachar \$USER arrives intact in {user}" 'u;touch PWNED_user' (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
+set -l base (_mkrep_sandbox)
+set -l target "$base/x"
+mkrep --new-remote='echo {name} >created.txt' --name '{user}' $target >/dev/null 2>&1
+check "placeholder-shaped --name exits 0" 0 $status
+check "placeholder-shaped --name is not substituted twice" '{user}' (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
+section "mkrep: --new-remote misuse points at the working forms"
+
+set -l base (_mkrep_sandbox)
+mkrep --new-remote --name n $base/a $base/b >/dev/null 2>/tmp/mkrep-test-err
+check "bare --new-remote + two operands (no command next) exits 2" 2 $status
+check "error names the --new-remote=<cmd> form" true (string match -q -- '*--new-remote=<cmd>*' (cat /tmp/mkrep-test-err); and echo true; or echo false)
+check "misuse creates nothing" false (test -d $base/a; and echo true; or echo false)
+rm -f /tmp/mkrep-test-err
+rm -rf $base
+
+section "mkrep: --server substitutions cannot inject commands"
+
+set -l base (_mkrep_sandbox)
+set -l target "$base/x"
+begin
+    set -l stub (mktemp -d)
+    printf '#!/bin/sh\nexit 1\n' >$stub/tea
+    chmod +x $stub/tea
+    set -lx PATH $stub $PATH
+    set -lx GITEA_URL 'https://g.example.invalid/$(touch PWNED_srv)'
+    set -lx MKREP_REMOTE_CMD 'echo {server}/{name} >created.txt'
+    mkrep --server gitea --name 'n;touch PWNED_n' $target >/dev/null 2>&1
+    check "--server with metachar values exits 0" 0 $status
+    rm -rf $stub
+end
+check "--server: nothing executed" false (begin; test -e $target/PWNED_srv; or test -e $target/PWNED_n; end; and echo true; or echo false)
+check "--server: values arrive intact" 'https://g.example.invalid/$(touch PWNED_srv)/n;touch PWNED_n' (cat $target/created.txt 2>/dev/null)
+cd $start
+rm -rf $base
+
 section "mkrep: --server conflicts with --remote/--new-remote"
 
 set -l base (_mkrep_sandbox)

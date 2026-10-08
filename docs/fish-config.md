@@ -1489,10 +1489,16 @@ functions). They are active in all interactive sessions.
     (e.g. gh repo create {name} --source=. --remote=origin --push).
     Three placeholders are substituted in a template: {name} (--name, or
     the target directory's basename), {user} ($USER), and {server} (the
-    resolved server base URL, gitea/gitlab only). Pass a command after
-    --new-remote to use it for this call only; with no value it falls
-    back to $MKREP_REMOTE_CMD. --remote and --new-remote are mutually
-    exclusive, and either requires --git.
+    resolved server base URL, gitea/gitlab only). Each value is
+    shell-escaped as it is inserted, so a directory named a;touch X reaches
+    the command as the literal text a;touch X and runs nothing extra; for the
+    same reason a template must not put quotes around a placeholder. Pass a
+    command after --new-remote (--new-remote <cmd> or --new-remote=<cmd>) to
+    use it for this call only; with no command it falls back to
+    $MKREP_REMOTE_CMD. The space form is recognized when exactly two
+    operands follow, the first being the command; a bare --new-remote
+    followed by a single operand treats that operand as <dir>. --remote and
+    --new-remote are mutually exclusive, and either requires --git.
 
     --server <type> (gitea, gitlab, or github) picks a host without an
     explicit --remote/--new-remote: resolve its base URL from
@@ -1574,6 +1580,8 @@ functions). They are active in all interactive sessions.
     mkrep --remote git@git.example.com:me/foo.git ~/projects/foo
     set -Ux MKREP_REMOTE_CMD 'gh repo create {name} --private --source=. --remote=origin --push'
     mkrep --new-remote ~/projects/foo
+    mkrep --new-remote 'gh repo create {name} --public --source=. --remote=origin' ~/projects/foo
+    mkrep --new-remote='gh repo create {name} --public --source=. --remote=origin' ~/projects/foo
     set -gx GITEA_URL https://git.example.com
     set -gx GIT_SERVER gitea
     mkrep ~/projects/foo        # asks before creating the remote
@@ -1594,7 +1602,7 @@ functions). They are active in all interactive sessions.
       GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
       Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 
-**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_add_origin`, `_mkrep_default_remote_cmd`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
+**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_add_origin`, `_mkrep_default_remote_cmd`, `_mkrep_expand_template`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
 
 **Classification:** `bypasses-shadow(cd)`, `self-limiting(rm)`, `destructive`, `network`
 
@@ -4780,6 +4788,14 @@ Fisher is bootstrapped automatically on the **first interactive session** via
 prints a one-time welcome message (gated by `__fish_config_op_greeting`; set
 it to 0 to suppress). Subsequent sessions skip all first-run logic with zero
 overhead.
+
+Fisher itself is downloaded from a pinned release tag (`_fisher_ref` in
+`conf.d/first_run.fish`), never the floating `main` branch. If the download
+fails (offline, HTTP error, empty or invalid body), first-run prints an error
+to stderr and does not report success. The first-run flag is still set, so the
+bootstrap is not retried automatically; re-trigger it with the command below
+once you are online. Until Fisher and the sponge plugin are installed, history
+secret filtering is inactive, and a notice on stderr says so.
 
 To re-trigger first-run initialization (e.g., after a fresh install or for
 testing), run:
