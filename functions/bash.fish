@@ -29,7 +29,9 @@ function bash --wraps='bash' --description 'bash switches to bash shell'
         return $status
     end
 
-    set SHELL $(which bash) # Set shell to bash
+    set -gx SHELL $(which bash) # Set shell to bash (global: a bare set is function-local when SHELL is unset)
     command bash --rcfile "$XDG_CONFIG_HOME/bash/bashrc" $argv # Run bash
-    set SHELL $(which fish) # Reset shell
+    set -l rc $status # Keep bash's status; the reset below would clobber it
+    set -gx SHELL $(which fish) # Reset shell
+    return $rc
 end
