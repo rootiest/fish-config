@@ -4865,8 +4865,8 @@ neither \f[V]wl-copy\f[R]/\f[V]wl-paste\f[R] nor \f[V]xclip\f[R] are
 present.
 \f[V]fish-deps\f[R] only offers to install it when WSL2 is detected
 (\f[V]microsoft\f[R] in \f[V]/proc/sys/kernel/osrelease\f[R]),
-downloading the \f[V]x86_64\f[R] binary from GitHub releases to
-\f[V]\[ti]/.local/bin\f[R].
+downloading the pinned, checksum-verified \f[V]x86_64\f[R] release from
+GitHub to \f[V]\[ti]/.local/bin\f[R].
 T}
 .TE
 .SS Terminal Emulators
@@ -4968,6 +4968,18 @@ T}@T{
 installer
 T}
 .TE
+.PP
+Installer scripts (\f[V]rustup\f[R], \f[V]uv\f[R], \f[V]starship\f[R],
+\f[V]lazydocker\f[R]) are downloaded to a temporary file and run only
+after the download succeeds; they are never streamed into \f[V]sh\f[R].
+Downloaded binaries (\f[V]wakatime-cli\f[R], \f[V]win32yank.exe\f[R],
+the MarkText AppImage) are checked against a SHA-256 digest before they
+are made executable: the release\[cq]s published checksum file for
+\f[V]wakatime-cli\f[R], the digest GitHub records for the MarkText
+asset, and a pinned digest for \f[V]win32yank.exe\f[R], whose upstream
+publishes none.
+A failed download or checksum mismatch aborts that install and reports
+failure.
 .PP
    *   *   *   *   *
 .SH 7. CUSTOMIZATION
