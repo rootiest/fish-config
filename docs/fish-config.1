@@ -1905,10 +1905,16 @@ nothing further is needed since the template itself does the linking
 (e.g. gh repo create {name} --source=. --remote=origin --push).
 Three placeholders are substituted in a template: {name} (--name, or
 the target directory\[aq]s basename), {user} ($USER), and {server} (the
-resolved server base URL, gitea/gitlab only). Pass a command after
---new-remote to use it for this call only; with no value it falls
-back to $MKREP_REMOTE_CMD. --remote and --new-remote are mutually
-exclusive, and either requires --git.
+resolved server base URL, gitea/gitlab only). Each value is
+shell-escaped as it is inserted, so a directory named a;touch X reaches
+the command as the literal text a;touch X and runs nothing extra; for the
+same reason a template must not put quotes around a placeholder. Pass a
+command after --new-remote (--new-remote <cmd> or --new-remote=<cmd>) to
+use it for this call only; with no command it falls back to
+$MKREP_REMOTE_CMD. The space form is recognized when exactly two
+operands follow, the first being the command; a bare --new-remote
+followed by a single operand treats that operand as <dir>. --remote and
+--new-remote are mutually exclusive, and either requires --git.
 
 --server <type> (gitea, gitlab, or github) picks a host without an
 explicit --remote/--new-remote: resolve its base URL from
@@ -1990,6 +1996,8 @@ mkrep -l \[ti]/projects/my-local-repo
 mkrep --remote git\[at]git.example.com:me/foo.git \[ti]/projects/foo
 set -Ux MKREP_REMOTE_CMD \[aq]gh repo create {name} --private --source=. --remote=origin --push\[aq]
 mkrep --new-remote \[ti]/projects/foo
+mkrep --new-remote \[aq]gh repo create {name} --public --source=. --remote=origin\[aq] \[ti]/projects/foo
+mkrep --new-remote=\[aq]gh repo create {name} --public --source=. --remote=origin\[aq] \[ti]/projects/foo
 set -gx GITEA_URL https://git.example.com
 set -gx GIT_SERVER gitea
 mkrep \[ti]/projects/foo        # asks before creating the remote
@@ -2015,7 +2023,8 @@ not, so they are chained with the git commands that do the linking:
 \f[B]Dependencies:\f[R] \f[V]_fish_mkdir_p\f[R],
 \f[V]__fish_palette\f[R], \f[V]_mkrep_say\f[R],
 \f[V]_mkrep_add_origin\f[R], \f[V]_mkrep_default_remote_cmd\f[R],
-\f[V]_mkrep_remote_url\f[R], \f[V]_mkrep_repo_exists\f[R], \f[V]git\f[R]
+\f[V]_mkrep_expand_template\f[R], \f[V]_mkrep_remote_url\f[R],
+\f[V]_mkrep_repo_exists\f[R], \f[V]git\f[R]
 .PP
 \f[B]Classification:\f[R] \f[V]bypasses-shadow(cd)\f[R],
 \f[V]self-limiting(rm)\f[R], \f[V]destructive\f[R], \f[V]network\f[R]
