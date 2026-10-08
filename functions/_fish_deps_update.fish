@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # CLASSIFICATION
-#   self-limiting(rm), bypasses-shadow(cp,bash), destructive, network
+#   self-limiting(rm), destructive, network
 #
 # SYNOPSIS
 #   _fish_deps_update
@@ -93,8 +93,8 @@ function _fish_deps_update
         # lazydocker: re-run the official install/update script
         if test "$special" = curl-lazydocker
             echo "Updating $bin..."
-            curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | command bash
-            set updated_any 1
+            _fish_deps_run_script https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh bash
+            and set updated_any 1
             set i (math $i + 1)
             continue
         end
@@ -123,46 +123,18 @@ function _fish_deps_update
         # wakatime: re-download the binary from github releases
         if test "$special" = wakatime-binary
             echo "Updating $bin..."
-            set -l _arch (uname -m)
-            switch $_arch
-                case x86_64
-                    set _arch amd64
-                case aarch64 arm64
-                    set _arch arm64
-                case armv7l
-                    set _arch arm
-                case '*'
-                    set _arch amd64
-            end
-            set -l _zip "wakatime-cli-linux-$_arch.zip"
-            set -l _bin_src "wakatime-cli-linux-$_arch"
-            set -l _wt_bin "$HOME/.config/wakatime/wakatime"
-            set -l _tmpdir (mktemp -d)
-            curl -L "https://github.com/wakatime/wakatime-cli/releases/latest/download/$_zip" \
-                -o "$_tmpdir/$_zip"
-            and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
-            and command cp "$_tmpdir/$_bin_src" "$_wt_bin"
-            and chmod +x "$_wt_bin"
-            rm -rf "$_tmpdir"
+            _fish_deps_wakatime_binary
             and set updated_any 1
             set i (math $i + 1)
             continue
         end
 
-        # win32yank: re-download the binary from github releases (WSL2 only;
-        # only reached if a copy is already on PATH, so no WSL check needed)
+        # win32yank: reinstall the pinned, checksum-verified release (WSL2
+        # only; only reached if a copy is already on PATH, so no WSL check
+        # needed)
         if test "$special" = win32yank-release
             echo "Updating $bin..."
-            set -l _zip win32yank-x64.zip
-            set -l _tmpdir (mktemp -d)
-            curl -fL "https://github.com/equalsraf/win32yank/releases/latest/download/$_zip" \
-                -o "$_tmpdir/$_zip"
-            and unzip -o "$_tmpdir/$_zip" -d "$_tmpdir"
-            and command cp "$_tmpdir/win32yank.exe" "$HOME/.local/bin/win32yank.exe"
-            and chmod +x "$HOME/.local/bin/win32yank.exe"
-            set -l _up_status $status
-            rm -rf "$_tmpdir"
-            test $_up_status -eq 0
+            _fish_deps_win32yank_binary
             and set updated_any 1
             set i (math $i + 1)
             continue
@@ -231,8 +203,8 @@ function _fish_deps_update
         if test "$special" = curl-installer
             if test "$bin" = starship
                 echo "Updating $bin..."
-                curl -sS https://starship.rs/install.sh | sh -s -- --yes
-                set updated_any 1
+                _fish_deps_run_script https://starship.rs/install.sh sh --yes
+                and set updated_any 1
             end
             set i (math $i + 1)
             continue
