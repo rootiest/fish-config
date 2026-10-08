@@ -60,8 +60,15 @@ set -a _privacy_patterns '(?i)set\s+-\S+\s+\S*(?:password|passwd|token|secret|ap
 # URLs with embedded credentials: https://user:password@host
 set -a _privacy_patterns 'https?://[^:@\s]+:[^@\s]+@'
 
-# HTTP Authorization headers: curl -H "Authorization: Bearer xxx"
-set -a _privacy_patterns 'curl\s.*[Aa]uthorization:'
+# Token-only URL userinfo: https://TOKEN@host (16+ chars, so that a plain
+# https://user@host is kept)
+set -a _privacy_patterns 'https?://[^:@\s/]{16,}@'
+
+# HTTP Authorization headers, any case: curl -H "Authorization: Bearer xxx"
+set -a _privacy_patterns '(?i)curl\s.*authorization:'
+
+# API-key style headers: X-API-Key: xxx, X-Auth-Token: xxx
+set -a _privacy_patterns '(?i)\bx-(?:api-key|auth-token|access-token|amz-security-token)\s*:'
 
 # Basic auth flags: curl -u user:pass, wget --user user --password pass
 set -a _privacy_patterns '(?:curl|wget)\s.*(?:-u|--user)\s+\S+:\S+'
@@ -117,14 +124,15 @@ function __sponge_register_secret_values --on-event fish_prompt
         "(?i)(?:$_sensitive_alt)")
 
     for var in $sensitive_vars
-        # Take only the first element — array vars yield multiple values.
-        set -l value $$var[1]
-        # If the var is unset or holds an empty list, value has no elements;
-        # set -q catches that before string length receives zero arguments.
-        set -q value[1]; or continue
-        test (string length -- $value) -gt 8; or continue
-        string match --quiet --regex '^[/~]' -- $value; and continue
-        set -a secret_values (string escape --style=regex -- $value)
+        # Register every element: `$$var[1]` would index the inner name, not
+        # the dereferenced list. An unset or empty variable loops zero times.
+        for value in $$var
+            test (string length -- $value) -gt 8; or continue
+            # Skip values that are an existing file or directory (leading ~/
+            # expanded); a mere leading / or ~ does not make a credential a path.
+            test -e (string replace --regex -- '^~(?=/)' $HOME $value); and continue
+            set -a secret_values (string escape --style=regex -- $value)
+        end
     end
 
     if test (count $secret_values) -gt 0
