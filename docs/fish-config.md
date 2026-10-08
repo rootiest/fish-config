@@ -2385,21 +2385,36 @@ functions). They are active in all interactive sessions.
 
 ### qr
 
-    Synopsis:  qr [text...]
+    Synopsis:  qr [-o | --online] [--] [text...]
 
     Generates a UTF-8 QR code from the given text or from stdin if no
-    argument is provided. Uses qrencode locally if available, otherwise
-    falls back to the qrenco.de API via curl.
+    argument is provided. Encodes locally with qrencode. When qrencode is
+    missing, qr fails with an error rather than sending the text anywhere;
+    pass --online to send it to the qrenco.de API via curl instead.
 
     Arguments:
-      text...  Text to encode; reads from stdin if omitted
+      -o, --online  Allow the qrenco.de fallback when qrencode is missing.
+                    The text leaves the machine: avoid it for passwords,
+                    tokens and one-time URLs
+      text...       Text to encode, joined with spaces; reads stdin if omitted
 
     Exit Status:
-      Exit status of qrencode, or curl if qrencode is unavailable
+      0  Success
+      1  qrencode is missing and --online was not given
+      2  Unknown option
+      *  Exit status of qrencode, or of curl with --online
+
+    Returns:
+      The QR code on stdout, drawn with UTF-8 block characters
+
+    Notes:
+      Options are only parsed before the first text word; use -- to encode
+      text that itself starts with a dash.
 
     Example:
     qr "https://example.com"
     echo "hello" | qr
+    qr --online "not a secret"
 
 **Dependencies:** `curl`, `qrencode`
 
