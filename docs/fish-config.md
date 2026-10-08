@@ -3611,7 +3611,8 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Services updated and running
-      1  Directory not found or no docker-compose.yml present
+      1  Directory not found, no docker-compose.yml present, or docker missing
+      2  docker compose pull/up failed
 
     Example:
     dockup ~/myapp
