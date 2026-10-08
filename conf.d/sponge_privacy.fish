@@ -90,6 +90,24 @@ for _i in (seq (count $sponge_regex_patterns) -1 1)
     end
 end
 
+# Retired patterns: earlier versions registered these, a later version replaced
+# them. Remove them from the universal list on load. Exact-string match only,
+# so user-added patterns are never touched. Append here whenever a pattern in
+# the list above is changed or dropped.
+set -l _retired_patterns \
+    'curl\s.*[Aa]uthorization:'
+# The list is rebuilt rather than edited by index: `set -Ue name[N]` silently
+# does nothing on a universal variable.
+set -l _kept_patterns
+for _pattern in $sponge_regex_patterns
+    if not contains -- "$_pattern" $_retired_patterns
+        set -a _kept_patterns $_pattern
+    end
+end
+if test (count $_kept_patterns) -ne (count $sponge_regex_patterns)
+    set -U sponge_regex_patterns $_kept_patterns
+end
+
 # Idempotent registration into universal sponge_regex_patterns
 for _pattern in $_privacy_patterns
     if not contains -- $_pattern $sponge_regex_patterns
