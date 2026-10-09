@@ -53,7 +53,7 @@ function cleanup
 end
 
 # ── stubs ────────────────────────────────────────────────────────────────────
-set -l stubsrc (mktemp -d)
+set -g stubsrc (mktemp -d)
 set -ga TMPDIRS $stubsrc
 
 # curl: logs argv, the curl config it was handed (-K), the mode of that file,
@@ -189,7 +189,8 @@ function _has --argument-names file pattern
         echo false
         return
     end
-    if string match -q -- "*$pattern*" (string collect <$file)
+    # Literal substring (escaped regex): a glob cannot match a lone backslash.
+    if string match -q -r -- (string escape --style=regex -- $pattern) (string collect <$file)
         echo true
     else
         echo false
@@ -233,7 +234,7 @@ check "no page 3" false (_has $STATE/urls.log 'page=3')
 
 check "two beads created (PR, closed and linked issues skipped)" 2 (count (string match -r '^create .*' -- (string split \n -- (string collect <$STATE/bd.log))))
 check "bead for the plain issue" true (_has $STATE/bd.log 'create --title Plain issue one')
-check "bead for the hostile title" true (_has $STATE/bd.log 'He said "hi" \\\\ back')
+check "bead for the hostile title" true (_has $STATE/bd.log "create --title $HOSTILE")
 check "no bead for the pull request" false (_has $STATE/bd.log 'A pull request')
 check "no bead for the closed issue" false (_has $STATE/bd.log 'Closed issue')
 check "no bead for the already linked issue" false (_has $STATE/bd.log 'Already linked')
