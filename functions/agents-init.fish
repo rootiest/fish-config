@@ -146,7 +146,7 @@
 #      rejected, or an unresolved rebase blocked it), --enable refused
 #      because .agents-disabled exists, a migration precondition failed,
 #      or --private given for a public project; also --enable when
-#      `git config --unset agents-init.disabled` failed or the key is still
+#      unsetting the git key failed or the key is still
 #      in effect from another scope (global/system), which is reported on
 #      stderr with its origin
 #   2  Unknown option, or both --public and --private given
