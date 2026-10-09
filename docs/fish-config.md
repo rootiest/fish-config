@@ -4448,7 +4448,10 @@ case-insensitively:
 
 An unset, empty, or unrecognized value is treated as unset: the toggle falls
 back to the next level (sub-category to category, category to master switch)
-and finally to the category default. Opt-in C5 logging stays off.
+and finally to the category default. Opt-in C5 logging stays off. A value that
+is set but unrecognized (a typo such as `disabled` or `ture`) also prints a
+one-time warning to stderr per variable per shell session, naming the variable
+and the value; the toggle is otherwise still ignored.
 
 ## Per-function overrides: `C0`/`always`
 
