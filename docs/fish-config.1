@@ -362,6 +362,47 @@ The directory is kept private: created \f[V]700\f[R], with the log files
 \f[V]600\f[R], regardless of umask.
 A looser existing directory is tightened silently on its next use.
 See the C5 reference in Section 8.
+.SS Colour Output (NO_COLOR)
+.PP
+.TS
+tab(@);
+lw(35.0n) lw(35.0n).
+T{
+Variable
+T}@T{
+Value / Notes
+T}
+_
+T{
+\f[V]NO_COLOR\f[R]
+T}@T{
+unset by default.
+Set to any non-empty value (\f[V]1\f[R], \f[V]true\f[R], \&...)
+to turn colour off in this configuration\[cq]s own command output; an
+empty value does not count
+T}
+.TE
+.PP
+\f[V]NO_COLOR\f[R] follows the convention at
+no-color.org (https://no-color.org).
+With it set, the shared output palette (\f[V]__fish_palette\f[R]) hands
+every function empty colour roles, and the functions that colour their
+output directly (through \f[V]__fish_color\f[R], a
+\f[V]NO_COLOR\f[R]-aware \f[V]set_color\f[R]) print no escape sequences
+either.
+That covers \f[V]--help\f[R] text, errors and warnings,
+\f[V]fish-deps\f[R] status, \f[V]config-help\f[R], \f[V]gi\f[R],
+\f[V]scrub\f[R] and the rest of the user-facing functions.
+The status marks (\f[V]✓\f[R], \f[V]✗\f[R], \f[V]⚠\f[R]) are unchanged,
+so they still show.
+.PP
+What it does not change: your prompt and theme, fish\[cq]s syntax
+highlighting (the \f[V]fish_color_*\f[R] variables), the Python
+\f[V]config-settings\f[R] interface, the vendored \f[V]fzf\f[R],
+autopair, done and puffer plugins, and the output of external tools that
+colour themselves.
+Export it from your environment, or put \f[V]set -gx NO_COLOR 1\f[R] in
+\f[V]local.fish\f[R], to apply it everywhere.
 .SS Other
 .PP
 .TS
