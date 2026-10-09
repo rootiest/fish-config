@@ -40,7 +40,7 @@ function _fish_deps_build_fish
     and begin
         # Upstream's release tags are bare version numbers (4.9.3), so this
         # pattern matches nothing and the default branch is built as cloned.
-        # Pre-existing behavior, kept as-is here and tracked separately.
+        # Pre-existing behavior, kept as-is here and tracked in issue 300.
         set -l tag (git -C "$tmpdir" tag --list 'fish-*' --sort=version:refname | tail -1)
         test -n "$tag"; and git -C "$tmpdir" checkout "$tag"
         true
