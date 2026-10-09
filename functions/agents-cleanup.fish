@@ -11,7 +11,7 @@
 #   destructive, self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
 #
 # SYNOPSIS
-#   agents-cleanup [-n | --dry-run] [--drop-extras] [--marker-file]
+#   agents-cleanup [-n | --dry-run] [--drop-extras] [-f | --force] [--marker-file]
 #                  [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 #
 # DESCRIPTION
@@ -48,6 +48,14 @@
 #   and every "Added by agents-init" block is stripped from .gitignore.
 #   Nothing is committed to the outer repository.
 #
+#   A damaged AGENTS/.git (present but not a valid repository, e.g. HEAD
+#   gone with the objects left) cannot be bundled, so the cleanup refuses
+#   before anything changes: repair it, or pass --force to remove AGENTS/
+#   without an archive. With --force the damaged .git is treated as "not a
+#   repository" and removed with AGENTS/, and a warning on stderr says that
+#   its history is not archived (suppressed by --silent only). --dry-run
+#   refuses the same way, unless --force is also given.
+#
 #   Files inside AGENTS/ that no project symlink points to -- other than
 #   agents-init's own .version, .agents-tools/ and .gitkeep files -- stop
 #   the cleanup before anything changes. They are listed; --drop-extras
@@ -73,6 +81,7 @@
 # ARGUMENTS
 #   -n, --dry-run    Print the plan and change nothing
 #   --drop-extras    Discard unlinked files in AGENTS/ instead of refusing
+#   -f, --force      Remove AGENTS/ even though its .git is damaged (no archive)
 #   --marker-file    Also write .agents-disabled (required outside git)
 #   -v, --verbose    Print all per-step output (default)
 #   -q, --quiet      Print one summary line only if changes were made
@@ -82,8 +91,8 @@
 # EXIT STATUS
 #   0  Cleanup finished, or nothing was left to do
 #   1  Refused (outside git without --marker-file, unresolved rebase in
-#      AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
-#      failed
+#      AGENTS/, unlinked files or a nested repository in AGENTS/, a damaged
+#      AGENTS/.git without --force) or a step failed
 #   2  Unknown option
 #
 # EXAMPLE
@@ -104,11 +113,11 @@
 function agents-cleanup --description 'undo agents-init: restore real files, archive and remove AGENTS/, disable agents-init'
     __fish_palette
 
-    argparse h/help n/dry-run drop-extras marker-file v/verbose q/quiet s/silent -- $argv
+    argparse h/help n/dry-run drop-extras f/force marker-file v/verbose q/quiet s/silent -- $argv
     or return
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-cleanup$c_reset $c_flag""[-n] [--drop-extras] [--marker-file] [-v] [-q] [-s] [-h | --help]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-cleanup$c_reset $c_flag""[-n] [--drop-extras] [-f] [--marker-file] [-v] [-q] [-s] [-h | --help]$c_reset"
         echo
         echo "  Undo agents-init here: restore real files, archive and remove AGENTS/,"
         echo "  and stop agents-init from scaffolding this project again."
@@ -117,6 +126,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       Show this help message"
         echo "  $c_flag-n$c_reset, $c_flag--dry-run$c_reset    Print the plan and change nothing"
         echo "      $c_flag--drop-extras$c_reset  Discard unlinked files in AGENTS/ instead of refusing"
+        echo "  $c_flag-f$c_reset, $c_flag--force$c_reset      Remove AGENTS/ even though its .git is damaged (no archive)"
         echo "      $c_flag--marker-file$c_reset  Also write .agents-disabled (required outside git)"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset    Print all per-step output (default)"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset      Print one summary line only if changes were made"
@@ -164,6 +174,19 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         # A .git that is not a valid gitdir (half-removed) is "not a repository";
         # git would otherwise resolve to the enclosing project.
         test "$(git -C "$agents_dir" rev-parse --git-dir 2>/dev/null)" = .git; and set has_repo 1
+        # ...but a .git that is present and still not valid is damaged (HEAD
+        # gone, objects left): nothing can be archived, so refuse before
+        # anything changes unless --force says to remove AGENTS/ as it is.
+        if test $has_repo -eq 0; and test -e "$agents_dir/.git"
+            if not set -q _flag_force
+                echo "$c_err""Error: AGENTS/.git is damaged (not a valid repository), so its history cannot be archived and would be lost with AGENTS/$c_reset" >&2
+                echo "Repair it, or re-run with --force to remove AGENTS/ without an archive." >&2
+                return 1
+            end
+            if not set -q _flag_silent
+                echo "$c_warn""Warning: AGENTS/.git is damaged (not a valid repository); its history is not archived and will be lost with AGENTS/$c_reset" >&2
+            end
+        end
     end
 
     if test $has_repo -eq 1

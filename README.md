@@ -382,7 +382,7 @@ If you'd rather set them by hand, each category is controlled by a universal var
 | `__fish_config_op_greeting` | Per-session `fish_greeting` (suppresses distro greetings such as CachyOS fastfetch by overriding with an empty function); first-run welcome banner |
 | `__fish_config_opinionated` | Master switch — disables all six categories at once (it is a master *off* switch; it cannot enable opt-in C5 logging) |
 
-Set any of them to a falsy value to disable; erase the variable to re-enable. Accepted values (case-insensitive): truthy `1`, `true`, `yes`, `on`, `y`; falsy `0`, `false`, `no`, `off`, `n`. Anything else is treated as unset (see the [Components Reference](https://fish.rootiest.fyi/08-components-reference/)). An explicit per-category truthy value overrides a falsy master switch, so you can disable everything with `__fish_config_opinionated=0` and selectively re-enable individual categories:
+Set any of them to a falsy value to disable; erase the variable to re-enable. Accepted values (case-insensitive): truthy `1`, `true`, `yes`, `on`, `y`; falsy `0`, `false`, `no`, `off`, `n`. Anything else is treated as unset, with a one-time warning on stderr (see the [Components Reference](https://fish.rootiest.fyi/08-components-reference/)). An explicit per-category truthy value overrides a falsy master switch, so you can disable everything with `__fish_config_opinionated=0` and selectively re-enable individual categories:
 
 ```fish
 # Plain shell: disable everything opinionated

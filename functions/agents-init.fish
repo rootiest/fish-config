@@ -41,7 +41,10 @@
 #   in the project root, which a team may commit, has the same effect.
 #   Either one turns every wrapper launch into a silent no-op there.
 #   --enable clears the git key and scaffolds; the file has to be deleted
-#   by hand, because it is a decision shared with every clone.
+#   by hand, because it is a decision shared with every clone. --enable only
+#   clears the repository-local key: if the key is still in effect from
+#   another scope (global, system, include), it names that origin on stderr,
+#   exits 1 and does not scaffold.
 #
 #   Two modes, recorded in AGENTS/.mode. In both, each real file lives in
 #   the repository whose visibility matches it, and the other side holds a
@@ -142,7 +145,10 @@
 #   1  Fatal error (git init failed, move failed, the AGENTS/ commit was
 #      rejected, or an unresolved rebase blocked it), --enable refused
 #      because .agents-disabled exists, a migration precondition failed,
-#      or --private given for a public project
+#      or --private given for a public project; also --enable when
+#      unsetting the git key failed or the key is still
+#      in effect from another scope (global/system), which is reported on
+#      stderr with its origin
 #   2  Unknown option, or both --public and --private given
 #
 # EXAMPLE
@@ -239,9 +245,28 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
             echo "$c_err""Error: .agents-disabled disables agents-init for every clone; delete it (and commit the deletion) to re-enable$c_reset" >&2
             return 1
         end
+        set -l unset_done 0
         if test $in_git -eq 1; and git -C "$root" config --local --get agents-init.disabled >/dev/null 2>&1
-            git -C "$root" config --local --unset agents-init.disabled
-            test $verbose -eq 1; and echo "$c_ok→ Re-enabled agents-init (unset git config agents-init.disabled)$c_reset"
+            if not git -C "$root" config --local --unset agents-init.disabled
+                echo "$c_err""Error: could not unset git config agents-init.disabled$c_reset" >&2
+                return 1
+            end
+            set unset_done 1
+        end
+        # The guard above reads every scope but --unset only touches the
+        # local one, so a global/system key (or an include) can keep the
+        # project disabled. Check again and say where it comes from.
+        if test $in_git -eq 1
+            set -l still (git -C "$root" config --type=bool --get agents-init.disabled 2>/dev/null)
+            if test "$still" = true
+                echo "$c_err""Error: agents-init is still disabled here; git config agents-init.disabled is set outside this repository's local config:$c_reset" >&2
+                git -C "$root" config --show-origin --get-all agents-init.disabled >&2
+                echo "$c_err""Unset it there (e.g. git config --global --unset agents-init.disabled) and re-run.$c_reset" >&2
+                return 1
+            end
+            if test $unset_done -eq 1; and test $verbose -eq 1
+                echo "$c_ok→ Re-enabled agents-init (unset git config agents-init.disabled)$c_reset"
+            end
         end
     else if test -e "$marker_file"
         test $verbose -eq 1; and echo "$c_dim→ agents-init is disabled here by .agents-disabled; delete that file to re-enable$c_reset"

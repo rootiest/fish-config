@@ -524,6 +524,47 @@ set -l mout5 (agents-init 2>/dev/null)
 popd >/dev/null
 check "git key, verbose: note names the marker" true (string match -q -- '*agents-init.disabled*' "$mout5"; and echo true; or echo false)
 
+# --enable only clears the local key. A key at another scope (here a
+# throwaway GIT_CONFIG_GLOBAL file, never the real ~/.gitconfig) keeps the
+# project disabled: it must say where, exit non-zero and not scaffold.
+set -l m6 (new_repo)
+set -l gcfg6 (mktemp)
+set -ga TMPDIRS $gcfg6
+git config --file $gcfg6 agents-init.disabled true
+git -C $m6 config agents-init.disabled true
+set -gx GIT_CONFIG_GLOBAL $gcfg6
+pushd $m6 >/dev/null
+set -l merr6 (mktemp)
+set -ga TMPDIRS $merr6
+agents-init --private --enable --silent 2>$merr6
+set -l mrc6 $status
+popd >/dev/null
+set -e GIT_CONFIG_GLOBAL
+check "--enable, global key: exits 1" 1 "$mrc6"
+check "--enable, global key: warning names the origin file" true (string match -q -- "*$gcfg6*" (string collect <$merr6); and echo true; or echo false)
+check "--enable, global key: local key still unset" 1 (git -C $m6 config --local --get agents-init.disabled >/dev/null; echo $status)
+check "--enable, global key: nothing scaffolded" false (test -e $m6/AGENTS -o -L $m6/AGENTS.md; and echo true; or echo false)
+
+# Only a global key (no local one): same outcome, nothing to unset.
+set -l m7 (new_repo)
+set -gx GIT_CONFIG_GLOBAL $gcfg6
+pushd $m7 >/dev/null
+agents-init --private --enable --silent 2>/dev/null
+set -l mrc7 $status
+popd >/dev/null
+set -e GIT_CONFIG_GLOBAL
+check "--enable, global key only: exits 1" 1 "$mrc7"
+check "--enable, global key only: nothing scaffolded" false (test -e $m7/AGENTS -o -L $m7/AGENTS.md; and echo true; or echo false)
+
+# --enable on a project that was never disabled still works and is silent.
+set -l m8 (new_repo)
+pushd $m8 >/dev/null
+agents-init --private --enable --silent 2>/dev/null
+set -l mrc8 $status
+popd >/dev/null
+check "--enable, nothing disabled: exits 0" 0 "$mrc8"
+check "--enable, nothing disabled: scaffold created" AGENTS/AGENTS.md (readlink $m8/AGENTS.md)
+
 #   ───────────────────────────── public mode ─────────────────────────────
 function _is_link --argument-names p want
     test -L $p; and test (readlink $p) = $want; and echo true; or echo false
