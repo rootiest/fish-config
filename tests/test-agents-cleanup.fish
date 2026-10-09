@@ -404,14 +404,50 @@ echo secret >$i1/untracked-secret.txt
 rm -rf $i1/AGENTS/.git/HEAD $i1/AGENTS/.git/objects
 set -l i1before (git -C $i1 rev-list --all | count)
 pushd $i1 >/dev/null
-set -l i1rc (agents-cleanup --silent 2>/dev/null; echo $status)
+set -l i1rc (agents-cleanup --silent --force 2>/dev/null; echo $status)
 popd >/dev/null
 check "invalid .git: exits 0" 0 "$i1rc"
 check "invalid .git: outer repo untouched" "$i1before" (git -C $i1 rev-list --all | count)
 check "invalid .git: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
 check "invalid .git: AGENTS/ removed" false (test -e $i1/AGENTS; and echo true; or echo false)
 
-section "agents-cleanup: damaged AGENTS/.git is announced, not archived"
+section "agents-cleanup: damaged AGENTS/.git is refused without --force"
+fresh_state
+set -l d1 (scaffolded_repo)
+rm -rf $d1/AGENTS/.git/HEAD $d1/AGENTS/.git/objects
+set -l d1err (mktemp)
+set -a TMPDIRS $d1err
+pushd $d1 >/dev/null
+agents-cleanup --quiet 2>$d1err >/dev/null
+set -l d1rc $status
+popd >/dev/null
+check "damaged .git: refused (exit 1)" 1 "$d1rc"
+check "damaged .git: stderr names the damage and --force" true (string match -q -- '*damaged*--force*' (string collect <$d1err); and echo true; or echo false)
+check "damaged .git: AGENTS/ left in place" true (test -e $d1/AGENTS; and echo true; or echo false)
+check "damaged .git: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
+
+# --silent suppresses everything but errors, and a refusal is an error.
+set -l d2 (scaffolded_repo)
+rm -rf $d2/AGENTS/.git/HEAD $d2/AGENTS/.git/objects
+set -l d2out (pushd $d2 >/dev/null; agents-cleanup --silent 2>&1; echo "rc=$status"; popd >/dev/null)
+check "damaged .git: --silent still reports the refusal" true (string match -q -- '*damaged*' (string join \n -- $d2out); and echo true; or echo false)
+check "damaged .git: --silent refusal exits 1" true (string match -q -- '*rc=1*' (string join \n -- $d2out); and echo true; or echo false)
+check "damaged .git: --silent leaves AGENTS/ in place" true (test -e $d2/AGENTS; and echo true; or echo false)
+
+# --dry-run refuses the same way, unless --force is also given.
+set -l d3 (scaffolded_repo)
+rm -rf $d3/AGENTS/.git/HEAD $d3/AGENTS/.git/objects
+pushd $d3 >/dev/null
+agents-cleanup --dry-run >/dev/null 2>&1
+set -l d3rc $status
+agents-cleanup --dry-run --force >/dev/null 2>&1
+set -l d3frc $status
+popd >/dev/null
+check "damaged .git: --dry-run refuses" 1 "$d3rc"
+check "damaged .git: --dry-run --force exits 0" 0 "$d3frc"
+check "damaged .git: --dry-run --force changes nothing" true (test -e $d3/AGENTS; and echo true; or echo false)
+
+section "agents-cleanup: damaged AGENTS/.git with --force is announced, not archived"
 fresh_state
 set -l i2 (scaffolded_repo)
 rm -rf $i2/AGENTS/.git/HEAD $i2/AGENTS/.git/objects
@@ -420,15 +456,15 @@ rm -rf $i3/AGENTS/.git/HEAD $i3/AGENTS/.git/objects
 set -l i2err (mktemp)
 set -a TMPDIRS $i2err
 pushd $i2 >/dev/null
-agents-cleanup --quiet 2>$i2err >/dev/null
+agents-cleanup --quiet --force 2>$i2err >/dev/null
 set -l i2rc $status
 popd >/dev/null
-set -l i3out (pushd $i3 >/dev/null; agents-cleanup --silent 2>&1; popd >/dev/null)
-check "damaged .git: exits 0" 0 "$i2rc"
-check "damaged .git: stderr says damaged, not archived" true (string match -q -- '*damaged*not archived*' (string collect <$i2err); and echo true; or echo false)
-check "damaged .git: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
-check "damaged .git: AGENTS/ still removed" false (test -e $i2/AGENTS; and echo true; or echo false)
-check "damaged .git: --silent prints nothing" "" "$i3out"
+set -l i3out (pushd $i3 >/dev/null; agents-cleanup --silent --force 2>&1; popd >/dev/null)
+check "damaged .git, --force: exits 0" 0 "$i2rc"
+check "damaged .git, --force: stderr says damaged, not archived" true (string match -q -- '*damaged*not archived*' (string collect <$i2err); and echo true; or echo false)
+check "damaged .git, --force: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
+check "damaged .git, --force: AGENTS/ removed" false (test -e $i2/AGENTS; and echo true; or echo false)
+check "damaged .git, --force: --silent prints nothing" "" "$i3out"
 
 section "agents-cleanup: verbose output survives a log-file stderr"
 fresh_state

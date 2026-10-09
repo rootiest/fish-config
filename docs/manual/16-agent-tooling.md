@@ -415,7 +415,10 @@ it changes anything, and are listed. Move them out yourself, or pass
 `--drop-extras` to discard them. `--dry-run` refuses the same way, unless
 you also give it `--drop-extras`. A git repository nested inside `AGENTS/`
 is always refused, even with `--drop-extras`: the bundle records only a
-pointer to it, so move it out first. `agents-cleanup` also refuses to run
+pointer to it, so move it out first. A damaged `AGENTS/.git` (present but not
+a valid repository) is refused too, because its history cannot be archived;
+repair it, or pass `--force` to remove `AGENTS/` without an archive (a warning
+says so). `agents-cleanup` also refuses to run
 when `AGENTS/` is itself a symlink to a directory elsewhere, since removing
 it would remove that directory; replace the link with a real directory
 first. Discarded files survive only in the bundle, and files
