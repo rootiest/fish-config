@@ -181,13 +181,35 @@ set -l got (__sponge_probe "" \
     "curl -H 'X-API-Key: abcd1234' https://example.com" \
     "curl -H 'AUTHORIZATION: Bearer abcd1234' https://example.com" \
     "curl -H 'Authorization: Bearer abcd1234' https://example.com" \
-    "git status")
+    "git status" \
+    "http example.com Authorization:'Bearer abcd1234'" \
+    "https example.com 'Authorization: Bearer abcd1234'" \
+    "wget --header='Authorization: Bearer abcd1234' https://example.com/f" \
+    "wget --header='X-Auth-Token: abcd1234' https://example.com/f" \
+    "http example.com X-API-Key:abcd1234" \
+    "https://example.com" \
+    "http --help" \
+    "curl https://x" \
+    "wget file.tar.gz" \
+    "wget --header='Accept: text/html' https://example.com" \
+    "http example.com Accept:application/json")
 check "pattern: token-only URL userinfo" MATCH $got[1]
 check "pattern: short username-only URL not matched" NOMATCH $got[2]
 check "pattern: X-API-Key header" MATCH $got[3]
 check "pattern: uppercase AUTHORIZATION header" MATCH $got[4]
 check "pattern: Authorization header still matched" MATCH $got[5]
 check "pattern: clean command not matched" NOMATCH $got[6]
+check "pattern: httpie Authorization arg (http)" MATCH $got[7]
+check "pattern: httpie Authorization arg (https)" MATCH $got[8]
+check "pattern: wget Authorization header" MATCH $got[9]
+check "pattern: wget X-Auth-Token header" MATCH $got[10]
+check "pattern: httpie X-API-Key arg" MATCH $got[11]
+check "pattern: bare URL not matched" NOMATCH $got[12]
+check "pattern: http --help not matched" NOMATCH $got[13]
+check "pattern: curl without auth header not matched" NOMATCH $got[14]
+check "pattern: wget plain download not matched" NOMATCH $got[15]
+check "pattern: wget non-auth header not matched" NOMATCH $got[16]
+check "pattern: httpie non-auth arg not matched" NOMATCH $got[17]
 
 functions -e __sponge_probe
 
