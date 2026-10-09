@@ -32,12 +32,12 @@ The configuration uses a structured file tree:
 
     ~/.config/fish/
     ├── config.fish                 Main entry point; sets env vars and PATH
-    ├── conf.d/
+    ├── conf.d/                     Snippets sourced at startup
     │   ├── __fish_config_op_registry.fish  Generated component registry
     │   ├── abbr.fish               All abbreviations
-    │   ├── auto-pull.fish          Background fast-forward pulls for opted-in repos
+    │   ├── auto-pull.fish          Background git pulls for opted-in repos
     │   ├── autopair.fish           Auto-pair brackets and quotes
-    │   ├── bash_expands.fish       Bash-style history expansion for abbreviations
+    │   ├── bash_expands.fish       Bash-style history expansion
     │   ├── done.fish               Desktop notifications for long commands
     │   ├── first_run.fish          One-time init: Fisher bootstrap, theme
     │   ├── fzf.fish                fzf key bindings and pickers
@@ -57,13 +57,13 @@ The configuration uses a structured file tree:
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
     ├── functions/                  Custom functions, one per file
     ├── completions/                Tab completion scripts, autoloaded on demand
-    ├── scripts/
+    ├── scripts/                    Helper scripts and tools
     │   ├── agents-tools/           AGENTS.md git hooks and version-bump
-    │   ├── claude-shell-prefix     Strips telemetry opt-outs for the claude wrapper
+    │   ├── claude-shell-prefix     Strips telemetry opt-outs for claude
     │   ├── clean_progress_log.py   Strips typescript animations for clean logs
     │   ├── cli-agent.md            System prompt for the terminal assistant
     │   ├── config-settings-tui.py  curses front-end for config-settings
-    │   ├── kitty-fish-config-watcher.py  Kitty watcher, linked in by kitty-logging
+    │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
     ├── data/                       gi templates, session-env catalog, word lists
     ├── templates/                  Templates such as allow-telemetry.fish

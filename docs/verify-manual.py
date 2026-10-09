@@ -153,6 +153,18 @@ def test_index_file_tree_matches_repo():
     assert not unlisted, f"docs/manual/index.md file tree is missing: {unlisted}"
 
 
+def test_index_file_tree_fits_the_site():
+    """No file-tree line on the landing page is wider than 81 characters.
+
+    The docs site's code block wraps longer lines even in a maximised window,
+    pushing a description's last word onto its own line (82 wrapped, 81 did not).
+    """
+    text = (Path(__file__).parent / "manual" / "index.md").read_text()
+    block = text[text.index("    ~/.config/fish/\n"):].split("\n\n", 1)[0]
+    wide = [line.strip() for line in block.splitlines() if len(line) > 81]
+    assert not wide, f"docs/manual/index.md file tree lines wider than 81 characters: {wide}"
+
+
 def test_function_stubs_carry_no_entries():
     """Category files are stubs: entries come from functions/*.fish headers.
 
