@@ -9,21 +9,21 @@
 #
 # DESCRIPTION
 #   Builds and installs fish from source: clones the upstream repository
-#   into a temporary directory, checks out the newest `fish-*` tag if there
-#   is one, and runs `cargo install --locked --path .` (to $CARGO_HOME/bin).
-#   Shared by `fish-deps install` and `fish-deps update`.
+#   into a temporary directory, checks out the newest fish-* tag if there
+#   is one, and runs cargo install --locked --path . (to $CARGO_HOME/bin).
+#   Shared by fish-deps install and fish-deps update.
 #
-#   The build is wrapped in `uv run --no-project --with sphinx`. Sphinx is
+#   The build is wrapped in uv run --no-project --with sphinx. Sphinx is
 #   there for one reason: fish's build script renders its man pages with
-#   `sphinx-build`, and without it on PATH they are skipped. The wrapper
+#   sphinx-build, and without it on PATH they are skipped. The wrapper
 #   deliberately ignores upstream's pyproject.toml, which pins
-#   `requires-python >= 3.13` "for reproducibility" while noting that lower
-#   versions work. With `--no-project`, uv takes whatever Python 3 the system
+#   requires-python >= 3.13 "for reproducibility" while noting that lower
+#   versions work. With --no-project, uv takes whatever Python 3 the system
 #   has and resolves a Sphinx that supports it, and downloads a managed
 #   Python itself only if there is none, so the build works on any distro
 #   (Ubuntu 22.04 and 24.04 ship 3.10 and 3.12).
 #
-#   `--locked` makes cargo honor the repository's Cargo.lock instead of
+#   --locked makes cargo honor the repository's Cargo.lock instead of
 #   re-resolving every dependency to its newest release.
 #
 # EXIT STATUS

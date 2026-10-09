@@ -7,9 +7,9 @@
 # DESCRIPTION
 #   Translates a generic requirement into the package name a given package
 #   manager uses for it. The catalog records Arch-style names, which are not
-#   what Debian or Fedora call things (`go` is `golang-go` under apt and
-#   `golang` under dnf), and a few requirements are not single packages at
-#   all (`cc` is build-essential under apt, base-devel under pacman).
+#   what Debian or Fedora call things (go is golang-go under apt and
+#   golang under dnf), and a few requirements are not single packages at
+#   all (cc is build-essential under apt, base-devel under pacman).
 #
 #   A NAME with no special mapping is printed unchanged.
 #

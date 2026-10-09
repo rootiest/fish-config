@@ -24,8 +24,8 @@
 #
 #   When multiple methods are available you are prompted to choose.
 #
-#   What `install` does: it walks the catalog and, for each tool that is
-#   missing, asks `Install <tool>? [Y/n/q]`. Enter or y installs it, n skips
+#   What install does: it walks the catalog and, for each tool that is
+#   missing, asks Install <tool>? [Y/n/q]. Enter or y installs it, n skips
 #   that tool, and q (or Ctrl+C or Ctrl+D) stops the whole run, so nothing
 #   further is offered. Nothing is installed without your say-so, and sudo
 #   asks for its own password where the system package manager needs it.
@@ -36,7 +36,7 @@
 #   compiler for cargo builds (build-essential, base-devel or gcc), a default
 #   Rust toolchain when cargo is a bare rustup shim, unzip for the wakatime-cli
 #   download, and Go for ov on distros that do not package it. Rust tools are
-#   built with `cargo install --locked`, so they use the dependency versions
+#   built with cargo install --locked, so they use the dependency versions
 #   their authors published rather than whatever is newest. paru and yay are
 #   only offered on Arch-based systems.
 #

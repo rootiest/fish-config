@@ -10,7 +10,7 @@
 #   that only exists there, namely the AUR helpers paru and yay.
 #
 #   The check reads ID and ID_LIKE from os-release, falling back to
-#   /etc/arch-release. The presence of a `pacman` binary is deliberately not
+#   /etc/arch-release. The presence of a pacman binary is deliberately not
 #   used: Debian and Ubuntu ship an unrelated game by that name.
 #
 #   $__fish_deps_os_release overrides the os-release path (used by the test

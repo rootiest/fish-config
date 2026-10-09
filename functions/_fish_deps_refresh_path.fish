@@ -8,16 +8,18 @@
 #   Puts the bin directories that installers write into on this session's
 #   $PATH, so a tool installed a moment ago is usable by the very next step
 #   without restarting the shell. It covers cargo and rustup ($CARGO_HOME/bin
-#   and ~/.cargo/bin), uv and wakatime (~/.local/bin), and `go install`
+#   and ~/.cargo/bin), uv and wakatime (~/.local/bin), and go install
 #   ($GOBIN, or $GOPATH/bin).
 #
-#   Directories are added session-only (`fish_add_path -g`); a new shell
-#   gets them from config.fish as usual. A directory that is missing or
-#   already on $PATH is left alone, so the existing order is not disturbed.
+#   Directories are added to $PATH itself for this session only
+#   (fish_add_path --path, which never touches the universal
+#   fish_user_paths); a new shell gets them from config.fish as usual.
+#   A directory that is missing or already on $PATH is left alone, so the
+#   existing order is not disturbed.
 #
 #   Every candidate is considered, not just the first that exists: rustup
 #   installs under ~/.cargo when CARGO_HOME was not exported yet, while
-#   `cargo install` writes under $CARGO_HOME, and both must be reachable.
+#   cargo install writes under $CARGO_HOME, and both must be reachable.
 #
 # EXAMPLE
 #   _fish_deps_refresh_path
@@ -36,7 +38,7 @@ function _fish_deps_refresh_path
 
     for d in $dirs
         if test -d "$d"; and not contains -- "$d" $PATH
-            fish_add_path -g "$d"
+            fish_add_path --path "$d"
         end
     end
     return 0

@@ -13,15 +13,15 @@
 #   These are tools the installers assume exist but a fresh server often
 #   lacks, and which are not catalog entries themselves:
 #
-#     cc         A C compiler/linker. Every `cargo install` needs `cc` to link
+#     cc         A C compiler/linker. Every cargo install needs cc to link
 #                (build-essential, base-devel, gcc).
 #     toolchain  A working Rust toolchain. A rustup shim with no default
 #                toolchain answers every cargo command with "rustup could not
-#                choose a version of cargo"; this offers `rustup default
-#                stable`.
+#                choose a version of cargo"; this offers rustup default
+#                stable.
 #     cargo      Both of the above, toolchain first.
 #     unzip      Needed to unpack the wakatime-cli release zip.
-#     go         The Go toolchain, for `go install` of ov (which most distros
+#     go         The Go toolchain, for go install of ov (which most distros
 #                do not package).
 #
 #   Each need is asked about once per run: the first answer (installed, or

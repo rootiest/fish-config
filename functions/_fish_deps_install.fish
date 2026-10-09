@@ -29,12 +29,12 @@
 #     C compiler    Before any cargo install (cc is the linker).
 #     Rust toolchain  When cargo is a rustup shim with no default toolchain.
 #     unzip         Before the wakatime-cli binary download.
-#     Go            Before `go install` of ov, where the distro has no ov.
+#     Go            Before go install of ov, where the distro has no ov.
 #
 #   Every crates.io install passes --locked, so cargo builds against the
 #   dependency versions the crate was published with rather than whatever is
 #   newest. Without it, eza 0.23.5 fails to compile against a newer
-#   `palette` release.
+#   palette release.
 #
 # ARGUMENTS
 #   --optional   Also offer to install Optional-tier dependencies

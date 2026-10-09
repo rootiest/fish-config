@@ -9,12 +9,12 @@
 #
 # DESCRIPTION
 #   Asks a yes/no/quit question for the fish-deps installer and reports the
-#   answer through its exit status. The prompt reads `[Y/n/q]`: an empty
-#   answer or `y` accepts, `n` declines this one step, and `q` abandons the
+#   answer through its exit status. The prompt reads [Y/n/q]: an empty
+#   answer or y accepts, n declines this one step, and q abandons the
 #   whole run.
 #
-#   Ctrl+C and Ctrl+D make `read` fail with an empty answer, which the old
-#   `[Y/n]` prompt mistook for the default "yes". Here a failed read is a
+#   Ctrl+C and Ctrl+D make read fail with an empty answer, which the old
+#   [Y/n] prompt mistook for the default "yes". Here a failed read is a
 #   quit, and so is an interrupt already recorded in $_fdc_cancelled, so the
 #   caller never carries on to the next step after a cancellation.
 #
