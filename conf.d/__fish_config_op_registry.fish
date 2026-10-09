@@ -30,6 +30,7 @@ set -g __fish_config_op_registry_keys \
     "config:cachyos-strip-overrides" \
     "config:cachyos-tricks" \
     "config:cdpath" \
+    "config:claude-no-flicker" \
     "config:exit-wiring" \
     "config:greeting-stamp" \
     "config:pager-editor-gpg" \
@@ -95,6 +96,7 @@ set -g __fish_config_op_registry_values \
     aliases/dev-tools \
     aliases/filesystem \
     overrides/key-bindings \
+    overrides/environment \
     overrides/environment \
     overrides/environment \
     overrides/key-bindings \

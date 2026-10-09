@@ -113,6 +113,7 @@ section sponge_privacy
 # fragment of setup code (made-up credentials only); the rest are commands.
 function __sponge_probe --argument-names setup
     set -l body "
+        set -p fish_function_path $repo_root/functions
         set -g sponge_version 1
         set -g sponge_regex_patterns
         set -g sponge_filters
@@ -148,6 +149,30 @@ check "layer 2: no stray output with list var" 5 (count $got)
 set -l got (__sponge_probe "set -gx SL_SECRET '/s3cretValue!xyz'" "login /s3cretValue!xyz")
 check "layer 2: /-prefixed password registered" MATCH $got[1]
 command rm -rf $sp_dir
+
+# An extra sensitive name (#252) must be honoured by BOTH layers. The extras
+# are a session global (set -g) and the layer-2 probe runs in a child fish, so
+# no universal variable is touched.
+set -l got (__sponge_probe "set -g __fish_sponge_extra_sensitive SESSIONKEY; set -gx MY_SESSIONKEY abcdefghij1234; set -gx MY_OTHERNAME zyxwvutsrq9876" \
+    "echo abcdefghij1234" "echo zyxwvutsrq9876")
+check "layer 2: extra sensitive name registered" MATCH $got[1]
+check "layer 2: non-sensitive name still ignored" NOMATCH $got[2]
+
+set -l got (__sponge_probe "" "echo abcdefghij1234")
+check "layer 2: without the extra name nothing registered" NOMATCH $got[1]
+
+set -gx MY_SESSIONKEY abcdefghij1234
+sponge_filter_secrets "echo abcdefghij1234" 0 false
+check "layer 3: extra name ignored when not configured" 1 $status
+set -g __fish_sponge_extra_sensitive SESSIONKEY
+sponge_filter_secrets "echo abcdefghij1234" 0 false
+check "layer 3: extra sensitive name filtered" 0 $status
+sponge_filter_secrets "echo unrelated" 0 false
+check "layer 3: extra name leaves other commands retained" 1 $status
+check "shared pattern includes extra name" true \
+    (string match -q '*SESSIONKEY*' -- (__fish_sponge_sensitive_pattern); and echo true; or echo false)
+set -e __fish_sponge_extra_sensitive
+set -e MY_SESSIONKEY
 
 # Layer 1: static patterns (#221 finding c).
 set -l got (__sponge_probe "" \

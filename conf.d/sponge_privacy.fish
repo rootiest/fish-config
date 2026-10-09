@@ -90,6 +90,24 @@ for _i in (seq (count $sponge_regex_patterns) -1 1)
     end
 end
 
+# Retired patterns: earlier versions registered these, a later version replaced
+# them. Remove them from the universal list on load. Exact-string match only,
+# so user-added patterns are never touched. Append here whenever a pattern in
+# the list above is changed or dropped.
+set -l _retired_patterns \
+    'curl\s.*[Aa]uthorization:'
+# The list is rebuilt rather than edited by index: `set -Ue name[N]` silently
+# does nothing on a universal variable.
+set -l _kept_patterns
+for _pattern in $sponge_regex_patterns
+    if not contains -- "$_pattern" $_retired_patterns
+        set -a _kept_patterns $_pattern
+    end
+end
+if test (count $_kept_patterns) -ne (count $sponge_regex_patterns)
+    set -U sponge_regex_patterns $_kept_patterns
+end
+
 # Idempotent registration into universal sponge_regex_patterns
 for _pattern in $_privacy_patterns
     if not contains -- $_pattern $sponge_regex_patterns
@@ -109,19 +127,16 @@ function __sponge_register_secret_values --on-event fish_prompt
 
     set -l secret_values
 
-    # Base credential-name tokens, plus any user-supplied extras from
-    # __fish_sponge_extra_sensitive (set via config-settings → Sponge page).
-    set -l _sensitive_names \
-        TOKEN PASSWORD PASSWD SECRET 'API[_-]KEY' 'PRIVATE[_-]KEY' \
-        'ACCESS[_-]KEY' 'AUTH[_-]KEY' CREDENTIAL KOPIA_PASSWORD \
-        $__fish_sponge_extra_sensitive
-    set -l _sensitive_alt (string join '|' $_sensitive_names)
+    # Name pattern shared with sponge_filter_secrets: built-in tokens plus any
+    # user-supplied extras from __fish_sponge_extra_sensitive (set via
+    # config-settings → Sponge page).
+    set -l _sensitive_re (__fish_sponge_sensitive_pattern)
 
     # --entire returns the full matching variable NAME (e.g. GITHUB_TOKEN), not
     # just the matched token substring (TOKEN) — required so $$var below
     # dereferences the real variable instead of an unset partial name.
     set -l sensitive_vars (set --names --export | string match --regex --entire -- \
-        "(?i)(?:$_sensitive_alt)")
+        $_sensitive_re)
 
     for var in $sensitive_vars
         # Register every element: `$$var[1]` would index the inner name, not
