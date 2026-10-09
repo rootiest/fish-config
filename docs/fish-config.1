@@ -1497,15 +1497,17 @@ Synopsis:  fc [command_prefix]
 
 Edits the last shell command -- or the most recent one matching a
 prefix -- in $EDITOR, then executes the result. Bash-style fc
-behaviour. Falls back to vi when $EDITOR is unset, and aborts without
-executing if the buffer is left empty.
+behaviour. $EDITOR may carry arguments (e.g. \[dq]code --wait\[dq]); falls back
+to vi when unset. Multi-line commands keep their newlines, the scratch
+file is private (mode 600) and always removed, and an empty buffer
+aborts without executing.
 
 Arguments:
   command_prefix   Search history for the newest command matching this
 
 Exit Status:
-  The edited command\[aq]s exit status, or a message when history lookup
-  found nothing.
+  0  The edited command was queued for execution
+  1  History lookup found nothing, or the buffer was left empty
 
 Example:
 fc
