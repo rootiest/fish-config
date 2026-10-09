@@ -16,7 +16,8 @@
 #   output-streaming facility like tmux's pipe-pane, so this performs a one-shot
 #   zellij action dump-screen --full — intended to run on shell exit. Old
 #   zellij_*.log files are pruned via _prune_terminal_logs to stay within
-#   SCROLLBACK_HISTORY_MAX_FILES.
+#   SCROLLBACK_HISTORY_MAX_FILES. Session and pane identifiers are sanitized
+#   (_terminal_log_safe_name) before they become part of the file name.
 #
 #   The C5 logging guard (__fish_config_op_logging) is evaluated here, at call
 #   time, so toggling logging takes effect on the next exit without a restart.
@@ -36,6 +37,8 @@ function _zellij_dump_log --description 'Dump the current Zellij pane scrollback
     set -l log_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
     set -l session (set -q ZELLIJ_SESSION_NAME; and echo $ZELLIJ_SESSION_NAME; or echo unknown)
     set -l pane_id (set -q ZELLIJ_PANE_ID; and echo $ZELLIJ_PANE_ID; or echo unknown)
+    set session (_terminal_log_safe_name "$session")
+    set pane_id (_terminal_log_safe_name "$pane_id")
     set -l timestamp (date "+%Y-%m-%d_%H-%M-%S")
     set -l log_file "$log_dir/zellij_"$session"-p"$pane_id"_"$timestamp".log"
 
