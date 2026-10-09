@@ -49,7 +49,7 @@ The configuration uses a structured file tree:
     │   ├── puffer.fish             !! / !$ / ./ expansion
     │   ├── sponge_privacy.fish     Sponge privacy patterns
     │   ├── starship.fish           fish_prompt shell-integration markers
-    │   ├── theme.fish              Catppuccin syntax highlight colors
+    │   ├── theme.fish              Saves the Catppuccin theme; FZF colors
     │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
     │   ├── wakatime.fish           WakaTime shell hook
