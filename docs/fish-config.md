@@ -44,34 +44,48 @@ The configuration uses a structured file tree:
     ~/.config/fish/
     ├── config.fish                 Main entry point; sets env vars and PATH
     ├── conf.d/
+    │   ├── __fish_config_op_registry.fish  Generated component registry
     │   ├── abbr.fish               All abbreviations
+    │   ├── auto-pull.fish          Background fast-forward pulls for opted-in repos
     │   ├── autopair.fish           Auto-pair brackets and quotes
+    │   ├── bash_expands.fish       Bash-style history expansion for abbreviations
     │   ├── done.fish               Desktop notifications for long commands
     │   ├── first_run.fish          One-time init: Fisher bootstrap, theme
+    │   ├── fzf.fish                fzf key bindings and pickers
+    │   ├── help.fish               help command for config topics
     │   ├── key_bindings.fish       Custom key bindings and Vi mode
-    │   ├── logging-events.fish     C5 event handlers; syncs logging state
     │   ├── kitty-watcher-reminder.fish  C5 per-session Kitty watcher reminder
+    │   ├── logging-events.fish     C5 event handlers; syncs logging state
     │   ├── pkg-wrappers.fish       Auto-generates paru/yay logging wrappers
     │   ├── puffer.fish             !! / !$ / ./ expansion
-    │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
-    │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
     │   ├── sponge_privacy.fish     Sponge privacy patterns
     │   ├── starship.fish           fish_prompt shell-integration markers
     │   ├── theme.fish              Catppuccin syntax highlight colors
+    │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
     │   ├── wakatime.fish           WakaTime shell hook
+    │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
     ├── functions/                  Custom functions, one per file
     ├── completions/                Tab completion scripts, autoloaded on demand
     ├── scripts/
+    │   ├── agents-tools/           AGENTS.md git hooks and version-bump
+    │   ├── claude-shell-prefix     Strips telemetry opt-outs for the claude wrapper
     │   ├── clean_progress_log.py   Strips typescript animations for clean logs
-    │   └── agents-tools/           AGENTS.md scripts and git hooks
+    │   ├── cli-agent.md            System prompt for the terminal assistant
+    │   ├── config-settings-tui.py  curses front-end for config-settings
+    │   ├── kitty-fish-config-watcher.py  Kitty watcher, linked in by kitty-logging
+    │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
+    ├── data/                       gi templates, session-env catalog, word lists
+    ├── templates/                  Templates such as allow-telemetry.fish
+    ├── themes/                     Catppuccin theme files
+    ├── tests/                      Test suite: fish tests/run-tests.fish
     └── docs/                       Offline documentation and man page
-        ├── fish-config.md          Primary source manual
+        ├── fish-config.md          Generated manual
         ├── fish-config.1           Compiled man page (auto-generated)
         ├── fish-config.index       Section index for help config
-        ├── html/                   Chunked HTML docs (auto-generated)
-        └── wiki/                   Markdown wiki (auto-generated)
+        ├── manual/                 Manual source, one file per chapter
+        └── site/                   Source for this documentation site
 
 ---
 

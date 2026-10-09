@@ -111,6 +111,48 @@ def test_manual_tree_exists():
     assert len(cats) == 14, f"expected 14 function categories, got {len(cats)}: {cats}"
 
 
+def _index_file_tree() -> set[str]:
+    """Repo-relative paths listed in the file tree on the landing page (index.md)."""
+    text = (Path(__file__).parent / "manual" / "index.md").read_text()
+    block = text[text.index("    ~/.config/fish/\n"):]
+    paths, stack = set(), []
+    for line in block.splitlines()[1:]:
+        m = re.match(r"    ((?:│   |    )*)[├└]── (\S+)", line)
+        if not m:
+            break
+        depth = len(m.group(1)) // 4
+        stack[depth:] = [m.group(2).rstrip("/")]
+        paths.add("/".join(stack))
+    return paths
+
+
+def test_index_file_tree_matches_repo():
+    """The landing page's file tree stays in step with the repo.
+
+    Every listed path must be tracked, conf.d/ and scripts/ must be listed in
+    full, and every top-level directory must appear, so adding, renaming or
+    removing one of those without updating docs/manual/index.md fails here.
+    Compares against `git ls-files`, so build output and untracked local files
+    never count; hidden entries are never listed.
+    """
+    import subprocess
+
+    repo = Path(__file__).parent.parent
+    files = subprocess.run(["git", "-C", str(repo), "ls-files"], capture_output=True, text=True, check=True).stdout.split()
+    tracked = {"/".join(f.split("/")[:n]) for f in files for n in range(1, f.count("/") + 2)}
+    listed = _index_file_tree()
+    gone = sorted(listed - tracked)
+    assert not gone, f"docs/manual/index.md file tree lists untracked or missing paths: {gone}"
+
+    def shown(p: str) -> bool:
+        return not p.rsplit("/", 1)[-1].startswith(".")
+
+    expected = {p for p in tracked if shown(p) and p.count("/") == 1 and p.split("/")[0] in ("conf.d", "scripts")}
+    expected |= {f.split("/")[0] for f in files if "/" in f and shown(f.split("/")[0])}
+    unlisted = sorted(expected - listed)
+    assert not unlisted, f"docs/manual/index.md file tree is missing: {unlisted}"
+
+
 def test_function_stubs_carry_no_entries():
     """Category files are stubs: entries come from functions/*.fish headers.
 
