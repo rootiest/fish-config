@@ -5389,6 +5389,24 @@ C6         Greeting & First-Run UI \[em] Custom startup banner
 Each category further sub-divides into several sub-categories, each with
 its own \f[V]__fish_config_op_<category>_<subcategory>\f[R] toggle \[en]
 see that category\[cq]s page for its sub-category list.
+.SS Accepted values for guard variables
+.PP
+Every guard variable (\f[V]__fish_config_opinionated\f[R], the six
+\f[V]__fish_config_op_<category>\f[R] variables, and every
+\f[V]__fish_config_op_<category>_<subcategory>\f[R] toggle) is read the
+same way, case-insensitively:
+.IP
+.nf
+\f[C]
+Truthy (enable)       1  true  yes  on  y
+Falsy (disable)       0  false  no  off  n
+\f[R]
+.fi
+.PP
+An unset, empty, or unrecognized value is treated as unset: the toggle
+falls back to the next level (sub-category to category, category to
+master switch) and finally to the category default.
+Opt-in C5 logging stays off.
 .SS Per-function overrides: \f[V]C0\f[R]/\f[V]always\f[R]
 .PP
 Every guarded function or file can also carry a reserved
