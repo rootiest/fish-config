@@ -131,13 +131,16 @@ function logs --description 'Browse terminal log files interactively with fzf'
 
         # Declare before switch so the variable survives past the block
         set -l label "[$parts[3]]"
-        switch $parts[3]
-            case scrollback
-                set label (printf '\033[36m[scrollback]\033[0m')
-            case paru
-                set label (printf '\033[32m[paru      ]\033[0m')
-            case yay
-                set label (printf '\033[33m[yay       ]\033[0m')
+        # NO_COLOR keeps the plain "[type]" label (non-empty value only).
+        if test -z "$NO_COLOR"
+            switch $parts[3]
+                case scrollback
+                    set label (printf '\033[36m[scrollback]\033[0m')
+                case paru
+                    set label (printf '\033[32m[paru      ]\033[0m')
+                case yay
+                    set label (printf '\033[33m[yay       ]\033[0m')
+            end
         end
 
         set -a fzf_lines (printf '%s\t%s %s  %s' $parts[2] $date $time $label)

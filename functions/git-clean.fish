@@ -52,7 +52,7 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
     end
 
     # 1. Fetch and prune (Quietly)
-    echo (set_color blue)"Fetching and pruning remote tracking..."(set_color normal)
+    echo (__fish_color blue)"Fetching and pruning remote tracking..."(__fish_color normal)
     git fetch --prune --quiet
 
     # 2. Identify orphaned branches and current branch
@@ -67,14 +67,14 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
     if test -n "$gone_branches"
         # 3. Move to safety if needed (Quietly)
         if contains "$current_branch" $gone_branches
-            echo (set_color yellow)"Current branch '$current_branch' was deleted on remote. Moving to main..."(set_color normal)
+            echo (__fish_color yellow)"Current branch '$current_branch' was deleted on remote. Moving to main..."(__fish_color normal)
             # Redirecting output to /dev/null to hide the 'Switched to branch' message
             git checkout main >/dev/null 2>&1; or git checkout master >/dev/null 2>&1
         end
     end
 
     # 4. Update the current branch (Quietly)
-    echo (set_color blue)"Updating current branch..."(set_color normal)
+    echo (__fish_color blue)"Updating current branch..."(__fish_color normal)
     git pull --quiet
 
     # 5. Final cleanup
@@ -87,7 +87,7 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
         end
 
         set -l failed 0
-        echo (set_color red)"Deleting orphaned local branches ($delete_flag):"(set_color normal)
+        echo (__fish_color red)"Deleting orphaned local branches ($delete_flag):"(__fish_color normal)
         for branch in $gone_branches
             # We keep this output so you can see confirmation of which hashes were deleted
             git branch $delete_flag $branch
@@ -96,5 +96,5 @@ function git-clean --description 'Sync main, prune remotes, and delete orphaned 
         return $failed
     end
 
-    echo (set_color green)"Everything is tidy. No orphaned branches found."(set_color normal)
+    echo (__fish_color green)"Everything is tidy. No orphaned branches found."(__fish_color normal)
 end

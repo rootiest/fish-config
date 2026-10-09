@@ -18,8 +18,8 @@ __fish_config_op_enabled (status basename); or exit
 __fish_variable_check __fish_config_kitty_watcher_dismissed; and exit
 __kitty_logging_has_watcher; and exit
 
-set_color --bold yellow
+echo -n (__fish_color --bold yellow)
 echo "Kitty session logging is available but not set up."
-set_color normal
+echo -n (__fish_color normal)
 echo "  Enable:  kitty-logging install"
 echo "  Silence: kitty-logging dismiss"

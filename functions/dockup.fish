@@ -30,10 +30,10 @@
 #   dockup ~/myapp
 function dockup --description 'Pull and restart docker compose containers'
     # Define colors
-    set -l clr_error (set_color red)
-    set -l clr_info (set_color -b blue white)
-    set -l clr_success (set_color green)
-    set -l clr_off (set_color normal)
+    set -l clr_error (__fish_color red)
+    set -l clr_info (__fish_color -b blue white)
+    set -l clr_success (__fish_color green)
+    set -l clr_off (__fish_color normal)
 
     # Handle help flags
     if contains -- -h $argv; or contains -- --help $argv
@@ -74,7 +74,7 @@ function dockup --description 'Pull and restart docker compose containers'
     end
 
     # Execution
-    echo $clr_info" UPDATING "$clr_off" Containers in "(set_color -o)(pwd)$clr_off"..."
+    echo $clr_info" UPDATING "$clr_off" Containers in "(__fish_color -o)(pwd)$clr_off"..."
 
     set -l rc 0
     if docker compose pull && docker compose up -d --remove-orphans

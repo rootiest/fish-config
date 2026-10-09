@@ -105,9 +105,9 @@ function _fish_deps_install
                     set -a methods cargo
                     set -a method_labels "cargo ($cargo_crate)"
                 else
-                    set_color brblack
+                    echo -n (__fish_color brblack)
                     echo "  note: cargo not found — install cargo first for the latest $bin"
-                    set_color normal
+                    echo -n (__fish_color normal)
                 end
             end
 
@@ -121,12 +121,12 @@ function _fish_deps_install
                         set -a methods special-git-cargo-fish
                         set -a method_labels "build from source (git + cargo)"
                     else
-                        set_color brblack
+                        echo -n (__fish_color brblack)
                         set -l _need
                         type -q cargo; or set -a _need cargo
                         type -q uv; or set -a _need uv
                         echo "  note: "(string join " and " $_need)" not found — install them first to build fish from source"
-                        set_color normal
+                        echo -n (__fish_color normal)
                     end
                 case rustup-installer
                     set -a methods special-rustup
@@ -156,18 +156,18 @@ function _fish_deps_install
                         set -a methods special-win32yank
                         set -a method_labels "binary download (github releases)"
                     else
-                        set_color brblack
+                        echo -n (__fish_color brblack)
                         echo "  note: win32yank only ships x86_64 builds (this is "(uname -m)")"
-                        set_color normal
+                        echo -n (__fish_color normal)
                     end
                 case go-ov
                     if type -q go
                         set -a methods special-go-ov
                         set -a method_labels "go install (github.com/noborus/ov@latest)"
                     else
-                        set_color brblack
+                        echo -n (__fish_color brblack)
                         echo "  note: go not found — install go first for the latest $bin (not all distros package $bin in their base repos)"
-                        set_color normal
+                        echo -n (__fish_color normal)
                     end
             end
 
@@ -207,15 +207,15 @@ function _fish_deps_install
             end
 
             if test (count $methods) -eq 0
-                set_color yellow
+                echo -n (__fish_color yellow)
                 echo "  $bin: no install method available on this system — skipping"
-                set_color normal
+                echo -n (__fish_color normal)
                 set i (math $i + 1)
                 continue
             end
 
             # Prompt: install/upgrade this dep?
-            read -l -P (set_color cyan)"$upgrade_label $bin?"(set_color normal)" [Y/n] " _reply
+            read -l -P (__fish_color cyan)"$upgrade_label $bin?"(__fish_color normal)" [Y/n] " _reply
             if test "$_reply" = n; or test "$_reply" = N
                 set i (math $i + 1)
                 continue
@@ -227,9 +227,9 @@ function _fish_deps_install
                 echo "  Available methods:"
                 set -l m 1
                 for lbl in $method_labels
-                    set_color brblack
+                    echo -n (__fish_color brblack)
                     echo -n "    $m) "
-                    set_color normal
+                    echo -n (__fish_color normal)
                     echo $lbl
                     set m (math $m + 1)
                 end
@@ -238,9 +238,9 @@ function _fish_deps_install
                     set chosen_method $methods[$_choice]
                 end
             else
-                set_color brblack
+                echo -n (__fish_color brblack)
                 echo "  "(string lower $upgrade_label)"ing via $method_labels[1]"
-                set_color normal
+                echo -n (__fish_color normal)
             end
 
             # Execute chosen method
@@ -261,9 +261,9 @@ function _fish_deps_install
                         end
                     end
                     if test $_rustup_status -eq 0; and not type -q cargo
-                        set_color yellow
+                        echo -n (__fish_color yellow)
                         echo "  cargo not yet in PATH — restart your shell if subsequent installs fail."
-                        set_color normal
+                        echo -n (__fish_color normal)
                     end
                     test $_rustup_status -eq 0
                 case special-go-ov
@@ -280,9 +280,9 @@ function _fish_deps_install
                         fish_add_path "$_gobin"
                     end
                     if test $_go_status -eq 0; and not type -q ov
-                        set_color yellow
+                        echo -n (__fish_color yellow)
                         echo "  ov not yet in PATH — restart your shell if subsequent installs fail."
-                        set_color normal
+                        echo -n (__fish_color normal)
                     end
                     test $_go_status -eq 0
                 case special-lazydocker
@@ -334,9 +334,9 @@ function _fish_deps_install
                         end
                     end
                     if test $_uv_status -eq 0; and not type -q uv
-                        set_color yellow
+                        echo -n (__fish_color yellow)
                         echo "  uv not yet in PATH — restart your shell if subsequent installs fail."
-                        set_color normal
+                        echo -n (__fish_color normal)
                     end
                     test $_uv_status -eq 0
                 case special-git-cargo-fish
@@ -358,18 +358,18 @@ function _fish_deps_install
 
             if test $status -eq 0
                 set installed_any 1
-                set_color green
+                echo -n (__fish_color green)
                 echo "  $bin "(string lower $upgrade_label)"ed."
-                set_color normal
+                echo -n (__fish_color normal)
                 if test "$bin" = fish
-                    set_color yellow
+                    echo -n (__fish_color yellow)
                     echo "  Fish upgraded — restart your shell to use the new version."
-                    set_color normal
+                    echo -n (__fish_color normal)
                 end
             else
-                set_color red
+                echo -n (__fish_color red)
                 echo "  $bin "(string lower $upgrade_label)" failed."
-                set_color normal
+                echo -n (__fish_color normal)
             end
         end
         set i (math $i + 1)
@@ -382,16 +382,16 @@ function _fish_deps_install
     if test $skipped_optional -gt 0
         set -l _plural dependencies
         test $skipped_optional -eq 1; and set _plural dependency
-        set_color brblack
+        echo -n (__fish_color brblack)
         echo "Skipped $skipped_optional optional $_plural. Run 'fish-deps install --optional' to include them."
-        set_color normal
+        echo -n (__fish_color normal)
     end
 
     if test $skipped_terminals -gt 0
         set -l _plural "terminal emulators"
         test $skipped_terminals -eq 1; and set _plural "terminal emulator"
-        set_color brblack
+        echo -n (__fish_color brblack)
         echo "Skipped $skipped_terminals $_plural. Run 'fish-deps install --terminals' to include them."
-        set_color normal
+        echo -n (__fish_color normal)
     end
 end

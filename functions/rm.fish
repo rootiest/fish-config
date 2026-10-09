@@ -132,17 +132,17 @@ function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
                 end
 
                 # 3. Display Logic
-                set_color red --bold
+                echo -n (__fish_color red --bold)
                 echo -n "error: "
-                set_color normal
+                echo -n (__fish_color normal)
                 echo $raw_msg
 
                 if set -q culprits[1]
                     # If we found missing files, show the user's source paths
                     for c in $culprits
-                        set_color blue
+                        echo -n (__fish_color blue)
                         echo -n "  ↳ Source: "
-                        set_color normal
+                        echo -n (__fish_color normal)
                         echo $c
                     end
                 else
@@ -154,9 +154,9 @@ function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
                                     | string unescape \
                                     | string trim)
 
-                    set_color yellow
+                    echo -n (__fish_color yellow)
                     echo -n "  ↳ Technical detail: "
-                    set_color normal
+                    echo -n (__fish_color normal)
                     echo $clean_detail
                 end
             end

@@ -58,19 +58,19 @@ function _fish_mkdir_p --description 'mkdir -p with configurable verbose output'
 
     if test $mode = path
         set -l display (string replace -- "$HOME" "~" $target)"/"
-        echo (set_color --bold cyan)"Created directory: "(set_color cyan)"$display"(set_color normal)
+        echo (__fish_color --bold cyan)"Created directory: "(__fish_color cyan)"$display"(__fish_color normal)
         return 0
     end
 
     # Tree mode: dimmed existing anchor, then cyan new dirs.
-    echo (set_color --bold yellow)"Created directories:"(set_color normal)
+    echo (__fish_color --bold yellow)"Created directories:"(__fish_color normal)
     set -l anchor (string replace -- "$HOME" "~" $cursor)"/"
-    echo (set_color brblack)" $anchor"(set_color normal)
+    echo (__fish_color brblack)" $anchor"(__fish_color normal)
     set -l i 1
     while test $i -le (count $to_create)
         set -l spaces (string repeat -n (math "($i - 1) * 4") " ")
         set -l name (basename $to_create[$i])"/"
-        echo (set_color cyan)" $spaces└── $name"(set_color normal)
+        echo (__fish_color cyan)" $spaces└── $name"(__fish_color normal)
         set i (math $i + 1)
     end
 end

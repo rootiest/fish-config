@@ -224,7 +224,7 @@ if status is-interactive
     if type -q fzf
         set -l _fzf_ver (fzf --version | string match -r '^(\d+)\.(\d+)')
         if test -n "$_fzf_ver[1]"; and test "$_fzf_ver[2]" -eq 0 -a "$_fzf_ver[3]" -lt 48
-            echo (set_color yellow)"fzf $_fzf_ver[1] is older than 0.48: fzf key bindings are off. Run `fzf-update` to upgrade."(set_color normal) >&2
+            echo (__fish_color yellow)"fzf $_fzf_ver[1] is older than 0.48: fzf key bindings are off. Run `fzf-update` to upgrade."(__fish_color normal) >&2
         else
             fzf --fish | source
         end
