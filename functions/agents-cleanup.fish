@@ -24,8 +24,10 @@
 #   and docs/superpowers/plans), the shallower one receives the content
 #   and the other is removed; a link to a target holding only .gitkeep, a
 #   dangling link, or a link to AGENTS/ itself is removed with nothing put
-#   in its place. Dangling links are removed even when AGENTS/ is already
-#   gone. An AGENTS.md that is exactly
+#   in its place. Inside a git repository, dangling links are removed even
+#   when AGENTS/ is already gone; outside git with no AGENTS/ the links are
+#   not inventoried at all, because the current directory is only a guess
+#   at the project root. An AGENTS.md that is exactly
 #   the stub agents-init writes is deleted; any other AGENTS.md loses only
 #   the SYSTEM DIRECTIVE blockquote that pointed agents at AGENTS/AGENTS.md.
 #   No CLAUDE.md is recreated.
@@ -59,7 +61,10 @@
 #   which may be committed to opt every clone out; it is the only marker
 #   available outside a git repository, where the project root is taken to
 #   be the current directory -- run it from there. In a project with no
-#   AGENTS/, only the marker is set -- a pre-emptive opt-out. agents-init --enable
+#   AGENTS/, the marker is set -- a pre-emptive opt-out -- and, inside git,
+#   any dangling AGENTS/ links and agents-init .gitignore blocks are removed
+#   as well; outside git there is no link inventory, so only the marker and
+#   any .gitignore blocks are touched. agents-init --enable
 #   clears the git key again.
 #
 #   Re-running is safe: an interrupted cleanup resumes where it stopped,

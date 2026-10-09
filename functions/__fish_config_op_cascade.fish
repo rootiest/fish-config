@@ -45,6 +45,18 @@ function __fish_config_op_cascade --description 'Evaluate the sub-category -> ca
         if test $s -eq 1
             return 1
         end
+        # Status 3 = set but unrecognized (e.g. "ture", "disabled"). The
+        # value is ignored exactly as before; the only addition is a warning,
+        # once per variable per session (deduped via a global list). Nothing
+        # here runs for valid, unset or empty values, so startup pays nothing.
+        if test $s -eq 3
+            if not contains -- $var_name $__fish_op_warned_values
+                set -g __fish_op_warned_values $__fish_op_warned_values $var_name
+                __fish_palette
+                printf '%s%s%s is set to %s%s%s; expected one of on/off/1/0/true/false/yes/no/y/n %s-- ignoring%s\n' \
+                    $c_cmd $var_name $c_reset $c_err "$$var_name" $c_reset $c_dim $c_reset >&2
+            end
+        end
     end
 
     # Every variable in the chain was unset/unrecognized. chain[-1] is
@@ -56,7 +68,16 @@ function __fish_config_op_cascade --description 'Evaluate the sub-category -> ca
     end
 
     __fish_variable_check __fish_config_opinionated
-    if test $status -eq 1
+    set -l m $status
+    if test $m -eq 3
+        if not contains -- __fish_config_opinionated $__fish_op_warned_values
+            set -g __fish_op_warned_values $__fish_op_warned_values __fish_config_opinionated
+            __fish_palette
+            printf '%s%s%s is set to %s%s%s; expected one of on/off/1/0/true/false/yes/no/y/n %s-- ignoring%s\n' \
+                $c_cmd __fish_config_opinionated $c_reset $c_err "$__fish_config_opinionated" $c_reset $c_dim $c_reset >&2
+        end
+    end
+    if test $m -eq 1
         return 1
     end
     return 0

@@ -255,8 +255,36 @@ automatically and deactivated when you leave the project tree.
 
 ### WakaTime
 
-Every shell command is reported to WakaTime for time-tracking. Set
-`FISH_WAKATIME_DISABLED=1` to disable without removing the plugin.
+Every shell command is reported to WakaTime for time-tracking, but only when
+the `wakatime` CLI (on `$PATH`, or `~/.wakatime/wakatime-cli`) is found. It is
+looked up once; with no CLI the hook is never registered and costs nothing.
+
+For each command the hook sends two things: the first word of the command
+line (for example `git`, never its arguments) as the entity, and a project
+name. Inside a git repository the project is the repository directory name;
+elsewhere it is `Terminal`.
+
+Opt-outs:
+
+    FISH_WAKATIME_DISABLED=1    Disable without removing the plugin
+    DO_NOT_TRACK=1              Honoured by the hook; the C3 privacy block
+                                sets it (and DISABLE_TELEMETRY=1) by default
+    DISABLE_TELEMETRY=1         Honoured by the hook
+    FISH_WAKATIME_PROJECT=name  Send this constant project name instead of
+                                the repository directory name
+    FISH_WAKATIME_IGNORE_DNT=1  Override: keep reporting even though
+                                DO_NOT_TRACK / DISABLE_TELEMETRY are set
+
+Because the C3 privacy block exports `DO_NOT_TRACK=1` by default, the hook is
+silent out of the box while that block is active. To keep WakaTime reporting
+on a machine where you want it, set the override once:
+
+    set -U FISH_WAKATIME_IGNORE_DNT 1
+
+This affects only the WakaTime hook. `DO_NOT_TRACK` and `DISABLE_TELEMETRY`
+stay exported and keep applying to every other tool. `FISH_WAKATIME_DISABLED`
+still switches the hook off regardless of the override. (Alternatively, disable
+the C3 privacy block or unset both variables after startup.)
 
 ### Tailscale
 
@@ -1123,15 +1151,17 @@ functions). They are active in all interactive sessions.
 
     Edits the last shell command -- or the most recent one matching a
     prefix -- in $EDITOR, then executes the result. Bash-style fc
-    behaviour. Falls back to vi when $EDITOR is unset, and aborts without
-    executing if the buffer is left empty.
+    behaviour. $EDITOR may carry arguments (e.g. "code --wait"); falls back
+    to vi when unset. Multi-line commands keep their newlines, the scratch
+    file is private (mode 600) and always removed, and an empty buffer
+    aborts without executing.
 
     Arguments:
       command_prefix   Search history for the newest command matching this
 
     Exit Status:
-      The edited command's exit status, or a message when history lookup
-      found nothing.
+      0  The edited command was queued for execution
+      1  History lookup found nothing, or the buffer was left empty
 
     Example:
     fc
@@ -1319,7 +1349,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Patterns appended, or resolved with -o/--stdout or -l/--list
-      1  Not in a git repository or API fetch failed
+      1  Not in a git repository, API fetch failed, or curl is not installed
       2  Unknown option
 
     Returns:
@@ -1459,13 +1489,13 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Command selected and inserted, or fzf was cancelled
-      1  Disabled by __fish_config_op_integrations
+      1  Disabled by __fish_config_op_integrations, or fzf is not installed
       2  Unexpected argument (takes none)
 
     Example:
     hist
 
-**Dependencies:** `_fish_clipboard_copy`
+**Dependencies:** `fzf`, `_fish_clipboard_copy`
 
 ### mkrep
 
@@ -1659,7 +1689,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Packages removed or none selected
-      1  No AUR helper (paru or yay) found
+      1  No AUR helper (paru or yay) found, or fzf is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -1792,6 +1822,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Subcommand completed, or help was shown
+      1  update (or the update half of sync) had one or more failed updates
       2  Unknown subcommand
 
     Example:
@@ -2224,7 +2255,7 @@ functions). They are active in all interactive sessions.
     Wraps ssh with kitten ssh inside Kitty terminal for better terminal
     integration (terminfo forwarding, multiplexing, copy/paste support).
     Falls back to system ssh on
-    other terminals.
+    other terminals, or when kitten is not installed.
 
     Arguments:
       args...  Arguments forwarded to kitten ssh or system ssh
@@ -2334,6 +2365,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Network failures print "Not detected" instead of failing
+      1  curl is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -2350,6 +2382,7 @@ functions). They are active in all interactive sessions.
     Fetches and prints the machine's public IPv4 address using icanhazip.com.
 
     Exit Status:
+      1  curl is not installed
       2  Unexpected argument (takes none)
       *  Exit status of curl otherwise
 
@@ -2369,7 +2402,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  IPv6 address resolved
-      1  IPv6 unavailable or not supported on this network
+      1  IPv6 unavailable or not supported on this network, or curl is not installed
       2  Unexpected argument (takes none)
 
     Returns:
@@ -2464,7 +2497,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  File viewed or no file selected
-      1  No log files found
+      1  No log files found, or fzf is not installed
       2  Unknown option
 
     Example:
@@ -2524,8 +2557,12 @@ functions). They are active in all interactive sessions.
     credential.  The value is escaped for literal regex matching before
     comparison.
 
+    The sensitive-name heuristic is shared with the session-start registration
+    (conf.d/sponge_privacy.fish) and includes any extra names listed in
+    $__fish_sponge_extra_sensitive.
+
     Arguments:
-      command                 The exact command that was entered
+      command                The exact command that was entered
       exit_code               Exit code of the command (unused)
       previously_in_history   "true"/"false" flag (unused)
 
@@ -2536,6 +2573,8 @@ functions). They are active in all interactive sessions.
     Example:
     # Register with sponge (done automatically by conf.d/sponge_privacy.fish):
     set -U -a sponge_filters sponge_filter_secrets
+
+**Dependencies:** `__fish_sponge_sensitive_pattern`
 
 ## 5.12 AI and Developer Tools
 
@@ -2553,8 +2592,10 @@ functions). They are active in all interactive sessions.
     and docs/superpowers/plans), the shallower one receives the content
     and the other is removed; a link to a target holding only .gitkeep, a
     dangling link, or a link to AGENTS/ itself is removed with nothing put
-    in its place. Dangling links are removed even when AGENTS/ is already
-    gone. An AGENTS.md that is exactly
+    in its place. Inside a git repository, dangling links are removed even
+    when AGENTS/ is already gone; outside git with no AGENTS/ the links are
+    not inventoried at all, because the current directory is only a guess
+    at the project root. An AGENTS.md that is exactly
     the stub agents-init writes is deleted; any other AGENTS.md loses only
     the SYSTEM DIRECTIVE blockquote that pointed agents at AGENTS/AGENTS.md.
     No CLAUDE.md is recreated.
@@ -2588,7 +2629,10 @@ functions). They are active in all interactive sessions.
     which may be committed to opt every clone out; it is the only marker
     available outside a git repository, where the project root is taken to
     be the current directory -- run it from there. In a project with no
-    AGENTS/, only the marker is set -- a pre-emptive opt-out. agents-init --enable
+    AGENTS/, the marker is set -- a pre-emptive opt-out -- and, inside git,
+    any dangling AGENTS/ links and agents-init .gitignore blocks are removed
+    as well; outside git there is no link inventory, so only the marker and
+    any .gitignore blocks are touched. agents-init --enable
     clears the git key again.
 
     Re-running is safe: an interrupted cleanup resumes where it stopped,
@@ -3397,6 +3441,10 @@ functions). They are active in all interactive sessions.
       args...  Arguments forwarded to yt-dlp (defaults prepended)
       --no-embed-thumbnail  Skip thumbnail embedding for this run
 
+    Exit Status:
+      1  yt-dlp is not installed
+      *  Exit status of yt-dlp otherwise
+
     Example:
     yt-dlp dQw4w9WgXcQ
     yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
@@ -3936,6 +3984,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Detached sessions killed, or none found
+      1  tmux is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -4361,6 +4410,20 @@ category variable.
 Each category further sub-divides into several sub-categories, each with
 its own `__fish_config_op_<category>_<subcategory>` toggle -- see that
 category's page for its sub-category list.
+
+## Accepted values for guard variables
+
+Every guard variable (`__fish_config_opinionated`, the six
+`__fish_config_op_<category>` variables, and every
+`__fish_config_op_<category>_<subcategory>` toggle) is read the same way,
+case-insensitively:
+
+    Truthy (enable)       1  true  yes  on  y
+    Falsy (disable)       0  false  no  off  n
+
+An unset, empty, or unrecognized value is treated as unset: the toggle falls
+back to the next level (sub-category to category, category to master switch)
+and finally to the category default. Opt-in C5 logging stays off.
 
 ## Per-function overrides: `C0`/`always`
 

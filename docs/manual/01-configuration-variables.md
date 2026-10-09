@@ -113,8 +113,36 @@ automatically and deactivated when you leave the project tree.
 
 ### WakaTime
 
-Every shell command is reported to WakaTime for time-tracking. Set
-`FISH_WAKATIME_DISABLED=1` to disable without removing the plugin.
+Every shell command is reported to WakaTime for time-tracking, but only when
+the `wakatime` CLI (on `$PATH`, or `~/.wakatime/wakatime-cli`) is found. It is
+looked up once; with no CLI the hook is never registered and costs nothing.
+
+For each command the hook sends two things: the first word of the command
+line (for example `git`, never its arguments) as the entity, and a project
+name. Inside a git repository the project is the repository directory name;
+elsewhere it is `Terminal`.
+
+Opt-outs:
+
+    FISH_WAKATIME_DISABLED=1    Disable without removing the plugin
+    DO_NOT_TRACK=1              Honoured by the hook; the C3 privacy block
+                                sets it (and DISABLE_TELEMETRY=1) by default
+    DISABLE_TELEMETRY=1         Honoured by the hook
+    FISH_WAKATIME_PROJECT=name  Send this constant project name instead of
+                                the repository directory name
+    FISH_WAKATIME_IGNORE_DNT=1  Override: keep reporting even though
+                                DO_NOT_TRACK / DISABLE_TELEMETRY are set
+
+Because the C3 privacy block exports `DO_NOT_TRACK=1` by default, the hook is
+silent out of the box while that block is active. To keep WakaTime reporting
+on a machine where you want it, set the override once:
+
+    set -U FISH_WAKATIME_IGNORE_DNT 1
+
+This affects only the WakaTime hook. `DO_NOT_TRACK` and `DISABLE_TELEMETRY`
+stay exported and keep applying to every other tool. `FISH_WAKATIME_DISABLED`
+still switches the hook off regardless of the override. (Alternatively, disable
+the C3 privacy block or unset both variables after startup.)
 
 ### Tailscale
 
