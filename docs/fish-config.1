@@ -4135,27 +4135,53 @@ bash
 .IP
 .nf
 \f[C]
-Synopsis:  bd-pull <owner/repo>
+Synopsis:  bd-pull [--push] [-h | --help] <owner/repo>
 
 Fetches unlinked issues from a Gitea repository, creates corresponding local
 Beads entries, and updates the Gitea issue titles to include the new Bead IDs.
 Requires $GITEA_TOKEN and $GITEA_URL to be set.
 
+Only open issues are considered: the query asks for type=issues and
+state=open, and pull requests or closed entries that still slip through
+are dropped. The issues endpoint is paginated (50 per page); pages are
+followed until one comes back empty or shorter than the first, up to a
+fixed upper bound of 200 pages.
+
+Every HTTP request uses curl -f, so an error status (a bad token, a wrong
+URL, a missing repository) is reported on stderr and the response body is
+never handed to jq. Nothing is created locally or on Gitea when listing
+the issues fails. The API token is never placed on a command line: it is
+written to a mode 600 curl config file in a private temporary directory
+that is removed on exit. The title update payload is built with jq
+--arg, so quotes and backslashes in a title cannot break or alter it.
+
+An issue whose Bead ID cannot be determined is skipped with a warning on
+stderr; its Gitea title is left untouched.
+
+After linking, the Beads store is synced and ONLY .beads/issues.jsonl is
+committed (anything else already staged is left alone). The commit is
+not pushed unless --push is given.
+
 Arguments:
   owner/repo  The repository path in owner/name format
+  --push      Push the commit after creating it (default: do not push)
+  -h, --help  Show this help
 
 Exit Status:
   0  Issues linked and synced (or no unlinked issues found)
-  1  GITEA_TOKEN or GITEA_URL not set
-  2  Missing repository argument
+  1  GITEA_TOKEN or GITEA_URL not set, a required tool (curl, jq, bd, git)
+     is missing, the Gitea API request failed, or an issue could not be
+     linked, committed or pushed
+  2  Missing or malformed repository argument, or an unknown option
 
 Example:
 bd-pull myuser/myproject
-bd-pull rootiest/fish-config
+bd-pull --push rootiest/fish-config
 \f[R]
 .fi
 .PP
-\f[B]Dependencies:\f[R] \f[V]curl\f[R], \f[V]jq\f[R], \f[V]git\f[R]
+\f[B]Dependencies:\f[R] \f[V]__fish_palette\f[R], \f[V]curl\f[R],
+\f[V]jq\f[R], \f[V]bd\f[R], \f[V]git\f[R]
 .SS cffetch
 .IP
 .nf
