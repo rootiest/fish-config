@@ -4,6 +4,9 @@
 # CATEGORY
 #   11-pager-and-logging
 #
+# DEPENDENCIES
+#   __fish_sponge_sensitive_pattern
+#
 # SYNOPSIS
 #   sponge_filter_secrets <command> <exit_code> <previously_in_history>
 #
@@ -23,8 +26,12 @@
 #   credential.  The value is escaped for literal regex matching before
 #   comparison.
 #
+#   The sensitive-name heuristic is shared with the session-start registration
+#   (conf.d/sponge_privacy.fish) and includes any extra names listed in
+#   $__fish_sponge_extra_sensitive.
+#
 # ARGUMENTS
-#   command                 The exact command that was entered
+#   command                The exact command that was entered
 #   exit_code               Exit code of the command (unused)
 #   previously_in_history   "true"/"false" flag (unused)
 #
@@ -36,9 +43,10 @@
 #   # Register with sponge (done automatically by conf.d/sponge_privacy.fish):
 #   set -U -a sponge_filters sponge_filter_secrets
 function sponge_filter_secrets --argument-names command
-    # Find all exported variables with security-sensitive names
+    # Find all exported variables with security-sensitive names. The name
+    # pattern is shared with Layer 2 and includes __fish_sponge_extra_sensitive.
     set -l sensitive_vars (set --names --export | string match --entire --regex -- \
-        '(?i)(?:TOKEN|PASSWORD|PASSWD|SECRET|API[_-]KEY|PRIVATE[_-]KEY|ACCESS[_-]KEY|AUTH[_-]KEY|CREDENTIAL|KOPIA_PASSWORD)')
+        (__fish_sponge_sensitive_pattern))
 
     for var in $sensitive_vars
         # Check every element: `$$var[1]` would index the inner name, not the

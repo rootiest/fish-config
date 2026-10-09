@@ -161,6 +161,57 @@ if test (uname -m) = x86_64
 end
 
 # =============================================================================
+# 5. _fish_deps_update exit status (#228)
+# =============================================================================
+section _fish_deps_update
+
+# PATH holds only stub tools, so no real tool can be touched. `cargo` fails
+# for the lsd crate and succeeds for eza and bat; fisher is a stub function.
+set -l stubs $work/stubs
+mkdir -p $stubs
+for t in eza lsd bat
+    printf '#!/bin/sh\nexit 0\n' >$stubs/$t
+    chmod +x $stubs/$t
+end
+printf '#!/bin/sh\ncase "$*" in *lsd*) exit 1;; esac\nexit 0\n' >$stubs/cargo
+chmod +x $stubs/cargo
+
+set -g _fisher_rc 0
+function fisher
+    return $_fisher_rc
+end
+
+set -l oldpath $PATH
+set -gx PATH $stubs
+
+set -l err (_fish_deps_update 2>&1 >/dev/null)
+set -l rc $status
+check "a failing update returns 1" 1 $rc
+check "failure summary counts failed of attempted" true (string match -q '*1 of 4 updates failed*' -- "$err"; and echo true; or echo false)
+check "failure summary names the failed tool" true (string match -q '*failed: *lsd*' -- "$err"; and echo true; or echo false)
+check "successful tools are not named as failed" false (string match -q '*eza*' -- "$err"; and echo true; or echo false)
+
+set -g _fisher_rc 1
+set err (_fish_deps_update 2>&1 >/dev/null)
+check "fisher failure is counted too" true (string match -q '*2 of 4 updates failed*' -- "$err"; and echo true; or echo false)
+check "fisher failure is named" true (string match -q '*fisher*' -- "$err"; and echo true; or echo false)
+
+fish-deps update >/dev/null 2>&1
+check "fish-deps update propagates the failure" 1 $status
+
+# Everything succeeding: cargo stub no longer rejects lsd.
+printf '#!/bin/sh\nexit 0\n' >$stubs/cargo
+set -g _fisher_rc 0
+set err (_fish_deps_update 2>&1 >/dev/null)
+check "all updates succeeding returns 0" 0 $status
+check "all updates succeeding prints no stderr" "" "$err"
+fish-deps update >/dev/null 2>&1
+check "fish-deps update returns 0 on success" 0 $status
+
+set -gx PATH $oldpath
+functions -e fisher
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 functions -e curl sha_of
