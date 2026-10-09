@@ -45,6 +45,17 @@
 #   inside the store are neither followed nor copied, so the allowlist
 #   bounds whose files it collects and not merely what kind.
 #
+#   A project's devlogs are tracked too. AGENTS/devlogs/ holds handoff
+#   documents and, beside them, the backups a job saved before changing a
+#   live system; the AGENTS/ sub-repo has no remote, so without this they
+#   last as long as the machine. They are copied into the project's entry
+#   under agents/devlogs/ and committed with the memory. Unlike agy's
+#   store this copy is bounded by location, not by file type: backups are
+#   zone dumps, client lists and original scripts, and an extension rule
+#   would drop exactly those. Symlinks are not followed, dot-led names are
+#   skipped, and a file over 1 MiB is left behind so a stray database dump
+#   cannot bloat a history that keeps every version.
+#
 #   Global state that belongs to no project is tracked as well. Claude's
 #   global memory directory (~/.claude/memory) is symlinked into the vault
 #   exactly like per-project memory, and is only linked when one side or
@@ -180,6 +191,17 @@
 #   knowledge store persists in the vault indefinitely, and a restore or a
 #   fresh clone brings it back. Prune such an entry from the vault by hand
 #   if it must really be gone.
+#
+#   The devlog copy is merge-only for the same reason, and it only ever
+#   goes one way. A log deleted or moved in AGENTS/devlogs/ stays in the
+#   vault, and an ordinary run never copies back out, because that would
+#   resurrect a file removed on purpose. To bring devlogs back on a new
+#   machine, copy the entry's agents/devlogs/ over AGENTS/devlogs/ without
+#   overwriting (cp -rn). A file over 1 MiB is skipped, and only a
+#   verbose run says so. The vault's *.db ignore still applies, so a
+#   SQLite file in a backups folder is never committed. Nothing is
+#   scanned for secrets: the devlog rules (no secret values, scanned
+#   backups) are what keep them out, and the copy trusts them.
 #
 #   Three further variables exist only so the test suite can run against
 #   throwaway directories instead of the real home, and are not meant for
@@ -387,7 +409,13 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             '(`$XDG_DATA_HOME/agent-vault`, or `$__fish_agent_vault_dir`).' \
             'Then simply run `claude` in any project: the wrapper derives that' \
             "project's slug, finds its entry here, and relinks the live memory" \
-            'directory automatically. There is no separate restore step.' \
+            'directory automatically. There is no separate restore step for' \
+            'memory.' \
+            '' \
+            "A project's devlogs and their backups are kept beside its memory," \
+            'under `projects/<slug>/agents/devlogs/`. They are never copied back' \
+            'on their own: to restore them, copy that directory over the' \
+            "project's `AGENTS/devlogs/` with `cp -rn`." \
             '' \
             'Entries are keyed by normalized git remote URL. A `local-*` key' \
             'belongs to a project with no remote and is machine-specific;' \
@@ -489,6 +517,11 @@ function agents-vault --description 'track curated agent memory in a host-scoped
 
         set -l to_content
         test -d "$to/claude/memory"; and set to_content (command ls -A "$to/claude/memory" 2>/dev/null)
+        # Devlog backups are content too. A fresh clone of the vault gives
+        # an entry that holds only agents/ (git cannot track the empty
+        # memory directory), and the stash below is dropped once the adopt
+        # succeeds, so judging by memory alone would throw them away.
+        test -d "$to/agents/devlogs"; and set -a to_content (command ls -A "$to/agents/devlogs" 2>/dev/null)
         if test (count $to_content) -gt 0
             echo "$c_err""agents-vault: $_flag_adopt already holds content; refusing to overwrite$c_reset" >&2
             return 1
@@ -996,6 +1029,92 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             printf 'remote: %s\npath:   %s\nhost:   %s\n' \
                 "$url" "$root" "$host" >"$entry/origin"
             set changed 1
+        end
+
+        # ── AGENTS/devlogs (handoff documents and their backups) ───────────
+        # The AGENTS/ sub-repo is local only, so a devlog and the backups it
+        # keeps beside it would otherwise last exactly as long as the
+        # machine. They are copied into the entry, never linked: the
+        # sub-repo is a repository of its own and a symlink into the vault
+        # would nest one repo's history inside another's.
+        #
+        # This is the one place the allowlist is a location rather than a
+        # file type. A devlog's backups are whatever the job needed saved
+        # (zone dumps, client lists, an original script), so an extension
+        # rule would drop exactly the files that matter. What bounds the
+        # copy instead is the same set of rules the knowledge copy leans
+        # on: nothing that is a symlink is followed or copied, dot-led
+        # names never match a fish wildcard, and a file over $dl_max is
+        # left behind because the vault is a git repository whose history
+        # keeps every version of a large file forever. The vault's own
+        # .gitignore still holds, so a SQLite database in a backups folder
+        # is copied into the worktree and never committed.
+        #
+        # Merge-only, like the agy copy, and for the same reason: a log
+        # deleted or moved upstream stays in the vault. The ordinary run
+        # never copies back out, because doing so would resurrect a file
+        # that was removed on purpose. Getting a devlog back is a plain
+        # `cp -rn` of the entry's agents/devlogs/ into AGENTS/devlogs/.
+        #
+        # Best-effort, exactly like the global copies above: this runs on
+        # every agent launch, and a devlog that could not be copied must
+        # not take the memory backup and its commit down with it.
+        set -l dl_src "$root/AGENTS/devlogs"
+        set -l dl_max 1048576
+        if test -d "$dl_src"; and not test -L "$dl_src"; and not test -L "$root/AGENTS"
+            # Same walk as the knowledge copy, and for the same reasons:
+            # one level at a time so a symlink stops it, a printed list
+            # rather than an appended one, and NUL separators because a
+            # filename may hold a newline.
+            set -l dl_files (begin
+                set -l dl_dirs "$dl_src"
+                while set -q dl_dirs[1]
+                    set -l dl_dir $dl_dirs[1]
+                    set -e dl_dirs[1]
+                    for e in $dl_dir/*
+                        test -L "$e"; and continue
+                        if test -d "$e"
+                            set -a dl_dirs "$e"
+                        else if test -f "$e"
+                            printf '%s\0' "$e"
+                        end
+                    end
+                end
+            end | string split0)
+            set -l dl_copied 0
+            set -l dl_failed 0
+            set -l dl_skipped 0
+            for f in $dl_files
+                test -f "$f"; or continue
+                set -l size (command wc -c <"$f" 2>/dev/null | string trim)
+                if test -n "$size"; and test "$size" -gt $dl_max
+                    set dl_skipped (math $dl_skipped + 1)
+                    continue
+                end
+                set -l dest "$entry/agents/devlogs/"(string replace -- "$dl_src/" "" "$f")
+                if not mkdir -p (path dirname "$dest"); or not command cp "$f" "$dest"
+                    set dl_failed 1
+                    continue
+                end
+                set dl_copied 1
+            end
+            if test $dl_failed -eq 1
+                echo "$c_warn""agents-vault: could not copy part of AGENTS/devlogs$c_reset" >&2
+            end
+            if test $dl_skipped -gt 0; and test $verbose -eq 1
+                echo "$c_warn→ Skipped $dl_skipped devlog file(s) over 1 MiB; they are not in the vault$c_reset"
+            end
+            # cp cannot say whether anything differed, so as with the agy
+            # copy the vault is asked: the copy counts as a change only if
+            # it left the entry's agents/ dirty. Otherwise --quiet would
+            # report a sync on every launch.
+            if test $dl_copied -eq 1
+                set -l dl_dirty (git -C "$vault" status --porcelain -- "projects/$slug/agents" 2>/dev/null)
+                if test -n "$dl_dirty"
+                    set changed 1
+                    test $verbose -eq 1; and echo "$c_ok→ Copied AGENTS/devlogs into the vault$c_reset"
+                end
+            end
         end
     end
 

@@ -2085,6 +2085,163 @@ printf '!AGENTS/foo\n' >$ng/.gitignore
 _agents_init_ensure_gitignore $ng test AGENTS/ >/dev/null
 check "negation does not count as ignored" true (grep -qx 'AGENTS/' $ng/.gitignore; and echo true; or echo false)
 
+#   ──────────────────────── AGENTS/devlogs copy ──────────────────────────
+# A project's devlogs and the backups kept beside them are copied into its
+# vault entry, because the AGENTS/ sub-repo has no remote and would
+# otherwise last only as long as the machine. The allowlist here is a
+# location, not a file type, so the checks that matter are the ones that
+# say what still stays out: symlinks, dot-led names, oversize files, and
+# anything the vault's own .gitignore refuses.
+echo ""
+echo "== agents-vault (AGENTS/devlogs) =="
+
+set -l vrootd (mktemp -d)
+set -ga TMPDIRS $vrootd
+set -l crootd (mktemp -d)
+set -ga TMPDIRS $crootd
+set -l chomed (mktemp -d)
+set -ga TMPDIRS $chomed
+set -l agyd (mktemp -d)
+set -ga TMPDIRS $agyd
+set -g __fish_agent_vault_dir $vrootd/agent-vault
+set -g __fish_agent_vault_claude_root $crootd
+set -g __fish_agent_vault_claude_home $chomed
+set -g __fish_agent_vault_agy_root $agyd
+set -l dv $vrootd/agent-vault
+
+set -l dp (new_repo https://git.rootiest.dev/rootiest/devlogs.git)
+set -l dslug git.rootiest.dev-rootiest-devlogs
+set -l dl $dp/AGENTS/devlogs
+mkdir -p $dl/2026-10-09-job-backups
+echo log-body >$dl/2026-10-09-job.md
+# Extensions the agy copy would refuse. A backups folder is made of exactly
+# these, which is why the devlog copy is bounded by location instead.
+echo '{"k":1}' >$dl/2026-10-09-job-backups/clients.jsonl
+echo original >$dl/2026-10-09-job-backups/script.sh.orig
+echo zone >$dl/2026-10-09-job-backups/dns-backup.txt
+: >$dl/.gitkeep
+echo hidden >$dl/.draft.md
+# Over the cap: one byte more than 1 MiB.
+head -c 1048577 /dev/zero >$dl/2026-10-09-job-backups/big.bin
+# A SQLite file is copied into the worktree and then ignored by the vault.
+echo sqlite >$dl/2026-10-09-job-backups/state.db
+
+# Symlinks, as for the knowledge store: nothing they name may come through.
+set -l outsided (mktemp -d)
+set -ga TMPDIRS $outsided
+mkdir -p $outsided/nested
+echo SECRET-OUTSIDE-DEVLOGS >$outsided/leaked.md
+echo SECRET-OUTSIDE-DEVLOGS >$outsided/nested/deep.md
+ln -s $outsided $dl/linked
+ln -s $outsided/leaked.md $dl/alias.md
+
+pushd $dp >/dev/null
+set -l dout (agents-vault --verbose)
+popd >/dev/null
+
+set -l de $dv/projects/$dslug/agents/devlogs
+check "devlog copied" log-body (cat $de/2026-10-09-job.md 2>/dev/null)
+check "backup .jsonl copied" '{"k":1}' (cat $de/2026-10-09-job-backups/clients.jsonl 2>/dev/null)
+check "backup .orig copied" original (cat $de/2026-10-09-job-backups/script.sh.orig 2>/dev/null)
+check "backup .txt copied" zone (cat $de/2026-10-09-job-backups/dns-backup.txt 2>/dev/null)
+check "devlog copy is a copy not a link" false (test -L $dv/projects/$dslug/agents; and echo true; or echo false)
+check "devlog is in the vault history" 0 (git -C $dv ls-files --error-unmatch projects/$dslug/agents/devlogs/2026-10-09-job.md >/dev/null 2>&1; echo $status)
+check "backup is in the vault history" 0 (git -C $dv ls-files --error-unmatch projects/$dslug/agents/devlogs/2026-10-09-job-backups/clients.jsonl >/dev/null 2>&1; echo $status)
+check ".gitkeep stayed out" false (test -e $de/.gitkeep; and echo true; or echo false)
+check "dot-led file stayed out" false (test -e $de/.draft.md; and echo true; or echo false)
+check "oversize file stayed out" false (test -e $de/2026-10-09-job-backups/big.bin; and echo true; or echo false)
+check "verbose run says what it skipped" true (string match -q '*Skipped 1 devlog*' -- "$dout"; and echo true; or echo false)
+check "verbose run reports the copy" true (string match -q '*Copied AGENTS/devlogs*' -- "$dout"; and echo true; or echo false)
+for escapee in linked linked/leaked.md linked/nested/deep.md alias.md
+    check "devlogs: symlinked $escapee stayed out" false (test -e $de/$escapee; and echo true; or echo false)
+end
+check "devlogs: nothing outside the folder reached a commit" false (git -C $dv grep -q SECRET-OUTSIDE-DEVLOGS HEAD 2>/dev/null; and echo true; or echo false)
+# The vault's own *.db ignore holds: copied into the worktree, never tracked.
+check "sqlite file not committed" 1 (git -C $dv ls-files --error-unmatch projects/$dslug/agents/devlogs/2026-10-09-job-backups/state.db >/dev/null 2>&1; echo $status)
+
+# --quiet stays silent when nothing changed. The copy is unconditional and
+# cp cannot say whether anything differed, so this is what proves the vault
+# is asked instead.
+pushd $dp >/dev/null
+set -l dq1 (agents-vault --quiet)
+set -l dq2 (agents-vault --quiet)
+popd >/dev/null
+check "devlogs: first --quiet rerun prints nothing" "" "$dq1"
+check "devlogs: second --quiet rerun prints nothing" "" "$dq2"
+
+# A real edit re-syncs, reports, and lands in a new commit.
+set -l dhead (git -C $dv rev-list --count HEAD)
+echo log-body-two >$dl/2026-10-09-job.md
+pushd $dp >/dev/null
+set -l dq3 (agents-vault --quiet)
+popd >/dev/null
+check "devlogs: edited log re-synced" log-body-two (cat $de/2026-10-09-job.md 2>/dev/null)
+check "devlogs: edit reports in --quiet" true (string match -q '*Synced*' -- "$dq3"; and echo true; or echo false)
+check "devlogs: edit made a commit" (math $dhead + 1) (git -C $dv rev-list --count HEAD)
+
+# Merge-only, and one way: deleting a log upstream must not delete the
+# vault copy, and the ordinary run must not bring it back either.
+rm $dl/2026-10-09-job-backups/dns-backup.txt
+pushd $dp >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "devlogs: deleted upstream, kept in the vault" zone (cat $de/2026-10-09-job-backups/dns-backup.txt 2>/dev/null)
+check "devlogs: not copied back out" false (test -e $dl/2026-10-09-job-backups/dns-backup.txt; and echo true; or echo false)
+
+# A failed copy is a warning and not a failure: the memory backup and its
+# commit are the primary feature and must survive a secondary one.
+echo log-body-three >$dl/2026-10-09-job.md
+set -l derr (mktemp)
+set -ga TMPDIRS $derr
+set -l dshim (failing_shim cp 2026-10-09-job.md)
+set -l dpath $PATH
+set PATH $dshim $PATH
+pushd $dp >/dev/null
+set -l drc (agents-vault --silent 2>$derr; echo $status)
+popd >/dev/null
+set PATH $dpath
+check "devlogs: a failed copy does not fail the run" 0 "$drc"
+check "devlogs: a failed copy is reported" true (string match -q '*could not copy part of AGENTS/devlogs*' -- (cat $derr); and echo true; or echo false)
+
+# No AGENTS/devlogs, no agents/ in the entry. A project that was never
+# scaffolded must not grow an empty directory in the vault.
+set -l np (new_repo https://git.rootiest.dev/rootiest/nodevlogs.git)
+pushd $np >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "no devlogs, no agents/ in the entry" false (test -e $dv/projects/git.rootiest.dev-rootiest-nodevlogs/agents; and echo true; or echo false)
+
+# AGENTS itself a link: the same rule one level up. Following it would make
+# the copy read whatever the link names.
+set -l lp (new_repo https://git.rootiest.dev/rootiest/linkedagents.git)
+mkdir -p $outsided/fake-agents/devlogs
+echo SECRET-OUTSIDE-DEVLOGS >$outsided/fake-agents/devlogs/x.md
+ln -s $outsided/fake-agents $lp/AGENTS
+pushd $lp >/dev/null
+agents-vault --silent
+popd >/dev/null
+check "a symlinked AGENTS is not followed" false (test -e $dv/projects/git.rootiest.dev-rootiest-linkedagents/agents; and echo true; or echo false)
+
+# --adopt must treat devlog backups as content. A cloned vault gives an
+# entry holding only agents/ (git cannot track the empty memory directory),
+# and an adopt that judged by memory alone would drop it with the stash.
+mkdir -p $dv/projects/devtarget/agents/devlogs
+echo precious >$dv/projects/devtarget/agents/devlogs/keep.md
+set -l aerr (mktemp)
+set -ga TMPDIRS $aerr
+pushd $dp >/dev/null
+set -l arc (agents-vault --adopt=devtarget --silent 2>$aerr; echo $status)
+popd >/dev/null
+check "adopt refuses an entry holding only devlogs" 1 "$arc"
+check "adopt says why" true (string match -q '*already holds content*' -- (cat $aerr); and echo true; or echo false)
+check "adopt kept the devlogs it refused to overwrite" precious (cat $dv/projects/devtarget/agents/devlogs/keep.md 2>/dev/null)
+check "adopt left the original entry in place" true (test -d $dv/projects/$dslug; and echo true; or echo false)
+
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The
 # failure this guards is specific: a global-memory sync with no test
