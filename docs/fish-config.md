@@ -43,35 +43,54 @@ The configuration uses a structured file tree:
 
     ~/.config/fish/
     ├── config.fish                 Main entry point; sets env vars and PATH
-    ├── conf.d/
+    ├── conf.d/                     Snippets sourced at startup
+    │   ├── __fish_config_op_registry.fish  Generated component registry
     │   ├── abbr.fish               All abbreviations
+    │   ├── auto-pull.fish          Background git pulls for opted-in repos
     │   ├── autopair.fish           Auto-pair brackets and quotes
+    │   ├── bash_expands.fish       Bash-style history expansion
     │   ├── done.fish               Desktop notifications for long commands
     │   ├── first_run.fish          One-time init: Fisher bootstrap, theme
+    │   ├── fzf.fish                fzf key bindings and pickers
+    │   ├── help.fish               help command for config topics
     │   ├── key_bindings.fish       Custom key bindings and Vi mode
-    │   ├── logging-events.fish     C5 event handlers; syncs logging state
     │   ├── kitty-watcher-reminder.fish  C5 per-session Kitty watcher reminder
+    │   ├── logging-events.fish     C5 event handlers; syncs logging state
     │   ├── pkg-wrappers.fish       Auto-generates paru/yay logging wrappers
     │   ├── puffer.fish             !! / !$ / ./ expansion
-    │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
-    │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
     │   ├── sponge_privacy.fish     Sponge privacy patterns
     │   ├── starship.fish           fish_prompt shell-integration markers
     │   ├── theme.fish              Catppuccin syntax highlight colors
+    │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
     │   ├── wakatime.fish           WakaTime shell hook
+    │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
     ├── functions/                  Custom functions, one per file
     ├── completions/                Tab completion scripts, autoloaded on demand
-    ├── scripts/
+    ├── scripts/                    Helper scripts and tools
+    │   ├── agents-tools/           AGENTS.md git hooks and version-bump
+    │   ├── claude-shell-prefix     Strips telemetry opt-outs for claude
     │   ├── clean_progress_log.py   Strips typescript animations for clean logs
-    │   └── agents-tools/           AGENTS.md scripts and git hooks
+    │   ├── cli-agent.md            System prompt for the terminal assistant
+    │   ├── config-settings-tui.py  curses front-end for config-settings
+    │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
+    │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
+    ├── data/                       gi templates, session-env catalog, word lists
+    ├── templates/                  Function templates to copy and adapt
+    │   └── allow-telemetry.fish    Per-command telemetry opt-out wrapper
+    ├── themes/                     Catppuccin color themes
+    │   ├── Catppuccin Frappe.theme     Frappé (medium dark)
+    │   ├── Catppuccin Latte.theme      Latte (light)
+    │   ├── Catppuccin Macchiato.theme  Macchiato (dark)
+    │   └── Catppuccin Mocha.theme      Mocha (darkest)
+    ├── tests/                      Test suite: fish tests/run-tests.fish
     └── docs/                       Offline documentation and man page
-        ├── fish-config.md          Primary source manual
+        ├── fish-config.md          Generated manual
         ├── fish-config.1           Compiled man page (auto-generated)
         ├── fish-config.index       Section index for help config
-        ├── html/                   Chunked HTML docs (auto-generated)
-        └── wiki/                   Markdown wiki (auto-generated)
+        ├── manual/                 Manual source, one file per chapter
+        └── site/                   Source for this documentation site
 
 ---
 
@@ -192,8 +211,8 @@ automatically on exit. Use `logs` to browse them interactively.
 
 | Variable | Value | Notes |
 |---|---|---|
-| `GPG_TTY` | `$(tty)` | ensures GPG passphrase prompts work |
-| `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code |
+| `GPG_TTY` | `$(tty)` | ensures GPG passphrase prompts work; interactive shells with a tty only |
+| `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code (C3 overrides) |
 | `CDPATH` | `. ~/projects ~` | |
 
 Opinionated defaults (`CDPATH`, `PAGER`/`MANPAGER`, Vi mode, command shadows,
@@ -1104,15 +1123,17 @@ functions). They are active in all interactive sessions.
 
     Edits the last shell command -- or the most recent one matching a
     prefix -- in $EDITOR, then executes the result. Bash-style fc
-    behaviour. Falls back to vi when $EDITOR is unset, and aborts without
-    executing if the buffer is left empty.
+    behaviour. $EDITOR may carry arguments (e.g. "code --wait"); falls back
+    to vi when unset. Multi-line commands keep their newlines, the scratch
+    file is private (mode 600) and always removed, and an empty buffer
+    aborts without executing.
 
     Arguments:
       command_prefix   Search history for the newest command matching this
 
     Exit Status:
-      The edited command's exit status, or a message when history lookup
-      found nothing.
+      0  The edited command was queued for execution
+      1  History lookup found nothing, or the buffer was left empty
 
     Example:
     fc
@@ -1300,7 +1321,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Patterns appended, or resolved with -o/--stdout or -l/--list
-      1  Not in a git repository or API fetch failed
+      1  Not in a git repository, API fetch failed, or curl is not installed
       2  Unknown option
 
     Returns:
@@ -1440,13 +1461,13 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Command selected and inserted, or fzf was cancelled
-      1  Disabled by __fish_config_op_integrations
+      1  Disabled by __fish_config_op_integrations, or fzf is not installed
       2  Unexpected argument (takes none)
 
     Example:
     hist
 
-**Dependencies:** `_fish_clipboard_copy`
+**Dependencies:** `fzf`, `_fish_clipboard_copy`
 
 ### mkrep
 
@@ -1640,7 +1661,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Packages removed or none selected
-      1  No AUR helper (paru or yay) found
+      1  No AUR helper (paru or yay) found, or fzf is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -1773,6 +1794,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Subcommand completed, or help was shown
+      1  update (or the update half of sync) had one or more failed updates
       2  Unknown subcommand
 
     Example:
@@ -2205,7 +2227,7 @@ functions). They are active in all interactive sessions.
     Wraps ssh with kitten ssh inside Kitty terminal for better terminal
     integration (terminfo forwarding, multiplexing, copy/paste support).
     Falls back to system ssh on
-    other terminals.
+    other terminals, or when kitten is not installed.
 
     Arguments:
       args...  Arguments forwarded to kitten ssh or system ssh
@@ -2315,6 +2337,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Network failures print "Not detected" instead of failing
+      1  curl is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -2331,6 +2354,7 @@ functions). They are active in all interactive sessions.
     Fetches and prints the machine's public IPv4 address using icanhazip.com.
 
     Exit Status:
+      1  curl is not installed
       2  Unexpected argument (takes none)
       *  Exit status of curl otherwise
 
@@ -2350,7 +2374,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  IPv6 address resolved
-      1  IPv6 unavailable or not supported on this network
+      1  IPv6 unavailable or not supported on this network, or curl is not installed
       2  Unexpected argument (takes none)
 
     Returns:
@@ -2445,7 +2469,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  File viewed or no file selected
-      1  No log files found
+      1  No log files found, or fzf is not installed
       2  Unknown option
 
     Example:
@@ -2505,8 +2529,12 @@ functions). They are active in all interactive sessions.
     credential.  The value is escaped for literal regex matching before
     comparison.
 
+    The sensitive-name heuristic is shared with the session-start registration
+    (conf.d/sponge_privacy.fish) and includes any extra names listed in
+    $__fish_sponge_extra_sensitive.
+
     Arguments:
-      command                 The exact command that was entered
+      command                The exact command that was entered
       exit_code               Exit code of the command (unused)
       previously_in_history   "true"/"false" flag (unused)
 
@@ -2517,6 +2545,8 @@ functions). They are active in all interactive sessions.
     Example:
     # Register with sponge (done automatically by conf.d/sponge_privacy.fish):
     set -U -a sponge_filters sponge_filter_secrets
+
+**Dependencies:** `__fish_sponge_sensitive_pattern`
 
 ## 5.12 AI and Developer Tools
 
@@ -3383,6 +3413,10 @@ functions). They are active in all interactive sessions.
       args...  Arguments forwarded to yt-dlp (defaults prepended)
       --no-embed-thumbnail  Skip thumbnail embedding for this run
 
+    Exit Status:
+      1  yt-dlp is not installed
+      *  Exit status of yt-dlp otherwise
+
     Example:
     yt-dlp dQw4w9WgXcQ
     yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
@@ -3922,6 +3956,7 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Detached sessions killed, or none found
+      1  tmux is not installed
       2  Unexpected argument (takes none)
 
     Example:
@@ -4348,6 +4383,20 @@ Each category further sub-divides into several sub-categories, each with
 its own `__fish_config_op_<category>_<subcategory>` toggle -- see that
 category's page for its sub-category list.
 
+## Accepted values for guard variables
+
+Every guard variable (`__fish_config_opinionated`, the six
+`__fish_config_op_<category>` variables, and every
+`__fish_config_op_<category>_<subcategory>` toggle) is read the same way,
+case-insensitively:
+
+    Truthy (enable)       1  true  yes  on  y
+    Falsy (disable)       0  false  no  off  n
+
+An unset, empty, or unrecognized value is treated as unset: the toggle falls
+back to the next level (sub-category to category, category to master switch)
+and finally to the category default. Opt-in C5 logging stays off.
+
 ## Per-function overrides: `C0`/`always`
 
 Every guarded function or file can also carry a reserved `always/on` or
@@ -4555,7 +4604,8 @@ all of them.
     exit → smart_exit         exit wrapper that captures scrollback before closing
     PAGER=ov                  ov used by git, man, and all $PAGER-aware tools
     EDITOR=nvim               nvim fallback to vi for git commit, etc.
-    GPG_TTY                   Sets GPG_TTY to current terminal tty
+    GPG_TTY                   Sets GPG_TTY to current terminal tty (only when one exists)
+    CLAUDE_CODE_NO_FLICKER=1  Suppresses terminal flicker in Claude Code
     MANPAGER=bat pipeline     man pages rendered with syntax highlighting
     CDPATH=. ~/projects ~     bare dir names resolve against ~/projects and ~
     Bang-bang system          ! and $ keys expand history; !^, !*, !-N, !?str?,
@@ -4589,7 +4639,7 @@ and `smart_exit`'s plain-exit path.
 
 ### environment
 
-`$PATH`, `$PAGER`/`$EDITOR`/`$GPG_TTY`, and `$CDPATH`.
+`$PATH`, `$PAGER`/`$EDITOR`/`$GPG_TTY`, `$CLAUDE_CODE_NO_FLICKER`, and `$CDPATH`.
 
 ### prompt
 

@@ -16,11 +16,11 @@
 #   or win32yank (WSL2).
 #
 # DEPENDENCIES
-#   _fish_clipboard_copy
+#   fzf, _fish_clipboard_copy
 #
 # EXIT STATUS
 #   0  Command selected and inserted, or fzf was cancelled
-#   1  Disabled by __fish_config_op_integrations
+#   1  Disabled by __fish_config_op_integrations, or fzf is not installed
 #   2  Unexpected argument (takes none)
 #
 # EXAMPLE
@@ -33,6 +33,12 @@ function hist --description 'Search fish history and put it in the prompt'
     if not __fish_config_op_enabled (status current-function)
         __fish_palette
         echo "$c_err"'hist: disabled by __fish_config_op_integrations'"$c_reset" >&2
+        return 1
+    end
+
+    if not type -q fzf
+        __fish_palette
+        echo "$c_err"'hist: fzf is not installed'"$c_reset" >&2
         return 1
     end
 

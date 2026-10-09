@@ -31,7 +31,7 @@ source $repo_root/conf.d/__fish_config_op_registry.fish
 
 section "guards: preconditions"
 
-check "the fork's registry is loaded" 65 (count $__fish_config_op_registry_keys)
+check "the fork's registry is loaded" 66 (count $__fish_config_op_registry_keys)
 
 section "__fish_variable_check: truthy"
 
@@ -89,7 +89,7 @@ __fish_config_op_cascade __probe_cat
 check "category truthy -> enabled" 0 $status
 
 set -g __probe_cat garbage
-__fish_config_op_cascade __probe_cat
+__fish_config_op_cascade __probe_cat 2>/dev/null
 check "category unrecognized defers to master -> enabled" 0 $status
 set -e __probe_cat
 
@@ -111,7 +111,7 @@ __fish_config_op_cascade __probe_cat __probe_cat_sub
 check "sub unset, category off -> disabled" 1 $status
 
 set -g __probe_cat_sub garbage
-__fish_config_op_cascade __probe_cat __probe_cat_sub
+__fish_config_op_cascade __probe_cat __probe_cat_sub 2>/dev/null
 check "sub unrecognized defers, category off -> disabled" 1 $status
 set -e __probe_cat __probe_cat_sub
 
@@ -134,7 +134,7 @@ __fish_config_op_cascade __probe_cat
 check "master on, category unset -> enabled" 0 $status
 
 set -g __fish_config_opinionated garbage
-__fish_config_op_cascade __probe_cat
+__fish_config_op_cascade __probe_cat 2>/dev/null
 check "master unrecognized, category unset -> enabled" 0 $status
 set -e __fish_config_opinionated
 
@@ -156,7 +156,7 @@ check "C5 unset + master truthy -> still disabled" 1 $status
 set -e __fish_config_opinionated
 
 set -g __fish_config_op_logging garbage
-__fish_config_op_cascade __fish_config_op_logging
+__fish_config_op_cascade __fish_config_op_logging 2>/dev/null
 check "C5 unrecognized is not consent -> disabled" 1 $status
 
 set -g __fish_config_op_logging on
@@ -235,7 +235,7 @@ section "op_enabled: always/* and AND, via a synthetic registry"
 
 # Why this fixture exists, so nobody deletes it as redundant:
 #
-# The generated registry has 65 entries, EVERY ONE carrying exactly one tag,
+# The generated registry has 66 entries, EVERY ONE carrying exactly one tag,
 # and contains no always/on or always/off anywhere (measured 2026-09-07
 # against conf.d/__fish_config_op_registry.fish). So three documented
 # semantics -- always/off, always/on, and AND-across-tags -- have no reachable
@@ -327,5 +327,73 @@ set -g __fish_config_op_logging 1
 __fish_config_op_enabled syn_log
 check "C5-tagged component + explicit C5 on -> enabled" 0 $status
 set -e __fish_config_op_logging
+
+section "unrecognized values: one-time stderr warning"
+
+# Behaviour is pinned by the sections above (the 3 is ignored exactly as
+# before); this section pins only the added warning. Global guard variables
+# stand in for the user's, so no universal variable is ever touched.
+set -e __fish_op_warned_values __fish_config_opinionated __fish_config_op_logging __fish_config_op_aliases
+set -e __probe_cat __probe_cat_sub
+
+set -l out (__fish_config_op_cascade __probe_cat 2>&1)
+check "unset value -> no output" "" "$out"
+for v in 1 off Yes N
+    set -g __probe_cat $v
+    set out (__fish_config_op_cascade __probe_cat 2>&1)
+    check "valid '$v' -> no output" "" "$out"
+end
+check "valid values record nothing" 0 (count $__fish_op_warned_values)
+
+set -g __probe_cat ture
+set out (__fish_config_op_cascade __probe_cat 2>&1 >/dev/null | string collect)
+check "typo warns on stderr" true (string match -q -- "*__probe_cat*is set to*ture*expected one of on/off/1/0/true/false/yes/no/y/n*ignoring*" $out; and echo true; or echo false)
+set out (__fish_config_op_cascade __probe_cat 2>/dev/null)
+check "nothing on stdout" "" "$out"
+check "dedupe list names the variable" __probe_cat "$__fish_op_warned_values"
+
+set out (__fish_config_op_cascade __probe_cat 2>&1)
+check "second call in the same session is silent" "" "$out"
+__fish_config_op_cascade __probe_cat 2>/dev/null
+check "status unchanged on repeat (unrecognized defers -> enabled)" 0 $status
+
+# A different variable still warns once; sub-category is named, not the category.
+set -g __probe_cat_sub disabled
+set out (__fish_config_op_cascade __probe_cat __probe_cat_sub 2>&1 >/dev/null | string collect)
+check "second variable warns, naming it and its value" true (string match -q -- "*__probe_cat_sub*is set to*disabled*" $out; and echo true; or echo false)
+check "already-warned category variable not repeated (one line only)" 1 (count (string split \n -- (string trim -- $out)))
+check "dedupe list holds both" "__probe_cat __probe_cat_sub" "$__fish_op_warned_values"
+set -e __probe_cat __probe_cat_sub
+
+# Master switch typo: warned, still ignored (enabled).
+set -e __fish_op_warned_values
+set -g __fish_config_opinionated maybe
+set out (__fish_config_op_cascade __probe_cat 2>&1 >/dev/null | string collect)
+check "master typo warns" true (string match -q -- "*__fish_config_opinionated*is set to*maybe*" $out; and echo true; or echo false)
+__fish_config_op_cascade __probe_cat 2>/dev/null
+check "master typo still ignored -> enabled" 0 $status
+set -e __fish_config_opinionated
+
+# C5: warns, and the opt-in semantics are untouched (unrecognized -> off).
+set -e __fish_op_warned_values
+set -g __fish_config_op_logging ture
+set out (__fish_config_op_cascade __fish_config_op_logging 2>&1 >/dev/null | string collect)
+check "C5 typo warns" true (string match -q -- "*__fish_config_op_logging*is set to*ture*" $out; and echo true; or echo false)
+__fish_config_op_cascade __fish_config_op_logging 2>/dev/null
+check "C5 typo still means off" 1 $status
+set -e __fish_config_op_logging
+
+# Through the production entry point, for a non-opt-in category.
+set -e __fish_op_warned_values
+set -g __fish_config_op_registry_keys "syn_warn:"
+set -g __fish_config_op_registry_values aliases/filesystem
+set -g __fish_config_op_aliases disabled
+set out (__fish_config_op_enabled syn_warn 2>&1 >/dev/null | string collect)
+check "op_enabled names the category variable and value" true (string match -q -- "*__fish_config_op_aliases*is set to*disabled*" $out; and echo true; or echo false)
+__fish_config_op_enabled syn_warn 2>/dev/null
+check "op_enabled behaviour unchanged (typo -> default enabled)" 0 $status
+set out (__fish_config_op_enabled syn_warn 2>&1)
+check "op_enabled second call silent" "" "$out"
+set -e __fish_config_op_aliases __fish_op_warned_values
 
 report
