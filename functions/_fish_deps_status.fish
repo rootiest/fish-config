@@ -40,6 +40,11 @@ function _fish_deps_status
             set_color brblack
             echo "(Found at "(__fish_real_command $bin)")"
             set_color normal
+        else if contains -- $bin paru yay; and not _fish_deps_is_arch
+            # AUR helpers do not exist off Arch: not a gap, so no warning.
+            set_color brblack
+            echo " – $bin (Arch only — not applicable on this system)"
+            set_color normal
         else if test "$tier" = req
             set_color red
             echo -n " ✗ "

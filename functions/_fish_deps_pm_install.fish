@@ -7,14 +7,14 @@
 # DESCRIPTION
 #   Installs a single package via the detected system package manager, running
 #   with sudo where required. Supports paru, yay, pacman, apt, brew, pkg, dnf,
-#   and yum.
+#   zypper, and yum.
 #
 # ARGUMENTS
 #   pkg  The package name to install
 #
 # EXIT STATUS
 #   0  Package installed successfully
-#   1  No supported package manager found
+#   1  No supported package manager found, or the install failed
 #
 # EXAMPLE
 #   _fish_deps_pm_install ripgrep
@@ -37,7 +37,13 @@ function _fish_deps_pm_install --argument-names pkg
             sudo pkg install -y $pkg
         case dnf
             sudo dnf install -y $pkg
+        case zypper
+            sudo zypper --non-interactive install $pkg
         case yum
             sudo yum install -y $pkg
+        case '*'
+            # detect_pm only prints names handled above, but a silent
+            # no-op must never read as a successful install.
+            return 1
     end
 end
