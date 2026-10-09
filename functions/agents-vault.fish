@@ -7,7 +7,7 @@
 # DEPENDENCIES
 #   _agents_vault_dir, _agents_repo_slug, _agents_repo_local_slug,
 #   _agents_repo_ensure_symlink, _agents_repo_sync,
-#   _agents_repo_install_tools, git, hostname
+#   _agents_repo_install_tools, _private_dir, git, hostname
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir), manual-section(16-agent-tooling)
@@ -55,6 +55,14 @@
 #   SQLite databases whose WAL sidecars must never be live-tracked inside
 #   a git worktree. A failed copy is reported but is not fatal, because an
 #   incomplete backup still leaves the agent working.
+#
+#   The vault is private: its root directory is created with mode 700
+#   whatever the umask, since it holds personal agent memory and config. A
+#   vault that is laxer than that (made by an earlier version, or by a manual
+#   clone) is tightened on the next run, silently, together with the regular
+#   files directly in the root; the files it writes there itself (.version,
+#   .gitignore, README.md) are created 600. The git object store and the entries below
+#   the root are not touched; the 700 root is what keeps them out of reach.
 #
 #   Because the slug is derived from the remote, gaining, losing, or
 #   rewriting a project's origin changes it. Each run detects this by
@@ -314,11 +322,18 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     end
 
     #   ────────────────────── ensure the vault repo ──────────────────────
-    if not test -d "$vault"
-        if not mkdir -p "$vault"
-            echo "$c_err""agents-vault: could not create $vault$c_reset" >&2
-            return 1
-        end
+    # The vault holds agent memory and config, so its root is private (700,
+    # whatever the umask). A vault created laxer by an earlier version, or by
+    # a manual clone, is tightened here silently, along with the top-level
+    # files in it. Only the root and those files: the git object store and
+    # the entries below are left exactly as they are.
+    set -l existed 0
+    test -d "$vault"; and set existed 1
+    if not _private_dir "$vault" files
+        echo "$c_err""agents-vault: could not create or secure $vault$c_reset" >&2
+        return 1
+    end
+    if test $existed -eq 0
         set changed 1
         set did_init 1
     end
@@ -335,6 +350,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
 
     if not test -f "$vault/.version"
         echo 1.0.0 >"$vault/.version"
+        command chmod 600 "$vault/.version"
         set changed 1
     end
 
@@ -354,6 +370,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             '# directory.' \
             '/.adopt-stash' \
             '/.migrate-stash' >"$vault/.gitignore"
+        command chmod 600 "$vault/.gitignore"
         set changed 1
     end
 
@@ -375,6 +392,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             'Entries are keyed by normalized git remote URL. A `local-*` key' \
             'belongs to a project with no remote and is machine-specific;' \
             'rebind one with `agents-vault --adopt=SLUG`.' >"$vault/README.md"
+        command chmod 600 "$vault/README.md"
         set changed 1
     end
 

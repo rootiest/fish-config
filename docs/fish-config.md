@@ -207,6 +207,10 @@ Scrollback logs accumulate in `SCROLLBACK_HISTORY_DIR` as timestamped files.
 When the count exceeds `SCROLLBACK_HISTORY_MAX_FILES` the oldest are pruned
 automatically on exit. Use `logs` to browse them interactively.
 
+The directory is kept private: created `700`, with the log files `600`,
+regardless of umask. A looser existing directory is tightened silently on its
+next use. See the C5 reference in Section 8.
+
 ## Other
 
 | Variable | Value | Notes |
@@ -2518,6 +2522,9 @@ functions). They are active in all interactive sessions.
     Automatically prunes junk and the oldest logs when the count exceeds
     $SCROLLBACK_HISTORY_MAX_FILES.
 
+    The log directory is private (700, tightened silently if an earlier
+    version left it laxer) and the log file is written 600 whatever the umask.
+
     Arguments:
       -h, --help    Show help message
       -n, --no-log  Exit without saving a scrollback log
@@ -2534,9 +2541,9 @@ functions). They are active in all interactive sessions.
     smart_exit
     smart_exit --no-log
 
-**Dependencies:** `kitty`, `ps`, `_scrollback_prune_junk`
+**Dependencies:** `kitty`, `ps`, `_private_dir`, `_scrollback_prune_junk`
 
-**Classification:** `self-limiting(rm,mkdir)`, `destructive`
+**Classification:** `self-limiting(rm)`, `destructive`
 
 ### sponge_filter_secrets
 
@@ -2580,7 +2587,7 @@ functions). They are active in all interactive sessions.
 
 ### agents-cleanup
 
-    Synopsis:  agents-cleanup [-n | --dry-run] [--drop-extras] [--marker-file]
+    Synopsis:  agents-cleanup [-n | --dry-run] [--drop-extras] [-f | --force] [--marker-file]
                               [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 
     Reverses agents-init in the current project, and marks the project so
@@ -2616,6 +2623,14 @@ functions). They are active in all interactive sessions.
     and every "Added by agents-init" block is stripped from .gitignore.
     Nothing is committed to the outer repository.
 
+    A damaged AGENTS/.git (present but not a valid repository, e.g. HEAD
+    gone with the objects left) cannot be bundled, so the cleanup refuses
+    before anything changes: repair it, or pass --force to remove AGENTS/
+    without an archive. With --force the damaged .git is treated as "not a
+    repository" and removed with AGENTS/, and a warning on stderr says that
+    its history is not archived (suppressed by --silent only). --dry-run
+    refuses the same way, unless --force is also given.
+
     Files inside AGENTS/ that no project symlink points to -- other than
     agents-init's own .version, .agents-tools/ and .gitkeep files -- stop
     the cleanup before anything changes. They are listed; --drop-extras
@@ -2641,6 +2656,7 @@ functions). They are active in all interactive sessions.
     Arguments:
       -n, --dry-run    Print the plan and change nothing
       --drop-extras    Discard unlinked files in AGENTS/ instead of refusing
+      -f, --force      Remove AGENTS/ even though its .git is damaged (no archive)
       --marker-file    Also write .agents-disabled (required outside git)
       -v, --verbose    Print all per-step output (default)
       -q, --quiet      Print one summary line only if changes were made
@@ -2650,8 +2666,8 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Cleanup finished, or nothing was left to do
       1  Refused (outside git without --marker-file, unresolved rebase in
-         AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
-         failed
+         AGENTS/, unlinked files or a nested repository in AGENTS/, a damaged
+         AGENTS/.git without --force) or a step failed
       2  Unknown option
 
     Notes:
@@ -2707,7 +2723,10 @@ functions). They are active in all interactive sessions.
     in the project root, which a team may commit, has the same effect.
     Either one turns every wrapper launch into a silent no-op there.
     --enable clears the git key and scaffolds; the file has to be deleted
-    by hand, because it is a decision shared with every clone.
+    by hand, because it is a decision shared with every clone. --enable only
+    clears the repository-local key: if the key is still in effect from
+    another scope (global, system, include), it names that origin on stderr,
+    exits 1 and does not scaffold.
 
     Two modes, recorded in AGENTS/.mode. In both, each real file lives in
     the repository whose visibility matches it, and the other side holds a
@@ -2808,7 +2827,10 @@ functions). They are active in all interactive sessions.
       1  Fatal error (git init failed, move failed, the AGENTS/ commit was
          rejected, or an unresolved rebase blocked it), --enable refused
          because .agents-disabled exists, a migration precondition failed,
-         or --private given for a public project
+         or --private given for a public project; also --enable when
+         unsetting the git key failed or the key is still
+         in effect from another scope (global/system), which is reported on
+         stderr with its origin
       2  Unknown option, or both --public and --private given
 
     Notes:
@@ -2878,6 +2900,14 @@ functions). They are active in all interactive sessions.
     SQLite databases whose WAL sidecars must never be live-tracked inside
     a git worktree. A failed copy is reported but is not fatal, because an
     incomplete backup still leaves the agent working.
+
+    The vault is private: its root directory is created with mode 700
+    whatever the umask, since it holds personal agent memory and config. A
+    vault that is laxer than that (made by an earlier version, or by a manual
+    clone) is tightened on the next run, silently, together with the regular
+    files directly in the root; the files it writes there itself (.version,
+    .gitignore, README.md) are created 600. The git object store and the entries below
+    the root are not touched; the 700 root is what keeps them out of reach.
 
     Because the slug is derived from the remote, gaining, losing, or
     rewriting a project's origin changes it. Each run detects this by
@@ -3019,7 +3049,7 @@ functions). They are active in all interactive sessions.
     agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
     agents-vault --restore
 
-**Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `git`, `hostname`
+**Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `_private_dir`, `git`, `hostname`
 
 **Classification:** `self-limiting(rm,mkdir)`, `manual-section(16-agent-tooling)`
 
@@ -4271,7 +4301,9 @@ full sub-category breakdown of every category.
     __fish_agent_vault_dir
 
     Overrides the agent memory vault location. Defaults to
-    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault).
+    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault). The vault
+    root is kept private (mode 700, whatever the umask); a laxer existing
+    root is tightened silently on the next agents-vault run.
 
     __fish_agent_vault_autopush
 
@@ -4433,7 +4465,10 @@ case-insensitively:
 
 An unset, empty, or unrecognized value is treated as unset: the toggle falls
 back to the next level (sub-category to category, category to master switch)
-and finally to the category default. Opt-in C5 logging stays off.
+and finally to the category default. Opt-in C5 logging stays off. A value that
+is set but unrecognized (a typo such as `disabled` or `ture`) also prints a
+one-time warning to stderr per variable per shell session, naming the variable
+and the value; the toggle is otherwise still ignored.
 
 ## Per-function overrides: `C0`/`always`
 
@@ -4773,6 +4808,18 @@ CAUTION: This configuration is capable of silently recording terminal output and
     yay wrapper             All yay/AUR output captured to:
                             ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
     Kitty watcher           watcher.py captures scrollback when Kitty closes
+
+NOTE: **Logs are private.** The log directory is created with mode 700 and
+every log file with mode 600, whatever the umask, so other local users cannot
+read them even when the home directory is 755 or 750. A directory left laxer by
+an earlier version is tightened to 700 silently the next time logging uses it
+(nothing is printed at shell startup), and the logs directly inside it are set
+to 600 at that moment; subdirectories are not touched. The logs are still plain
+text and can hold anything that was printed to the terminal: command output,
+file contents, tokens. To keep them elsewhere or change how many are kept:
+
+    set -U __fish_scrollback_history_dir ~/private/logs   # default: ~/.terminal_history
+    set -U __fish_scrollback_history_max_files 50         # default: 100
 
 NOTE: **Turning off logging does not delete any existing logs.**  
 They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)
@@ -5921,7 +5968,10 @@ it changes anything, and are listed. Move them out yourself, or pass
 `--drop-extras` to discard them. `--dry-run` refuses the same way, unless
 you also give it `--drop-extras`. A git repository nested inside `AGENTS/`
 is always refused, even with `--drop-extras`: the bundle records only a
-pointer to it, so move it out first. `agents-cleanup` also refuses to run
+pointer to it, so move it out first. A damaged `AGENTS/.git` (present but not
+a valid repository) is refused too, because its history cannot be archived;
+repair it, or pass `--force` to remove `AGENTS/` without an archive (a warning
+says so). `agents-cleanup` also refuses to run
 when `AGENTS/` is itself a symlink to a directory elsewhere, since removing
 it would remove that directory; replace the link with a real directory
 first. Discarded files survive only in the bundle, and files

@@ -1,8 +1,8 @@
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-# CLASSIFICATION
-#   uses-shadow(mkdir)
+# DEPENDENCIES
+#   tmux, _private_dir, _prune_terminal_logs, _terminal_log_safe_name
 #
 # SYNOPSIS
 #   _tmux_pipe_log
@@ -18,6 +18,10 @@
 #   The session name is sanitized (_terminal_log_safe_name) before it becomes
 #   part of the file name, and the final path is shell-escaped before being
 #   handed to tmux, which runs the pipe-pane command through sh -c.
+#
+#   Logs are private: the directory is created 700 (an existing laxer one is
+#   tightened silently, see _private_dir) and the pipe-pane command runs
+#   under umask 077 so the log file is created 600 whatever the umask.
 #
 # EXIT STATUS
 #   0  Always
@@ -35,9 +39,10 @@ function _tmux_pipe_log --description 'Start tmux pipe-pane capture for the curr
     set -l timestamp (date "+%Y-%m-%d_%H-%M-%S")
     set -l log_file "$log_dir/tmux_"$pane_id"_"$timestamp".log"
 
-    mkdir -p $log_dir
+    _private_dir $log_dir files
     _prune_terminal_logs tmux
 
-    # tmux hands this string to sh -c, so the path must be shell-escaped.
-    tmux pipe-pane "cat >> "(string escape --style=script -- $log_file) 2>/dev/null
+    # tmux hands this string to sh -c, so the path must be shell-escaped. The
+    # umask makes sh create the log file 600.
+    tmux pipe-pane "umask 077; cat >> "(string escape --style=script -- $log_file) 2>/dev/null
 end
