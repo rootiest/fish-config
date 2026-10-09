@@ -93,7 +93,9 @@ if not type -q fisher
 end
 
 #   ───────────────────────────── Apply theme ──────────────────────────────
-# Catppuccin Mocha theme ships with this config in themes/; it is always available.
-if not fish_config theme choose "Catppuccin Mocha" 2>/dev/null
+# Catppuccin Mocha ships with this config as themes/catppuccin-mocha.theme; it is
+# always available, and it takes precedence over fish's built-in theme of the
+# same name.
+if not fish_config theme choose catppuccin-mocha 2>/dev/null
     echo "  [first-run] Could not apply Catppuccin Mocha theme — set manually with 'fish_config theme choose'." >&2
 end

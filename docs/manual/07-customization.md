@@ -275,12 +275,15 @@ there always wins.
 
 ### Catppuccin Mocha Syntax Highlighting
 
-The Catppuccin Mocha theme ships with this config in themes/ and is applied
-automatically on first run via `conf.d/first_run.fish` (gated by
-`__fish_config_op_autoexec`; see Opinionated Components above). Colors are
-stored in fish_variables (universal). Three other bundled variants are
-available in themes/ — Latte, Frappé, and Macchiato. To switch:
+The Catppuccin Mocha theme ships with this config as
+`themes/catppuccin-mocha.theme` and is applied automatically on first run via
+`conf.d/first_run.fish` (gated by `__fish_config_op_autoexec`; see Opinionated
+Components above). Colors are stored in fish_variables (universal). Three other
+bundled variants are available in themes/: `catppuccin-latte`,
+`catppuccin-frappe` and `catppuccin-macchiato`. fish 4 ships built-in themes
+named `catppuccin-mocha`, `catppuccin-frappe` and `catppuccin-macchiato`; the
+bundled files take precedence over them. To switch:
 
-    fish_config theme choose "Catppuccin Latte"
+    fish_config theme choose catppuccin-latte
 
 ---
