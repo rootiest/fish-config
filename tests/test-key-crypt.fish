@@ -341,7 +341,22 @@ else
         kc -a -k $fpr proj.tgz.gpg
         check "decrypt --archive: exit 0" 0 $kc_rc
         check "decrypt --archive: archive kept as <name>.tgz" true (b test -f proj.tgz)
-        check "decrypt --archive: result is a readable tar" true (b tar -tzf proj.tgz)
+        check "decrypt --archive: result is a readable tar" true (tar -tzf proj.tgz >/dev/null 2>&1; and echo true; or echo false)
+
+        # tar failing mid-pipeline (unreadable file) must fail the encrypt: no
+        # truncated archive may be passed off as a good ciphertext. root can
+        # read anything, so the case needs an unprivileged user.
+        if test (id -u) -ne 0
+            mkdir -p unreadable_dir
+            printf 'x\n' >unreadable_dir/secret
+            chmod 000 unreadable_dir/secret
+            kc -k $fpr unreadable_dir
+            check "encrypt dir with an unreadable file: exit 1" 1 $kc_rc
+            check "encrypt dir with an unreadable file: no output file" false (b test -e unreadable_dir.tgz.gpg)
+            chmod 600 unreadable_dir/secret
+        else
+            echo "  SKIP  encrypt dir with an unreadable file (running as root)"
+        end
 
         kc -a -k $fpr proj.tgz.gpg arch/
         check "--archive with trailing-slash output: exit 1" 1 $kc_rc
