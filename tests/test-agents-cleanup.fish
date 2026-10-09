@@ -340,12 +340,16 @@ section "agents-cleanup: unterminated .gitignore block is left alone, quietly"
 fresh_state
 set -l u1 (new_repo)
 printf '%s\n' user-line '' '#   ──── Added by agents-init ────' AGENTS/ >$u1/.gitignore
-set -l ubefore (string collect <$u1/.gitignore)
+# A byte snapshot: `string collect` strips trailing newlines, so a captured
+# string could not see a lost or added one.
+set -l ubefore (mktemp)
+set -a TMPDIRS $ubefore
+command cp -f $u1/.gitignore $ubefore
 pushd $u1 >/dev/null
 set -l u1rc (agents-cleanup --silent 2>/dev/null; echo $status)
 popd >/dev/null
 check "unterminated: exits 0" 0 "$u1rc"
-check "unterminated: file byte-identical" "$ubefore" (string collect <$u1/.gitignore)
+check "unterminated: file byte-identical" true (cmp -s $ubefore $u1/.gitignore; and echo true; or echo false)
 pushd $u1 >/dev/null
 set -l u2out (agents-cleanup --quiet 2>&1)
 popd >/dev/null
@@ -381,7 +385,9 @@ set -l v1 (new_repo)
 printf '%s\n' '> ⚠️ **SYSTEM DIRECTIVE FOR AI AGENTS: FILE EDITING**' '> x' >$v1/AGENTS.md
 set -l v2 (new_repo)
 printf '%s\n' '# Mine' '' 'no directive here' >$v2/AGENTS.md
-set -l v2before (string collect <$v2/AGENTS.md)
+set -l v2before (mktemp)
+set -a TMPDIRS $v2before
+command cp -f $v2/AGENTS.md $v2before
 for v in $v1 $v2
     pushd $v >/dev/null
     agents-init --private --silent 2>/dev/null
@@ -389,7 +395,7 @@ for v in $v1 $v2
     popd >/dev/null
 end
 check "directive-only: deleted" false (test -e $v1/AGENTS.md -o -L $v1/AGENTS.md; and echo true; or echo false)
-check "no directive: content identical" "$v2before" (string collect <$v2/AGENTS.md)
+check "no directive: content identical" true (cmp -s $v2before $v2/AGENTS.md; and echo true; or echo false)
 
 section "agents-cleanup: invalid AGENTS/.git never commits the outer repo"
 fresh_state
@@ -412,7 +418,7 @@ set -l o1log (mktemp)
 set -a TMPDIRS $o1log
 # A subshell: only a shell whose own stderr is the file reproduces the
 # truncation (an in-process redirect is emulated and never reopens it).
-fish -c "set -p fish_function_path $repo_root/functions; cd $o1; agents-cleanup" >$o1log 2>&1
+fish --no-config -c "set -p fish_function_path "(string escape -- $repo_root/functions)"; cd "(string escape -- $o1)"; agents-cleanup" >$o1log 2>&1
 check "log file: archive line kept" true (string match -q -- '*Archived AGENTS/ history*' (string collect <$o1log); and echo true; or echo false)
 check "log file: restore hint kept" true (string match -q -- '*restore with: git clone*' (string collect <$o1log); and echo true; or echo false)
 
@@ -493,7 +499,7 @@ printf '%s\n' after1 after2 >>$w9/.gitignore
 pushd $w9 >/dev/null
 agents-cleanup --silent 2>/dev/null
 popd >/dev/null
-check "gitignore: exactly the user lines remain, in order" (printf '%s\n' before1 before2 between after1 after2 | string collect) (string collect <$w9/.gitignore)
+check "gitignore: exactly the user lines remain, in order" true (printf '%s\n' before1 before2 between after1 after2 | cmp -s - $w9/.gitignore; and echo true; or echo false)
 
 section "agents-cleanup: public mode keeps public files and private ones unpublished"
 fresh_state
