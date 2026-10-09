@@ -66,8 +66,13 @@ The configuration uses a structured file tree:
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
     ├── data/                       gi templates, session-env catalog, word lists
-    ├── templates/                  Templates such as allow-telemetry.fish
-    ├── themes/                     Catppuccin theme files
+    ├── templates/                  Function templates to copy and adapt
+    │   └── allow-telemetry.fish    Per-command telemetry opt-out wrapper
+    ├── themes/                     Catppuccin color themes
+    │   ├── Catppuccin Frappe.theme     Frappé (medium dark)
+    │   ├── Catppuccin Latte.theme      Latte (light)
+    │   ├── Catppuccin Macchiato.theme  Macchiato (dark)
+    │   └── Catppuccin Mocha.theme      Mocha (darkest)
     ├── tests/                      Test suite: fish tests/run-tests.fish
     └── docs/                       Offline documentation and man page
         ├── fish-config.md          Generated manual

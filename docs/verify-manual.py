@@ -117,7 +117,9 @@ def _index_file_tree() -> set[str]:
     block = text[text.index("    ~/.config/fish/\n"):]
     paths, stack = set(), []
     for line in block.splitlines()[1:]:
-        m = re.match(r"    ((?:│   |    )*)[├└]── (\S+)", line)
+        # A name ends at two spaces (the gap before its description): theme
+        # file names contain single spaces.
+        m = re.match(r"    ((?:│   |    )*)[├└]── (.+?)(?:  |$)", line)
         if not m:
             break
         depth = len(m.group(1)) // 4
@@ -126,11 +128,16 @@ def _index_file_tree() -> set[str]:
     return paths
 
 
+# Folders whose files the landing page's tree lists one by one. functions/ and
+# completions/ are documented by the generated reference pages instead.
+FULLY_LISTED = ("conf.d", "scripts", "templates", "themes")
+
+
 def test_index_file_tree_matches_repo():
     """The landing page's file tree stays in step with the repo.
 
-    Every listed path must be tracked, conf.d/ and scripts/ must be listed in
-    full, and every top-level directory must appear, so adding, renaming or
+    Every listed path must be tracked, conf.d/, scripts/, templates/ and
+    themes/ must be listed in full, and every top-level directory must appear, so adding, renaming or
     removing one of those without updating docs/manual/index.md fails here.
     Compares against `git ls-files`, so build output and untracked local files
     never count; hidden entries are never listed.
@@ -138,7 +145,9 @@ def test_index_file_tree_matches_repo():
     import subprocess
 
     repo = Path(__file__).parent.parent
-    files = subprocess.run(["git", "-C", str(repo), "ls-files"], capture_output=True, text=True, check=True).stdout.split()
+    # -z: tracked names may contain spaces (the theme files)
+    out = subprocess.run(["git", "-C", str(repo), "ls-files", "-z"], capture_output=True, text=True, check=True).stdout
+    files = [f for f in out.split("\0") if f]
     tracked = {"/".join(f.split("/")[:n]) for f in files for n in range(1, f.count("/") + 2)}
     listed = _index_file_tree()
     gone = sorted(listed - tracked)
@@ -147,7 +156,7 @@ def test_index_file_tree_matches_repo():
     def shown(p: str) -> bool:
         return not p.rsplit("/", 1)[-1].startswith(".")
 
-    expected = {p for p in tracked if shown(p) and p.count("/") == 1 and p.split("/")[0] in ("conf.d", "scripts")}
+    expected = {p for p in tracked if shown(p) and p.count("/") == 1 and p.split("/")[0] in FULLY_LISTED}
     expected |= {f.split("/")[0] for f in files if "/" in f and shown(f.split("/")[0])}
     unlisted = sorted(expected - listed)
     assert not unlisted, f"docs/manual/index.md file tree is missing: {unlisted}"
