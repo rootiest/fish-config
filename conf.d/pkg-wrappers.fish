@@ -17,7 +17,7 @@
 # idempotent write every interactive session already performs.
 status is-interactive; or return
 
-set -l _pkg_wrapper_version 7
+set -l _pkg_wrapper_version 8
 
 # Every early exit below is `continue`, not `return`: a guard that skips
 # paru must not skip yay.
@@ -59,7 +59,12 @@ for pm in paru yay
         '# then renders the captured terminal animation to a clean static log.' \
         '' \
         'log_dir="${SCROLLBACK_HISTORY_DIR:-$HOME/.terminal_history}"' \
-        'mkdir -p "$log_dir"' \
+        '# Logs can hold anything the package manager printed: keep them private' \
+        '# (dir 700, files 600), tightening a laxer dir from an older version once.' \
+        'mkdir -p -m 700 "$log_dir"' \
+        'if [[ "$(stat -L -c %a "$log_dir" 2>/dev/null)" != 700 ]]; then' \
+        '    chmod 700 "$log_dir" && find "$log_dir/" -maxdepth 1 -type f -exec chmod 600 -- {} +' \
+        fi \
         'log_file="$log_dir/'$pm'_$(date +%Y-%m-%d_%H-%M-%S).log"' \
         '' \
         '# Build a safely-quoted command string for script(1).' \
@@ -68,6 +73,7 @@ for pm in paru yay
         'for arg in "$@"; do' \
         '    cmd_str+=" $(printf '"'"'%q'"'"' "$arg")"' \
         done \
+        '( umask 077; : >"$log_file" )' \
         'script -q -e -c "$cmd_str" "$log_file"' \
         'exit_code=$?' \
         '' \
@@ -80,6 +86,7 @@ for pm in paru yay
         else \
         '    sed -i "/^Script \(started\|done\) on /d" "$log_file" 2>/dev/null || true' \
         fi \
+        'chmod 600 "$log_file" 2>/dev/null' \
         '' \
         'max_files="${SCROLLBACK_HISTORY_MAX_FILES:-100}"' \
         'mapfile -t logs < <(ls -1t "$log_dir"/'$pm'_*.log 2>/dev/null)' \

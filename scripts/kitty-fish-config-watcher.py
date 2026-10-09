@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 Rootiest
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# fish-config-watcher-version: 1
+# fish-config-watcher-version: 2
 #
 # Managed by fish-config `kitty-logging`, which symlinks this file into the
 # Kitty config directory. The canonical source lives at
@@ -10,6 +10,7 @@
 import datetime
 import os
 import re
+import stat
 from kitty.boss import Boss
 from kitty.window import Window
 
@@ -37,7 +38,19 @@ def save_scrollback_safely(window: Window) -> None:
     except ValueError:
         max_files = 100
 
-    os.makedirs(snapshot_dir, exist_ok=True)
+    # Logs can hold anything printed to the terminal: keep the directory 700
+    # and the files 600. An existing laxer directory (from an older version)
+    # is tightened once, along with the top-level logs in it.
+    os.makedirs(snapshot_dir, mode=0o700, exist_ok=True)
+    try:
+        if stat.S_IMODE(os.stat(snapshot_dir).st_mode) != 0o700:
+            os.chmod(snapshot_dir, 0o700)
+            for name in os.listdir(snapshot_dir):
+                path = os.path.join(snapshot_dir, name)
+                if os.path.isfile(path) and not os.path.islink(path):
+                    os.chmod(path, 0o600)
+    except OSError:
+        pass
 
     # Safety filter: prevent TUI capture if an editor is focused
     try:
@@ -60,9 +73,10 @@ def save_scrollback_safely(window: Window) -> None:
     filename = os.path.join(snapshot_dir, f"scrollback_{timestamp}.log")
 
     try:
-        with open(filename, "w", encoding="utf-8") as f:
+        fd = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(text_cleaned)
-    except IOError:
+    except OSError:
         return
 
     _logged_windows.add(window.id)

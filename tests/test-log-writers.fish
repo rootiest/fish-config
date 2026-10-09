@@ -43,7 +43,7 @@ end
 set -gx TMUX fake
 set -gx SCROLLBACK_HISTORY_DIR "$base/dir with space"
 _tmux_pipe_log
-check "pipe-pane command issued" 1 (string match -q 'cat >> *' -- $__pipe_cmd; and echo 1; or echo 0)
+check "pipe-pane command issued" 1 (string match -q 'umask 077; cat >> *' -- $__pipe_cmd; and echo 1; or echo 0)
 # Run the recorded command through sh exactly as tmux would. The file must
 # land at the sanitized name and nothing else may be created or executed.
 echo hi | sh -c "$__pipe_cmd"

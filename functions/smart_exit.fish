@@ -9,10 +9,10 @@
 #   site logging-guard: logging/terminal-capture
 #
 # DEPENDENCIES
-#   kitty, ps, _scrollback_prune_junk
+#   kitty, ps, _private_dir, _scrollback_prune_junk
 #
 # CLASSIFICATION
-#   self-limiting(rm,mkdir), destructive
+#   self-limiting(rm), destructive
 #
 # SYNOPSIS
 #   smart_exit [-h] [-n]
@@ -22,6 +22,9 @@
 #   timestamped log file in $SCROLLBACK_HISTORY_DIR before exiting.
 #   Automatically prunes junk and the oldest logs when the count exceeds
 #   $SCROLLBACK_HISTORY_MAX_FILES.
+#
+#   The log directory is private (700, tightened silently if an earlier
+#   version left it laxer) and the log file is written 600 whatever the umask.
 #
 # ARGUMENTS
 #   -h, --help    Show help message
@@ -78,7 +81,7 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
 
     # Handle Scrollback Capture (Skipped if -n/--no-log is used)
     if not set -q _flag_no_log
-        mkdir -p $snapshot_dir
+        _private_dir $snapshot_dir files
         set -l timestamp (date "+%Y-%m-%d_%H-%M-%S")
         set -l filename "$snapshot_dir/scrollback_$timestamp.log"
 
@@ -92,7 +95,10 @@ function smart_exit --description 'Capture colorized scrollback before exiting, 
             if string match -qr exit "$_"
                 if not string match -qr '^(nvim|vim|vi|nano|emacs|tmux)$' "$active_tui"
                     # Capture the log via the shell
+                    set -l old_umask (umask)
+                    umask 077
                     kitty @ get-text --match id:$KITTY_WINDOW_ID --extent all --ansi | sed 's/^\[38;2;[0-9;]*m//g' >$filename 2>/dev/null
+                    umask $old_umask
                     # Broadcast a window variable flag telling Kitty the log is handled
                     kitty @ set-user-vars "logged_by_shell=true" 2>/dev/null
                 end
