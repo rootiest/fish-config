@@ -111,6 +111,69 @@ def test_manual_tree_exists():
     assert len(cats) == 14, f"expected 14 function categories, got {len(cats)}: {cats}"
 
 
+def _index_file_tree() -> set[str]:
+    """Repo-relative paths listed in the file tree on the landing page (index.md)."""
+    text = (Path(__file__).parent / "manual" / "index.md").read_text()
+    block = text[text.index("    ~/.config/fish/\n"):]
+    paths, stack = set(), []
+    for line in block.splitlines()[1:]:
+        # A name ends at two spaces (the gap before its description): theme
+        # file names contain single spaces.
+        m = re.match(r"    ((?:│   |    )*)[├└]── (.+?)(?:  |$)", line)
+        if not m:
+            break
+        depth = len(m.group(1)) // 4
+        stack[depth:] = [m.group(2).rstrip("/")]
+        paths.add("/".join(stack))
+    return paths
+
+
+# Folders whose files the landing page's tree lists one by one. functions/ and
+# completions/ are documented by the generated reference pages instead.
+FULLY_LISTED = ("conf.d", "scripts", "templates", "themes")
+
+
+def test_index_file_tree_matches_repo():
+    """The landing page's file tree stays in step with the repo.
+
+    Every listed path must be tracked, conf.d/, scripts/, templates/ and
+    themes/ must be listed in full, and every top-level directory must appear, so adding, renaming or
+    removing one of those without updating docs/manual/index.md fails here.
+    Compares against `git ls-files`, so build output and untracked local files
+    never count; hidden entries are never listed.
+    """
+    import subprocess
+
+    repo = Path(__file__).parent.parent
+    # -z: tracked names may contain spaces (the theme files)
+    out = subprocess.run(["git", "-C", str(repo), "ls-files", "-z"], capture_output=True, text=True, check=True).stdout
+    files = [f for f in out.split("\0") if f]
+    tracked = {"/".join(f.split("/")[:n]) for f in files for n in range(1, f.count("/") + 2)}
+    listed = _index_file_tree()
+    gone = sorted(listed - tracked)
+    assert not gone, f"docs/manual/index.md file tree lists untracked or missing paths: {gone}"
+
+    def shown(p: str) -> bool:
+        return not p.rsplit("/", 1)[-1].startswith(".")
+
+    expected = {p for p in tracked if shown(p) and p.count("/") == 1 and p.split("/")[0] in FULLY_LISTED}
+    expected |= {f.split("/")[0] for f in files if "/" in f and shown(f.split("/")[0])}
+    unlisted = sorted(expected - listed)
+    assert not unlisted, f"docs/manual/index.md file tree is missing: {unlisted}"
+
+
+def test_index_file_tree_fits_the_site():
+    """No file-tree line on the landing page is wider than 81 characters.
+
+    The docs site's code block wraps longer lines even in a maximised window,
+    pushing a description's last word onto its own line (82 wrapped, 81 did not).
+    """
+    text = (Path(__file__).parent / "manual" / "index.md").read_text()
+    block = text[text.index("    ~/.config/fish/\n"):].split("\n\n", 1)[0]
+    wide = [line.strip() for line in block.splitlines() if len(line) > 81]
+    assert not wide, f"docs/manual/index.md file tree lines wider than 81 characters: {wide}"
+
+
 def test_function_stubs_carry_no_entries():
     """Category files are stubs: entries come from functions/*.fish headers.
 

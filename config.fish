@@ -27,6 +27,7 @@
 #   site cachyos-strip-overrides: overrides/key-bindings
 #   site privacy: overrides/privacy
 #   site pager-editor-gpg: overrides/environment
+#   site claude-no-flicker: overrides/environment
 #   site exit-wiring: overrides/key-bindings
 #   site path-setup: overrides/environment
 #   site cdpath: overrides/environment
@@ -100,7 +101,10 @@ set -q BUN_INSTALL; or set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"
 set -q GNUPGHOME; or set -gx GNUPGHOME "$XDG_CONFIG_HOME/gnupg"
 set -q WAKATIME_HOME; or set -gx WAKATIME_HOME "$XDG_CONFIG_HOME/wakatime"
 set -q HISTFILE; or set -gx HISTFILE "$XDG_STATE_HOME/bash_history"
-set -q EXINIT; or set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo | source $MYVIMRC"
+#   No `| source $MYVIMRC`: vim only reads EXINIT when no vimrc exists, so there
+#   is never a vimrc to source, and $MYVIMRC (a Vim-internal variable, never in
+#   the shell environment) expanded to an empty `source` argument.
+set -q EXINIT; or set -gx EXINIT "set viminfofile=$XDG_STATE_HOME/vim/viminfo"
 set -q NVIDIA_SETTINGS_RW_CONFIG_FILE; or set -gx NVIDIA_SETTINGS_RW_CONFIG_FILE "$XDG_CONFIG_HOME/nvidia/settings"
 set -q CODEIUM_HOME; or set -gx CODEIUM_HOME "$XDG_CONFIG_HOME/codeium"
 set -q WORDLIST; or set -gx WORDLIST "$XDG_CONFIG_HOME/hunspell_en_US"
@@ -114,7 +118,8 @@ if __fish_config_op_enabled (status basename) privacy
 end
 
 #   ─────────────────────────── Pager variables ────────────────────────────
-# Overriding $PAGER, $EDITOR, and $GPG_TTY is opinionated (C3 overrides)
+# Overriding $PAGER and $EDITOR is opinionated (C3 overrides). $GPG_TTY shares
+# this guard but is set in the interactive block below.
 if __fish_config_op_enabled (status basename) pager-editor-gpg
     if type -q ov
         set -gx PAGER ov
@@ -134,10 +139,6 @@ if __fish_config_op_enabled (status basename) pager-editor-gpg
     end
     # set -gx VISUAL $EDITOR # <- Use local.fish to set your preferred GUI editor.
     set -gx SUDO_EDITOR $EDITOR
-
-    #   ──────────────────────────── GPG variables ─────────────────────────────
-    #   Helps ensure that GPG can prompt for passphrases correctly when invoked from the terminal.
-    set -gx GPG_TTY (tty)
 end
 
 #   ────────────────────────── Scrollback History ──────────────────────────
@@ -242,8 +243,21 @@ if status is-interactive
     # .envrc file (direnv configuration) to prevent conflicts.
     type -q direnv; and direnv hook fish | source
 
+    #   ──────────────────────────── GPG variables ─────────────────────────────
+    #   Helps ensure that GPG can prompt for passphrases correctly when invoked
+    #   from the terminal. Only exported when there is a controlling tty:
+    #   without one `tty` prints the literal "not a tty", which must never be
+    #   exported to child processes (gpg/pinentry would try to use it).
+    if __fish_config_op_enabled (status basename) pager-editor-gpg
+        set -l _gpg_tty (tty 2>/dev/null)
+        and set -gx GPG_TTY $_gpg_tty
+    end
+
     #   Helps ensure that Claude Code's terminal output is clean and doesn't have flickering issues.
-    set -gx CLAUDE_CODE_NO_FLICKER 1
+    #   Opinionated (C3 overrides: environment).
+    if __fish_config_op_enabled (status basename) claude-no-flicker
+        set -gx CLAUDE_CODE_NO_FLICKER 1
+    end
 
     #   ╭────────────────────────────── OVERRIDES ─────────────────────────────╮
     #   │        Run these last so they can override any previous settings.    │

@@ -20,8 +20,10 @@ function _fzf_preview_file --description "Print a preview for the given file bas
             eval $fzf_preview_file_cmd (string escape -- $file_path)
         else if command -q file; and string match -q 'image/*' -- (command file --brief --mime-type -- "$file_path" 2>/dev/null)
             _fzf_preview_image "$file_path"
-        else
+        else if command -q bat
             bat --style=numbers --color=always "$file_path"
+        else
+            command cat -- "$file_path"
         end
     else if test -d "$file_path" # directory
         if set --query fzf_preview_dir_cmd
