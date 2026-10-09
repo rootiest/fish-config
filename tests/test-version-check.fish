@@ -20,8 +20,11 @@ set -g sandbox (mktemp -d)
 mkdir -p $sandbox/home $sandbox/data $sandbox/cfg $sandbox/cache
 
 # Strip colour escapes so assertions do not depend on the palette.
+# Strip colour escapes from stdin. `command cat |` makes the stdin read
+# explicit: a function whose whole body is a bare `string replace PAT ''` does
+# not see the pipe it is fed (verified on fish 4.9.3).
 function _plain
-    string replace -ra '\e\[[0-9;]*m' ''
+    command cat | string replace -ra '\e\[[0-9;]*m' ''
 end
 
 # ---- the function: version table -------------------------------------------
