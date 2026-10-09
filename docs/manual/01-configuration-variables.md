@@ -65,6 +65,10 @@ Scrollback logs accumulate in `SCROLLBACK_HISTORY_DIR` as timestamped files.
 When the count exceeds `SCROLLBACK_HISTORY_MAX_FILES` the oldest are pruned
 automatically on exit. Use `logs` to browse them interactively.
 
+The directory is kept private: created `700`, with the log files `600`,
+regardless of umask. A looser existing directory is tightened silently on its
+next use. See the C5 reference in Section 8.
+
 ## Other
 
 | Variable | Value | Notes |
