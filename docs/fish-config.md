@@ -4669,7 +4669,9 @@ to a falsy value (or toggle "Dots link" off on the `config-settings` Paths page)
 to stop generating it and remove any existing link — honoured even when C2 is
 enabled. Managed by the `__fish_user_dots_link` helper.
 The first-run completion marker (`__fish_config_first_run_complete`) is still
-set so the init does not re-run on subsequent shells.
+set so the init does not re-run on subsequent shells. A failed Fisher bootstrap
+is tracked separately (`__fish_config_bootstrap_pending`) and retried at most
+once a day while C2 and the `plugin-management` sub-category are enabled.
 
 Python venv activation fires on every directory change. If a directory uses
 `direnv` (`.envrc` present), `direnv` takes priority and auto-venv is skipped for
@@ -5007,11 +5009,23 @@ overhead.
 
 Fisher itself is downloaded from a pinned release tag (`_fisher_ref` in
 `conf.d/first_run.fish`), never the floating `main` branch. If the download
-fails (offline, HTTP error, empty or invalid body), first-run prints an error
-to stderr and does not report success. The first-run flag is still set, so the
-bootstrap is not retried automatically; re-trigger it with the command below
-once you are online. Until Fisher and the sponge plugin are installed, history
-secret filtering is inactive, and a notice on stderr says so.
+fails (offline, HTTP error, empty or invalid body) or `fisher update` fails,
+first-run prints an error to stderr and does not report success. The first-run
+flag is still set, so the welcome banner and theme step never repeat, but the
+failure is recorded in a separate universal variable,
+`__fish_config_bootstrap_pending`, which holds the epoch time of the last
+attempt. While it is set, a later interactive shell start retries only the
+bootstrap step, at most once every 24 hours and at most once per shell session,
+with short network timeouts so an offline start is not noticeably delayed.
+Non-interactive shells never retry. Starts inside the 24-hour window print a
+one-line hint on stderr; a successful retry prints one line and erases the
+marker, and a failed retry refreshes the timestamp. To retry on the next start
+without waiting, run:
+
+    set -U __fish_config_bootstrap_pending 0
+
+Until Fisher and the sponge plugin are installed, history secret filtering is
+inactive, and a notice on stderr says so.
 
 To re-trigger first-run initialization (e.g., after a fresh install or for
 testing), run:
@@ -5403,6 +5417,13 @@ The first-run welcome banner runs exactly once. To re-trigger it (e.g. for
 testing):
 
     set -Ue __fish_config_first_run_complete
+
+If the Fisher/plugin bootstrap failed (offline first run), it is retried
+automatically on a later start, at most once a day; see
+Fisher Plugins. To retry on the next start instead of
+waiting, run:
+
+    set -U __fish_config_bootstrap_pending 0
 
 See C6 — Greeting and First-Run UI for details.
 

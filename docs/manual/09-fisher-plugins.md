@@ -16,11 +16,23 @@ overhead.
 
 Fisher itself is downloaded from a pinned release tag (`_fisher_ref` in
 `conf.d/first_run.fish`), never the floating `main` branch. If the download
-fails (offline, HTTP error, empty or invalid body), first-run prints an error
-to stderr and does not report success. The first-run flag is still set, so the
-bootstrap is not retried automatically; re-trigger it with the command below
-once you are online. Until Fisher and the sponge plugin are installed, history
-secret filtering is inactive, and a notice on stderr says so.
+fails (offline, HTTP error, empty or invalid body) or `fisher update` fails,
+first-run prints an error to stderr and does not report success. The first-run
+flag is still set, so the welcome banner and theme step never repeat, but the
+failure is recorded in a separate universal variable,
+`__fish_config_bootstrap_pending`, which holds the epoch time of the last
+attempt. While it is set, a later interactive shell start retries only the
+bootstrap step, at most once every 24 hours and at most once per shell session,
+with short network timeouts so an offline start is not noticeably delayed.
+Non-interactive shells never retry. Starts inside the 24-hour window print a
+one-line hint on stderr; a successful retry prints one line and erases the
+marker, and a failed retry refreshes the timestamp. To retry on the next start
+without waiting, run:
+
+    set -U __fish_config_bootstrap_pending 0
+
+Until Fisher and the sponge plugin are installed, history secret filtering is
+inactive, and a notice on stderr says so.
 
 To re-trigger first-run initialization (e.g., after a fresh install or for
 testing), run:
