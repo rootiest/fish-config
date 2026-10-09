@@ -250,11 +250,11 @@ check "no marker: still no marker" unset $fr_pending
 section "sponge_privacy: notice when sponge is expected but missing"
 
 mkdir -p $sandbox/cfg/fish
-printf '%s\n' jorgebucaran/fisher meaningful-ooo/sponge >$sandbox/cfg/fish/fish_plugins
+printf '%s\n' jorgebucaran/fisher@4.4.8 meaningful-ooo/sponge@1.1.0 >$sandbox/cfg/fish/fish_plugins
 set -l sp_err (env HOME=$sandbox/home XDG_CONFIG_HOME=$sandbox/cfg fish --no-config -i -c "source $repo_root/conf.d/sponge_privacy.fish" 2>&1 >/dev/null | string collect)
-check "sponge listed but absent: stderr notice" true (string match -q '*history secret filtering is inactive*' -- $sp_err; and echo true; or echo false)
+check "sponge listed (pinned @ref) but absent: stderr notice" true (string match -q '*history secret filtering is inactive*' -- $sp_err; and echo true; or echo false)
 
-printf '%s\n' jorgebucaran/fisher >$sandbox/cfg/fish/fish_plugins
+printf '%s\n' jorgebucaran/fisher@4.4.8 >$sandbox/cfg/fish/fish_plugins
 set sp_err (env HOME=$sandbox/home XDG_CONFIG_HOME=$sandbox/cfg fish --no-config -i -c "source $repo_root/conf.d/sponge_privacy.fish" 2>&1 >/dev/null | string collect)
 check "sponge not in fish_plugins: silent" "" "$sp_err"
 
