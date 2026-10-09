@@ -53,8 +53,13 @@ function __wakatime_fish_tick
     # Honour the cross-tool telemetry opt-outs (the C3 privacy block in
     # config.fish exports both). __fish_variable_check is the shared
     # truthiness parser; these are not opinionated-component guards.
-    if __fish_variable_check DO_NOT_TRACK; or __fish_variable_check DISABLE_TELEMETRY
-        return 0
+    # FISH_WAKATIME_IGNORE_DNT=1 is the per-machine override: WakaTime keeps
+    # reporting while DO_NOT_TRACK / DISABLE_TELEMETRY stay exported (and
+    # honoured) for every other tool.
+    if not __fish_variable_check FISH_WAKATIME_IGNORE_DNT
+        if __fish_variable_check DO_NOT_TRACK; or __fish_variable_check DISABLE_TELEMETRY
+            return 0
+        end
     end
 
     set -l exec_command_str (string split -f1 ' ' "$argv")

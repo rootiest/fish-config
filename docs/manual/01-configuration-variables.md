@@ -130,10 +130,19 @@ Opt-outs:
     DISABLE_TELEMETRY=1         Honoured by the hook
     FISH_WAKATIME_PROJECT=name  Send this constant project name instead of
                                 the repository directory name
+    FISH_WAKATIME_IGNORE_DNT=1  Override: keep reporting even though
+                                DO_NOT_TRACK / DISABLE_TELEMETRY are set
 
 Because the C3 privacy block exports `DO_NOT_TRACK=1` by default, the hook is
-silent out of the box while that block is active. To keep WakaTime reporting,
-disable the C3 privacy block or unset both variables after startup.
+silent out of the box while that block is active. To keep WakaTime reporting
+on a machine where you want it, set the override once:
+
+    set -U FISH_WAKATIME_IGNORE_DNT 1
+
+This affects only the WakaTime hook. `DO_NOT_TRACK` and `DISABLE_TELEMETRY`
+stay exported and keep applying to every other tool. `FISH_WAKATIME_DISABLED`
+still switches the hook off regardless of the override. (Alternatively, disable
+the C3 privacy block or unset both variables after startup.)
 
 ### Tailscale
 

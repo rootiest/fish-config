@@ -61,7 +61,7 @@ printf '%s\n' \
 # wk_out (child stdout lines). $PATH is $base_bin plus whatever PATH=... asks.
 function run_wk --inherit-variable sandbox --inherit-variable base_bin --inherit-variable fake_home --inherit-variable log --inherit-variable child --inherit-variable fish_bin --inherit-variable repo_root
     command rm -f $log
-    set -g wk_out (env -u DO_NOT_TRACK -u DISABLE_TELEMETRY -u FISH_WAKATIME_DISABLED -u FISH_WAKATIME_PROJECT \
+    set -g wk_out (env -u DO_NOT_TRACK -u DISABLE_TELEMETRY -u FISH_WAKATIME_DISABLED -u FISH_WAKATIME_PROJECT -u FISH_WAKATIME_IGNORE_DNT \
         HOME=$fake_home XDG_CONFIG_HOME=$sandbox/cfg XDG_DATA_HOME=$sandbox/data \
         PATH=$base_bin TERM=xterm WK_REPO=$repo_root WK_LOG=$log $argv \
         $fish_bin --no-config -i $child 2>/dev/null)
@@ -134,6 +134,25 @@ end
 run_wk $ok DO_NOT_TRACK=0
 wk_wait
 check "DO_NOT_TRACK=0: still sent" true (test -s $log; and echo true; or echo false)
+
+# FISH_WAKATIME_IGNORE_DNT=1 is the per-machine override: the telemetry
+# opt-outs stay set in the environment but the hook keeps reporting.
+for dnt in DO_NOT_TRACK=1 DISABLE_TELEMETRY=1 DO_NOT_TRACK=true
+    run_wk $ok FISH_WAKATIME_IGNORE_DNT=1 $dnt
+    wk_wait
+    check "IGNORE_DNT + $dnt: still sent" true (test -s $log; and echo true; or echo false)
+end
+
+run_wk $ok FISH_WAKATIME_IGNORE_DNT=1 FISH_WAKATIME_DISABLED=1 DO_NOT_TRACK=1
+sleep 0.5
+check "IGNORE_DNT does not override FISH_WAKATIME_DISABLED" false (test -s $log; and echo true; or echo false)
+
+# A falsy or garbage override does not lift the opt-out.
+for off in 0 false nope
+    run_wk $ok FISH_WAKATIME_IGNORE_DNT=$off DO_NOT_TRACK=1
+    sleep 0.5
+    check "IGNORE_DNT=$off: DO_NOT_TRACK still wins" false (test -s $log; and echo true; or echo false)
+end
 
 command rm -rf $sandbox
 report
