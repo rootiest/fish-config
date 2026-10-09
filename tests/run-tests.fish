@@ -229,8 +229,12 @@ if test (count $session_suites) -gt 0
     # deletes and does not trash). Prefixed anyway: a test runner must not
     # depend on the configuration under test.
     command cp $repo_root/config.fish $sandbox_cfg/
+    # The sandbox has no sponge, so drop it from the copied plugin list: with
+    # it listed, conf.d/sponge_privacy.fish prints its "history secret
+    # filtering is inactive" notice into the stderr block below. The notice
+    # itself is asserted in test-first-run.fish.
     test -f $repo_root/fish_plugins
-    and command cp $repo_root/fish_plugins $sandbox_cfg/
+    and string match -v -- '*meaningful-ooo/sponge*' <$repo_root/fish_plugins >$sandbox_cfg/fish_plugins
     for d in functions conf.d completions themes data
         test -d $repo_root/$d
         and command cp -r $repo_root/$d $sandbox_cfg/

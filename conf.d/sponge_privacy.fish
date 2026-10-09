@@ -87,28 +87,26 @@ set -a _privacy_patterns 'docker\s+login\s.*(?:-p|--password)\s+\S+'
 # openssl passphrase arguments: -passin pass:xxx, -passout env:VAR
 set -a _privacy_patterns 'openssl\s.*-pass(?:in|out)\s+\S+'
 
-# Remove any previously stored patterns that begin with -- ; string match
-# passes patterns before its own -- sentinel and would treat them as flags.
-for _i in (seq (count $sponge_regex_patterns) -1 1)
-    if string match --quiet -- '--*' $sponge_regex_patterns[$_i]
-        set -Ue sponge_regex_patterns[$_i]
-    end
-end
-
-# Retired patterns: earlier versions registered these, a later version replaced
-# them. Remove them from the universal list on load. Exact-string match only,
-# so user-added patterns are never touched. Append here whenever a pattern in
-# the list above is changed or dropped.
+# Stale stored patterns, removed from the universal list on load:
+#   - anything beginning with `--` (left over from before commit 13eb93c;
+#     string match passes patterns before its own -- sentinel and would treat
+#     them as flags);
+#   - retired patterns: earlier versions registered these, a later version
+#     replaced them. Exact-string match only. Append here whenever a pattern
+#     in the list above is changed or dropped.
+# User-added patterns are never touched: only a `--` prefix or an exact
+# retired string is removed.
 set -l _retired_patterns \
     'curl\s.*[Aa]uthorization:' \
     '(?i)curl\s.*authorization:'
-# The list is rebuilt rather than edited by index: `set -Ue name[N]` silently
-# does nothing on a universal variable.
+# The list is rebuilt and reassigned (only when something was dropped) rather
+# than edited by index: `set -Ue name[N]` silently does nothing on a universal
+# variable.
 set -l _kept_patterns
 for _pattern in $sponge_regex_patterns
-    if not contains -- "$_pattern" $_retired_patterns
-        set -a _kept_patterns $_pattern
-    end
+    string match --quiet -- '--*' $_pattern; and continue
+    contains -- "$_pattern" $_retired_patterns; and continue
+    set -a _kept_patterns $_pattern
 end
 if test (count $_kept_patterns) -ne (count $sponge_regex_patterns)
     set -U sponge_regex_patterns $_kept_patterns
