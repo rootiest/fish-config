@@ -28,7 +28,9 @@ to a falsy value (or toggle "Dots link" off on the config-settings Paths page)
 to stop generating it and remove any existing link — honoured even when C2 is
 enabled. Managed by the `__fish_user_dots_link` helper.
 The first-run completion marker (`__fish_config_first_run_complete`) is still
-set so the init does not re-run on subsequent shells.
+set so the init does not re-run on subsequent shells. A failed Fisher bootstrap
+is tracked separately (`__fish_config_bootstrap_pending`) and retried at most
+once a day while C2 and the `plugin-management` sub-category are enabled.
 
 Python venv activation fires on every directory change. If a directory uses
 direnv (`.envrc` present), direnv takes priority and auto-venv is skipped for

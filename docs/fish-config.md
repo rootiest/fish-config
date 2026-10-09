@@ -44,6 +44,7 @@ The configuration uses a structured file tree:
     ~/.config/fish/
     ├── config.fish                 Main entry point; sets env vars and PATH
     ├── conf.d/                     Snippets sourced at startup
+    │   ├── 00-version-check.fish   Warns once if Fish is older than 4.0.0
     │   ├── __fish_config_op_registry.fish  Generated component registry
     │   ├── abbr.fish               All abbreviations
     │   ├── auto-pull.fish          Background git pulls for opted-in repos
@@ -4688,7 +4689,9 @@ to a falsy value (or toggle "Dots link" off on the `config-settings` Paths page)
 to stop generating it and remove any existing link — honoured even when C2 is
 enabled. Managed by the `__fish_user_dots_link` helper.
 The first-run completion marker (`__fish_config_first_run_complete`) is still
-set so the init does not re-run on subsequent shells.
+set so the init does not re-run on subsequent shells. A failed Fisher bootstrap
+is tracked separately (`__fish_config_bootstrap_pending`) and retried at most
+once a day while C2 and the `plugin-management` sub-category are enabled.
 
 Python venv activation fires on every directory change. If a directory uses
 `direnv` (`.envrc` present), `direnv` takes priority and auto-venv is skipped for
@@ -5026,11 +5029,23 @@ overhead.
 
 Fisher itself is downloaded from a pinned release tag (`_fisher_ref` in
 `conf.d/first_run.fish`), never the floating `main` branch. If the download
-fails (offline, HTTP error, empty or invalid body), first-run prints an error
-to stderr and does not report success. The first-run flag is still set, so the
-bootstrap is not retried automatically; re-trigger it with the command below
-once you are online. Until Fisher and the sponge plugin are installed, history
-secret filtering is inactive, and a notice on stderr says so.
+fails (offline, HTTP error, empty or invalid body) or `fisher update` fails,
+first-run prints an error to stderr and does not report success. The first-run
+flag is still set, so the welcome banner and theme step never repeat, but the
+failure is recorded in a separate universal variable,
+`__fish_config_bootstrap_pending`, which holds the epoch time of the last
+attempt. While it is set, a later interactive shell start retries only the
+bootstrap step, at most once every 24 hours and at most once per shell session,
+with short network timeouts so an offline start is not noticeably delayed.
+Non-interactive shells never retry. Starts inside the 24-hour window print a
+one-line hint on stderr; a successful retry prints one line and erases the
+marker, and a failed retry refreshes the timestamp. To retry on the next start
+without waiting, run:
+
+    set -U __fish_config_bootstrap_pending 0
+
+Until Fisher and the sponge plugin are installed, history secret filtering is
+inactive, and a notice on stderr says so.
 
 To re-trigger first-run initialization (e.g., after a fresh install or for
 testing), run:
@@ -5043,7 +5058,8 @@ Then open a new shell.
 
 The following plugins are fully managed by Fisher. Their files are installed
 into the repo directory by Fisher and are listed in `.gitignore` — do not
-commit them. Fisher installs and updates them automatically.
+commit them. Fisher installs and updates them automatically, each at the
+release tag pinned in `fish_plugins`.
 
 - [`jorgebucaran/fisher`](https://github.com/jorgebucaran/fisher) — Plugin manager itself
 - [`meaningful-ooo/sponge`](https://github.com/meaningful-ooo/sponge) — Remove failed commands from history
@@ -5139,11 +5155,34 @@ versions. To update their behavior, edit the relevant bundled files directly.
 
 The `fish_plugins` file at the config root:
 
-- [`jorgebucaran/fisher`](https://github.com/jorgebucaran/fisher) — Plugin manager itself
-- [`meaningful-ooo/sponge`](https://github.com/meaningful-ooo/sponge) — Remove failed commands from history
+- [`jorgebucaran/fisher`](https://github.com/jorgebucaran/fisher) (`@4.4.8`) — Plugin manager itself
+- [`meaningful-ooo/sponge`](https://github.com/meaningful-ooo/sponge) (`@1.1.0`) — Remove failed commands from history
 
-To update all Fisher-managed plugins, run `fisher update` or
-`fish-deps update` which calls it as its first step.
+Every entry is pinned to a release tag (`owner/repo@tag`), so `fisher update`
+installs exactly that tag rather than whatever the default branch holds. A
+pinned plugin only changes when someone bumps the pin by hand (below).
+
+To refresh all Fisher-managed plugins, run `fisher update` or
+`fish-deps update` which calls it as its first step. This re-fetches the
+pinned tags; it does not move to newer releases.
+
+### How to bump a pin
+
+1. Find the new release tag on the plugin's GitHub releases page, or with
+   `git ls-remote --tags https://github.com/<owner>/<repo> | sort -V`. Use a
+   release tag, not a branch name or `HEAD`.
+2. Edit the entry in `fish_plugins` to `<owner>/<repo>@<new-tag>`.
+3. For `jorgebucaran/fisher`, also change `_fisher_ref` in
+   `conf.d/first_run.fish` to the same tag. The two must match; the test
+   suite fails if they differ.
+4. Review the upstream `diff` between the old and new tag before accepting it:
+   these plugins run in every interactive shell.
+5. Apply it with `fisher update` and open a fresh shell. Changing a pin makes
+   Fisher treat the new `owner/repo@tag` as a different plugin, so it installs
+   the new one and removes the old one.
+6. Test: `fish tests/run-tests.fish` must exit 0. For sponge, also confirm
+   that a failing command is dropped from history and that a command carrying
+   a secret is not recorded.
 
 ---
 
@@ -5337,6 +5376,11 @@ This config requires Fish 4.x or newer. Check your version:
 Run `fish-deps` to see a status report — an outdated Fish shows ⚠ with an
 upgrade message.
 
+On an older Fish, an interactive shell prints a one-time warning on stderr at
+startup naming the version it found and pointing back to this section. It is
+a warning only: the rest of the config still loads, and the features that
+need Fish 4.x may fail with confusing errors until you upgrade.
+
 Upgrading Fish by distribution:
 
     # Arch / AUR
@@ -5393,6 +5437,13 @@ The first-run welcome banner runs exactly once. To re-trigger it (e.g. for
 testing):
 
     set -Ue __fish_config_first_run_complete
+
+If the Fisher/plugin bootstrap failed (offline first run), it is retried
+automatically on a later start, at most once a day; see
+Fisher Plugins. To retry on the next start instead of
+waiting, run:
+
+    set -U __fish_config_bootstrap_pending 0
 
 See C6 — Greeting and First-Run UI for details.
 
