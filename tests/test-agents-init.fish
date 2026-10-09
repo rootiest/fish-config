@@ -466,13 +466,16 @@ echo ""
 echo "== _agents_init_find: shared prune set =="
 
 set -l pf (new_repo)
-mkdir -p $pf/src $pf/node_modules/pkg $pf/.claude $pf/AGENTS $pf/build $pf/nested
+mkdir -p $pf/src $pf/node_modules/pkg $pf/.claude $pf/AGENTS $pf/build $pf/dist $pf/out $pf/target $pf/nested
 git -C $pf/nested init -q
 ln -s ../x $pf/src/link
 ln -s x $pf/node_modules/pkg/link
 ln -s x $pf/.claude/link
 ln -s x $pf/AGENTS/link
 ln -s x $pf/build/link
+ln -s x $pf/dist/link
+ln -s x $pf/out/link
+ln -s x $pf/target/link
 ln -s x $pf/nested/link
 check "find: only the unpruned symlink" $pf/src/link (_agents_init_find $pf -type l -print | string join ,)
 check "find: no root -> status 1" 1 (_agents_init_find ""; echo $status)
