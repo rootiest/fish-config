@@ -118,6 +118,13 @@ testing):
 
     set -Ue __fish_config_first_run_complete
 
+If the Fisher/plugin bootstrap failed (offline first run), it is retried
+automatically on a later start, at most once a day; see
+[Fisher Plugins](/09-fisher-plugins/). To retry on the next start instead of
+waiting, run:
+
+    set -U __fish_config_bootstrap_pending 0
+
 See [C6 — Greeting and First-Run UI](/08-components-reference/06-c6-greeting-and-first-run-ui/) for details.
 
 ## Secrets and Machine-Local Configuration
