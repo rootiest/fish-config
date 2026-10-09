@@ -207,6 +207,10 @@ Scrollback logs accumulate in `SCROLLBACK_HISTORY_DIR` as timestamped files.
 When the count exceeds `SCROLLBACK_HISTORY_MAX_FILES` the oldest are pruned
 automatically on exit. Use `logs` to browse them interactively.
 
+The directory is kept private: created `700`, with the log files `600`,
+regardless of umask. A looser existing directory is tightened silently on its
+next use. See the C5 reference in Section 8.
+
 ## Other
 
 | Variable | Value | Notes |
@@ -2518,6 +2522,9 @@ functions). They are active in all interactive sessions.
     Automatically prunes junk and the oldest logs when the count exceeds
     $SCROLLBACK_HISTORY_MAX_FILES.
 
+    The log directory is private (700, tightened silently if an earlier
+    version left it laxer) and the log file is written 600 whatever the umask.
+
     Arguments:
       -h, --help    Show help message
       -n, --no-log  Exit without saving a scrollback log
@@ -2534,9 +2541,9 @@ functions). They are active in all interactive sessions.
     smart_exit
     smart_exit --no-log
 
-**Dependencies:** `kitty`, `ps`, `_scrollback_prune_junk`
+**Dependencies:** `kitty`, `ps`, `_private_dir`, `_scrollback_prune_junk`
 
-**Classification:** `self-limiting(rm,mkdir)`, `destructive`
+**Classification:** `self-limiting(rm)`, `destructive`
 
 ### sponge_filter_secrets
 
@@ -2879,6 +2886,14 @@ functions). They are active in all interactive sessions.
     a git worktree. A failed copy is reported but is not fatal, because an
     incomplete backup still leaves the agent working.
 
+    The vault is private: its root directory is created with mode 700
+    whatever the umask, since it holds personal agent memory and config. A
+    vault that is laxer than that (made by an earlier version, or by a manual
+    clone) is tightened on the next run, silently, together with the regular
+    files directly in the root; the files it writes there itself (.version,
+    .gitignore, README.md) are created 600. The git object store and the entries below
+    the root are not touched; the 700 root is what keeps them out of reach.
+
     Because the slug is derived from the remote, gaining, losing, or
     rewriting a project's origin changes it. Each run detects this by
     reading the previous slug straight off the live memory symlink's
@@ -3019,7 +3034,7 @@ functions). They are active in all interactive sessions.
     agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
     agents-vault --restore
 
-**Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `git`, `hostname`
+**Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `_private_dir`, `git`, `hostname`
 
 **Classification:** `self-limiting(rm,mkdir)`, `manual-section(16-agent-tooling)`
 
@@ -4271,7 +4286,9 @@ full sub-category breakdown of every category.
     __fish_agent_vault_dir
 
     Overrides the agent memory vault location. Defaults to
-    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault).
+    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault). The vault
+    root is kept private (mode 700, whatever the umask); a laxer existing
+    root is tightened silently on the next agents-vault run.
 
     __fish_agent_vault_autopush
 
@@ -4773,6 +4790,18 @@ CAUTION: This configuration is capable of silently recording terminal output and
     yay wrapper             All yay/AUR output captured to:
                             ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
     Kitty watcher           watcher.py captures scrollback when Kitty closes
+
+NOTE: **Logs are private.** The log directory is created with mode 700 and
+every log file with mode 600, whatever the umask, so other local users cannot
+read them even when the home directory is 755 or 750. A directory left laxer by
+an earlier version is tightened to 700 silently the next time logging uses it
+(nothing is printed at shell startup), and the logs directly inside it are set
+to 600 at that moment; subdirectories are not touched. The logs are still plain
+text and can hold anything that was printed to the terminal: command output,
+file contents, tokens. To keep them elsewhere or change how many are kept:
+
+    set -U __fish_scrollback_history_dir ~/private/logs   # default: ~/.terminal_history
+    set -U __fish_scrollback_history_max_files 50         # default: 100
 
 NOTE: **Turning off logging does not delete any existing logs.**  
 They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)

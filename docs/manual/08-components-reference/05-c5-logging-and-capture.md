@@ -29,6 +29,18 @@ CAUTION: This configuration is capable of silently recording terminal output and
                             ~/.terminal_history/yay_YYYY-MM-DD_HH-MM-SS.log
     Kitty watcher           watcher.py captures scrollback when Kitty closes
 
+NOTE: **Logs are private.** The log directory is created with mode 700 and
+every log file with mode 600, whatever the umask, so other local users cannot
+read them even when the home directory is 755 or 750. A directory left laxer by
+an earlier version is tightened to 700 silently the next time logging uses it
+(nothing is printed at shell startup), and the logs directly inside it are set
+to 600 at that moment; subdirectories are not touched. The logs are still plain
+text and can hold anything that was printed to the terminal: command output,
+file contents, tokens. To keep them elsewhere or change how many are kept:
+
+    set -U __fish_scrollback_history_dir ~/private/logs   # default: ~/.terminal_history
+    set -U __fish_scrollback_history_max_files 50         # default: 100
+
 NOTE: **Turning off logging does not delete any existing logs.**  
 They remain in `$SCROLLBACK_HISTORY_DIR` (defaults to: `~/.terminal_history/`)
 until you remove them manually.

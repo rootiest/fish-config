@@ -164,7 +164,9 @@ full sub-category breakdown of every category.
     __fish_agent_vault_dir
 
     Overrides the agent memory vault location. Defaults to
-    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault).
+    $XDG_DATA_HOME/agent-vault (or ~/.local/share/agent-vault). The vault
+    root is kept private (mode 700, whatever the umask); a laxer existing
+    root is tightened silently on the next agents-vault run.
 
     __fish_agent_vault_autopush
 

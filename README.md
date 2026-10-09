@@ -47,7 +47,9 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 > streams, zellij pane snapshots on exit, and full `paru`/`yay` output. These
 > logs can contain command output, file contents, and anything else printed to
 > your terminal. Nothing is sent off your machine, but the files persist
-> locally until pruned.
+> locally until pruned. The log directory is created private (mode `700`) and
+> the files `600` regardless of your umask, so other local users cannot read
+> them; they are plain text, so still treat them as sensitive.
 >
 > To turn logging on, set the C5 category variable:
 >
@@ -90,6 +92,24 @@ Old logs are pruned automatically to stay within `$SCROLLBACK_HISTORY_MAX_FILES`
 **These logs can contain secrets** — anything printed to your terminal (command
 output, file dumps, tokens echoed to stdout) ends up in them. They never leave
 your machine, but treat `~/.terminal_history` as sensitive.
+
+Logs are private by default: the log directory is created `700` and every log
+file `600`, whatever your umask, so other users on the machine (or a `755`/`750`
+home directory) cannot read them. A directory left looser by an earlier version
+is tightened silently the next time logging uses it, along with the logs
+directly inside it. The agent memory vault (`agents-vault`, default
+`~/.local/share/agent-vault`) gets the same treatment: its root is `700`.
+
+To keep logs somewhere else, or to change how many are kept per source:
+
+```fish
+set -U __fish_scrollback_history_dir ~/private/logs   # default: ~/.terminal_history
+set -U __fish_scrollback_history_max_files 50         # default: 100
+```
+
+(These are also under `config-settings` → Paths. The `SCROLLBACK_HISTORY_DIR` and
+`SCROLLBACK_HISTORY_MAX_FILES` environment variables they export are what the
+log writers read.)
 
 All of it is controlled by a single universal variable:
 
