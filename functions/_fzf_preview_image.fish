@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # helper function for _fzf_preview_file
 function _fzf_preview_image --description "Render an image preview using the best available tool for the current terminal."
     set -f file_path $argv

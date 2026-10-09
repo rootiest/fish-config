@@ -32,6 +32,10 @@ Scoped rules live next to the code they govern:
    # SPDX-License-Identifier: AGPL-3.0-or-later
    ```
 
+   Exception: vendored third-party files get no header; their provenance
+   lives in `REUSE.toml` (`CONTRIBUTING.md` § Vendored files), and
+   `tests/test-license-headers.fish` enforces it.
+
 2. **Banners:** section banners are box-drawing rules, usually a single line
    (`#   ──────── Section ────────`), boxed (`╭─…─╮`) for major blocks.
 3. **Functions:** one function per file in `functions/`. No function

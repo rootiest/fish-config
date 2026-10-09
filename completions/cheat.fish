@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 complete -c cheat -f -a "(cheat -l | tail -n +2 | cut -d ' ' -f 1)"
 complete -c cheat -l init -d "Write a default config file to stdout"
 complete -c cheat -s c -l colorize -d "Colorize output"

@@ -85,6 +85,7 @@ The configuration uses a structured file tree:
     │   ├── catppuccin-latte.theme      Latte (light)
     │   ├── catppuccin-macchiato.theme  Macchiato; Latte on light terminals
     │   └── catppuccin-mocha.theme      Mocha (default); Latte on light terminals
+    ├── LICENSES/                   Licence texts for vendored code
     ├── tests/                      Test suite: fish tests/run-tests.fish
     └── docs/                       Offline documentation and man page
         ├── fish-config.md          Generated manual
