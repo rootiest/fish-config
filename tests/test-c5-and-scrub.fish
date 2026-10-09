@@ -292,8 +292,8 @@ section "C5: __fish_config_sync_logging when disabled"
 # __fish_config_sync_logging also sources conf.d/pkg-wrappers.fish from the
 # read-only $__fish_config_dir. That file returns immediately in a
 # non-interactive shell, and HOME is the sandbox, so no wrapper is written.
-# The function's own exit status is NOT asserted: it inherits the sourced
-# file's early `return` (1 when non-interactive), see the report on #238.
+# The sourced file's early `return` (1 when non-interactive) must not leak
+# out: the function documents exit status 0 always (issue #290).
 set -g sentinel $XDG_CONFIG_HOME/fish/.logging_disabled
 set -gx SCROLLBACK_HISTORY_DIR $sandbox/logs
 set -gx TMUX fake
@@ -301,6 +301,7 @@ reset_c5
 set tmux_calls
 
 __fish_config_sync_logging
+check "unset: exits 0 (documented)" 0 $status
 check "unset: sentinel created" true (yesno test -f $sentinel)
 check "unset: tmux pipe-pane stopped (bare pipe-pane)" pipe-pane (string join , $tmux_calls)
 check "unset: no log directory created" false (yesno test -e $SCROLLBACK_HISTORY_DIR)
@@ -324,6 +325,7 @@ reset_c5
 set -g __fish_config_op_logging 1
 set tmux_calls
 __fish_config_sync_logging
+check "explicit truthy: exits 0 (documented)" 0 $status
 check "explicit truthy: sentinel removed" false (yesno test -e $sentinel)
 check "explicit truthy: tmux capture started" true (yesno string match -q '*pipe-pane umask 077; cat >>*' -- (string join ' ' $tmux_calls))
 check "explicit truthy: log directory created" true (yesno test -d $SCROLLBACK_HISTORY_DIR)
