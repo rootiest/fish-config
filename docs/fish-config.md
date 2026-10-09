@@ -60,7 +60,7 @@ The configuration uses a structured file tree:
     │   ├── puffer.fish             !! / !$ / ./ expansion
     │   ├── sponge_privacy.fish     Sponge privacy patterns
     │   ├── starship.fish           fish_prompt shell-integration markers
-    │   ├── theme.fish              Catppuccin syntax highlight colors
+    │   ├── theme.fish              Saves the Catppuccin theme; FZF colors
     │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
     │   ├── wakatime.fish           WakaTime shell hook
@@ -80,10 +80,10 @@ The configuration uses a structured file tree:
     ├── templates/                  Function templates to copy and adapt
     │   └── allow-telemetry.fish    Per-command telemetry opt-out wrapper
     ├── themes/                     Catppuccin color themes
-    │   ├── Catppuccin Frappe.theme     Frappé (medium dark)
-    │   ├── Catppuccin Latte.theme      Latte (light)
-    │   ├── Catppuccin Macchiato.theme  Macchiato (dark)
-    │   └── Catppuccin Mocha.theme      Mocha (darkest)
+    │   ├── catppuccin-frappe.theme     Frappé; Latte on light terminals
+    │   ├── catppuccin-latte.theme      Latte (light)
+    │   ├── catppuccin-macchiato.theme  Macchiato; Latte on light terminals
+    │   └── catppuccin-mocha.theme      Mocha (default); Latte on light terminals
     ├── tests/                      Test suite: fish tests/run-tests.fish
     └── docs/                       Offline documentation and man page
         ├── fish-config.md          Generated manual
@@ -4382,13 +4382,23 @@ there always wins.
 
 ### Catppuccin Mocha Syntax Highlighting
 
-The Catppuccin Mocha theme ships with this config in themes/ and is applied
-automatically on first run via `conf.d/first_run.fish` (gated by
-`__fish_config_op_autoexec`; see Opinionated Components above). Colors are
-stored in `fish_variables` (universal). Three other bundled variants are
-available in themes/ — Latte, Frappé, and Macchiato. To switch:
+The Catppuccin Mocha theme ships with this config as
+`themes/catppuccin-mocha.theme`. `conf.d/theme.fish` saves it to universal
+variables (`fish_variables`) once, at the first prompt (opinionated; disabled by
+`__fish_config_op_overrides`, see Opinionated Components above), and records
+that in `__fish_config_theme_saved`; `conf.d/first_run.fish` also applies it
+to the very first session. Three other bundled variants are available in
+themes/: `catppuccin-latte`, `catppuccin-frappe` and `catppuccin-macchiato`.
 
-    fish_config theme choose "Catppuccin Latte"
+`catppuccin-mocha`, `catppuccin-frappe` and `catppuccin-macchiato` are exact
+copies of the themes fish ships from 4.4 on; they are bundled so fish versions
+without them still have them. Each holds a Latte `[light]` section and its own
+`[dark]` section: fish 4.3 and newer pick one to match the terminal background,
+older versions use the dark colors. `catppuccin-latte` (which fish does not
+ship) always applies Latte. To switch for good (`theme choose` lasts only for
+the current session):
+
+    fish_config theme save catppuccin-latte
 
 ---
 
@@ -4641,7 +4651,7 @@ all of them.
     Autopair                  ( [ { " ' auto-close to (), [], {}, "", ''
     Puffer key intercepts     . ! $ * keys intercepted for smart expansion
     Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
-    Catppuccin colors         30+ fish_color_* variables set to Mocha palette
+    Catppuccin theme          bundled catppuccin-mocha saved once (universal)
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
     Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
     DO_NOT_TRACK=1            Universal telemetry opt-out for tools and AI agents
@@ -4671,7 +4681,7 @@ and `smart_exit`'s plain-exit path.
 
 ### prompt
 
-Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
+Starship, the right prompt, the Catppuccin theme save, and FZF
 theming (`$FZF_DEFAULT_OPTS`) -- all driven by the same guard as a single
 unit, not independently toggleable from each other.
 
@@ -5173,7 +5183,10 @@ If no backup exists, remove the directory and let Fish regenerate a default
 config on next launch:
 
     rm -rf ~/.config/fish
-    fish -c 'fish_config theme choose "Fish default"'
+    fish -c 'fish_config theme choose default 2>/dev/null; or fish_config theme choose "fish default"'
+
+fish 4.3 renamed its default theme from `fish default` to `default`; the
+command tries the new name first and falls back to the old one.
 
 Clean up files generated outside the config directory:
 
