@@ -500,3 +500,17 @@ and similar host-scoped locations — into its own host-scoped repository.
 The `claude`/`agy` wrappers sync both on every launch. See
 `__fish_agent_vault_autopush` in Section 7 for its one user-facing
 configuration variable; command-line usage for both tools is in Section 5.
+
+A project's `AGENTS/` repository has no remote, so `agents-vault` also
+copies its `AGENTS/devlogs/` — the handoff documents and the backups saved
+beside them — into the project's vault entry, under `agents/devlogs/`.
+That is the one exception to "memory only", and the reason devlogs
+survive losing the machine. The copy is bounded by location rather than by
+file type, because a backups folder holds zone dumps and original scripts,
+not just Markdown: symlinks are never followed, dot-led names are skipped,
+and a file over 1 MiB is left out (a verbose run says so). It is merge-only
+and one-way. A log deleted from `AGENTS/devlogs/` stays in the vault, and
+an ordinary run never copies back out, since that would resurrect
+something removed on purpose. To restore devlogs on a new machine, copy the
+entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
+`cp -rn`.
