@@ -19,7 +19,7 @@
 #
 # EXIT STATUS
 #   0  IPv6 address resolved
-#   1  IPv6 unavailable or not supported on this network
+#   1  IPv6 unavailable or not supported on this network, or curl is not installed
 #   2  Unexpected argument (takes none)
 #
 # RETURNS
@@ -30,6 +30,12 @@
 function gip6 --description 'Get public IPv6 address'
     __fish_help_header (status current-function) $argv; and return 0
     __fish_no_args (status current-function) $argv; or return
+
+    if not type -q curl
+        __fish_palette
+        echo "$c_err"'gip6: curl is not installed'"$c_reset" >&2
+        return 1
+    end
 
     # Use -6 to force IPv6 and --fail to catch network errors
     set -l ip (curl -6 -s --fail https://icanhazip.com 2>/dev/null)

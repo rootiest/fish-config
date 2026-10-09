@@ -5,6 +5,10 @@
 # commit.gpgsign. Bypass intentionally with `git push --no-verify`.
 zero=0000000000000000000000000000000000000000
 
+# Git feeds the ref lines on stdin, once. Capture them so the signature loop
+# below does not consume them before the chained global hook needs them.
+input="$(cat)"
+
 while read -r local_ref local_sha remote_ref _remote_sha; do
     [ "$local_sha" = "$zero" ] && continue # branch deletion
     case "$remote_ref" in refs/heads/*) ;; *) continue ;; esac
@@ -32,13 +36,20 @@ while read -r local_ref local_sha remote_ref _remote_sha; do
         echo "Bypass: git push --no-verify" >&2
         exit 1
     fi
-done
+done <<<"$input"
 
 # Chain to the global/system hook this local override is shadowing.
 global_hooks="$(git config --global core.hooksPath 2>/dev/null)"
 [ -z "$global_hooks" ] && global_hooks="$(git config --system core.hooksPath 2>/dev/null)"
 if [ -n "$global_hooks" ]; then
     global_hooks="${global_hooks/#\~/$HOME}" # git stores ~ verbatim
-    [ -x "$global_hooks/pre-push" ] && exec "$global_hooks/pre-push" "$@"
+    if [ -x "$global_hooks/pre-push" ]; then
+        # Replay the ref lines. An empty push stays empty rather than becoming
+        # a single blank line.
+        if [ -n "$input" ]; then
+            exec "$global_hooks/pre-push" "$@" <<<"$input"
+        fi
+        exec "$global_hooks/pre-push" "$@" </dev/null
+    fi
 fi
 exit 0
