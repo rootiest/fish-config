@@ -229,6 +229,8 @@ See [OS Compatibility](https://fish.rootiest.fyi/10-installation/#os-compatibili
 
 ## Installation
 
+This config requires **Fish 4.x or newer** (check with `fish --version`; distro-packaged 3.x is too old, see [Fish Version Requirement](https://fish.rootiest.fyi/12-troubleshooting/#fish-version-requirement) for upgrade steps).
+
 This config is managed as a Git repository. To use it on a new machine:
 
 ```fish
