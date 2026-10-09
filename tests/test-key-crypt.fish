@@ -197,11 +197,16 @@ set -l odd "$sb/odd home"
 mkdir -p $odd
 begin
     set -lx HOME $odd
+    # Baseline: whatever merely starting a fish under this HOME leaves behind
+    # (state directories on some fish builds, the CI runner among them).
+    kc --help
+    set -g odd_base (find $odd -mindepth 1 | sort | string collect)
     kc --install
 end
 check "unsafe install path: exit 1" 1 $kc_rc
 check "unsafe install path: says why" true (has "unsafe" "$kc_err")
-check "unsafe install path: nothing written" 0 (find $odd -mindepth 1 | count)
+# Anything beyond the baseline was written by --install itself.
+check "unsafe install path: nothing written" "$odd_base" (find $odd -mindepth 1 | sort | string collect)
 
 check "real ~/.local key-crypt files unchanged" "$real_before" (real_snapshot | string collect)
 
