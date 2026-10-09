@@ -63,8 +63,9 @@ map is in `docs/manual/08-components-reference/`.
 
 - **Evaluation:** always use `__fish_config_op_enabled`. Never call
   `__fish_variable_check` directly on the guards.
-- **Truthiness:** explicit truthy (`1`, `true`) enables; explicit falsy (`0`,
-  `false`) disables.
+- **Truthiness:** explicit truthy (`1 true yes on y`) enables; explicit falsy
+  (`0 false no off n`) disables; case-insensitive. Anything else is treated
+  as unset.
 - **Master switch:** `__fish_config_opinionated=0` disables every category
   whose own variable is unset; explicit category values override it. The
   master is an *off* switch only: a truthy master never enables anything.

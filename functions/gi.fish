@@ -37,7 +37,7 @@
 #
 # EXIT STATUS
 #   0  Patterns appended, or resolved with -o/--stdout or -l/--list
-#   1  Not in a git repository or API fetch failed
+#   1  Not in a git repository, API fetch failed, or curl is not installed
 #   2  Unknown option
 #
 # RETURNS
@@ -98,6 +98,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
     end
 
     if set -q _flag_list
+        __gi_require_curl; or return 1
         curl -sL https://www.toptal.com/developers/gitignore/api/list
         return 0
     end
@@ -227,6 +228,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
         end
         set patterns (string trim -- $patterns)
         if test -n "$patterns"
+            __gi_require_curl; or return 1
             for pattern in (string split "," -- $patterns)
                 set pattern (string trim -- $pattern)
                 test -z "$pattern"; and continue
@@ -250,6 +252,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
 
     # Direct API call mode
     if set -q argv[1]
+        __gi_require_curl; or return 1
         set -l targets (string join "," $argv)
 
         if set -q _flag_stdout
@@ -324,4 +327,26 @@ function __gi_append_dedup
             echo (set_color green)"✔"(set_color normal)" Appended $label patterns to "(set_color cyan)"$readable_path"(set_color normal)
         end
     end
+end
+
+# SYNOPSIS
+#   __gi_require_curl
+#
+# DESCRIPTION
+#   Checks that curl is available for gi's API requests. Prints a one-line
+#   error to stderr and returns 1 when it is not.
+#
+# EXIT STATUS
+#   0  curl is installed
+#   1  curl is not installed
+#
+# EXAMPLE
+#   __gi_require_curl; or return 1
+function __gi_require_curl
+    if not type -q curl
+        __fish_palette
+        echo "$c_err"'gi: curl is not installed'"$c_reset" >&2
+        return 1
+    end
+    return 0
 end

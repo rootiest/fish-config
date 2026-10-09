@@ -81,8 +81,18 @@ if not type -q fisher
         and source $_fisher_tmp
         and type -q fisher
         echo "  [first-run] Fisher installed."
-        if not fisher update 2>/dev/null
-            echo "  [first-run] Fisher update failed — run 'fisher update' manually." >&2
+        # Capture both streams so a failure can say why (network, bad plugin
+        # ref, a plugin install hook). Success stays silent: the output is
+        # only shown on failure. Fisher names the offending plugin in its own
+        # "fisher: ..." lines, so the tail of the output is what is relayed.
+        set -l _fisher_out (fisher update 2>&1)
+        set -l _fisher_rc $status
+        if test $_fisher_rc -ne 0
+            echo "  [first-run] Fisher update failed (exit $_fisher_rc) — run 'fisher update' manually." >&2
+            if test (count $_fisher_out) -gt 0
+                echo "  [first-run] Last output from Fisher:" >&2
+                printf '    %s\n' $_fisher_out[-5..-1] >&2
+            end
         end
     else
         echo "  [first-run] Fisher install failed (download or load error)." >&2

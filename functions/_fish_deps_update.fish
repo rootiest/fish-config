@@ -12,19 +12,29 @@
 #   preferred method. Priority order: cargo, then system PM, then special
 #   installers (fzf-update, fisher, pipx). Always updates fisher plugins first.
 #
+#   Each update command's exit status is checked. A failing update does not
+#   stop the run; the failed tools are collected and reported on stderr at
+#   the end ("N of M updates failed: ...").
+#
+# EXIT STATUS
+#   0  Every attempted update succeeded, or there was nothing to update
+#   1  One or more updates failed
+#
 # EXAMPLE
 #   _fish_deps_update
 function _fish_deps_update
     _fish_deps_catalog
 
     set -l pm (_fish_deps_detect_pm)
-    set -l updated_any 0
+    set -l attempted 0
+    set -l failed
 
     # Fisher plugins — always update if fisher is present
     if type -q fisher
         echo "Updating fisher plugins..."
+        set attempted (math $attempted + 1)
         fisher update
-        set updated_any 1
+        or set -a failed fisher
     end
 
     set -l i 1
@@ -44,12 +54,14 @@ function _fish_deps_update
         if test "$special" = yay-build
             if type -q paru
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 paru -S --noconfirm yay
-                set updated_any 1
+                or set -a failed $bin
             else if test -n "$pm_pkg"; and test -n "$pm"
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 _fish_deps_pm_upgrade $pm_pkg
-                set updated_any 1
+                or set -a failed $bin
             end
             set i (math $i + 1)
             continue
@@ -59,8 +71,9 @@ function _fish_deps_update
         if test "$special" = rustup-installer
             if type -q rustup
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 rustup update
-                set updated_any 1
+                or set -a failed $bin
             end
             set i (math $i + 1)
             continue
@@ -69,8 +82,9 @@ function _fish_deps_update
         # fzf: always use fzf-update (git-based)
         if test "$special" = fzf-update
             echo "Updating $bin..."
+            set attempted (math $attempted + 1)
             fzf-update
-            set updated_any 1
+            or set -a failed $bin
             set i (math $i + 1)
             continue
         end
@@ -79,12 +93,14 @@ function _fish_deps_update
         if test "$special" = go-ov
             if type -q go
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 go install github.com/noborus/ov@latest
-                set updated_any 1
+                or set -a failed $bin
             else if test -n "$pm_pkg"; and test -n "$pm"
                 echo "Updating $bin (go unavailable, using system PM)..."
+                set attempted (math $attempted + 1)
                 _fish_deps_pm_upgrade $pm_pkg
-                set updated_any 1
+                or set -a failed $bin
             end
             set i (math $i + 1)
             continue
@@ -93,8 +109,9 @@ function _fish_deps_update
         # lazydocker: re-run the official install/update script
         if test "$special" = curl-lazydocker
             echo "Updating $bin..."
+            set attempted (math $attempted + 1)
             _fish_deps_run_script https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh bash
-            and set updated_any 1
+            or set -a failed $bin
             set i (math $i + 1)
             continue
         end
@@ -105,16 +122,19 @@ function _fish_deps_update
         if test "$special" = marktext-release
             if type -q paru
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 paru -S --noconfirm marktext-bin
-                set updated_any 1
+                or set -a failed $bin
             else if type -q yay
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 yay -S --noconfirm marktext-bin
-                set updated_any 1
+                or set -a failed $bin
             else if test -f "$HOME/.local/bin/marktext"
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 _fish_deps_marktext_appimage
-                set updated_any 1
+                or set -a failed $bin
             end
             set i (math $i + 1)
             continue
@@ -123,8 +143,9 @@ function _fish_deps_update
         # wakatime: re-download the binary from github releases
         if test "$special" = wakatime-binary
             echo "Updating $bin..."
+            set attempted (math $attempted + 1)
             _fish_deps_wakatime_binary
-            and set updated_any 1
+            or set -a failed $bin
             set i (math $i + 1)
             continue
         end
@@ -134,8 +155,9 @@ function _fish_deps_update
         # needed)
         if test "$special" = win32yank-release
             echo "Updating $bin..."
+            set attempted (math $attempted + 1)
             _fish_deps_win32yank_binary
-            and set updated_any 1
+            or set -a failed $bin
             set i (math $i + 1)
             continue
         end
@@ -144,8 +166,9 @@ function _fish_deps_update
         if test "$special" = pipx
             if type -q pipx
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 pipx upgrade $bin
-                set updated_any 1
+                or set -a failed $bin
             end
             set i (math $i + 1)
             continue
@@ -154,8 +177,9 @@ function _fish_deps_update
         # uv: use built-in self-updater
         if test "$special" = curl-uv
             echo "Updating $bin..."
+            set attempted (math $attempted + 1)
             uv self update
-            set updated_any 1
+            or set -a failed $bin
             set i (math $i + 1)
             continue
         end
@@ -164,6 +188,7 @@ function _fish_deps_update
         if test "$special" = git-cargo-fish
             if type -q cargo; and type -q uv
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 set -l _tmpdir (mktemp -d)
                 set -l _build_ok 0
                 git clone https://github.com/fish-shell/fish-shell "$_tmpdir"
@@ -178,18 +203,22 @@ function _fish_deps_update
                 popd 2>/dev/null
                 rm -rf "$_tmpdir"
                 if test $_build_ok -eq 1
-                    set updated_any 1
                     set_color yellow
                     echo "  Fish updated — restart your shell to use the new version."
                     set_color normal
+                else
+                    set -a failed $bin
                 end
             else if test -n "$pm_pkg"; and test -n "$pm"
                 echo "Updating $bin (cargo/uv unavailable, using system PM)..."
-                _fish_deps_pm_upgrade $pm_pkg
-                set updated_any 1
-                set_color yellow
-                echo "  Fish updated — restart your shell to use the new version."
-                set_color normal
+                set attempted (math $attempted + 1)
+                if _fish_deps_pm_upgrade $pm_pkg
+                    set_color yellow
+                    echo "  Fish updated — restart your shell to use the new version."
+                    set_color normal
+                else
+                    set -a failed $bin
+                end
             else
                 set_color yellow
                 echo "  fish: cannot update — install cargo and uv to build from source"
@@ -203,8 +232,9 @@ function _fish_deps_update
         if test "$special" = curl-installer
             if test "$bin" = starship
                 echo "Updating $bin..."
+                set attempted (math $attempted + 1)
                 _fish_deps_run_script https://starship.rs/install.sh sh --yes
-                and set updated_any 1
+                or set -a failed $bin
             end
             set i (math $i + 1)
             continue
@@ -213,8 +243,9 @@ function _fish_deps_update
         # Cargo: prefer for Rust tools
         if test -n "$cargo_crate"; and type -q cargo
             echo "Updating $bin..."
+            set attempted (math $attempted + 1)
             cargo install --force $cargo_crate
-            set updated_any 1
+            or set -a failed $bin
             set i (math $i + 1)
             continue
         end
@@ -222,14 +253,24 @@ function _fish_deps_update
         # System PM fallback
         if test -n "$pm_pkg"; and test -n "$pm"
             echo "Updating $bin..."
+            set attempted (math $attempted + 1)
             _fish_deps_pm_upgrade $pm_pkg
-            set updated_any 1
+            or set -a failed $bin
         end
 
         set i (math $i + 1)
     end
 
-    if test $updated_any -eq 0
+    if test $attempted -eq 0
         echo "Nothing to update."
     end
+
+    # Explicit terminal status: a trailing `if` with no branch taken would
+    # resolve $status to 0 whatever happened above.
+    if test (count $failed) -gt 0
+        __fish_palette
+        echo "$c_err"(count $failed)" of $attempted updates failed: $c_cmd$failed$c_reset" >&2
+        return 1
+    end
+    return 0
 end

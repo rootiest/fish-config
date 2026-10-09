@@ -69,8 +69,8 @@ automatically on exit. Use `logs` to browse them interactively.
 
 | Variable | Value | Notes |
 |---|---|---|
-| `GPG_TTY` | `$(tty)` | ensures GPG passphrase prompts work |
-| `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code |
+| `GPG_TTY` | `$(tty)` | ensures GPG passphrase prompts work; interactive shells with a tty only |
+| `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code (C3 overrides) |
 | `CDPATH` | `. ~/projects ~` | |
 
 Opinionated defaults (`CDPATH`, `PAGER`/`MANPAGER`, Vi mode, command shadows,
