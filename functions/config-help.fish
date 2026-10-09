@@ -151,18 +151,18 @@ function config-help --description 'Open the offline fish shell configuration ma
     # ── --html / -w ──────────────────────────────────────────────
     if contains -- --html $argv; or contains -- -w $argv
         if test -n "$section_kw"
-            set_color yellow
+            echo -n (__fish_color yellow)
             echo "note: deep links aren't available on the website — opening the site root; use its search box to find '$section_kw'" >&2
-            set_color normal
+            echo -n (__fish_color normal)
         end
 
         if type -q xdg-open
             xdg-open "$site_url" &>/dev/null &
             disown
         else
-            set_color red
+            echo -n (__fish_color red)
             echo "error: no opener found — visit $site_url" >&2
-            set_color normal
+            echo -n (__fish_color normal)
             return 1
         end
         return 0
@@ -171,15 +171,15 @@ function config-help --description 'Open the offline fish shell configuration ma
     # ── --man / -m ───────────────────────────────────────────────
     if contains -- --man $argv; or contains -- -m $argv
         if not test -f "$man_file"
-            set_color red
+            echo -n (__fish_color red)
             echo "error: man page not found at $man_file" >&2
-            set_color normal
+            echo -n (__fish_color normal)
             return 1
         end
         if not type -q man
-            set_color red
+            echo -n (__fish_color red)
             echo "error: man not found — cannot open man page" >&2
-            set_color normal
+            echo -n (__fish_color normal)
             return 1
         end
         if test -n "$found_text"
@@ -191,9 +191,9 @@ function config-help --description 'Open the offline fish shell configuration ma
             # shell doesn't word-split headings that contain spaces.
             env MANPAGER="less '+/$pattern'" man -l "$man_file"
         else if test -n "$section_kw"
-            set_color yellow
+            echo -n (__fish_color yellow)
             echo "note: no section matching '$section_kw' — opening at top" >&2
-            set_color normal
+            echo -n (__fish_color normal)
             man -l "$man_file"
         else
             man -l "$man_file"
@@ -253,9 +253,9 @@ function config-help --description 'Open the offline fish shell configuration ma
     end
 
     if not test -f "$doc_file"
-        set_color red
+        echo -n (__fish_color red)
         echo "error: documentation not found at $doc_file" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 1
     end
 
@@ -268,9 +268,9 @@ function config-help --description 'Open the offline fish shell configuration ma
             set start_line $lnum
         end
     else if test -n "$section_kw"
-        set_color yellow
+        echo -n (__fish_color yellow)
         echo "note: no section matching '$section_kw' — opening at top" >&2
-        set_color normal
+        echo -n (__fish_color normal)
     end
 
     # ── Navigation hint line ─────────────────────────────────────
@@ -278,6 +278,9 @@ function config-help --description 'Open the offline fish shell configuration ma
     # remains visible at the top of the screen at all times.
     set -l nav_hint \
         " \033[2mNAVIGATION: [ Space=next section  ^=prev  Alt+u=sections  /=search  q=quit ]\033[0m"
+    # NO_COLOR: no escapes in the hint, bat renders plain (so the spans
+    # stay raw backticks for span_raw), and the span replacement is plain.
+    set -l bat_color always
 
     # ── Inline code spans ────────────────────────────────────────
     # The document carries backticks for pandoc and the docs site, but
@@ -294,6 +297,12 @@ function config-help --description 'Open the offline fish shell configuration ma
     set -l span_ansi '\e\[[0-9;]*m`\e\[0m(.*?)\e\[[0-9;]*m`\e\[0m'
     set -l span_raw '`([^`]+)`'
     set -l span_bold (printf '\e[1m$1\e[0m')
+    if test -n "$NO_COLOR"
+        set nav_hint " NAVIGATION: [ Space=next section  ^=prev  Alt+u=sections  /=search  q=quit ]"
+        set bat_color never
+        set span_ansi $span_raw
+        set span_bold '$1'
+    end
 
     # ── Viewer fallback chain ────────────────────────────────────
     # When jumping to a section, slice the file from start_line so ov
@@ -308,14 +317,14 @@ function config-help --description 'Open the offline fish shell configuration ma
         if test $start_line -gt 1
             begin
                 printf "$nav_hint\n"
-                bat --color=always --style=plain --language=markdown "$doc_file" \
+                bat --color=$bat_color --style=plain --language=markdown "$doc_file" \
                     | tail -n +$start_line \
                     | string replace -ra $span_ansi $span_bold
             end | ov $ov_args
         else
             begin
                 printf "$nav_hint\n"
-                bat --color=always --style=plain --language=markdown "$doc_file" \
+                bat --color=$bat_color --style=plain --language=markdown "$doc_file" \
                     | string replace -ra $span_ansi $span_bold
             end | ov $ov_args
         end
@@ -342,9 +351,9 @@ function config-help --description 'Open the offline fish shell configuration ma
         # bat alone: syntax highlighting with built-in paging; no line jump.
     else if type -q bat
         if test $start_line -gt 1
-            set_color brblack
+            echo -n (__fish_color brblack)
             echo "note: bat pager — use / to search for your section" >&2
-            set_color normal
+            echo -n (__fish_color normal)
         end
         # bat owns the pager here, so the spans are flattened on the way
         # in rather than styled on the way out — bat would escape any

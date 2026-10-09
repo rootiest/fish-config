@@ -72,8 +72,8 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
     end
 
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
-        set_color red --bold
-        echo "Error:" (set_color normal)"Not a git repository (or any parent directories)" >&2
+        echo -n (__fish_color red --bold)
+        echo "Error:" (__fish_color normal)"Not a git repository (or any parent directories)" >&2
         return 1
     end
 
@@ -101,9 +101,9 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
 
     if set -q _flag_warn
         for f in $pending
-            set_color yellow --bold
+            echo -n (__fish_color yellow --bold)
             echo -n "Warning: "
-            set_color normal
+            echo -n (__fish_color normal)
             echo "$f is tracked but ignored"
         end
         return 1
@@ -111,7 +111,7 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
 
     if set -q _flag_force
         git rm --cached -- $pending >/dev/null
-        echo (set_color green)"✔"(set_color normal)" Untracked "(count $pending)" file(s)."
+        echo (__fish_color green)"✔"(__fish_color normal)" Untracked "(count $pending)" file(s)."
         return 0
     end
 
@@ -120,7 +120,7 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
             read -P "Remove '$f' from git tracking? [y/N] " confirm
             if string match -qir '^y' -- "$confirm"
                 git rm --cached -- "$f" >/dev/null
-                echo (set_color green)"✔"(set_color normal)" Untracked $f"
+                echo (__fish_color green)"✔"(__fish_color normal)" Untracked $f"
             else
                 git config --local --add gitignore-scrub.skip "$f"
             end
@@ -128,19 +128,19 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
         return 0
     end
 
-    set_color yellow
-    echo (count $pending)" tracked file(s) now match .gitignore:"(set_color normal)
+    echo -n (__fish_color yellow)
+    echo (count $pending)" tracked file(s) now match .gitignore:"(__fish_color normal)
     for f in $pending
         echo "  $f"
     end
     read -P "Remove from git tracking? [y/N] " confirm
     if string match -qir '^y' -- "$confirm"
         git rm --cached -- $pending >/dev/null
-        echo (set_color green)"✔"(set_color normal)" Untracked "(count $pending)" file(s)."
+        echo (__fish_color green)"✔"(__fish_color normal)" Untracked "(count $pending)" file(s)."
     else
         for f in $pending
             git config --local --add gitignore-scrub.skip "$f"
         end
-        echo (set_color brblack)"Remembered — won't ask again for these files."(set_color normal)
+        echo (__fish_color brblack)"Remembered — won't ask again for these files."(__fish_color normal)
     end
 end

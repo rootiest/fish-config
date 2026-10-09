@@ -27,7 +27,7 @@ function poke --description 'touch with automatic parent directory creation'
     __fish_help_header (status current-function) $argv; and return 0
 
     if test (count $argv) -eq 0
-        echo (set_color red)"poke: no file specified"(set_color normal) >&2
+        echo (__fish_color red)"poke: no file specified"(__fish_color normal) >&2
         return 2
     end
     for _path in $argv

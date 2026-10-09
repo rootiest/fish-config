@@ -212,6 +212,26 @@ The directory is kept private: created `700`, with the log files `600`,
 regardless of umask. A looser existing directory is tightened silently on its
 next use. See the C5 reference in Section 8.
 
+## Colour Output (NO_COLOR)
+
+| Variable | Value / Notes |
+|---|---|
+| `NO_COLOR` | unset by default. Set to any non-empty value (`1`, `true`, ...) to turn colour off in this configuration's own command output; an empty value does not count |
+
+`NO_COLOR` follows the convention at <https://no-color.org>. With it set, the
+shared output palette (`__fish_palette`) hands every function empty colour
+roles, and the functions that colour their output directly (through
+`__fish_color`, a `NO_COLOR`-aware `set_color`) print no escape sequences
+either. That covers `--help` text, errors and warnings, `fish-deps` status,
+`config-help`, `gi`, `scrub` and the rest of the user-facing functions. The
+status marks (`✓`, `✗`, `⚠`) are unchanged, so they still show.
+
+What it does not change: your prompt and theme, fish's syntax highlighting
+(the `fish_color_*` variables), the Python `config-settings` interface, the
+vendored `fzf`, autopair, done and puffer plugins, and the output of external
+tools that colour themselves. Export it from your environment, or put
+`set -gx NO_COLOR 1` in `local.fish`, to apply it everywhere.
+
 ## Other
 
 | Variable | Value | Notes |
