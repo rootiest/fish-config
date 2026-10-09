@@ -6126,8 +6126,10 @@ Fish set with sensitive names: \f[V]set -gx GITHUB_TOKEN xxx\f[R]
 URLs with embedded credentials: \f[V]https://user:pass\[at]host\f[R], or
 a token-only \f[V]https://TOKEN\[at]host\f[R]
 .IP \[bu] 2
-HTTP Authorization headers (any case):
-\f[V]curl -H \[dq]Authorization: ...\[dq]\f[R]
+HTTP Authorization headers (any case) in \f[V]curl\f[R], \f[V]wget\f[R]
+and httpie (\f[V]http\f[R]/\f[V]https\f[R]):
+\f[V]curl -H \[dq]Authorization: ...\[dq]\f[R],
+\f[V]wget --header=\[aq]Authorization: ...\[aq]\f[R]
 .IP \[bu] 2
 API-key style headers: \f[V]X-API-Key: ...\f[R],
 \f[V]X-Auth-Token: ...\f[R]
