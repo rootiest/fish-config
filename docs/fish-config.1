@@ -369,14 +369,14 @@ T{
 T}@T{
 \f[V]$(tty)\f[R]
 T}@T{
-ensures GPG passphrase prompts work
+ensures GPG passphrase prompts work; interactive shells with a tty only
 T}
 T{
 \f[V]CLAUDE_CODE_NO_FLICKER\f[R]
 T}@T{
 \f[V]1\f[R]
 T}@T{
-suppress terminal flicker in Claude Code
+suppress terminal flicker in Claude Code (C3 overrides)
 T}
 T{
 \f[V]CDPATH\f[R]
@@ -5596,7 +5596,8 @@ PATH setup                Prepends custom bin directories to the PATH
 exit → smart_exit         exit wrapper that captures scrollback before closing
 PAGER=ov                  ov used by git, man, and all $PAGER-aware tools
 EDITOR=nvim               nvim fallback to vi for git commit, etc.
-GPG_TTY                   Sets GPG_TTY to current terminal tty
+GPG_TTY                   Sets GPG_TTY to current terminal tty (only when one exists)
+CLAUDE_CODE_NO_FLICKER=1  Suppresses terminal flicker in Claude Code
 MANPAGER=bat pipeline     man pages rendered with syntax highlighting
 CDPATH=. \[ti]/projects \[ti]     bare dir names resolve against \[ti]/projects and \[ti]
 Bang-bang system          ! and $ keys expand history; !\[ha], !*, !-N, !?str?,
@@ -5634,7 +5635,7 @@ and \f[V]smart_exit\f[R]\[cq]s plain-exit path.
 .SS environment
 .PP
 \f[V]$PATH\f[R], \f[V]$PAGER\f[R]/\f[V]$EDITOR\f[R]/\f[V]$GPG_TTY\f[R],
-and \f[V]$CDPATH\f[R].
+\f[V]$CLAUDE_CODE_NO_FLICKER\f[R], and \f[V]$CDPATH\f[R].
 .SS prompt
 .PP
 Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
