@@ -171,7 +171,7 @@ set -l counts (mktemp)
 # runs against the user's LIVE config and real universal variables -- this repo
 # doubles as a real ~/.config/fish -- so a guard test doing
 # `set -e __fish_config_op_logging` would erase a real universal variable out of
-# the running shell. Measured: $__fish_config_op_registry_keys has 65 entries
+# the running shell. Measured: $__fish_config_op_registry_keys has 66 entries
 # under a plain `fish`, 0 under `fish --no-config`.
 #
 # `env -i HOME=$sandbox` was tried and REJECTED. It looks strictly more

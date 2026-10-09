@@ -132,15 +132,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # The default GITEA_TOKEN is Gitea Actions' built-in synthetic
-          # bot identity, not a real account -- main's branch protection
-          # rejects its pushes outright (run 983, run 990), and it can't
-          # be whitelisted because it isn't an addable user. BOT_PUSH_TOKEN
-          # is a PAT on the rootiest account (already bypass-whitelisted)
-          # used only so this job's later push succeeds; commit authorship
-          # and GPG signing below still use the fishconfig-bot identity,
-          # which is unrelated to push auth.
-          token: ${{ secrets.BOT_PUSH_TOKEN }}
+          # The job's built-in token is no real user, so main's branch
+          # protection rejects its pushes (runs 983, 990) and it cannot be
+          # allow-listed. Don't persist it: ci-auth (in the commit step)
+          # gives git the shared CI_GITEA_TOKEN instead, which belongs to
+          # the rootiest account and may push to main.
+          persist-credentials: false
           fetch-depth: 0
 
       # Same shape as the test job's identical step; see its comment.
@@ -227,29 +224,19 @@ jobs:
       - name: Commit generated docs
         if: github.event_name != 'pull_request'
         env:
-          BOT_GPG_KEY: ${{ secrets.CI_GPG_PRIVATE_KEY }}
+          # The shared CI identity (user-level secrets and variables on the
+          # rootiest account): commits are "Rootiest CI <ci@rootiest.dev>",
+          # signed with a key on that account so Gitea shows them verified.
+          # ci-auth (from the fish-ci image) logs tea in, makes git push use
+          # the token, and sets up the identity and signing. Only this step
+          # gets the secrets.
+          GITEA_SERVER_URL: ${{ vars.CI_GITEA_URL }}
+          GITEA_SERVER_TOKEN: ${{ secrets.CI_GITEA_TOKEN }}
+          CI_GIT_NAME: ${{ vars.CI_GIT_NAME }}
+          CI_GIT_EMAIL: ${{ vars.CI_GIT_EMAIL }}
+          CI_GPG_PRIVATE_KEY: ${{ secrets.CI_GPG_PRIVATE_KEY }}
         run: |
-          # actions@gitea was never a verified email on any account, so
-          # these commits could never show as signed/verified regardless
-          # of server config. fishconfig-bot is a dedicated Gitea account
-          # (verified email, no login) that owns this key; the private
-          # key lives only in the CI_GPG_PRIVATE_KEY repo secret.
-          #
-          # Secret is base64-encoded: a raw multi-line armored key piped
-          # through `echo "$VAR" | gpg --import` came out CRC-corrupted
-          # ("Invalid keyring") the first time this ran -- something in
-          # the secret/env round-trip mangles embedded newlines. Base64
-          # collapses it to one line immune to that.
-          export GNUPGHOME="$(mktemp -d)"
-          chmod 700 "$GNUPGHOME"
-          echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
-          echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
-          command -v gpg >/dev/null || { echo "gpg missing from the CI image" >&2; exit 1; }
-          echo "$BOT_GPG_KEY" | base64 -d | gpg --batch --quiet --import
-          git config user.name  "Gitea Actions Bot"
-          git config user.email "fishconfig-bot@git.rootiest.dev"
-          git config user.signingkey CAA082C2F3467E1F7217AD492075C120312D23F4
-          git config commit.gpgsign true
+          ci-auth
           git add docs/fish-config.md docs/fish-config.1 conf.d/__fish_config_op_registry.fish
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "chore(docs): regenerate manual, man page, and component registry"
