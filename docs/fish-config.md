@@ -2580,7 +2580,7 @@ functions). They are active in all interactive sessions.
 
 ### agents-cleanup
 
-    Synopsis:  agents-cleanup [-n | --dry-run] [--drop-extras] [--marker-file]
+    Synopsis:  agents-cleanup [-n | --dry-run] [--drop-extras] [-f | --force] [--marker-file]
                               [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 
     Reverses agents-init in the current project, and marks the project so
@@ -2616,6 +2616,14 @@ functions). They are active in all interactive sessions.
     and every "Added by agents-init" block is stripped from .gitignore.
     Nothing is committed to the outer repository.
 
+    A damaged AGENTS/.git (present but not a valid repository, e.g. HEAD
+    gone with the objects left) cannot be bundled, so the cleanup refuses
+    before anything changes: repair it, or pass --force to remove AGENTS/
+    without an archive. With --force the damaged .git is treated as "not a
+    repository" and removed with AGENTS/, and a warning on stderr says that
+    its history is not archived (suppressed by --silent only). --dry-run
+    refuses the same way, unless --force is also given.
+
     Files inside AGENTS/ that no project symlink points to -- other than
     agents-init's own .version, .agents-tools/ and .gitkeep files -- stop
     the cleanup before anything changes. They are listed; --drop-extras
@@ -2641,6 +2649,7 @@ functions). They are active in all interactive sessions.
     Arguments:
       -n, --dry-run    Print the plan and change nothing
       --drop-extras    Discard unlinked files in AGENTS/ instead of refusing
+      -f, --force      Remove AGENTS/ even though its .git is damaged (no archive)
       --marker-file    Also write .agents-disabled (required outside git)
       -v, --verbose    Print all per-step output (default)
       -q, --quiet      Print one summary line only if changes were made
@@ -2650,8 +2659,8 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Cleanup finished, or nothing was left to do
       1  Refused (outside git without --marker-file, unresolved rebase in
-         AGENTS/, unlinked files or a nested repository in AGENTS/) or a step
-         failed
+         AGENTS/, unlinked files or a nested repository in AGENTS/, a damaged
+         AGENTS/.git without --force) or a step failed
       2  Unknown option
 
     Notes:
@@ -2707,7 +2716,10 @@ functions). They are active in all interactive sessions.
     in the project root, which a team may commit, has the same effect.
     Either one turns every wrapper launch into a silent no-op there.
     --enable clears the git key and scaffolds; the file has to be deleted
-    by hand, because it is a decision shared with every clone.
+    by hand, because it is a decision shared with every clone. --enable only
+    clears the repository-local key: if the key is still in effect from
+    another scope (global, system, include), it names that origin on stderr,
+    exits 1 and does not scaffold.
 
     Two modes, recorded in AGENTS/.mode. In both, each real file lives in
     the repository whose visibility matches it, and the other side holds a
@@ -2808,7 +2820,10 @@ functions). They are active in all interactive sessions.
       1  Fatal error (git init failed, move failed, the AGENTS/ commit was
          rejected, or an unresolved rebase blocked it), --enable refused
          because .agents-disabled exists, a migration precondition failed,
-         or --private given for a public project
+         or --private given for a public project; also --enable when
+         unsetting the git key failed or the key is still
+         in effect from another scope (global/system), which is reported on
+         stderr with its origin
       2  Unknown option, or both --public and --private given
 
     Notes:
@@ -5924,7 +5939,10 @@ it changes anything, and are listed. Move them out yourself, or pass
 `--drop-extras` to discard them. `--dry-run` refuses the same way, unless
 you also give it `--drop-extras`. A git repository nested inside `AGENTS/`
 is always refused, even with `--drop-extras`: the bundle records only a
-pointer to it, so move it out first. `agents-cleanup` also refuses to run
+pointer to it, so move it out first. A damaged `AGENTS/.git` (present but not
+a valid repository) is refused too, because its history cannot be archived;
+repair it, or pass `--force` to remove `AGENTS/` without an archive (a warning
+says so). `agents-cleanup` also refuses to run
 when `AGENTS/` is itself a symlink to a directory elsewhere, since removing
 it would remove that directory; replace the link with a real directory
 first. Discarded files survive only in the bundle, and files
