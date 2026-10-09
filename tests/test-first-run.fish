@@ -16,6 +16,9 @@
 #   empty       exit 0, empty file          (200 with an empty body)
 #   garbage     exit 0, HTML in the file    (200 with a non-fish body)
 #   good        exit 0, a stub `fisher` definition
+#
+# The stub `fisher` fails (stdout line + stderr line, exit 1) when
+# FISHER_STUB_FAIL=1, to exercise the `fisher update` failure reporting.
 
 source (realpath (dirname (status filename)))/lib.fish
 
@@ -34,7 +37,7 @@ printf '%s\n' \
     '  http-error) exit 22 ;;' \
     '  empty) : >"$out"; exit 0 ;;' \
     '  garbage) echo "<html><body>Not Found</body></html>" >"$out"; exit 0 ;;' \
-    '  good) printf "%s\n" "function fisher" "    echo fisher-ran \$argv >>\$FISHER_STUB_LOG" "end" >"$out"; exit 0 ;;' \
+    '  good) printf "%s\n" "function fisher" "    echo fisher-ran \$argv >>\$FISHER_STUB_LOG" "    if test \"\$FISHER_STUB_FAIL\" = 1" "        echo \"fisher: fetching bad/plugin\"" "        echo \"fisher: Invalid plugin name or host unavailable: bad/plugin\" >&2" "        return 1" "    end" "end" >"$out"; exit 0 ;;' \
     esac \
     'exit 99' >$stub_bin/curl
 chmod +x $stub_bin/curl
@@ -80,6 +83,21 @@ run_first_run good
 check "good: 'Fisher installed.' printed" true (string match -q '*Fisher installed.*' -- $fr_out; and echo true; or echo false)
 check "good: no failure message" false (string match -q '*Fisher install failed*' -- $fr_err; and echo true; or echo false)
 check "good: fisher update ran" "fisher-ran update" (string trim (string collect <$fr_fisher_log))
+
+section "first-run: fisher update failure reports the real error (issue #249)"
+
+run_first_run good FISHER_STUB_FAIL=1
+check "update fails: generic message on stderr" true (string match -q "*Fisher update failed*fisher update*manually*" -- $fr_err; and echo true; or echo false)
+check "update fails: exit code reported" true (string match -q "*Fisher update failed (exit 1)*" -- $fr_err; and echo true; or echo false)
+check "update fails: Fisher's stderr line is shown" true (string match -q "*Invalid plugin name or host unavailable: bad/plugin*" -- $fr_err; and echo true; or echo false)
+check "update fails: Fisher's stdout context is shown" true (string match -q "*fisher: fetching bad/plugin*" -- $fr_err; and echo true; or echo false)
+check "update fails: nothing about it on stdout" false (string match -q "*Invalid plugin name*" -- $fr_out; and echo true; or echo false)
+check "update fails: 'Fisher installed.' still printed" true (string match -q "*Fisher installed.*" -- $fr_out; and echo true; or echo false)
+
+run_first_run good
+check "update ok: no update failure text on stderr" false (string match -q "*Fisher update failed*" -- $fr_err; and echo true; or echo false)
+check "update ok: no Fisher output on stderr" false (string match -q "*fisher: *" -- $fr_err; and echo true; or echo false)
+check "update ok: no Fisher output leaked to stdout" false (string match -q "*fisher: *" -- $fr_out; and echo true; or echo false)
 
 section "first-run: download is pinned and hardened"
 
