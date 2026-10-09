@@ -5082,6 +5082,11 @@ To update all Fisher-managed plugins, run `fisher update` or
 
 # 10. INSTALLATION
 
+This configuration requires **Fish 4.x or newer**; check with `fish --version`.
+A distro-packaged Fish 3.x is too old. The Fish Version Requirement section of
+the Troubleshooting chapter lists upgrade steps by distribution, and `fish-deps`
+reports an outdated Fish.
+
 This configuration is managed as a git repository. To deploy on a new machine:
 
     mv ~/.config/fish ~/.config/fish.bak   # back up any existing config
