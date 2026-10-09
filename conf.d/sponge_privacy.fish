@@ -64,8 +64,13 @@ set -a _privacy_patterns 'https?://[^:@\s]+:[^@\s]+@'
 # https://user@host is kept)
 set -a _privacy_patterns 'https?://[^:@\s/]{16,}@'
 
-# HTTP Authorization headers, any case: curl -H "Authorization: Bearer xxx"
-set -a _privacy_patterns '(?i)curl\s.*authorization:'
+# HTTP credential headers, any case, in curl, wget and httpie (http/https):
+#   curl -H "Authorization: Bearer xxx"
+#   wget --header='Authorization: Bearer xxx'
+#   http example.com Authorization:'Bearer xxx' X-API-Key:xxx
+# `https?\s` needs whitespace after the command word, so a bare URL such as
+# https://example.com never matches.
+set -a _privacy_patterns '(?i)\b(?:curl|wget|https?)\s.*(?:authorization|x-api-key|x-auth-token):'
 
 # API-key style headers: X-API-Key: xxx, X-Auth-Token: xxx
 set -a _privacy_patterns '(?i)\bx-(?:api-key|auth-token|access-token|amz-security-token)\s*:'
@@ -95,7 +100,8 @@ end
 # so user-added patterns are never touched. Append here whenever a pattern in
 # the list above is changed or dropped.
 set -l _retired_patterns \
-    'curl\s.*[Aa]uthorization:'
+    'curl\s.*[Aa]uthorization:' \
+    '(?i)curl\s.*authorization:'
 # The list is rebuilt rather than edited by index: `set -Ue name[N]` silently
 # does nothing on a universal variable.
 set -l _kept_patterns

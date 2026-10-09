@@ -4951,7 +4951,7 @@ Commands matching any of these structural signatures are never recorded:
 - Inline env assignments: `GITHUB_TOKEN=xxx`, `MY_API_KEY=abc`
 - Fish set with sensitive names: `set -gx GITHUB_TOKEN xxx`
 - URLs with embedded credentials: `https://user:pass@host`, or a token-only `https://TOKEN@host`
-- HTTP Authorization headers (any case): `curl -H "Authorization: ..."`
+- HTTP Authorization headers (any case) in `curl`, `wget` and httpie (`http`/`https`): `curl -H "Authorization: ..."`, `wget --header='Authorization: ...'`
 - API-key style headers: `X-API-Key: ...`, `X-Auth-Token: ...`
 - Basic auth flags: `curl -u user:pass`
 - `sshpass`, `docker login -p`, `openssl -passin/-passout`

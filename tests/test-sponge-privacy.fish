@@ -30,7 +30,8 @@ function run_sponge --inherit-variable sandbox --inherit-variable repo_root
 end
 
 set -l old_pat 'curl\s.*[Aa]uthorization:'
-set -l new_pat '(?i)curl\s.*authorization:'
+set -l mid_pat '(?i)curl\s.*authorization:'
+set -l new_pat '(?i)\b(?:curl|wget|https?)\s.*(?:authorization|x-api-key|x-auth-token):'
 set -l custom 'my-custom-[Aa]uthorization:'
 
 section "sponge_privacy: retired patterns are migrated"
@@ -41,6 +42,13 @@ check "replacement pattern registered" true (contains -- $new_pat $got; and echo
 check "user-added pattern preserved" true (contains -- $custom $got; and echo true; or echo false)
 check "replacement registered exactly once (idempotent)" 1 (count (string match -- $new_pat $got))
 check "custom pattern kept exactly once" 1 (count (string match -- $custom $got))
+
+section "sponge_privacy: superseded curl-only pattern is migrated (#254)"
+
+set got (run_sponge $mid_pat $custom)
+check "curl-only pattern removed" false (contains -- $mid_pat $got; and echo true; or echo false)
+check "broadened pattern registered" true (contains -- $new_pat $got; and echo true; or echo false)
+check "user-added pattern preserved (#254)" true (contains -- $custom $got; and echo true; or echo false)
 
 section "sponge_privacy: near-miss user patterns are not retired"
 
