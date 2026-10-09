@@ -20,9 +20,15 @@ function _fzf_search_variables --argument-names set_show_output set_names_output
     # with a $, remove it from the query so that it will better match the variable names
     set -f cleaned_curr_token (string replace -- '$' '' $current_token)
 
+    # The preview is a command string that fzf runs through fish, so the file
+    # path is spliced into it: escape it so a path with spaces, quotes or
+    # `;`/`$()` (e.g. from a hostile $TMPDIR) stays one inert argument. {} is
+    # fzf's own already-quoted placeholder and is left alone.
+    set -f preview_cmd "_fzf_extract_var_info {} "(string escape -- $set_show_output)
+
     set -f variable_names_selected (
         printf '%s\n' $all_variable_names |
-        _fzf_wrapper --preview "_fzf_extract_var_info {} $set_show_output" \
+        _fzf_wrapper --preview $preview_cmd \
             --prompt="Variables> " \
             --preview-window="wrap" \
             --multi \
