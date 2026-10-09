@@ -20,7 +20,7 @@
 #   Wraps ssh with kitten ssh inside Kitty terminal for better terminal
 #   integration (terminfo forwarding, multiplexing, copy/paste support).
 #   Falls back to system ssh on
-#   other terminals.
+#   other terminals, or when kitten is not installed.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to kitten ssh or system ssh
@@ -34,7 +34,8 @@ function ssh --description 'Alias ssh to kitten ssh when using Kitty terminal'
         return $status
     end
 
-    if test "$TERM" = xterm-kitty
+    # kitten may be absent even when TERM says Kitty (containers, sudo -i, nested shells).
+    if test "$TERM" = xterm-kitty; and type -q kitten
         kitten ssh $argv
     else
         command ssh $argv

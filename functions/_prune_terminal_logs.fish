@@ -10,7 +10,8 @@
 # DESCRIPTION
 #   Removes the oldest "<prefix>_*.log" files in SCROLLBACK_HISTORY_DIR
 #   (default ~/.terminal_history) so the total count for that prefix stays
-#   within SCROLLBACK_HISTORY_MAX_FILES (default 100). Files are sorted by
+#   within SCROLLBACK_HISTORY_MAX_FILES (default 100; a value that is not a
+#   non-negative integer also falls back to 100). Files are sorted by
 #   modification time, so the most recently written logs are kept — actively
 #   appended logs (e.g. a tmux pipe-pane stream) survive.
 #
@@ -32,6 +33,9 @@ function _prune_terminal_logs --argument-names prefix --description 'Prune oldes
     set -q prefix[1]; or return 0
     set -l log_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
     set -l max_files (set -q SCROLLBACK_HISTORY_MAX_FILES; and echo $SCROLLBACK_HISTORY_MAX_FILES; or echo 100)
+    # A non-numeric or empty setting would make `test`/`math` error on every
+    # shell start; fall back to the default instead.
+    string match -qr '^[0-9]+$' -- "$max_files"; or set max_files 100
     test -d $log_dir; or return 0
 
     # Glob via `set` so a no-match yields an empty list rather than an error.

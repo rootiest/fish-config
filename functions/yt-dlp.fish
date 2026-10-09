@@ -30,10 +30,20 @@
 #   args...  Arguments forwarded to yt-dlp (defaults prepended)
 #   --no-embed-thumbnail  Skip thumbnail embedding for this run
 #
+# EXIT STATUS
+#   1  yt-dlp is not installed
+#   *  Exit status of yt-dlp otherwise
+#
 # EXAMPLE
 #   yt-dlp dQw4w9WgXcQ
 #   yt-dlp --no-embed-thumbnail dQw4w9WgXcQ   # drops our thumbnail default
 function yt-dlp --description 'yt-dlp with embedding + SponsorBlock defaults'
+    if not command -q yt-dlp
+        __fish_palette
+        echo "$c_err"'yt-dlp: yt-dlp is not installed'"$c_reset" >&2
+        return 1
+    end
+
     # Opinionated guard (C1): fall back to bare command yt-dlp when disabled.
     if not __fish_config_op_enabled (status current-function)
         command yt-dlp $argv
