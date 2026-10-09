@@ -15,6 +15,10 @@
 #   unset) or tmux is missing. Shared by conf.d/tmux-logging.fish (shell
 #   startup) and __fish_config_sync_logging (C5 re-enable) so both stay in sync.
 #
+#   The session name is sanitized (_terminal_log_safe_name) before it becomes
+#   part of the file name, and the final path is shell-escaped before being
+#   handed to tmux, which runs the pipe-pane command through sh -c.
+#
 # EXIT STATUS
 #   0  Always
 #
@@ -25,12 +29,15 @@ function _tmux_pipe_log --description 'Start tmux pipe-pane capture for the curr
     type -q tmux; or return 0
 
     set -l log_dir (set -q SCROLLBACK_HISTORY_DIR; and echo $SCROLLBACK_HISTORY_DIR; or echo "$HOME/.terminal_history")
-    set -l pane_id (tmux display-message -p '#{session_name}-w#{window_index}-p#{pane_index}' 2>/dev/null)
+    set -l session (tmux display-message -p '#{session_name}' 2>/dev/null)
+    set -l win_pane (tmux display-message -p 'w#{window_index}-p#{pane_index}' 2>/dev/null)
+    set -l pane_id (_terminal_log_safe_name "$session")-$win_pane
     set -l timestamp (date "+%Y-%m-%d_%H-%M-%S")
     set -l log_file "$log_dir/tmux_"$pane_id"_"$timestamp".log"
 
     mkdir -p $log_dir
     _prune_terminal_logs tmux
 
-    tmux pipe-pane "cat >> $log_file" 2>/dev/null
+    # tmux hands this string to sh -c, so the path must be shell-escaped.
+    tmux pipe-pane "cat >> "(string escape --style=script -- $log_file) 2>/dev/null
 end

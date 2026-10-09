@@ -31,7 +31,7 @@ source $repo_root/conf.d/__fish_config_op_registry.fish
 
 section "guards: preconditions"
 
-check "the fork's registry is loaded" 65 (count $__fish_config_op_registry_keys)
+check "the fork's registry is loaded" 66 (count $__fish_config_op_registry_keys)
 
 section "__fish_variable_check: truthy"
 
@@ -235,7 +235,7 @@ section "op_enabled: always/* and AND, via a synthetic registry"
 
 # Why this fixture exists, so nobody deletes it as redundant:
 #
-# The generated registry has 65 entries, EVERY ONE carrying exactly one tag,
+# The generated registry has 66 entries, EVERY ONE carrying exactly one tag,
 # and contains no always/on or always/off anywhere (measured 2026-09-07
 # against conf.d/__fish_config_op_registry.fish). So three documented
 # semantics -- always/off, always/on, and AND-across-tags -- have no reachable
