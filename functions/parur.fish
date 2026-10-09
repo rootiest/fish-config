@@ -20,7 +20,7 @@
 #
 # EXIT STATUS
 #   0  Packages removed or none selected
-#   1  No AUR helper (paru or yay) found
+#   1  No AUR helper (paru or yay) found, or fzf is not installed
 #   2  Unexpected argument (takes none)
 #
 # EXAMPLE
@@ -36,6 +36,12 @@ function parur --description 'Interactively search and remove an installed packa
         set aur yay
     else
         echo "No AUR helper found (install paru or yay)" >&2
+        return 1
+    end
+
+    if not type -q fzf
+        __fish_palette
+        echo "$c_err"'parur: fzf is not installed'"$c_reset" >&2
         return 1
     end
 
