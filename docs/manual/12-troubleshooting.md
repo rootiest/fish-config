@@ -178,6 +178,24 @@ Install missing dependencies interactively:
 
     fish-deps install
 
+Each prompt reads `[Y/n/q]`: `q`, Ctrl+C or Ctrl+D stops the whole run rather
+than just the current step. If an install fails, the cause is usually one of:
+
+    Message                                     Cause and fix
+    ───────────────────────────────────────────────────────────────────────
+    linker cc not found                         No C compiler. fish-deps offers
+                                                build-essential / base-devel /
+                                                gcc; install it and re-run.
+    rustup could not choose a version of cargo  rustup has no default toolchain.
+                                                Run: rustup default stable
+    Unable to locate package ov                 Not packaged for apt. fish-deps
+                                                offers Go and go install instead.
+    unzip is required                           Install unzip and re-run.
+    cannot find lms in the crate root           An unlocked cargo install picked
+                                                newer dependencies. fish-deps
+                                                passes --locked; for a manual
+                                                install, do the same.
+
 Or install everything missing and update what is installed:
 
     fish-deps sync
