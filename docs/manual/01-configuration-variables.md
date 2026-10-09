@@ -75,7 +75,7 @@ next use. See the C5 reference in Section 8.
 |---|---|
 | `NO_COLOR` | unset by default. Set to any non-empty value (`1`, `true`, ...) to turn colour off in this configuration's own command output; an empty value does not count |
 
-`NO_COLOR` follows the convention at <https://no-color.org>. With it set, the
+`NO_COLOR` follows the convention at [no-color.org](https://no-color.org). With it set, the
 shared output palette (`__fish_palette`) hands every function empty colour
 roles, and the functions that colour their output directly (through
 `__fish_color`, a `NO_COLOR`-aware `set_color`) print no escape sequences
