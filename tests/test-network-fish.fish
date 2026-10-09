@@ -470,8 +470,25 @@ set -gx GITEA_TOKEN dummy_token
 set -gx GITEA_URL "https://git.test"
 set -gx MOCK_CURL_STATUS 7
 set -gx MOCK_CURL_BODY ""
-set -l out_drop (bd-pull rootiest/test)
-check "bd-pull: network drop reports no unlinked issues" true (string match -q '*No unlinked issues found*' -- $out_drop; and echo true; or echo false)
+set -l out_drop (bd-pull rootiest/test 2>&1)
+set -l code_drop $status
+check "bd-pull: network drop exits 1" 1 $code_drop
+check "bd-pull: network drop is reported, not read as an empty list" true (string match -q '*Gitea request failed*' -- $out_drop; and echo true; or echo false)
+
+# The shared curl mock serves one body for every request, so give bd-pull a
+# handler that serves it for page 1 only and an empty list for any later page
+# (and nothing for the title PATCH).
+set -g BD_PULL_HANDLER (mktemp)
+set -ga TMPDIRS $BD_PULL_HANDLER
+printf '%s\n' \
+    '#!/bin/sh' \
+    'case "$*" in' \
+    '  *page=1) printf "%s\n" "$MOCK_CURL_BODY" ;;' \
+    '  *page=*) echo "[]" ;;' \
+    esac \
+    'exit 0' >$BD_PULL_HANDLER
+chmod +x $BD_PULL_HANDLER
+set -gx MOCK_CURL_HANDLER $BD_PULL_HANDLER
 
 # Empty JSON issue list
 set -gx MOCK_CURL_STATUS 0
@@ -484,7 +501,7 @@ set -gx MOCK_CURL_BODY '[{"number": 1, "title": "[bd-1] Already linked issue"}]'
 set -l out_already (bd-pull rootiest/test)
 check "bd-pull: already-linked issues skipped" true (string match -q '*No unlinked issues found*' -- $out_already; and echo true; or echo false)
 
-# Unlinked issue found: creates bead, patches title, commits & pushes
+# Unlinked issue found: creates bead, patches title, commits (no push without --push)
 set -l bd_remote (new_repo)
 git -C $bd_remote config --bool core.bare true
 set -l bd_repo (new_repo)
