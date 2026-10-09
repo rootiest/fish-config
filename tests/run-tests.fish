@@ -191,7 +191,7 @@ for suite in $isolated_suites
     echo ""
     echo "== "(string replace $repo_root/ '' $suite)" =="
     set -l xdg (mktemp -d)
-    env XDG_CONFIG_HOME=$xdg/cfg XDG_DATA_HOME=$xdg/data \
+    env -u NO_COLOR XDG_CONFIG_HOME=$xdg/cfg XDG_DATA_HOME=$xdg/data \
         FISH_CONFIG_TEST_ROOT=$repo_root FISH_CONFIG_TEST_COUNTS=$counts \
         fish --no-config $suite
     if test $status -ne 0

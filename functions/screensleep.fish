@@ -26,7 +26,7 @@ function screensleep --description 'Turn off the display using KDE PowerDevil'
     __fish_no_args (status current-function) $argv; or return
 
     if not type -q busctl
-        echo (set_color red)"Error: busctl is not installed."(set_color normal) >&2
+        echo (__fish_color red)"Error: busctl is not installed."(__fish_color normal) >&2
         return 1
     end
 

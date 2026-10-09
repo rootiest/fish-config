@@ -483,7 +483,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                 if test $srv_implicit -eq 1; and not set -q _flag_yes
                     set do_create 0
                     if status is-interactive; and isatty stdin
-                        read -l -P (set_color yellow)"?"(set_color normal)"  Create new remote "(set_color --bold)"$USER/$name"(set_color normal)" on $srv_type? [y/N] " _reply
+                        read -l -P (__fish_color yellow)"?"(__fish_color normal)"  Create new remote "(__fish_color --bold)"$USER/$name"(__fish_color normal)" on $srv_type? [y/N] " _reply
                         string match -qr '^[Yy]' -- "$_reply"; and set do_create 1
                     end
                     # Not gated on $silent: declining to do something the caller

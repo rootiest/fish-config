@@ -138,8 +138,8 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
 
     if test $needs_git -eq 1
         if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
-            set_color red --bold
-            echo "Error:" (set_color normal)"Not a git repository (or any parent directories)" >&2
+            echo -n (__fish_color red --bold)
+            echo "Error:" (__fish_color normal)"Not a git repository (or any parent directories)" >&2
             return 1
         end
         set -l git_root (git rev-parse --show-toplevel)
@@ -159,16 +159,16 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
             if test -f "$_flag_custom"
                 set boilerplate_path "$_flag_custom"
             else
-                set_color red --bold
-                echo "Error:" (set_color normal)"Custom boilerplate file not found at '$_flag_custom'" >&2
+                echo -n (__fish_color red --bold)
+                echo "Error:" (__fish_color normal)"Custom boilerplate file not found at '$_flag_custom'" >&2
                 set boilerplate_ok 0
             end
         else if set -q GITIGNORE_BOILERPLATE
             if test -f "$GITIGNORE_BOILERPLATE"
                 set boilerplate_path "$GITIGNORE_BOILERPLATE"
             else
-                set_color red --bold
-                echo "Error:" (set_color normal)"Boilerplate file not found at '$GITIGNORE_BOILERPLATE'" >&2
+                echo -n (__fish_color red --bold)
+                echo "Error:" (__fish_color normal)"Boilerplate file not found at '$GITIGNORE_BOILERPLATE'" >&2
                 set boilerplate_ok 0
             end
         else
@@ -178,12 +178,12 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
                 set boilerplate_path "$HOME/.config/fish/data/gi/boilerplate.gitignore"
             end
             if not test -f "$boilerplate_path"
-                set_color red --bold
-                echo "Error:" (set_color normal)"Bundled default boilerplate missing at '$boilerplate_path'" >&2
+                echo -n (__fish_color red --bold)
+                echo "Error:" (__fish_color normal)"Bundled default boilerplate missing at '$boilerplate_path'" >&2
                 set boilerplate_ok 0
             else if not set -q _flag_silent
-                set_color yellow --bold
-                echo "Notice:" (set_color normal)"\$GITIGNORE_BOILERPLATE not set; using the bundled default template."
+                echo -n (__fish_color yellow --bold)
+                echo "Notice:" (__fish_color normal)"\$GITIGNORE_BOILERPLATE not set; using the bundled default template."
             end
         end
 
@@ -202,14 +202,14 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
 
                 if test -f "$gitignore_path"; and grep -qF "$sig" "$gitignore_path"
                     if not set -q _flag_silent
-                        set_color yellow --bold
-                        echo "Notice:" (set_color normal)"Boilerplate already present in "(set_color cyan)"$readable_path"(set_color normal)"."
+                        echo -n (__fish_color yellow --bold)
+                        echo "Notice:" (__fish_color normal)"Boilerplate already present in "(__fish_color cyan)"$readable_path"(__fish_color normal)"."
                     end
                 else
                     printf "\n%s\n" "$sig" >>"$gitignore_path"
                     cat "$boilerplate_path" >>"$gitignore_path"
                     if not set -q _flag_silent
-                        echo (set_color green)"✔"(set_color normal)" Appended boilerplate to "(set_color cyan)"$readable_path"(set_color normal)
+                        echo (__fish_color green)"✔"(__fish_color normal)" Appended boilerplate to "(__fish_color cyan)"$readable_path"(__fish_color normal)
                     end
                 end
             end
@@ -244,7 +244,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
                 end
             end
         else if not set -q _flag_silent
-            echo (set_color brblack)"No patterns selected. Skipping API fetch."(set_color normal)
+            echo (__fish_color brblack)"No patterns selected. Skipping API fetch."(__fish_color normal)
         end
         test $needs_git -eq 1; and gitignore-scrub
         return 0
@@ -318,13 +318,13 @@ function __gi_append_dedup
 
     if test -f "$gitignore_path"; and grep -qF "$sig" "$gitignore_path"
         if test "$silent" != 1
-            set_color yellow --bold
-            echo "Notice:" (set_color normal)"$label patterns already present in "(set_color cyan)"$readable_path"(set_color normal)"."
+            echo -n (__fish_color yellow --bold)
+            echo "Notice:" (__fish_color normal)"$label patterns already present in "(__fish_color cyan)"$readable_path"(__fish_color normal)"."
         end
     else
         printf "\n%s\n%s\n" "$sig" "$content" >>"$gitignore_path"
         if test "$silent" != 1
-            echo (set_color green)"✔"(set_color normal)" Appended $label patterns to "(set_color cyan)"$readable_path"(set_color normal)
+            echo (__fish_color green)"✔"(__fish_color normal)" Appended $label patterns to "(__fish_color cyan)"$readable_path"(__fish_color normal)
         end
     end
 end

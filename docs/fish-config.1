@@ -76,6 +76,7 @@ The configuration uses a structured file tree:
 \[ti]/.config/fish/
 ├── config.fish                 Main entry point; sets env vars and PATH
 ├── conf.d/                     Snippets sourced at startup
+│   ├── 00-version-check.fish   Warns once if Fish is older than 4.0.0
 │   ├── __fish_config_op_registry.fish  Generated component registry
 │   ├── abbr.fish               All abbreviations
 │   ├── auto-pull.fish          Background git pulls for opted-in repos
@@ -361,6 +362,47 @@ The directory is kept private: created \f[V]700\f[R], with the log files
 \f[V]600\f[R], regardless of umask.
 A looser existing directory is tightened silently on its next use.
 See the C5 reference in Section 8.
+.SS Colour Output (NO_COLOR)
+.PP
+.TS
+tab(@);
+lw(35.0n) lw(35.0n).
+T{
+Variable
+T}@T{
+Value / Notes
+T}
+_
+T{
+\f[V]NO_COLOR\f[R]
+T}@T{
+unset by default.
+Set to any non-empty value (\f[V]1\f[R], \f[V]true\f[R], \&...)
+to turn colour off in this configuration\[cq]s own command output; an
+empty value does not count
+T}
+.TE
+.PP
+\f[V]NO_COLOR\f[R] follows the convention at
+no-color.org (https://no-color.org).
+With it set, the shared output palette (\f[V]__fish_palette\f[R]) hands
+every function empty colour roles, and the functions that colour their
+output directly (through \f[V]__fish_color\f[R], a
+\f[V]NO_COLOR\f[R]-aware \f[V]set_color\f[R]) print no escape sequences
+either.
+That covers \f[V]--help\f[R] text, errors and warnings,
+\f[V]fish-deps\f[R] status, \f[V]config-help\f[R], \f[V]gi\f[R],
+\f[V]scrub\f[R] and the rest of the user-facing functions.
+The status marks (\f[V]✓\f[R], \f[V]✗\f[R], \f[V]⚠\f[R]) are unchanged,
+so they still show.
+.PP
+What it does not change: your prompt and theme, fish\[cq]s syntax
+highlighting (the \f[V]fish_color_*\f[R] variables), the Python
+\f[V]config-settings\f[R] interface, the vendored \f[V]fzf\f[R],
+autopair, done and puffer plugins, and the output of external tools that
+colour themselves.
+Export it from your environment, or put \f[V]set -gx NO_COLOR 1\f[R] in
+\f[V]local.fish\f[R], to apply it everywhere.
 .SS Other
 .PP
 .TS
@@ -5724,6 +5766,10 @@ Managed by the \f[V]__fish_user_dots_link\f[R] helper.
 The first-run completion marker
 (\f[V]__fish_config_first_run_complete\f[R]) is still set so the init
 does not re-run on subsequent shells.
+A failed Fisher bootstrap is tracked separately
+(\f[V]__fish_config_bootstrap_pending\f[R]) and retried at most once a
+day while C2 and the \f[V]plugin-management\f[R] sub-category are
+enabled.
 .PP
 Python venv activation fires on every directory change.
 If a directory uses \f[V]direnv\f[R] (\f[V].envrc\f[R] present),
@@ -6120,10 +6166,29 @@ Subsequent sessions skip all first-run logic with zero overhead.
 Fisher itself is downloaded from a pinned release tag
 (\f[V]_fisher_ref\f[R] in \f[V]conf.d/first_run.fish\f[R]), never the
 floating \f[V]main\f[R] branch.
-If the download fails (offline, HTTP error, empty or invalid body),
-first-run prints an error to stderr and does not report success.
-The first-run flag is still set, so the bootstrap is not retried
-automatically; re-trigger it with the command below once you are online.
+If the download fails (offline, HTTP error, empty or invalid body) or
+\f[V]fisher update\f[R] fails, first-run prints an error to stderr and
+does not report success.
+The first-run flag is still set, so the welcome banner and theme step
+never repeat, but the failure is recorded in a separate universal
+variable, \f[V]__fish_config_bootstrap_pending\f[R], which holds the
+epoch time of the last attempt.
+While it is set, a later interactive shell start retries only the
+bootstrap step, at most once every 24 hours and at most once per shell
+session, with short network timeouts so an offline start is not
+noticeably delayed.
+Non-interactive shells never retry.
+Starts inside the 24-hour window print a one-line hint on stderr; a
+successful retry prints one line and erases the marker, and a failed
+retry refreshes the timestamp.
+To retry on the next start without waiting, run:
+.IP
+.nf
+\f[C]
+set -U __fish_config_bootstrap_pending 0
+\f[R]
+.fi
+.PP
 Until Fisher and the sponge plugin are installed, history secret
 filtering is inactive, and a notice on stderr says so.
 .PP
@@ -6142,7 +6207,8 @@ Then open a new shell.
 The following plugins are fully managed by Fisher.
 Their files are installed into the repo directory by Fisher and are
 listed in \f[V].gitignore\f[R] \[em] do not commit them.
-Fisher installs and updates them automatically.
+Fisher installs and updates them automatically, each at the release tag
+pinned in \f[V]fish_plugins\f[R].
 .IP \[bu] 2
 \f[V]jorgebucaran/fisher\f[R] (https://github.com/jorgebucaran/fisher)
 \[em] Plugin manager itself
@@ -6283,13 +6349,44 @@ To update their behavior, edit the relevant bundled files directly.
 The \f[V]fish_plugins\f[R] file at the config root:
 .IP \[bu] 2
 \f[V]jorgebucaran/fisher\f[R] (https://github.com/jorgebucaran/fisher)
-\[em] Plugin manager itself
+(\f[V]\[at]4.4.8\f[R]) \[em] Plugin manager itself
 .IP \[bu] 2
 \f[V]meaningful-ooo/sponge\f[R] (https://github.com/meaningful-ooo/sponge)
-\[em] Remove failed commands from history
+(\f[V]\[at]1.1.0\f[R]) \[em] Remove failed commands from history
 .PP
-To update all Fisher-managed plugins, run \f[V]fisher update\f[R] or
+Every entry is pinned to a release tag (\f[V]owner/repo\[at]tag\f[R]),
+so \f[V]fisher update\f[R] installs exactly that tag rather than
+whatever the default branch holds.
+A pinned plugin only changes when someone bumps the pin by hand (below).
+.PP
+To refresh all Fisher-managed plugins, run \f[V]fisher update\f[R] or
 \f[V]fish-deps update\f[R] which calls it as its first step.
+This re-fetches the pinned tags; it does not move to newer releases.
+.SS How to bump a pin
+.IP "1." 3
+Find the new release tag on the plugin\[cq]s GitHub releases page, or
+with
+\f[V]git ls-remote --tags https://github.com/<owner>/<repo> | sort -V\f[R].
+Use a release tag, not a branch name or \f[V]HEAD\f[R].
+.IP "2." 3
+Edit the entry in \f[V]fish_plugins\f[R] to
+\f[V]<owner>/<repo>\[at]<new-tag>\f[R].
+.IP "3." 3
+For \f[V]jorgebucaran/fisher\f[R], also change \f[V]_fisher_ref\f[R] in
+\f[V]conf.d/first_run.fish\f[R] to the same tag.
+The two must match; the test suite fails if they differ.
+.IP "4." 3
+Review the upstream \f[V]diff\f[R] between the old and new tag before
+accepting it: these plugins run in every interactive shell.
+.IP "5." 3
+Apply it with \f[V]fisher update\f[R] and open a fresh shell.
+Changing a pin makes Fisher treat the new \f[V]owner/repo\[at]tag\f[R]
+as a different plugin, so it installs the new one and removes the old
+one.
+.IP "6." 3
+Test: \f[V]fish tests/run-tests.fish\f[R] must exit 0.
+For sponge, also confirm that a failing command is dropped from history
+and that a command carrying a secret is not recorded.
 .PP
    *   *   *   *   *
 .SH 10. INSTALLATION
@@ -6547,6 +6644,13 @@ fish --version
 Run \f[V]fish-deps\f[R] to see a status report \[em] an outdated Fish
 shows ⚠ with an upgrade message.
 .PP
+On an older Fish, an interactive shell prints a one-time warning on
+stderr at startup naming the version it found and pointing back to this
+section.
+It is a warning only: the rest of the config still loads, and the
+features that need Fish 4.x may fail with confusing errors until you
+upgrade.
+.PP
 Upgrading Fish by distribution:
 .IP
 .nf
@@ -6629,6 +6733,16 @@ To re-trigger it (e.g.\ for testing):
 .nf
 \f[C]
 set -Ue __fish_config_first_run_complete
+\f[R]
+.fi
+.PP
+If the Fisher/plugin bootstrap failed (offline first run), it is retried
+automatically on a later start, at most once a day; see Fisher Plugins.
+To retry on the next start instead of waiting, run:
+.IP
+.nf
+\f[C]
+set -U __fish_config_bootstrap_pending 0
 \f[R]
 .fi
 .PP

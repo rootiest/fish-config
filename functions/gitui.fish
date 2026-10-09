@@ -25,7 +25,7 @@
 #   gitui
 function gitui --wraps='gitui' --description 'alias gitui=gitui -t mocha.ron'
     if not type -q -f gitui
-        echo (set_color red)"Error: gitui is not installed."(set_color normal) >&2
+        echo (__fish_color red)"Error: gitui is not installed."(__fish_color normal) >&2
         return 1
     end
 

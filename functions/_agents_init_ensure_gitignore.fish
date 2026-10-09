@@ -37,7 +37,7 @@ function _agents_init_ensure_gitignore
     __fish_palette
 
     if test (count $argv) -lt 3
-        echo (set_color red)"_agents_init_ensure_gitignore: requires <root> <label> <pattern>..."(set_color normal) >&2
+        echo (__fish_color red)"_agents_init_ensure_gitignore: requires <root> <label> <pattern>..."(__fish_color normal) >&2
         return 1
     end
 

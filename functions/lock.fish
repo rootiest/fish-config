@@ -25,7 +25,7 @@ function lock --wraps='loginctl' --description 'alias lock=loginctl'
     __fish_no_args (status current-function) $argv; or return
 
     if not type -q loginctl
-        echo (set_color red)"Error: loginctl is not installed."(set_color normal) >&2
+        echo (__fish_color red)"Error: loginctl is not installed."(__fish_color normal) >&2
         return 1
     end
 

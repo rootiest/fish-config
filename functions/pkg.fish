@@ -46,9 +46,9 @@ function pkg --description 'Install or remove packages via the system package ma
     # ── Package manager detection ────────────────────────────────
     set -l pm (_fish_deps_detect_pm)
     if test -z "$pm"
-        set_color red
+        echo -n (__fish_color red)
         echo "error: no supported package manager found" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 1
     end
 

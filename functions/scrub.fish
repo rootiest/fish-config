@@ -107,7 +107,7 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
             case -a --aggressive
                 set aggressive 1
             case '*'
-                echo (set_color red)"Error: Unknown argument '$arg'"(set_color normal)
+                echo (__fish_color red)"Error: Unknown argument '$arg'"(__fish_color normal)
                 _scrub_help
                 return 2
         end
@@ -120,7 +120,7 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
 
     # Core dependency verification
     if not command -s fd >/dev/null
-        echo (set_color --bold red)"Error:"(set_color normal) "Required tool "(set_color --underline)"fd"(set_color normal)" is missing."
+        echo (__fish_color --bold red)"Error:"(__fish_color normal) "Required tool "(__fish_color --underline)"fd"(__fish_color normal)" is missing."
         return 1
     end
 
@@ -140,20 +140,20 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
     # --- Dry Run Mode ---
     if test $dry_run -eq 1
         if test $aggressive -eq 1
-            echo (set_color --bold red)"⚡ Aggressive Dry Run Mode: Scanning deep tree..."(set_color normal)
+            echo (__fish_color --bold red)"⚡ Aggressive Dry Run Mode: Scanning deep tree..."(__fish_color normal)
         else
-            echo (set_color --bold yellow)"⚡ Dry Run Mode: Scanning standard tree..."(set_color normal)
+            echo (__fish_color --bold yellow)"⚡ Dry Run Mode: Scanning standard tree..."(__fish_color normal)
         end
 
         switch $delete_mode
             case custom_rm
-                echo (set_color --dim normal)"[Strategy: Custom rm function]"(set_color normal)
+                echo (__fish_color --dim normal)"[Strategy: Custom rm function]"(__fish_color normal)
             case trashy
-                echo (set_color --dim normal)"[Strategy: trashy (trash put)]"(set_color normal)
+                echo (__fish_color --dim normal)"[Strategy: trashy (trash put)]"(__fish_color normal)
             case trash_cli
-                echo (set_color --dim normal)"[Strategy: trash-cli (trash-put)]"(set_color normal)
+                echo (__fish_color --dim normal)"[Strategy: trash-cli (trash-put)]"(__fish_color normal)
             case fallback_rm
-                echo (set_color --dim normal)"[Strategy: System rm -rf (fallback)]"(set_color normal)
+                echo (__fish_color --dim normal)"[Strategy: System rm -rf (fallback)]"(__fish_color normal)
         end
         echo
 
@@ -163,22 +163,22 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
             if count $matches >/dev/null
                 set found_any 1
                 for item in $matches
-                    echo (set_color red)"  🗙 $item"(set_color normal)
+                    echo (__fish_color red)"  🗙 $item"(__fish_color normal)
                 end
             end
         end
 
         if test $found_any -eq 0
-            echo (set_color green)"✨ No garbage targets found. Everything looks clean."(set_color normal)
+            echo (__fish_color green)"✨ No garbage targets found. Everything looks clean."(__fish_color normal)
         end
         return 0
     end
 
     # --- Purge Mode ---
     if test $aggressive -eq 1
-        echo (set_color --bold red)"🔥 Initiating AGGRESSIVE sweep..."(set_color normal)
+        echo (__fish_color --bold red)"🔥 Initiating AGGRESSIVE sweep..."(__fish_color normal)
     else
-        echo (set_color --bold cyan)"🧹 Initiating sweep..."(set_color normal)
+        echo (__fish_color --bold cyan)"🧹 Initiating sweep..."(__fish_color normal)
     end
     set -l count 0
 
@@ -199,7 +199,7 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
                         command rm -rf $item
                 end
 
-                echo (set_color --dim white)"  [purged] $item"(set_color normal)
+                echo (__fish_color --dim white)"  [purged] $item"(__fish_color normal)
                 set count (math $count + 1)
             end
         end
@@ -209,15 +209,15 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
     if test $count -gt 0
         switch $delete_mode
             case custom_rm
-                echo (set_color --bold green)"✔ Clean Sweep:"(set_color normal) "Safely processed" (set_color --bold yellow)$count(set_color normal) "target(s) using smart-rm."
+                echo (__fish_color --bold green)"✔ Clean Sweep:"(__fish_color normal) "Safely processed" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) using smart-rm."
             case trashy
-                echo (set_color --bold green)"✔ Clean Sweep:"(set_color normal) "Safely moved" (set_color --bold yellow)$count(set_color normal) "target(s) to the system trash via trashy."
+                echo (__fish_color --bold green)"✔ Clean Sweep:"(__fish_color normal) "Safely moved" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) to the system trash via trashy."
             case trash_cli
-                echo (set_color --bold green)"✔ Clean Sweep:"(set_color normal) "Safely moved" (set_color --bold yellow)$count(set_color normal) "target(s) to the system trash via trash-put."
+                echo (__fish_color --bold green)"✔ Clean Sweep:"(__fish_color normal) "Safely moved" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) to the system trash via trash-put."
             case fallback_rm
-                echo (set_color --bold red)"⚠ Hard Purge:"(set_color normal) "Permanently deleted" (set_color --bold yellow)$count(set_color normal) "target(s) via native rm -rf."
+                echo (__fish_color --bold red)"⚠ Hard Purge:"(__fish_color normal) "Permanently deleted" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) via native rm -rf."
         end
     else
-        echo (set_color --bold green)"✨ Clean Sweep:"(set_color normal) "No garbage targets found. Environment is pristine."
+        echo (__fish_color --bold green)"✨ Clean Sweep:"(__fish_color normal) "No garbage targets found. Environment is pristine."
     end
 end

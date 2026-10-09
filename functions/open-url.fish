@@ -64,9 +64,9 @@ function open-url --description 'Open a URL in the best available web browser'
 
     set -l url $argv[1]
     if test -z "$url"
-        set_color red
+        echo -n (__fish_color red)
         echo "error: open-url requires a URL argument" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 2
     end
 
@@ -86,9 +86,9 @@ function open-url --description 'Open a URL in the best available web browser'
         if set -q BROWSER
             echo $BROWSER | read -at browser
             if not type -q $browser[1]
-                set_color red
+                echo -n (__fish_color red)
                 echo "error: \$BROWSER '$browser[1]' is not a valid command" >&2
-                set_color normal
+                echo -n (__fish_color normal)
                 return 1
             end
         else
@@ -122,16 +122,16 @@ function open-url --description 'Open a URL in the best available web browser'
     end
 
     if not set -q browser[1]
-        set_color red
+        echo -n (__fish_color red)
         echo "error: could not find a web browser — set \$fish_help_browser or \$BROWSER" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 1
     end
 
     if set -q _flag_verbose
-        set_color green
+        echo -n (__fish_color green)
         echo "Opening $browser[1]…"
-        set_color normal
+        echo -n (__fish_color normal)
     end
 
     # Background the browser so it doesn't block the terminal, and discard its

@@ -24,7 +24,7 @@
 #   fast-cli
 function fast-cli --description "Run a speed test using fast.com"
     if not type -q -f fast
-        echo (set_color red)"Error: fast is not installed."(set_color normal) >&2
+        echo (__fish_color red)"Error: fast is not installed."(__fish_color normal) >&2
         return 1
     end
     command fast $argv

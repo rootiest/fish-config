@@ -86,9 +86,9 @@ function mv --wraps='mv' --description 'Move files with auto-collapse for nested
                     if test $mv_status -eq 0
                         command rmdir "$real_src" 2>/dev/null
                     else
-                        set_color yellow
+                        echo -n (__fish_color yellow)
                         echo "⚠️ Some items could not be moved. Nested directory preserved." >&2
-                        set_color normal
+                        echo -n (__fish_color normal)
                     end
 
                     return $mv_status
