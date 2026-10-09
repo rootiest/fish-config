@@ -275,12 +275,22 @@ there always wins.
 
 ### Catppuccin Mocha Syntax Highlighting
 
-The Catppuccin Mocha theme ships with this config in themes/ and is applied
-automatically on first run via `conf.d/first_run.fish` (gated by
-`__fish_config_op_autoexec`; see Opinionated Components above). Colors are
-stored in fish_variables (universal). Three other bundled variants are
-available in themes/ — Latte, Frappé, and Macchiato. To switch:
+The Catppuccin Mocha theme ships with this config as
+`themes/catppuccin-mocha.theme`. `conf.d/theme.fish` saves it to universal
+variables (fish_variables) once, at the first prompt (opinionated; disabled by
+`__fish_config_op_overrides`, see Opinionated Components above), and records
+that in `__fish_config_theme_saved`; `conf.d/first_run.fish` also applies it
+to the very first session. Three other bundled variants are available in
+themes/: `catppuccin-latte`, `catppuccin-frappe` and `catppuccin-macchiato`.
 
-    fish_config theme choose "Catppuccin Latte"
+`catppuccin-mocha`, `catppuccin-frappe` and `catppuccin-macchiato` are exact
+copies of the themes fish ships from 4.4 on; they are bundled so fish versions
+without them still have them. Each holds a Latte `[light]` section and its own
+`[dark]` section: fish 4.3 and newer pick one to match the terminal background,
+older versions use the dark colors. `catppuccin-latte` (which fish does not
+ship) always applies Latte. To switch for good (`theme choose` lasts only for
+the current session):
+
+    fish_config theme save catppuccin-latte
 
 ---

@@ -22,7 +22,7 @@ all of them.
     Autopair                  ( [ { " ' auto-close to (), [], {}, "", ''
     Puffer key intercepts     . ! $ * keys intercepted for smart expansion
     Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
-    Catppuccin colors         30+ fish_color_* variables set to Mocha palette
+    Catppuccin theme          bundled catppuccin-mocha saved once (universal)
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
     Right prompt              fish_right_prompt: exit code (on failure) + dim timestamp; always rendered; Docker context added when starship+C3 active
     DO_NOT_TRACK=1            Universal telemetry opt-out for tools and AI agents
@@ -52,7 +52,7 @@ and `smart_exit`'s plain-exit path.
 
 ## prompt
 
-Starship, the right prompt, Catppuccin syntax/prompt colors, and FZF
+Starship, the right prompt, the Catppuccin theme save, and FZF
 theming (`$FZF_DEFAULT_OPTS`) -- all driven by the same guard as a single
 unit, not independently toggleable from each other.
 

@@ -26,7 +26,10 @@ If no backup exists, remove the directory and let Fish regenerate a default
 config on next launch:
 
     rm -rf ~/.config/fish
-    fish -c 'fish_config theme choose "Fish default"'
+    fish -c 'fish_config theme choose default 2>/dev/null; or fish_config theme choose "fish default"'
+
+fish 4.3 renamed its default theme from `fish default` to `default`; the
+command tries the new name first and falls back to the old one.
 
 Clean up files generated outside the config directory:
 
