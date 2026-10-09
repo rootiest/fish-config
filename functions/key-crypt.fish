@@ -446,10 +446,14 @@ function __kc_uninstall
         set n 1
     end
     if test $n -eq 1
+        # Best-effort refresh of the desktop database: a host without the
+        # optional tool (or a failing refresh) must not turn a successful
+        # uninstall into a failure, so the status of this line is discarded.
         command -q update-desktop-database; and update-desktop-database $app
     else
         __kc_warn "nothing to remove (not installed)"
     end
+    return 0
 end
 
 function __kc_body

@@ -63,4 +63,8 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     # non-interactive shell, and a sourced `return` exits the *calling*
     # function, which would otherwise abort this function.
     _fish_source_scoped "$__fish_config_dir/conf.d/pkg-wrappers.fish"
+
+    # The sourced file returns early (status 1) in a non-interactive shell;
+    # that is not a failure of this function.
+    return 0
 end

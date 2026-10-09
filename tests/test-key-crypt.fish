@@ -178,18 +178,29 @@ kc --install
 check "re-install is idempotent: exit 0" 0 $kc_rc
 
 kc --uninstall
-# __kc_uninstall ends on `command -q update-desktop-database; and ...`, so on a
-# host without that tool a successful uninstall reports 1 (reported on #238,
-# not asserted here). Pin the exit status only where the tool exists.
-if type -q update-desktop-database
-    check "uninstall: exit 0" 0 $kc_rc
-else
-    echo "  SKIP  update-desktop-database not installed: uninstall exit status not asserted"
-end
+check "uninstall: exit 0" 0 $kc_rc
 check "uninstall: wrapper removed" false (b test -e $bin)
 check "uninstall: entry removed" false (b test -e $app/key-crypt.desktop)
 check "uninstall: preset entry removed" false (b test -e $app/key-crypt-preset.desktop)
 check "uninstall: unrelated files untouched" true (b test -f $app/unrelated.desktop)
+
+# The desktop-database refresh is optional and best-effort (issue #289): on a
+# host without update-desktop-database a successful uninstall must still exit
+# 0. PATH here holds every /usr/bin tool except that one.
+set -l nodb (mktemp -d)
+find /usr/bin -maxdepth 1 ! -name update-desktop-database \( -type f -o -type l \) -exec ln -s -t $nodb '{}' +
+if test -x $nodb/fish -a -x $nodb/timeout
+    kc --install
+    begin
+        set -lx PATH $nodb
+        kc --uninstall
+    end
+    check "uninstall without update-desktop-database: exit 0" 0 $kc_rc
+    check "uninstall without update-desktop-database: wrapper removed" false (b test -e $bin)
+else
+    echo "  SKIP  no fish/timeout under /usr/bin: cannot build a PATH without update-desktop-database"
+end
+command rm -rf $nodb
 
 # A HOME that is unsafe inside a quoted .desktop Exec line is refused before
 # anything is written.
