@@ -44,6 +44,7 @@ The configuration uses a structured file tree:
     ~/.config/fish/
     ├── config.fish                 Main entry point; sets env vars and PATH
     ├── conf.d/                     Snippets sourced at startup
+    │   ├── 00-version-check.fish   Warns once if Fish is older than 4.0.0
     │   ├── __fish_config_op_registry.fish  Generated component registry
     │   ├── abbr.fish               All abbreviations
     │   ├── auto-pull.fish          Background git pulls for opted-in repos
@@ -5316,6 +5317,11 @@ This config requires Fish 4.x or newer. Check your version:
 
 Run `fish-deps` to see a status report — an outdated Fish shows ⚠ with an
 upgrade message.
+
+On an older Fish, an interactive shell prints a one-time warning on stderr at
+startup naming the version it found and pointing back to this section. It is
+a warning only: the rest of the config still loads, and the features that
+need Fish 4.x may fail with confusing errors until you upgrade.
 
 Upgrading Fish by distribution:
 
