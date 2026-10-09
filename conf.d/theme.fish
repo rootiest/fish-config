@@ -39,7 +39,7 @@ set --global fish_color_gray 6c7086
 set --global fish_color_history_current --bold
 set --global fish_color_host 89b4fa
 set --global fish_color_host_remote a6e3a1
-set --global fish_color_keyword f38ba8
+set --global fish_color_keyword cba6f7
 set --global fish_color_match F28779
 set --global fish_color_normal cdd6f4
 set --global fish_color_operator f5c2e7

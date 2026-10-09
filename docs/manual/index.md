@@ -69,10 +69,10 @@ The configuration uses a structured file tree:
     ├── templates/                  Function templates to copy and adapt
     │   └── allow-telemetry.fish    Per-command telemetry opt-out wrapper
     ├── themes/                     Catppuccin color themes
-    │   ├── catppuccin-frappe.theme     Frappé (medium dark)
+    │   ├── catppuccin-frappe.theme     Frappé; Latte on light terminals
     │   ├── catppuccin-latte.theme      Latte (light)
-    │   ├── catppuccin-macchiato.theme  Macchiato (dark)
-    │   └── catppuccin-mocha.theme      Mocha (darkest), the default
+    │   ├── catppuccin-macchiato.theme  Macchiato; Latte on light terminals
+    │   └── catppuccin-mocha.theme      Mocha (default); Latte on light terminals
     ├── tests/                      Test suite: fish tests/run-tests.fish
     └── docs/                       Offline documentation and man page
         ├── fish-config.md          Generated manual
