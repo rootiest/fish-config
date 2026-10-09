@@ -2524,8 +2524,12 @@ functions). They are active in all interactive sessions.
     credential.  The value is escaped for literal regex matching before
     comparison.
 
+    The sensitive-name heuristic is shared with the session-start registration
+    (conf.d/sponge_privacy.fish) and includes any extra names listed in
+    $__fish_sponge_extra_sensitive.
+
     Arguments:
-      command                 The exact command that was entered
+      command                The exact command that was entered
       exit_code               Exit code of the command (unused)
       previously_in_history   "true"/"false" flag (unused)
 
@@ -2536,6 +2540,8 @@ functions). They are active in all interactive sessions.
     Example:
     # Register with sponge (done automatically by conf.d/sponge_privacy.fish):
     set -U -a sponge_filters sponge_filter_secrets
+
+**Dependencies:** `__fish_sponge_sensitive_pattern`
 
 ## 5.12 AI and Developer Tools
 
