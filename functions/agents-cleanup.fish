@@ -48,6 +48,11 @@
 #   and every "Added by agents-init" block is stripped from .gitignore.
 #   Nothing is committed to the outer repository.
 #
+#   A damaged AGENTS/.git (present but not a valid repository, e.g. HEAD
+#   gone with the objects left) cannot be bundled: it is treated as "not a
+#   repository" and removed with AGENTS/. A warning on stderr says that
+#   its history is not archived (suppressed by --silent only).
+#
 #   Files inside AGENTS/ that no project symlink points to -- other than
 #   agents-init's own .version, .agents-tools/ and .gitkeep files -- stop
 #   the cleanup before anything changes. They are listed; --drop-extras
@@ -164,6 +169,12 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         # A .git that is not a valid gitdir (half-removed) is "not a repository";
         # git would otherwise resolve to the enclosing project.
         test "$(git -C "$agents_dir" rev-parse --git-dir 2>/dev/null)" = .git; and set has_repo 1
+        # ...but a .git that is present and still not valid is damaged (HEAD
+        # gone, objects left): nothing can be archived and AGENTS/ is removed
+        # as it is, so say so rather than deleting it unannounced.
+        if test $has_repo -eq 0; and test -e "$agents_dir/.git"; and not set -q _flag_silent
+            echo "$c_warn""Warning: AGENTS/.git is damaged (not a valid repository); its history is not archived and will be lost with AGENTS/$c_reset" >&2
+        end
     end
 
     if test $has_repo -eq 1

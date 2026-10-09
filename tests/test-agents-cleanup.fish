@@ -411,6 +411,25 @@ check "invalid .git: outer repo untouched" "$i1before" (git -C $i1 rev-list --al
 check "invalid .git: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
 check "invalid .git: AGENTS/ removed" false (test -e $i1/AGENTS; and echo true; or echo false)
 
+section "agents-cleanup: damaged AGENTS/.git is announced, not archived"
+fresh_state
+set -l i2 (scaffolded_repo)
+rm -rf $i2/AGENTS/.git/HEAD $i2/AGENTS/.git/objects
+set -l i3 (scaffolded_repo)
+rm -rf $i3/AGENTS/.git/HEAD $i3/AGENTS/.git/objects
+set -l i2err (mktemp)
+set -a TMPDIRS $i2err
+pushd $i2 >/dev/null
+agents-cleanup --quiet 2>$i2err >/dev/null
+set -l i2rc $status
+popd >/dev/null
+set -l i3out (pushd $i3 >/dev/null; agents-cleanup --silent 2>&1; popd >/dev/null)
+check "damaged .git: exits 0" 0 "$i2rc"
+check "damaged .git: stderr says damaged, not archived" true (string match -q -- '*damaged*not archived*' (string collect <$i2err); and echo true; or echo false)
+check "damaged .git: no bundle" 0 (count $XDG_STATE_HOME/agents-cleanup/*.bundle 2>/dev/null)
+check "damaged .git: AGENTS/ still removed" false (test -e $i2/AGENTS; and echo true; or echo false)
+check "damaged .git: --silent prints nothing" "" "$i3out"
+
 section "agents-cleanup: verbose output survives a log-file stderr"
 fresh_state
 set -l o1 (scaffolded_repo)
