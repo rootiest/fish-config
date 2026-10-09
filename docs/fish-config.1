@@ -3465,6 +3465,17 @@ same rule rather than by being known about in advance. Symlinks found
 inside the store are neither followed nor copied, so the allowlist
 bounds whose files it collects and not merely what kind.
 
+A project\[aq]s devlogs are tracked too. AGENTS/devlogs/ holds handoff
+documents and, beside them, the backups a job saved before changing a
+live system; the AGENTS/ sub-repo has no remote, so without this they
+last as long as the machine. They are copied into the project\[aq]s entry
+under agents/devlogs/ and committed with the memory. Unlike agy\[aq]s
+store this copy is bounded by location, not by file type: backups are
+zone dumps, client lists and original scripts, and an extension rule
+would drop exactly those. Symlinks are not followed, dot-led names are
+skipped, and a file over 1 MiB is left behind so a stray database dump
+cannot bloat a history that keeps every version.
+
 Global state that belongs to no project is tracked as well. Claude\[aq]s
 global memory directory (\[ti]/.claude/memory) is symlinked into the vault
 exactly like per-project memory, and is only linked when one side or
@@ -3592,6 +3603,17 @@ Notes:
   knowledge store persists in the vault indefinitely, and a restore or a
   fresh clone brings it back. Prune such an entry from the vault by hand
   if it must really be gone.
+
+  The devlog copy is merge-only for the same reason, and it only ever
+  goes one way. A log deleted or moved in AGENTS/devlogs/ stays in the
+  vault, and an ordinary run never copies back out, because that would
+  resurrect a file removed on purpose. To bring devlogs back on a new
+  machine, copy the entry\[aq]s agents/devlogs/ over AGENTS/devlogs/ without
+  overwriting (cp -rn). A file over 1 MiB is skipped, and only a
+  verbose run says so. The vault\[aq]s *.db ignore still applies, so a
+  SQLite file in a backups folder is never committed. Nothing is
+  scanned for secrets: the devlog rules (no secret values, scanned
+  backups) are what keep them out, and the copy trusts them.
 
   Three further variables exist only so the test suite can run against
   throwaway directories instead of the real home, and are not meant for
@@ -7566,6 +7588,24 @@ The \f[V]claude\f[R]/\f[V]agy\f[R] wrappers sync both on every launch.
 See \f[V]__fish_agent_vault_autopush\f[R] in Section 7 for its one
 user-facing configuration variable; command-line usage for both tools is
 in Section 5.
+.PP
+A project\[cq]s \f[V]AGENTS/\f[R] repository has no remote, so
+\f[V]agents-vault\f[R] also copies its \f[V]AGENTS/devlogs/\f[R] \[em]
+the handoff documents and the backups saved beside them \[em] into the
+project\[cq]s vault entry, under \f[V]agents/devlogs/\f[R].
+That is the one exception to \[lq]memory only\[rq], and the reason
+devlogs survive losing the machine.
+The copy is bounded by location rather than by file type, because a
+backups folder holds zone dumps and original scripts, not just Markdown:
+symlinks are never followed, dot-led names are skipped, and a file over
+1 MiB is left out (a verbose run says so).
+It is merge-only and one-way.
+A log deleted from \f[V]AGENTS/devlogs/\f[R] stays in the vault, and an
+ordinary run never copies back out, since that would resurrect something
+removed on purpose.
+To restore devlogs on a new machine, copy the entry\[cq]s
+\f[V]agents/devlogs/\f[R] over the project\[cq]s
+\f[V]AGENTS/devlogs/\f[R] with \f[V]cp -rn\f[R].
 .SH 17. ATTRIBUTION
 .PP
 The core of the Zoxide
