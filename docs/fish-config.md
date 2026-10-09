@@ -4378,6 +4378,20 @@ Each category further sub-divides into several sub-categories, each with
 its own `__fish_config_op_<category>_<subcategory>` toggle -- see that
 category's page for its sub-category list.
 
+## Accepted values for guard variables
+
+Every guard variable (`__fish_config_opinionated`, the six
+`__fish_config_op_<category>` variables, and every
+`__fish_config_op_<category>_<subcategory>` toggle) is read the same way,
+case-insensitively:
+
+    Truthy (enable)       1  true  yes  on  y
+    Falsy (disable)       0  false  no  off  n
+
+An unset, empty, or unrecognized value is treated as unset: the toggle falls
+back to the next level (sub-category to category, category to master switch)
+and finally to the category default. Opt-in C5 logging stays off.
+
 ## Per-function overrides: `C0`/`always`
 
 Every guarded function or file can also carry a reserved `always/on` or
