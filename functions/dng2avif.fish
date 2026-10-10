@@ -66,7 +66,7 @@ function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
     end
 
     if not test -f "$input"
-        echo (set_color red)"Error: File '$input' not found."(set_color normal)
+        echo (__fish_color red)"Error: File '$input' not found."(__fish_color normal)
         return 1
     end
 
@@ -92,42 +92,42 @@ function dng2avif --description 'Convert DNG raw to 10-bit HDR AVIF'
     # Dependency check
     for cmd in magick ffmpeg avifenc exiftool
         if not type -q $cmd
-            echo (set_color red)"Error: $cmd is not installed."(set_color normal)
+            echo (__fish_color red)"Error: $cmd is not installed."(__fish_color normal)
             return 1
         end
     end
 
     # Step 1: Develop
-    echo -n (set_color blue)"Step 1/3: Developing... "(set_color normal)
+    echo -n (__fish_color blue)"Step 1/3: Developing... "(__fish_color normal)
     magick "$input" -depth 16 pnm:"$temp_pnm" &>/dev/null
     if test $status -ne 0
-        echo (set_color red)"FAILED"
+        echo (__fish_color red)"FAILED"
         return 1
     end
-    echo (set_color green)"DONE"(set_color normal)
+    echo (__fish_color green)"DONE"(__fish_color normal)
 
     # Step 2: Encode
-    echo -n (set_color blue)"Step 2/3: Encoding (Q:$quality, S:$speed)... "(set_color normal)
+    echo -n (__fish_color blue)"Step 2/3: Encoding (Q:$quality, S:$speed)... "(__fish_color normal)
     ffmpeg -i "$temp_pnm" -vf "format=yuv444p10le" -f yuv4mpegpipe -strict -1 - 2>/dev/null | avifenc -q $quality -s $speed --stdin -d 10 -y 444 --cicp 12/1/1 -r f -o "$output" &>/dev/null
     if test $status -ne 0
-        echo (set_color red)"FAILED"
+        echo (__fish_color red)"FAILED"
         rm -f "$temp_pnm"
         return 1
     end
-    echo (set_color green)"DONE"(set_color normal)
+    echo (__fish_color green)"DONE"(__fish_color normal)
 
     # Step 3: Metadata
-    echo -n (set_color blue)"Step 3/3: Syncing Metadata... "(set_color normal)
+    echo -n (__fish_color blue)"Step 3/3: Syncing Metadata... "(__fish_color normal)
     exiftool -tagsFromFile "$input" -all:all "$output" -overwrite_original &>/dev/null
     if test $status -ne 0
-        echo (set_color red)"FAILED"
+        echo (__fish_color red)"FAILED"
     else
-        echo (set_color green)"DONE"(set_color normal)
+        echo (__fish_color green)"DONE"(__fish_color normal)
     end
 
     # Final Cleanup
     test -f "$temp_pnm"; and rm -f "$temp_pnm"
 
     set -l size (stat -c '%s' "$output" | numfmt --to=iec)
-    echo (set_color yellow)"Complete: $output ($size)"(set_color normal)
+    echo (__fish_color yellow)"Complete: $output ($size)"(__fish_color normal)
 end

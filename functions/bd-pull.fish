@@ -118,7 +118,7 @@ function bd-pull --description 'Pull new Gitea issues into local Beads and link 
             break
         end
 
-        echo (set_color blue)"📡 Checking Gitea: $REPO..."(set_color normal)
+        echo (__fish_color blue)"📡 Checking Gitea: $REPO..."(__fish_color normal)
 
         # 1. Fetch every page of open issues (pull requests excluded).
         set -l page 1
@@ -181,7 +181,7 @@ function bd-pull --description 'Pull new Gitea issues into local Beads and link 
             string match -qr '^\[.*\]' -- $title; and continue
 
             set unlinked (math $unlinked + 1)
-            echo (set_color yellow)"➕ Linking Web Issue #$number: $title"(set_color normal)
+            echo (__fish_color yellow)"➕ Linking Web Issue #$number: $title"(__fish_color normal)
 
             # A. Create local Bead and capture the new ID
             # This captures the output of bd create to find the ID it generated
@@ -238,7 +238,7 @@ function bd-pull --description 'Pull new Gitea issues into local Beads and link 
             break
         end
 
-        echo (set_color green)"✅ Linked $linked issues."(set_color normal)
+        echo (__fish_color green)"✅ Linked $linked issues."(__fish_color normal)
         if not bd sync
             echo "$c_warn""bd-pull: bd sync failed$c_reset" >&2
             set rc 1

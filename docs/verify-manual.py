@@ -1058,6 +1058,25 @@ def test_prettify_is_site_only():
             )
 
 
+def test_manual_has_no_autolinks():
+    """No <https://...> autolinks in the manual sources.
+
+    Pages the site promotes to MDX parse `<h...` as the start of a JSX tag, so
+    one autolink fails the whole static-site build ("Unexpected character
+    after `<`") -- and that build only runs on main, never on a pull request.
+    Write links as [text](url) instead. Inline code spans are ignored.
+    """
+    manual = Path(__file__).parent / "manual"
+    autolink = re.compile(r"<(?:https?|ftp|mailto):", re.IGNORECASE)
+    for path in sorted(manual.rglob("*.md")):
+        for n, line in enumerate(path.read_text().splitlines(), 1):
+            bare = re.sub(r"`[^`]*`", "", line)
+            assert not autolink.search(bare), (
+                f"{path.relative_to(manual)}:{n} has a <url> autolink, which "
+                "breaks the MDX site build; use [text](url)"
+            )
+
+
 def test_sidebar_has_no_duplicate_functions_entry():
     """The functions group must not also list itself as one of its children."""
     import build_manual

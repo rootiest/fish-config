@@ -190,9 +190,9 @@ function _fish_deps_update
                 echo "Updating $bin..."
                 set attempted (math $attempted + 1)
                 if _fish_deps_build_fish
-                    set_color yellow
+                    echo -n (__fish_color yellow)
                     echo "  Fish updated — restart your shell to use the new version."
-                    set_color normal
+                    echo -n (__fish_color normal)
                 else
                     set -a failed $bin
                 end
@@ -200,16 +200,16 @@ function _fish_deps_update
                 echo "Updating $bin (cargo/uv unavailable, using system PM)..."
                 set attempted (math $attempted + 1)
                 if _fish_deps_pm_upgrade $pm_pkg
-                    set_color yellow
+                    echo -n (__fish_color yellow)
                     echo "  Fish updated — restart your shell to use the new version."
-                    set_color normal
+                    echo -n (__fish_color normal)
                 else
                     set -a failed $bin
                 end
             else
-                set_color yellow
+                echo -n (__fish_color yellow)
                 echo "  fish: cannot update — install cargo and uv to build from source"
-                set_color normal
+                echo -n (__fish_color normal)
             end
             set i (math $i + 1)
             continue

@@ -1,0 +1,197 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Provenance and licensing for files this repository vendors or derives from
+# third-party projects (REUSE specification 3.x, https://reuse.software/spec/).
+#
+# These files deliberately carry no SPDX header of their own so they stay
+# byte-close to upstream and cheap to re-sync. This file is the only place
+# their origin is recorded; tests/test-license-headers.fish enforces that
+# every tracked .fish file either has an `SPDX-License-Identifier` in its
+# first 5 lines or is covered below. See CONTRIBUTING.md, "Vendored files".
+#
+# Conventions
+#   - The licence and copyright named in each block are the UPSTREAM's, copied
+#     from the upstream LICENSE file at the URL given (all verified 2026-10-09).
+#   - Local modifications made in this repository (opinionated guards,
+#     Fish 4.x fixes, ...) are AGPL-3.0-or-later; the upstream licence applies
+#     to the upstream-derived code.
+#   - `precedence = "closest"` is used for files with no header of their own.
+#     `precedence = "aggregate"` is used where the file ALSO carries our
+#     AGPL header, so both pieces of information apply.
+#   - The `path` arrays must stay one quoted entry per line: the test parses
+#     them line by line. `*` matches within one path segment, `**` crosses
+#     directories.
+#
+# To add a vendored file: append an [[annotations]] block (or add the path to
+# the existing block for the same upstream), verify the upstream LICENSE and
+# record its URL here, and add LICENSES/<id>.txt if the identifier is new.
+#
+# Unresolved files
+#   Files whose licence or copyright could not be established with
+#   confidence are deliberately NOT annotated (a guessed licence is worse than
+#   none). They are listed in the `UNRESOLVED:` lines below; the test
+#   tolerates and reports them, and fails if one is listed here but also
+#   annotated, no longer exists, or has gained a header (stale entry).
+#
+#   None at present. (The four tool-generated completions that were once listed
+#   here were replaced by loaders that run each tool's own generator, so
+#   nothing of theirs is vendored.)
+
+version = 1
+SPDX-PackageName = "fish-config"
+SPDX-PackageSupplier = "Rootiest"
+SPDX-PackageDownloadLocation = "https://git.rootiest.dev/rootiest/fish-config"
+
+# ── jorgebucaran/autopair.fish ───────────────────────────────────────────────
+# Upstream: https://github.com/jorgebucaran/autopair.fish
+# LICENSE:  https://raw.githubusercontent.com/jorgebucaran/autopair.fish/main/LICENSE.md
+# MIT, "Copyright © Jorge Bucaran". conf.d/autopair.fish carries a local
+# opinionated-guard modification (AGPL-3.0-or-later).
+[[annotations]]
+path = [
+  "conf.d/autopair.fish",
+  "functions/_autopair_*.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright © Jorge Bucaran <https://jorgebucaran.com>"
+SPDX-License-Identifier = "MIT"
+
+# ── franciscolourenco/done ───────────────────────────────────────────────────
+# Upstream: https://github.com/franciscolourenco/done
+# LICENSE:  https://raw.githubusercontent.com/franciscolourenco/done/master/LICENSE
+# MIT. The file also embeds the upstream MIT notice verbatim. Local
+# modifications (opinionated guard, ...) are AGPL-3.0-or-later.
+[[annotations]]
+path = [
+  "conf.d/done.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright (c) 2016 Francisco Lourenço & Daniel Wehner"
+SPDX-License-Identifier = "MIT"
+
+# ── PatrickF1/fzf.fish ───────────────────────────────────────────────────────
+# Upstream: https://github.com/PatrickF1/fzf.fish
+# LICENSE:  https://raw.githubusercontent.com/PatrickF1/fzf.fish/main/LICENSE.md
+# MIT. The upstream LICENSE.md reads literally "Copyright © `2020` `Patrick`"
+# (an unfilled template); recorded as written. completions/fzf_configure_bindings.fish
+# is byte-identical to upstream. functions/_fzf_preview_image.fish is NOT
+# upstream (added here, carries our own header) and is deliberately not listed.
+[[annotations]]
+path = [
+  "conf.d/fzf.fish",
+  "completions/fzf_configure_bindings.fish",
+  "functions/_fzf_configure_bindings_help.fish",
+  "functions/_fzf_extract_var_info.fish",
+  "functions/_fzf_preview_changed_file.fish",
+  "functions/_fzf_preview_file.fish",
+  "functions/_fzf_report_diff_type.fish",
+  "functions/_fzf_report_file_type.fish",
+  "functions/_fzf_search_directory.fish",
+  "functions/_fzf_search_git_log.fish",
+  "functions/_fzf_search_git_status.fish",
+  "functions/_fzf_search_history.fish",
+  "functions/_fzf_search_processes.fish",
+  "functions/_fzf_search_variables.fish",
+  "functions/_fzf_wrapper.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright © 2020 Patrick"
+SPDX-License-Identifier = "MIT"
+
+# Same upstream. functions/fzf_configure_bindings.fish is derived from
+# upstream's function of the same name but carries our AGPL header, so the
+# upstream notice is aggregated with it.
+[[annotations]]
+path = [
+  "functions/fzf_configure_bindings.fish",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright © 2020 Patrick"
+SPDX-License-Identifier = "MIT"
+
+# ── nickeb96/puffer-fish ─────────────────────────────────────────────────────
+# Upstream: https://github.com/nickeb96/puffer-fish
+# LICENSE:  https://raw.githubusercontent.com/nickeb96/puffer-fish/master/LICENSE
+# MIT, "Copyright © Nicholas Boyle". conf.d/puffer.fish derives from upstream's
+# conf.d/puffer_fish_key_bindings.fish and adds a local opinionated guard
+# (AGPL-3.0-or-later).
+[[annotations]]
+path = [
+  "conf.d/puffer.fish",
+  "functions/_puffer_fish_expand_*.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright © Nicholas Boyle"
+SPDX-License-Identifier = "MIT"
+
+# ── ik11235/wakatime.fish ────────────────────────────────────────────────────
+# Upstream: https://github.com/ik11235/wakatime.fish
+# LICENSE:  https://raw.githubusercontent.com/ik11235/wakatime.fish/master/LICENSE
+# MIT, "Copyright 2022 ik-fib". Any local modifications are
+# AGPL-3.0-or-later.
+[[annotations]]
+path = [
+  "conf.d/wakatime.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright 2022 ik-fib"
+SPDX-License-Identifier = "MIT"
+
+# ── icezyclon/zoxide.fish ────────────────────────────────────────────────────
+# Upstream: https://github.com/icezyclon/zoxide.fish
+# LICENSE:  https://raw.githubusercontent.com/icezyclon/zoxide.fish/main/LICENSE
+# MIT. That LICENSE lists two copyright holders (icezyclon, and Ajeet D'Souza
+# for the portions derived from zoxide itself). completions/zoxide.fish
+# says "Sourced from icezyclon/zoxide.fish (MIT)" and has no header of its own.
+[[annotations]]
+path = [
+  "completions/zoxide.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = [
+  "Copyright (c) 2022 icezyclon",
+  "Copyright 2020 Ajeet D'Souza",
+]
+SPDX-License-Identifier = "MIT"
+
+# conf.d/zoxide.fish and functions/zoxide.fish say "Adapted from
+# icezyclon/zoxide.fish (MIT)" but carry our AGPL header, so the upstream
+# notice is aggregated with it.
+[[annotations]]
+path = [
+  "conf.d/zoxide.fish",
+  "functions/zoxide.fish",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = [
+  "Copyright (c) 2022 icezyclon",
+  "Copyright 2020 Ajeet D'Souza",
+]
+SPDX-License-Identifier = "MIT"
+
+# ── jorgebucaran/replay.fish ─────────────────────────────────────────────────
+# Upstream: https://github.com/jorgebucaran/replay.fish
+# LICENSE:  https://raw.githubusercontent.com/jorgebucaran/replay.fish/main/LICENSE.md
+# MIT, "Copyright © Jorge Bucaran". completions/replay.fish is byte-identical
+# to upstream's completions/replay.fish.
+[[annotations]]
+path = [
+  "completions/replay.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright © Jorge Bucaran <https://jorgebucaran.com>"
+SPDX-License-Identifier = "MIT"
+
+# ── jorgebucaran/spark.fish ──────────────────────────────────────────────────
+# Upstream: https://github.com/jorgebucaran/spark.fish
+# LICENSE:  https://raw.githubusercontent.com/jorgebucaran/spark.fish/main/LICENSE.md
+# MIT, "Copyright © Jorge Bucaran". completions/spark.fish is byte-identical
+# to upstream's completions/spark.fish.
+[[annotations]]
+path = [
+  "completions/spark.fish",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright © Jorge Bucaran <https://jorgebucaran.com>"
+SPDX-License-Identifier = "MIT"

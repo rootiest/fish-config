@@ -86,17 +86,17 @@ function play-media --description 'Pick audio/video files with fzf and play them
     if set -q _flag_player
         set player $_flag_player
         if not type -q $player[1]
-            set_color red
+            echo -n (__fish_color red)
             echo "error: --player '$player[1]' is not a valid command" >&2
-            set_color normal
+            echo -n (__fish_color normal)
             return 1
         end
     else if set -q play_media_player
         echo $play_media_player | read -at player
         if not type -q $player[1]
-            set_color red
+            echo -n (__fish_color red)
             echo "error: \$play_media_player '$player[1]' is not a valid command" >&2
-            set_color normal
+            echo -n (__fish_color normal)
             return 1
         end
     else
@@ -122,9 +122,9 @@ function play-media --description 'Pick audio/video files with fzf and play them
     end
 
     if not set -q player[1]
-        set_color red
+        echo -n (__fish_color red)
         echo "error: could not find a media player — set \$play_media_player, pass --player, or install mpv/vlc" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 1
     end
 

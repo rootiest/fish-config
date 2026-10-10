@@ -71,17 +71,17 @@ function repo-open --description 'Open the origin remote of the current repo in 
     end
 
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
-        set_color red
+        echo -n (__fish_color red)
         echo "error: not inside a git repository" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 1
     end
 
     set -l remote (git remote get-url origin 2>/dev/null)
     if test -z "$remote"
-        set_color red
+        echo -n (__fish_color red)
         echo "error: no 'origin' remote configured" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 1
     end
 
@@ -103,9 +103,9 @@ function repo-open --description 'Open the origin remote of the current repo in 
     set -l host $parts[1]
     set -l repo_path $parts[2]
     if test -z "$host"; or test -z "$repo_path"
-        set_color red
+        echo -n (__fish_color red)
         echo "error: could not parse origin remote: $remote" >&2
-        set_color normal
+        echo -n (__fish_color normal)
         return 1
     end
     set -l base "https://$host/$repo_path"

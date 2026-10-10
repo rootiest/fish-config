@@ -33,6 +33,7 @@ The configuration uses a structured file tree:
     ~/.config/fish/
     ├── config.fish                 Main entry point; sets env vars and PATH
     ├── conf.d/                     Snippets sourced at startup
+    │   ├── 00-version-check.fish   Warns once if Fish is older than 4.0.0
     │   ├── __fish_config_op_registry.fish  Generated component registry
     │   ├── abbr.fish               All abbreviations
     │   ├── auto-pull.fish          Background git pulls for opted-in repos
@@ -73,6 +74,7 @@ The configuration uses a structured file tree:
     │   ├── catppuccin-latte.theme      Latte (light)
     │   ├── catppuccin-macchiato.theme  Macchiato; Latte on light terminals
     │   └── catppuccin-mocha.theme      Mocha (default); Latte on light terminals
+    ├── LICENSES/                   Licence texts for vendored code
     ├── tests/                      Test suite: fish tests/run-tests.fish
     └── docs/                       Offline documentation and man page
         ├── fish-config.md          Generated manual

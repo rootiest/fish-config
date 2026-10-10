@@ -32,6 +32,13 @@
 #   Each falls back to its previous static default when the theme
 #   variable is unset or empty (e.g. a --no-config script).
 #
+#   NO_COLOR: when NO_COLOR is set to a non-empty value (https://no-color.org;
+#   an empty value does not count) every role is set to the empty string,
+#   and the theme overrides are skipped. Under TERM=dumb the roles come back
+#   from set_color as empty lists instead; both are safe to interpolate
+#   when quoted. Direct set_color callers that cannot use a role go through
+#   __fish_color, which honours the same variable.
+#
 # ARGUMENTS
 #   none
 #
@@ -67,6 +74,18 @@ function __fish_palette --no-scope-shadowing --description 'Define the shared ou
     set c_accent (set_color green)
     set c_sel (set_color --bold magenta)
     set c_hi (set_color --bold white)
+
+    # NO_COLOR (https://no-color.org): any NON-EMPTY value turns colour off;
+    # an empty value does not count. Every role becomes the empty string --
+    # ONE empty element, not an empty list, so `$c_err"text"` keeps "text"
+    # (an empty list in a concatenation annihilates the word). The roles
+    # exist by now, so `set` rewrites them in the caller's scope.
+    if test -n "$NO_COLOR"
+        for __pal_role in c_reset c_cmd c_flag c_arg c_dim c_head c_warn c_err c_ok c_accent c_sel c_hi
+            set $__pal_role ''
+        end
+        return 0
+    end
 
     # Theme overrides: same roles fish's own highlighter/pager use, so
     # --help text matches the prompt instead of a fixed guess at it.

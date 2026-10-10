@@ -47,9 +47,9 @@ function sbver --description 'Verifies Secure Boot status of EFI binaries using 
     end
 
     # ANSI color codes (Fish uses set_color for easier management)
-    set RED (set_color red)
-    set GREEN (set_color green)
-    set NC (set_color normal)
+    set RED (__fish_color red)
+    set GREEN (__fish_color green)
+    set NC (__fish_color normal)
 
     # Flags
     set brief_mode false

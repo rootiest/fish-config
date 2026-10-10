@@ -61,6 +61,11 @@ This config requires Fish 4.x or newer. Check your version:
 Run `fish-deps` to see a status report — an outdated Fish shows ⚠ with an
 upgrade message.
 
+On an older Fish, an interactive shell prints a one-time warning on stderr at
+startup naming the version it found and pointing back to this section. It is
+a warning only: the rest of the config still loads, and the features that
+need Fish 4.x may fail with confusing errors until you upgrade.
+
 Upgrading Fish by distribution:
 
     # Arch / AUR
@@ -117,6 +122,13 @@ The first-run welcome banner runs exactly once. To re-trigger it (e.g. for
 testing):
 
     set -Ue __fish_config_first_run_complete
+
+If the Fisher/plugin bootstrap failed (offline first run), it is retried
+automatically on a later start, at most once a day; see
+[Fisher Plugins](/09-fisher-plugins/). To retry on the next start instead of
+waiting, run:
+
+    set -U __fish_config_bootstrap_pending 0
 
 See [C6 — Greeting and First-Run UI](/08-components-reference/06-c6-greeting-and-first-run-ui/) for details.
 

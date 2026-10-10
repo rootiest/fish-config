@@ -27,7 +27,7 @@ function steam-dl --description 'Run Steam while inhibiting system sleep'
 
     for cmd in systemd-inhibit steam
         if not type -q $cmd
-            echo (set_color red)"Error: $cmd is not installed."(set_color normal) >&2
+            echo (__fish_color red)"Error: $cmd is not installed."(__fish_color normal) >&2
             return 1
         end
     end
