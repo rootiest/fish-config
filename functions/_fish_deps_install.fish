@@ -156,7 +156,10 @@ function _fish_deps_install
             # manager's name, and drop the method when its index has no such
             # package (apt has no ov), instead of offering it only to fail.
             set -l pm_missing 0
-            if test -n "$pm_pkg"; and test -n "$pm"
+            if test -z "$pm"
+                # No package manager: nothing to install a package with.
+                set pm_pkg ""
+            else if test -n "$pm_pkg"
                 set pm_pkg (_fish_deps_pm_pkg $pm $pm_pkg)
                 if test -z "$pm_pkg"; or not _fish_deps_pm_has_pkg $pm $pm_pkg
                     set pm_missing 1

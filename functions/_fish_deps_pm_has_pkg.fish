@@ -26,10 +26,12 @@
 function _fish_deps_pm_has_pkg --argument-names pm pkg
     switch "$pm"
         case apt
+            # apt-cache exits 100 for an unknown package; the contract is 1.
             command apt-cache show $pkg >/dev/null 2>&1
+            or return 1
         case pacman
             command pacman -Si $pkg >/dev/null 2>&1
-        case '*'
-            return 0
+            or return 1
     end
+    return 0
 end
