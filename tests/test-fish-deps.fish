@@ -523,6 +523,7 @@ _fish_deps_ensure toolchain
 check "toolchain accepted returns 0" 0 $status
 check "the toolchain comes from rustup default stable" "default stable" (string collect <$work/rustup.log)
 
+set -gx PATH $_real_path
 command rm -f $work/toolchain-ready $work/rustup.log
 ens_reset n
 set -gx PATH $_rustup_stub $_ens_bin
@@ -607,7 +608,7 @@ inst_reset "starship zoxide"
 inst_run q ''
 check "q at the first prompt exits 130" 130 $_inst_rc
 check "q at the first prompt asks exactly once" 1 (count $_ask_log)
-check "q at the first prompt installs nothing" false (test -e $work/inst-logs/cargo.log; and echo true; or echo false)
+check "q at the first prompt installs nothing" false (inst_saw install (inst_log cargo))
 check "a cancelled run says so" true (inst_saw "Installation cancelled" "$_inst_out")
 check "a cancelled run removes its signal handler" false (functions -q __fdi_on_sigint; and echo true; or echo false)
 check "a cancelled run leaves no cancellation state behind" false (set -q _fdc_cancelled; and echo true; or echo false)
@@ -624,12 +625,12 @@ check "the run asked about starship then zoxide" 2 (count $_ask_log)
 inst_reset starship
 inst_run y ''
 check "Ctrl+D at the method menu exits 130, not the default method" 130 $_inst_rc
-check "Ctrl+D at the method menu installs nothing" false (test -e $work/inst-logs/cargo.log; and echo true; or echo false)
+check "Ctrl+D at the method menu installs nothing" false (inst_saw install (inst_log cargo))
 
 inst_reset starship
 inst_run y 'q\n'
 check "q at the method menu exits 130" 130 $_inst_rc
-check "q at the method menu installs nothing" false (test -e $work/inst-logs/cargo.log; and echo true; or echo false)
+check "q at the method menu installs nothing" false (inst_saw install (inst_log cargo))
 
 # ---- success and failure reporting ---------------------------------------
 inst_reset starship
@@ -709,7 +710,7 @@ check "a missing compiler does not fail the install" 0 $_inst_rc
 inst_reset "starship cc"
 inst_run y,n '1\n'
 check "declining the compiler fails the install" 1 $_inst_rc
-check "declining the compiler never calls cargo install" false (test -e $work/inst-logs/cargo.log; and echo true; or echo false)
+check "declining the compiler never calls cargo install" false (inst_saw install (inst_log cargo))
 
 # ---- fish-deps sync does not update after a cancel ---------------------------
 function _fish_deps_update
