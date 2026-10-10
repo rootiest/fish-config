@@ -9,9 +9,13 @@
 #
 # DESCRIPTION
 #   Builds and installs fish from source: clones the upstream repository
-#   into a temporary directory, checks out the newest fish-* tag if there
-#   is one, and runs cargo install --locked --path . (to $CARGO_HOME/bin).
-#   Shared by fish-deps install and fish-deps update.
+#   into a temporary directory, checks out the newest release tag (see
+#   _fish_deps_release_tag), and runs cargo install --locked --path . (to
+#   $CARGO_HOME/bin). Shared by fish-deps install and fish-deps update.
+#
+#   If the repository has no release tag at all, the default branch is built
+#   as cloned, which is what the build did before release tags were looked
+#   up correctly.
 #
 #   The build is wrapped in uv run --no-project --with sphinx. Sphinx is
 #   there for one reason: fish's build script renders its man pages with
@@ -38,11 +42,10 @@ function _fish_deps_build_fish
 
     git clone https://github.com/fish-shell/fish-shell "$tmpdir"
     and begin
-        # Upstream's release tags are bare version numbers (4.9.3), so this
-        # pattern matches nothing and the default branch is built as cloned.
-        # Pre-existing behavior, kept as-is here and tracked in issue 300.
-        set -l tag (git -C "$tmpdir" tag --list 'fish-*' --sort=version:refname | tail -1)
-        test -n "$tag"; and git -C "$tmpdir" checkout "$tag"
+        # Build the latest release, not whatever the default branch happens
+        # to be today. No tag at all falls through to the default branch.
+        set -l tag (_fish_deps_release_tag "$tmpdir")
+        test -n "$tag"; and git -C "$tmpdir" checkout --quiet "$tag"
         true
     end
     and pushd "$tmpdir"
