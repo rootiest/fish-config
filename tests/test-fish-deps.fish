@@ -173,7 +173,7 @@ for t in eza lsd bat
     printf '#!/bin/sh\nexit 0\n' >$stubs/$t
     chmod +x $stubs/$t
 end
-printf '#!/bin/sh\ncase "$*" in *lsd*) exit 1;; esac\nexit 0\n' >$stubs/cargo
+printf '#!/bin/sh\necho "$*" >>%s\ncase "$*" in *lsd*) exit 1;; esac\nexit 0\n' $work/cargo-update.log >$stubs/cargo
 chmod +x $stubs/cargo
 
 set -g _fisher_rc 0
@@ -210,6 +210,532 @@ check "fish-deps update returns 0 on success" 0 $status
 
 set -gx PATH $oldpath
 functions -e fisher
+
+# Crates are updated against the versions they were published with (#7).
+check "update passes --locked to cargo" true (string match -q '*install --locked --force eza*' -- (command cat $work/cargo-update.log | string collect); and echo true; or echo false)
+check "update never runs an unlocked cargo install" false (string match -qr '^install --force' -- (command cat $work/cargo-update.log); and echo true; or echo false)
+
+# =============================================================================
+# 6. _fish_deps_wakatime_binary without unzip (#8)
+# =============================================================================
+section _fish_deps_wakatime_binary / unzip
+
+# PATH holds only a uname stub: no unzip, and nothing else to fall back on.
+# The checksum lookup succeeds, so the unzip check is what stops the install,
+# and it must do so before the zip is requested.
+set -l nounzip $work/nounzip
+mkdir -p $nounzip
+printf '#!/bin/sh\necho x86_64\n' >$nounzip/uname
+chmod +x $nounzip/uname
+
+set -g _curl_urls
+set -g _curl_body "0000000000000000000000000000000000000000000000000000000000000000  wakatime-cli-linux-amd64.zip"
+set oldpath $PATH
+set -gx PATH $nounzip
+set err (_fish_deps_wakatime_binary 2>&1)
+set rc $status
+set -gx PATH $oldpath
+check "missing unzip returns 1" 1 $rc
+check "missing unzip says so" true (string match -q '*unzip is required*' -- "$err"; and echo true; or echo false)
+check "missing unzip fetches only the checksum file" 1 (count $_curl_urls)
+
+# =============================================================================
+# 7. _fish_deps_is_arch (#3)
+# =============================================================================
+section _fish_deps_is_arch
+
+function write_osrel
+    printf '%s\n' $argv >$work/os-release
+end
+set -g __fish_deps_os_release $work/os-release
+
+write_osrel 'NAME="Arch Linux"' ID=arch
+_fish_deps_is_arch
+check "ID=arch is Arch" 0 $status
+
+write_osrel ID=cachyos 'ID_LIKE="arch"'
+_fish_deps_is_arch
+check "ID_LIKE=arch (CachyOS) is Arch" 0 $status
+
+write_osrel ID=endeavouros 'ID_LIKE=arch'
+_fish_deps_is_arch
+check "unquoted ID_LIKE=arch is Arch" 0 $status
+
+write_osrel ID=garuda 'ID_LIKE="arch archlinux"'
+_fish_deps_is_arch
+check "arch among several ID_LIKE words is Arch" 0 $status
+
+write_osrel ID=ubuntu 'ID_LIKE=debian'
+_fish_deps_is_arch
+check "Ubuntu is not Arch" 1 $status
+
+write_osrel ID=debian
+_fish_deps_is_arch
+check "Debian is not Arch" 1 $status
+
+write_osrel ID=fedora 'ID_LIKE="rhel fedora"'
+_fish_deps_is_arch
+check "Fedora is not Arch" 1 $status
+
+write_osrel ID=archaic
+_fish_deps_is_arch
+check "a name merely starting with arch is not Arch" 1 $status
+
+set -g __fish_deps_os_release $work/no-such-os-release
+_fish_deps_is_arch
+check "an unreadable os-release is not Arch" 1 $status
+
+# =============================================================================
+# 8. _fish_deps_pm_pkg / _fish_deps_pm_has_pkg (#5, #6)
+# =============================================================================
+section _fish_deps_pm_pkg
+
+check "apt spells go golang-go" golang-go (_fish_deps_pm_pkg apt go)
+check "dnf spells go golang" golang (_fish_deps_pm_pkg dnf go)
+check "pacman spells go go" go (_fish_deps_pm_pkg pacman go)
+check "apt compiler is build-essential" build-essential (_fish_deps_pm_pkg apt cc)
+check "pacman compiler is base-devel" base-devel (_fish_deps_pm_pkg pacman cc)
+check "dnf compiler is gcc" gcc (_fish_deps_pm_pkg dnf cc)
+check "an unmapped name passes through" ripgrep (_fish_deps_pm_pkg apt ripgrep)
+_fish_deps_pm_pkg brew cc >/dev/null
+check "a manager with no compiler package returns 1" 1 $status
+
+section _fish_deps_pm_has_pkg
+
+# apt-cache and pacman stubs: only the package called "known" exists.
+set -l pmbin $work/pmbin
+mkdir -p $pmbin
+printf '#!/bin/sh\n[ "$2" = known ] && exit 0\nexit 100\n' >$pmbin/apt-cache
+printf '#!/bin/sh\n[ "$2" = known ] && exit 0\nexit 1\n' >$pmbin/pacman
+chmod +x $pmbin/apt-cache $pmbin/pacman
+set oldpath $PATH
+set -gx PATH $pmbin $oldpath
+
+_fish_deps_pm_has_pkg apt known
+check "apt knows a packaged name" 0 $status
+_fish_deps_pm_has_pkg apt ov
+check "apt does not know ov" 1 $status
+_fish_deps_pm_has_pkg pacman known
+check "pacman knows a packaged name" 0 $status
+_fish_deps_pm_has_pkg pacman missing
+check "pacman does not know a missing name" 1 $status
+_fish_deps_pm_has_pkg dnf anything
+check "a manager that cannot be queried is assumed to have it" 0 $status
+_fish_deps_pm_has_pkg paru anything
+check "an AUR helper is assumed to have it" 0 $status
+
+set -gx PATH $oldpath
+
+# =============================================================================
+# 9. _fish_deps_ask (#9)
+# =============================================================================
+section _fish_deps_ask
+
+set -e _fdc_cancelled
+# Feeds ANSWER (printf %b escapes) on stdin, through a file so the function
+# runs in this shell. An empty ANSWER is end of input, i.e. Ctrl+D.
+function ask_with --argument-names answer
+    printf '%b' "$answer" >$work/answer
+    _fish_deps_ask "Go on?" <$work/answer >/dev/null 2>&1
+end
+
+ask_with 'y\n'
+check "y accepts" 0 $status
+ask_with 'Y\n'
+check "Y accepts" 0 $status
+ask_with 'yes\n'
+check "yes accepts" 0 $status
+ask_with '\n'
+check "Enter accepts (the default)" 0 $status
+ask_with 'n\n'
+check "n declines this step" 1 $status
+ask_with 'N\n'
+check "N declines this step" 1 $status
+ask_with 'q\n'
+check "q quits" 2 $status
+ask_with 'Q\n'
+check "Q quits" 2 $status
+ask_with ''
+check "end of input (Ctrl+D) quits instead of defaulting to yes" 2 $status
+ask_with 'maybe\ny\n'
+check "an unrecognized answer is asked again" 0 $status
+
+set -g _fdc_cancelled 1
+ask_with 'y\n'
+check "an earlier interrupt quits without asking" 2 $status
+set -e _fdc_cancelled
+
+functions -e ask_with
+
+# =============================================================================
+# 10. _fish_deps_refresh_path (#2)
+# =============================================================================
+section _fish_deps_refresh_path
+
+# rustup lands in ~/.cargo/bin, `cargo install` in $CARGO_HOME/bin: both must
+# be reachable afterwards, not just the first that exists.
+set oldpath $PATH
+set -g CARGO_HOME $work/cargohome
+mkdir -p $CARGO_HOME/bin $HOME/.cargo/bin
+# The AppImage test above created ~/.local/bin in the sandbox; remove it so
+# there is a candidate directory that really is missing.
+command rm -rf $HOME/.local
+set -l missing $HOME/.local/bin
+
+_fish_deps_refresh_path
+check "refresh returns 0" 0 $status
+check "CARGO_HOME/bin is on PATH" true (contains -- $CARGO_HOME/bin $PATH; and echo true; or echo false)
+check "~/.cargo/bin is on PATH too" true (contains -- $HOME/.cargo/bin $PATH; and echo true; or echo false)
+check "a directory that does not exist is not added" false (contains -- $missing $PATH; and echo true; or echo false)
+
+set -l before (count $PATH)
+_fish_deps_refresh_path
+check "a second refresh adds nothing" $before (count $PATH)
+
+set -gx PATH $oldpath
+set -e CARGO_HOME
+
+# =============================================================================
+# 11. _fish_deps_ensure (#2, #5, #6, #8)
+# =============================================================================
+section _fish_deps_ensure
+
+set -g _real_path $PATH
+
+# The "package manager" is a stub apt plus a sudo function that records what
+# it was asked to install and, instead of installing, appends the directory
+# holding that tool's stub to PATH. Nothing real is installed.
+set -g _ens_bin $work/ensure-bin
+set -g _ens_pkgs $work/ensure-pkgs
+mkdir -p $_ens_bin $_ens_pkgs/cc $_ens_pkgs/unzip $_ens_pkgs/go
+printf '#!/bin/sh\nexit 0\n' >$_ens_bin/apt
+printf '#!/bin/sh\nexit 0\n' >$_ens_pkgs/cc/cc
+printf '#!/bin/sh\nexit 0\n' >$_ens_pkgs/unzip/unzip
+mkdir -p $work/inst-logs
+printf '#!/bin/sh\necho "$*" >>%s/go.log\nexit 0\n' $work/inst-logs >$_ens_pkgs/go/go
+chmod +x $_ens_bin/apt $_ens_pkgs/cc/cc $_ens_pkgs/unzip/unzip $_ens_pkgs/go/go
+
+set -g _sudo_log
+function sudo
+    set -ga _sudo_log "$argv"
+    switch "$argv"
+        case 'apt install -y build-essential'
+            set -gx PATH $PATH $_ens_pkgs/cc
+        case 'apt install -y unzip'
+            set -gx PATH $PATH $_ens_pkgs/unzip
+        case 'apt install -y golang-go'
+            set -gx PATH $PATH $_ens_pkgs/go
+    end
+end
+
+# Answers come from $_ask_answers, one per prompt (y, n or q); running out is
+# a quit, so an unexpected extra prompt shows up as a failure.
+set -g _ask_answers
+set -g _ask_log
+function _fish_deps_ask
+    set -ga _ask_log "$argv[1]"
+    set -l ans $_ask_answers[1]
+    set -e _ask_answers[1]
+    switch "$ans"
+        case y
+            return 0
+        case n
+            return 1
+    end
+    return 2
+end
+
+function ens_reset
+    set -gx PATH $_real_path
+    set -e _fdc_ensure_cc _fdc_ensure_toolchain _fdc_ensure_unzip _fdc_ensure_go
+    set -g _sudo_log
+    set -g _ask_log
+    set -g _ask_answers $argv
+    set -gx PATH $_ens_bin
+end
+
+set oldpath $PATH
+
+ens_reset n
+_fish_deps_ensure cc
+check "cc missing, declined: returns 1" 1 $status
+check "cc missing, declined: nothing is installed" 0 (count $_sudo_log)
+
+ens_reset y
+_fish_deps_ensure cc
+check "cc missing, accepted: returns 0" 0 $status
+check "cc is installed through the package manager" "apt install -y build-essential" "$_sudo_log"
+check "cc is found afterwards" true (command -q cc; and echo true; or echo false)
+check "the question named the package" true (string match -q '*build-essential*' -- "$_ask_log"; and echo true; or echo false)
+_fish_deps_ensure cc
+check "an answered need is not asked again" 0 $status
+check "an answered need prompts once" 1 (count $_ask_log)
+
+ens_reset n
+_fish_deps_ensure unzip
+check "unzip declined returns 1" 1 $status
+_fish_deps_ensure unzip
+check "a declined need is remembered" 1 $status
+check "a declined need prompts once" 1 (count $_ask_log)
+check "a declined need installs nothing" 0 (count $_sudo_log)
+
+ens_reset q
+_fish_deps_ensure go
+check "quitting at the prompt returns 130" 130 $status
+check "a quit is not remembered as a decline" false (set -q _fdc_ensure_go; and echo true; or echo false)
+
+ens_reset y
+_fish_deps_ensure go
+check "go accepted returns 0" 0 $status
+check "go is installed as golang-go under apt" "apt install -y golang-go" "$_sudo_log"
+
+# No package manager at all: manual instructions, and no prompt. detect_pm
+# is mocked because `type -q pkg` also matches this config's own pkg function.
+ens_reset y
+functions -c _fish_deps_detect_pm _ens_real_detect_pm
+function _fish_deps_detect_pm
+    echo ""
+end
+_fish_deps_ensure unzip >$work/out 2>&1
+check "no package manager returns 1" 1 $status
+check "no package manager prompts nothing" 0 (count $_ask_log)
+check "no package manager prints how to fix it" true (string match -q '*install the unzip package*' -- (string collect <$work/out); and echo true; or echo false)
+functions -e _fish_deps_detect_pm
+functions -c _ens_real_detect_pm _fish_deps_detect_pm
+functions -e _ens_real_detect_pm
+
+ens_reset
+_fish_deps_ensure nonsense
+check "an unknown need is a usage error" 2 $status
+
+# A rustup shim with no default toolchain: cargo exists but cannot run.
+set -gx PATH $_real_path
+set -g _rustup_stub $work/rustup-stub
+mkdir -p $_rustup_stub
+printf '#!/bin/sh\n[ -e %s ] && exit 0\necho "rustup could not choose a version of cargo" >&2\nexit 1\n' $work/toolchain-ready >$_rustup_stub/cargo
+printf '#!/bin/sh\necho "$*" >>%s\n: >%s\nexit 0\n' $work/rustup.log $work/toolchain-ready >$_rustup_stub/rustup
+chmod +x $_rustup_stub/cargo $_rustup_stub/rustup
+
+command rm -f $work/toolchain-ready $work/rustup.log
+ens_reset y
+set -gx PATH $_rustup_stub $_ens_bin
+_fish_deps_ensure toolchain
+check "toolchain accepted returns 0" 0 $status
+check "the toolchain comes from rustup default stable" "default stable" (string collect <$work/rustup.log)
+
+set -gx PATH $_real_path
+command rm -f $work/toolchain-ready $work/rustup.log
+ens_reset n
+set -gx PATH $_rustup_stub $_ens_bin
+_fish_deps_ensure toolchain
+check "toolchain declined returns 1" 1 $status
+check "toolchain declined runs no rustup" false (test -e $work/rustup.log; and echo true; or echo false)
+
+# `cargo` is toolchain, then compiler: a working toolchain still needs cc.
+ens_reset n
+set -gx PATH $_rustup_stub $_ens_bin
+: >$work/toolchain-ready
+_fish_deps_ensure cargo
+check "cargo without a compiler (declined) returns 1" 1 $status
+ens_reset y
+set -gx PATH $_rustup_stub $_ens_bin
+_fish_deps_ensure cargo
+check "cargo with a compiler installed on request returns 0" 0 $status
+check "cargo's compiler comes from the package manager" "apt install -y build-essential" "$_sudo_log"
+
+set -gx PATH $oldpath
+
+# =============================================================================
+# 12. _fish_deps_install end to end (#1-#10)
+# =============================================================================
+section _fish_deps_install
+
+# Every Required/Recommended/Integration tool is a stub on PATH except the
+# ones a scenario removes, so only those are offered. cargo, go and the rest
+# only record how they were called. `fish-deps install` is driven by the
+# scripted _fish_deps_ask above plus a stdin file for the method menu.
+set -g _inst_bin $work/inst-bin
+set -g _inst_all uv cargo fish starship fzf zoxide direnv eza lsd bat ov rg trash python3 wakatime tailscale cc cat head
+
+function inst_reset --argument-names missing
+    set -gx PATH $_real_path
+    command rm -rf $_inst_bin $work/inst-logs $work/cargo_fail
+    mkdir -p $_inst_bin $work/inst-logs
+    for t in $_inst_all
+        contains -- $t (string split ' ' -- $missing); and continue
+        switch $t
+            case fish
+                printf '#!/bin/sh\nread v <%s\necho "fish, version $v"\n' $work/fishver >$_inst_bin/$t
+            case cat
+                printf '#!/bin/sh\nexit 0\n' >$_inst_bin/$t
+            case '*'
+                printf '#!/bin/sh\necho "$*" >>%s/%s.log\n[ -e %s ] && [ "$1 $2" = "install --locked" ] && exit 1\nexit 0\n' $work/inst-logs $t $work/cargo_fail >$_inst_bin/$t
+        end
+        chmod +x $_inst_bin/$t
+    end
+    # apt exists and packages only what the scenario lists in aptknown.
+    printf '#!/bin/sh\nexit 0\n' >$_inst_bin/apt
+    printf '#!/bin/sh\nwhile read l; do [ "$l" = "$2" ] && exit 0; done <%s\nexit 100\n' $work/aptknown >$_inst_bin/apt-cache
+    chmod +x $_inst_bin/apt $_inst_bin/apt-cache
+    printf '%s\n' starship zoxide fish wakatime direnv >$work/aptknown
+    echo 4.9.3 >$work/fishver
+    printf '%s\n' 'ID=ubuntu' 'ID_LIKE=debian' >$work/os-release
+    set -g __fish_deps_os_release $work/os-release
+    set -g _sudo_log
+    set -gx PATH $_inst_bin
+end
+
+# Runs the installer with scripted answers (comma separated) and stdin text.
+function inst_run --argument-names answers input
+    set -g _ask_answers (string split , -- $answers)
+    set -g _ask_log
+    printf '%b' "$input" >$work/stdin
+    _fish_deps_install <$work/stdin >$work/out 2>&1
+    set -g _inst_rc $status
+    set -g _inst_out (string collect <$work/out)
+end
+
+function inst_log --argument-names tool
+    test -e $work/inst-logs/$tool.log; and string collect <$work/inst-logs/$tool.log
+end
+
+function inst_saw --argument-names needle haystack
+    string match -q "*$needle*" -- "$haystack"; and echo true; or echo false
+end
+
+# ---- q at the first prompt ----------------------------------------------
+inst_reset "starship zoxide"
+inst_run q ''
+check "q at the first prompt exits 130" 130 $_inst_rc
+check "q at the first prompt asks exactly once" 1 (count $_ask_log)
+check "q at the first prompt installs nothing" false (inst_saw install (inst_log cargo))
+check "a cancelled run says so" true (inst_saw "Installation cancelled" "$_inst_out")
+check "a cancelled run removes its signal handler" false (functions -q __fdi_on_sigint; and echo true; or echo false)
+check "a cancelled run leaves no cancellation state behind" false (set -q _fdc_cancelled; and echo true; or echo false)
+
+# ---- a crate install is --locked, then q stops the run -------------------
+inst_reset "starship zoxide"
+inst_run y,q '1\n'
+check "q after one install exits 130" 130 $_inst_rc
+check "the first crate is installed --locked" true (inst_saw "install --locked starship" (inst_log cargo))
+check "nothing is installed after q" false (inst_saw zoxide (inst_log cargo))
+check "the run asked about starship then zoxide" 2 (count $_ask_log)
+
+# ---- Ctrl+D / q at the method menu ---------------------------------------
+inst_reset starship
+inst_run y ''
+check "Ctrl+D at the method menu exits 130, not the default method" 130 $_inst_rc
+check "Ctrl+D at the method menu installs nothing" false (inst_saw install (inst_log cargo))
+
+inst_reset starship
+inst_run y 'q\n'
+check "q at the method menu exits 130" 130 $_inst_rc
+check "q at the method menu installs nothing" false (inst_saw install (inst_log cargo))
+
+# ---- success and failure reporting ---------------------------------------
+inst_reset starship
+inst_run y '1\n'
+check "a good install exits 0" 0 $_inst_rc
+check "a good install says installed" true (inst_saw "starship installed." "$_inst_out")
+
+inst_reset starship
+: >$work/cargo_fail
+inst_run y '1\n'
+check "a failed install exits 1" 1 $_inst_rc
+check "a failed install says so" true (inst_saw "starship install failed." "$_inst_out")
+check "a failed install is not reported as cancelled" false (inst_saw "cancelled" "$_inst_out")
+
+# ---- the fish upgrade message (#10) ---------------------------------------
+function _fish_deps_build_fish
+    return 0
+end
+inst_reset ""
+echo 3.7.1 >$work/fishver
+inst_run y '1\n'
+check "an upgrade exits 0" 0 $_inst_rc
+check "the upgrade message is 'fish upgraded.'" true (inst_saw "fish upgraded." "$_inst_out")
+check "the upgrade message has no 'upgradeed'" false (inst_saw upgradeed "$_inst_out")
+functions -e _fish_deps_build_fish
+
+# ---- AUR helpers only on Arch (#3) -----------------------------------------
+inst_reset ""
+inst_run '' ''
+check "off Arch, paru and yay are never asked about" 0 (count $_ask_log)
+check "off Arch, nothing missing means nothing to install" true (inst_saw "Nothing to install." "$_inst_out")
+
+inst_reset ""
+echo yay >>$work/aptknown
+printf '%s\n' ID=cachyos 'ID_LIKE=arch' >$work/os-release
+inst_run n ''
+check "on Arch, yay is offered" true (contains -- "Install yay?" $_ask_log; and echo true; or echo false)
+
+# ---- Go for ov (#6) ---------------------------------------------------------
+inst_reset ov
+inst_run y,y ''
+check "ov with no package and no go exits 0" 0 $_inst_rc
+check "go is installed first, through apt" "apt install -y golang-go" "$_sudo_log"
+check "ov is then installed with go install" true (inst_saw "install github.com/noborus/ov@latest" (inst_log go))
+check "the go prompt was asked after the ov prompt" 2 (count $_ask_log)
+
+inst_reset ov
+inst_run y,n ''
+check "declining go fails the ov install" 1 $_inst_rc
+check "declining go runs no go install" false (test -e $work/inst-logs/go.log; and echo true; or echo false)
+
+# ---- unzip for wakatime (#8) -------------------------------------------------
+function _fish_deps_wakatime_binary
+    echo called >>$work/inst-logs/wakatime-binary.log
+    return 0
+end
+
+inst_reset wakatime
+inst_run y,y '1\n'
+check "wakatime exits 0" 0 $_inst_rc
+check "unzip is installed first" "apt install -y unzip" "$_sudo_log"
+check "the wakatime download then runs" true (test -e $work/inst-logs/wakatime-binary.log; and echo true; or echo false)
+
+inst_reset wakatime
+inst_run y,n '1\n'
+check "declining unzip fails the wakatime install" 1 $_inst_rc
+check "declining unzip never starts the download" false (test -e $work/inst-logs/wakatime-binary.log; and echo true; or echo false)
+functions -e _fish_deps_wakatime_binary
+
+# ---- a C compiler for cargo (#5) ---------------------------------------------
+inst_reset "starship cc"
+inst_run y,y '1\n'
+check "a missing compiler is installed on request" "apt install -y build-essential" "$_sudo_log"
+check "the crate is built after the compiler is installed" true (inst_saw "install --locked starship" (inst_log cargo))
+check "a missing compiler does not fail the install" 0 $_inst_rc
+
+inst_reset "starship cc"
+inst_run y,n '1\n'
+check "declining the compiler fails the install" 1 $_inst_rc
+check "declining the compiler never calls cargo install" false (inst_saw install (inst_log cargo))
+
+# ---- fish-deps sync does not update after a cancel ---------------------------
+function _fish_deps_update
+    echo called >>$work/inst-logs/update.log
+    return 0
+end
+
+inst_reset starship
+set -g _ask_answers q
+set -g _ask_log
+printf '' >$work/stdin
+fish-deps sync <$work/stdin >$work/out 2>&1
+check "sync exits 130 when the install half is cancelled" 130 $status
+check "sync does not update after a cancel" false (test -e $work/inst-logs/update.log; and echo true; or echo false)
+
+inst_reset starship
+set -g _ask_answers n
+fish-deps sync <$work/stdin >$work/out 2>&1
+check "sync exits 0 when everything was merely declined" 0 $status
+check "sync updates after a completed install" true (test -e $work/inst-logs/update.log; and echo true; or echo false)
+functions -e _fish_deps_update
+
+set -gx PATH $oldpath
+set -e __fish_deps_os_release
+functions -e sudo _fish_deps_ask ens_reset inst_reset inst_run inst_log inst_saw write_osrel
 
 # =============================================================================
 # Cleanup

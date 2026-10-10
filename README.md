@@ -243,6 +243,8 @@ git clone https://git.rootiest.dev/rootiest/fish-config.git ~/.config/fish
 
 Then open a new Fish shell — Fisher will be installed automatically on first launch and the Catppuccin Mocha theme will be applied. All plugin functionality is bundled directly with this config and requires no additional installation.
 
+To install the external tools the config uses (starship, fzf, zoxide, eza, bat, ripgrep and friends), run `fish-deps` for a status report and `fish-deps install` to install what is missing. It asks `Install <tool>? [Y/n/q]` for each one (`q`, Ctrl+C or Ctrl+D stops the run), picks up build prerequisites such as a C compiler, `unzip` or Go when a method needs them, and puts new tools on your `PATH` without a restart. See [Installing the Tools](https://fish.rootiest.fyi/10-installation/#installing-the-tools) and the [fish-deps reference](https://fish.rootiest.fyi/reference/dependency-management/fish-deps/).
+
 A [chezmoi](https://www.chezmoi.io/) dotfile manager is also configured — secrets are kept in a private overlay directory (see [Personalization](#personalization)) and excluded from version control.
 
 **External requirements.** Everything degrades gracefully if a tool is missing, with two exceptions worth calling out. `python3` is required by the documentation pipeline and by `config-settings`, whose TUI is drawn with the stdlib `curses` module. That module ships with CPython on Arch, Fedora and a full Debian/Ubuntu `python3`; `python3-minimal` alone does **not** carry `_curses`, so install the complete `python3` package there. `config-settings` checks for both and tells you which is missing rather than failing inside the renderer.

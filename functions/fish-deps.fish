@@ -24,6 +24,22 @@
 #
 #   When multiple methods are available you are prompted to choose.
 #
+#   What install does: it walks the catalog and, for each tool that is
+#   missing, asks Install <tool>? [Y/n/q]. Enter or y installs it, n skips
+#   that tool, and q (or Ctrl+C or Ctrl+D) stops the whole run, so nothing
+#   further is offered. Nothing is installed without your say-so, and sudo
+#   asks for its own password where the system package manager needs it.
+#   Tools it installs are put on this shell's PATH straight away; only fish
+#   itself needs a restart to take effect.
+#
+#   Prerequisites are offered only once a chosen method needs them: a C
+#   compiler for cargo builds (build-essential, base-devel or gcc), a default
+#   Rust toolchain when cargo is a bare rustup shim, unzip for the wakatime-cli
+#   download, and Go for ov on distros that do not package it. Rust tools are
+#   built with cargo install --locked, so they use the dependency versions
+#   their authors published rather than whatever is newest. paru and yay are
+#   only offered on Arch-based systems.
+#
 #   Dependencies are grouped into five tiers:
 #
 #     Required           fish, fzf
@@ -50,9 +66,12 @@
 #   help, -h, --help  Show this help
 #
 # EXIT STATUS
-#   0  Subcommand completed, or help was shown
-#   1  update (or the update half of sync) had one or more failed updates
-#   2  Unknown subcommand
+#   0    Subcommand completed, or help was shown
+#   1    install had one or more failed installs, or update (or the update
+#        half of sync) had one or more failed updates
+#   2    Unknown subcommand
+#   130  install (or the install half of sync) was cancelled with q, Ctrl+C
+#        or Ctrl+D; sync does not go on to update
 #
 # EXAMPLE
 #   fish-deps sync
@@ -80,14 +99,22 @@ function fish-deps --description 'Manage fish shell dependencies'
             _fish_deps_status
         case install
             _fish_deps_install $flags
+            return $status
         case update
             _fish_deps_update
+            return $status
         case sync
             echo "=== Installing missing deps ==="
             _fish_deps_install $flags
+            set -l install_status $status
+            # A cancelled install must not roll straight into an update.
+            test $install_status -eq 130; and return 130
             echo ""
             echo "=== Updating installed deps ==="
             _fish_deps_update
+            set -l update_status $status
+            test $update_status -ne 0; and return $update_status
+            return $install_status
         case '*'
             __fish_palette
             echo "$c_err""fish-deps: unknown subcommand '$subcmd'$c_reset" >&2
@@ -111,7 +138,7 @@ function __fish_deps_help
     echo ""
     echo "$c_head""Usage:$c_reset"
     echo "  $c_cmd""fish-deps$c_reset $c_arg""[status]$c_reset    Check installed/missing deps (default)"
-    echo "  $c_cmd""fish-deps$c_reset install     Install missing deps interactively"
+    echo "  $c_cmd""fish-deps$c_reset install     Install missing deps interactively (Y/n/q at each prompt)"
     echo "  $c_cmd""fish-deps$c_reset update      Update all installed deps"
     echo "  $c_cmd""fish-deps$c_reset sync        Install missing, then update all"
     echo "  $c_cmd""fish-deps$c_reset help        Show this help (also -h, --help)"
@@ -123,4 +150,5 @@ function __fish_deps_help
     echo ""
     echo "Install method priority: cargo > system PM > git/curl/pipx"
     echo "When multiple methods are available, you will be prompted to choose."
+    echo "Answer q (or press Ctrl+C / Ctrl+D) to stop an install run."
 end

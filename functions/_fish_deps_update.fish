@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # CLASSIFICATION
-#   self-limiting(rm), destructive, network
+#   destructive, network
 #
 # SYNOPSIS
 #   _fish_deps_update
@@ -189,20 +189,7 @@ function _fish_deps_update
             if type -q cargo; and type -q uv
                 echo "Updating $bin..."
                 set attempted (math $attempted + 1)
-                set -l _tmpdir (mktemp -d)
-                set -l _build_ok 0
-                git clone https://github.com/fish-shell/fish-shell "$_tmpdir"
-                and begin
-                    set -l _tag (git -C "$_tmpdir" tag --list 'fish-*' --sort=version:refname | tail -1)
-                    test -n "$_tag"; and git -C "$_tmpdir" checkout "$_tag"
-                    true
-                end
-                and pushd "$_tmpdir"
-                and uv run --no-managed-python cargo install --path .
-                and set _build_ok 1
-                popd 2>/dev/null
-                rm -rf "$_tmpdir"
-                if test $_build_ok -eq 1
+                if _fish_deps_build_fish
                     echo -n (__fish_color yellow)
                     echo "  Fish updated — restart your shell to use the new version."
                     echo -n (__fish_color normal)
@@ -244,7 +231,8 @@ function _fish_deps_update
         if test -n "$cargo_crate"; and type -q cargo
             echo "Updating $bin..."
             set attempted (math $attempted + 1)
-            cargo install --force $cargo_crate
+            # --locked, as in install: unlocked, eza 0.23.5 fails to build.
+            cargo install --locked --force $cargo_crate
             or set -a failed $bin
             set i (math $i + 1)
             continue

@@ -17,7 +17,7 @@
 #
 # EXIT STATUS
 #   0  wakatime-cli installed and verified
-#   1  The download, verification, or install failed
+#   1  unzip is missing, or the download, verification, or install failed
 #
 # EXAMPLE
 #   _fish_deps_wakatime_binary
@@ -42,6 +42,13 @@ function _fish_deps_wakatime_binary
     set -l sum (curl -fsSL --proto '=https' "$base/checksums_sha256.txt" | string match -r -- $pattern)[2]
     if test -z "$sum"
         echo "  No published checksum found for $zip; not installing." >&2
+        return 1
+    end
+
+    # Checked before the download, so a missing unzip costs nothing and is
+    # reported plainly rather than as fish's "Command 'unzip' not found".
+    if not command -q unzip
+        echo "  unzip is required to unpack $zip; install it and retry." >&2
         return 1
     end
 

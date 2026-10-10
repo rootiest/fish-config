@@ -29,6 +29,44 @@ Then open a new Fish shell. Fisher installs automatically on first launch
 and the Catppuccin Mocha theme is applied. All other plugin functionality is
 bundled directly with this config and requires no additional installation.
 
+## Installing the Tools
+
+The shell itself needs nothing more, but much of what makes it useful is a
+set of external tools: `starship`, `fzf`, `zoxide`, `eza`, `bat`, `ripgrep`
+and others. Every one degrades gracefully when absent, and `fish-deps`
+installs them for you. From the first shell:
+
+    fish-deps            # report what is installed and what is missing
+    fish-deps install    # install what is missing, one prompt per tool
+
+`fish-deps install` walks the [Dependency Catalog](/06-dependency-catalog/)
+and, for each missing tool, asks `Install <tool>? [Y/n/q]`. Enter or `y`
+installs it, `n` skips that tool, and `q` (or Ctrl+C, or Ctrl+D) stops the
+whole run, so nothing further is offered. When a tool can be installed more
+than one way, it lists the methods and lets you pick; Enter takes the first,
+which is the preferred one. Nothing is installed without your answer, and
+`sudo` asks for its own password where the system package manager needs it.
+
+Beyond the individual installs it takes care of the things a fresh server
+tends to lack, but only when a method you chose needs them:
+
+- A C compiler (`build-essential`, `base-devel` or `gcc`), before any Rust
+  tool is built with cargo.
+- A default Rust toolchain, when `cargo` is only a rustup shim.
+- `unzip`, before the `wakatime-cli` download.
+- Go, before installing `ov` on a distro that does not package it.
+
+Newly installed tools are put on the current shell's `PATH` right away, so
+there is no restart between steps; fish itself is the exception, and needs a
+new shell once it has been upgraded. The Optional and Terminal Emulator tiers
+are skipped unless you add `--optional`, `--terminals` or `--all`.
+
+TIP: `fish-deps sync` installs what is missing and then updates everything
+installed. The full subcommand reference, including exit codes, is on the
+[fish-deps function page](/reference/dependency-management/fish-deps/), and
+[Missing Dependencies](/12-troubleshooting/#missing-dependencies) covers what
+to do when an install step fails.
+
 ## OS Compatibility
 
 This is a **Linux-only** configuration. It is developed and tested on an

@@ -40,6 +40,11 @@ function _fish_deps_status
             echo -n (__fish_color brblack)
             echo "(Found at "(__fish_real_command $bin)")"
             echo -n (__fish_color normal)
+        else if contains -- $bin paru yay; and not _fish_deps_is_arch
+            # AUR helpers do not exist off Arch: not a gap, so no warning.
+            echo -n (__fish_color brblack)
+            echo " – $bin (Arch only — not applicable on this system)"
+            echo -n (__fish_color normal)
         else if test "$tier" = req
             echo -n (__fish_color red)
             echo -n " ✗ "
