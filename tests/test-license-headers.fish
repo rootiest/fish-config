@@ -166,7 +166,10 @@ for f in $unexpected
 end
 
 # ---- unresolved list: tolerated, reported, never stale ------------------
-section "unresolved provenance (tolerated, needs maintainer confirmation)"
+# The section prints only when something is listed, so an empty list stays quiet.
+if set -q unresolved[1]
+    section "unresolved provenance (tolerated, needs maintainer confirmation)"
+end
 for f in $unresolved
     check "listed file exists: $f" true (contains -- $f $tracked; and echo true; or echo false)
     check "listed file is not also annotated: $f" 1 (__lh_covered $f $all_res; echo $status)
