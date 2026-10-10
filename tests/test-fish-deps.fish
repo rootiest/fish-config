@@ -377,6 +377,9 @@ section _fish_deps_refresh_path
 set oldpath $PATH
 set -g CARGO_HOME $work/cargohome
 mkdir -p $CARGO_HOME/bin $HOME/.cargo/bin
+# The AppImage test above created ~/.local/bin in the sandbox; remove it so
+# there is a candidate directory that really is missing.
+command rm -rf $HOME/.local
 set -l missing $HOME/.local/bin
 
 _fish_deps_refresh_path
@@ -489,6 +492,7 @@ check "go is installed as golang-go under apt" "apt install -y golang-go" "$_sud
 # No package manager at all: manual instructions, and no prompt. detect_pm
 # is mocked because `type -q pkg` also matches this config's own pkg function.
 ens_reset y
+functions -c _fish_deps_detect_pm _ens_real_detect_pm
 function _fish_deps_detect_pm
     echo ""
 end
@@ -497,12 +501,15 @@ check "no package manager returns 1" 1 $status
 check "no package manager prompts nothing" 0 (count $_ask_log)
 check "no package manager prints how to fix it" true (string match -q '*install the unzip package*' -- (string collect <$work/out); and echo true; or echo false)
 functions -e _fish_deps_detect_pm
+functions -c _ens_real_detect_pm _fish_deps_detect_pm
+functions -e _ens_real_detect_pm
 
 ens_reset
 _fish_deps_ensure nonsense
 check "an unknown need is a usage error" 2 $status
 
 # A rustup shim with no default toolchain: cargo exists but cannot run.
+set -gx PATH $_real_path
 set -g _rustup_stub $work/rustup-stub
 mkdir -p $_rustup_stub
 printf '#!/bin/sh\n[ -e %s ] && exit 0\necho "rustup could not choose a version of cargo" >&2\nexit 1\n' $work/toolchain-ready >$_rustup_stub/cargo
@@ -547,7 +554,7 @@ section _fish_deps_install
 # only record how they were called. `fish-deps install` is driven by the
 # scripted _fish_deps_ask above plus a stdin file for the method menu.
 set -g _inst_bin $work/inst-bin
-set -g _inst_all uv cargo fish starship fzf zoxide direnv eza lsd bat ov rg trash python3 wakatime tailscale cc cat
+set -g _inst_all uv cargo fish starship fzf zoxide direnv eza lsd bat ov rg trash python3 wakatime tailscale cc cat head
 
 function inst_reset --argument-names missing
     set -gx PATH $_real_path
