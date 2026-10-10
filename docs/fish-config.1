@@ -2296,6 +2296,22 @@ Install method priority (highest to lowest):
 
 When multiple methods are available you are prompted to choose.
 
+What install does: it walks the catalog and, for each tool that is
+missing, asks Install <tool>? [Y/n/q]. Enter or y installs it, n skips
+that tool, and q (or Ctrl+C or Ctrl+D) stops the whole run, so nothing
+further is offered. Nothing is installed without your say-so, and sudo
+asks for its own password where the system package manager needs it.
+Tools it installs are put on this shell\[aq]s PATH straight away; only fish
+itself needs a restart to take effect.
+
+Prerequisites are offered only once a chosen method needs them: a C
+compiler for cargo builds (build-essential, base-devel or gcc), a default
+Rust toolchain when cargo is a bare rustup shim, unzip for the wakatime-cli
+download, and Go for ov on distros that do not package it. Rust tools are
+built with cargo install --locked, so they use the dependency versions
+their authors published rather than whatever is newest. paru and yay are
+only offered on Arch-based systems.
+
 Dependencies are grouped into five tiers:
 
   Required           fish, fzf
@@ -2322,9 +2338,12 @@ Arguments:
   help, -h, --help  Show this help
 
 Exit Status:
-  0  Subcommand completed, or help was shown
-  1  update (or the update half of sync) had one or more failed updates
-  2  Unknown subcommand
+  0    Subcommand completed, or help was shown
+  1    install had one or more failed installs, or update (or the update
+       half of sync) had one or more failed updates
+  2    Unknown subcommand
+  130  install (or the install half of sync) was cancelled with q, Ctrl+C
+       or Ctrl+D; sync does not go on to update
 
 Example:
 fish-deps sync
@@ -4876,6 +4895,9 @@ T}@T{
 Rust toolchain (via rustup); used by \f[V]fish-deps\f[R] to install
 Rust-based tools and to build fish from source.
 All paths are gated on \f[V]type -q cargo\f[R] and degrade gracefully.
+Building needs a C compiler to link; \f[V]fish-deps\f[R] offers to
+install one (\f[V]build-essential\f[R], \f[V]base-devel\f[R] or
+\f[V]gcc\f[R]) the first time it is needed.
 T}
 T{
 \f[V]starship\f[R]
@@ -4887,7 +4909,10 @@ T{
 \f[V]uv\f[R]
 T}@T{
 Python package and project manager (Astral); used by the
-fish-from-source build path in \f[V]fish-deps\f[R].
+fish-from-source build path in \f[V]fish-deps\f[R], which has it run the
+build with Sphinx so fish\[cq]s man pages are rendered.
+Any system Python 3 works; \f[V]uv\f[R] downloads one itself only when
+the system has none.
 All consumers degrade gracefully without it.
 T}
 T{
@@ -4903,6 +4928,8 @@ T{
 T}@T{
 AUR helper (Arch only; preferred); guarded throughout \[em] non-Arch
 systems silently skip AUR-specific paths.
+\f[V]fish-deps\f[R] neither offers it nor reports it as missing unless
+\f[V]os-release\f[R] identifies an Arch-based system.
 T}
 T{
 \f[V]yay\f[R]
@@ -4940,6 +4967,10 @@ Prefers \f[V]go install github.com/noborus/ov\[at]latest\f[R] when
 \f[V]go\f[R] is available (always gets the latest release, and covers
 distros like Debian/Ubuntu that don\[cq]t package \f[V]ov\f[R] in their
 base repos); falls back to the system PM (AUR on Arch) otherwise.
+When the system PM has no \f[V]ov\f[R] and Go is missing,
+\f[V]fish-deps\f[R] offers to install Go first and then runs
+\f[V]go install\f[R]; a system package method the PM\[cq]s index does
+not carry is left out rather than offered only to fail.
 T}
 T{
 \f[V]ripgrep\f[R]
@@ -5008,9 +5039,12 @@ T}@T{
 Go toolchain; only used to install \f[V]ov\f[R] via \f[V]go install\f[R]
 (see below), which gets the latest release and doesn\[cq]t depend on
 your distro packaging \f[V]ov\f[R].
-Package name varies by distro (\f[V]go\f[R] on Arch/Homebrew,
-\f[V]golang\f[R]/\f[V]golang-go\f[R] on Debian/Fedora) \[em] install
-manually if the listed package name doesn\[cq]t resolve on your system.
+\f[V]fish-deps\f[R] maps the package name per distro (\f[V]go\f[R] on
+Arch/Homebrew, \f[V]golang-go\f[R] on Debian/Ubuntu, \f[V]golang\f[R] on
+Fedora) and offers to install Go itself when \f[V]ov\f[R] needs it, even
+though this entry is in the Optional tier.
+A distro\[cq]s Go may be older than \f[V]ov\f[R] asks for; from Go 1.21
+on, it then fetches the newer toolchain it needs by itself.
 T}
 T{
 \f[V]lazygit\f[R]
@@ -5147,7 +5181,8 @@ T{
 T}@T{
 Rust tools (\f[V]eza\f[R], \f[V]lsd\f[R], \f[V]bat\f[R], \f[V]dust\f[R],
 \f[V]ripgrep\f[R], \f[V]trashy\f[R], \f[V]zoxide\f[R],
-\f[V]starship\f[R]) \[em] always gets the latest crate version
+\f[V]starship\f[R]) \[em] always gets the latest crate version, built
+with \f[V]--locked\f[R]
 T}
 T{
 \f[V]go install\f[R]
@@ -5173,6 +5208,65 @@ T}@T{
 installer
 T}
 .TE
+.PP
+Every \f[V]cargo\f[R] install passes \f[V]--locked\f[R], so a crate is
+built against the dependency versions it was published with.
+Without it, \f[V]cargo\f[R] ignores the crate\[cq]s lockfile and takes
+the newest compatible release of everything; that is what made
+\f[V]eza\f[R] fail to compile against a newer \f[V]palette\f[R].
+.PP
+Build prerequisites are not catalog entries.
+\f[V]fish-deps\f[R] offers them on demand, once a method you chose needs
+them, and remembers the answer for the rest of the run:
+.PP
+.TS
+tab(@);
+lw(23.3n) lw(23.3n) lw(23.3n).
+T{
+Need
+T}@T{
+Used for
+T}@T{
+Packages
+T}
+_
+T{
+C compiler (\f[V]cc\f[R])
+T}@T{
+linking every \f[V]cargo install\f[R]
+T}@T{
+\f[V]build-essential\f[R] (\f[V]apt\f[R]), \f[V]base-devel\f[R]
+(\f[V]pacman\f[R]), \f[V]gcc\f[R] (\f[V]dnf\f[R], \f[V]yum\f[R],
+\f[V]zypper\f[R])
+T}
+T{
+Rust toolchain
+T}@T{
+\f[V]cargo\f[R] being a bare rustup shim
+T}@T{
+\f[V]rustup default stable\f[R]
+T}
+T{
+\f[V]unzip\f[R]
+T}@T{
+the \f[V]wakatime-cli\f[R] release zip
+T}@T{
+\f[V]unzip\f[R]
+T}
+T{
+Go
+T}@T{
+\f[V]go install\f[R] of \f[V]ov\f[R]
+T}@T{
+\f[V]golang-go\f[R] (\f[V]apt\f[R]), \f[V]golang\f[R] (\f[V]dnf\f[R],
+\f[V]yum\f[R]), \f[V]go\f[R] (others)
+T}
+.TE
+.PP
+\f[V]unzip\f[R] is deliberately not a catalog tier: one
+integration\[cq]s download needs it, and a dependency that shows up in
+every \f[V]fish-deps\f[R] report for that is noise.
+\f[V]_fish_deps_wakatime_binary\f[R] says plainly when it is missing.
 .PP
 Installer scripts (\f[V]rustup\f[R], \f[V]uv\f[R], \f[V]starship\f[R],
 \f[V]lazydocker\f[R]) are downloaded to a temporary file and run only
@@ -6414,6 +6508,56 @@ Fisher installs automatically on first launch and the Catppuccin Mocha
 theme is applied.
 All other plugin functionality is bundled directly with this config and
 requires no additional installation.
+.SS Installing the Tools
+.PP
+The shell itself needs nothing more, but much of what makes it useful is
+a set of external tools: \f[V]starship\f[R], \f[V]fzf\f[R],
+\f[V]zoxide\f[R], \f[V]eza\f[R], \f[V]bat\f[R], \f[V]ripgrep\f[R] and
+others.
+Every one degrades gracefully when absent, and \f[V]fish-deps\f[R]
+installs them for you.
+From the first shell:
+.IP
+.nf
+\f[C]
+fish-deps            # report what is installed and what is missing
+fish-deps install    # install what is missing, one prompt per tool
+\f[R]
+.fi
+.PP
+\f[V]fish-deps install\f[R] walks the Dependency Catalog and, for each
+missing tool, asks \f[V]Install <tool>? [Y/n/q]\f[R].
+Enter or \f[V]y\f[R] installs it, \f[V]n\f[R] skips that tool, and
+\f[V]q\f[R] (or \f[V]Ctrl+C\f[R], or \f[V]Ctrl+D\f[R]) stops the whole
+run, so nothing further is offered.
+When a tool can be installed more than one way, it lists the methods and
+lets you pick; Enter takes the first, which is the preferred one.
+Nothing is installed without your answer, and \f[V]sudo\f[R] asks for
+its own password where the system package manager needs it.
+.PP
+Beyond the individual installs it takes care of the things a fresh
+server tends to lack, but only when a method you chose needs them:
+.IP \[bu] 2
+A C compiler (\f[V]build-essential\f[R], \f[V]base-devel\f[R] or
+\f[V]gcc\f[R]), before any Rust tool is built with \f[V]cargo\f[R].
+.IP \[bu] 2
+A default Rust toolchain, when \f[V]cargo\f[R] is only a rustup shim.
+.IP \[bu] 2
+\f[V]unzip\f[R], before the \f[V]wakatime-cli\f[R] download.
+.IP \[bu] 2
+Go, before installing \f[V]ov\f[R] on a distro that does not package it.
+.PP
+Newly installed tools are put on the current shell\[cq]s \f[V]PATH\f[R]
+right away, so there is no restart between steps; fish itself is the
+exception, and needs a new shell once it has been upgraded.
+The Optional and Terminal Emulator tiers are skipped unless you add
+\f[V]--optional\f[R], \f[V]--terminals\f[R] or \f[V]--all\f[R].
+.PP
+TIP: \f[V]fish-deps sync\f[R] installs what is missing and then updates
+everything installed.
+The full subcommand reference, including exit codes, is on the
+\f[V]fish-deps\f[R] function page, and Missing Dependencies covers what
+to do when an install step fails.
 .SS OS Compatibility
 .PP
 This is a \f[B]Linux-only\f[R] configuration.
@@ -6832,6 +6976,29 @@ Install missing dependencies interactively:
 .nf
 \f[C]
 fish-deps install
+\f[R]
+.fi
+.PP
+Each prompt reads \f[V][Y/n/q]\f[R]: \f[V]q\f[R], \f[V]Ctrl+C\f[R] or
+\f[V]Ctrl+D\f[R] stops the whole run rather than just the current step.
+If an install fails, the cause is usually one of:
+.IP
+.nf
+\f[C]
+Message                                     Cause and fix
+───────────────────────────────────────────────────────────────────────
+linker cc not found                         No C compiler. fish-deps offers
+                                            build-essential / base-devel /
+                                            gcc; install it and re-run.
+rustup could not choose a version of cargo  rustup has no default toolchain.
+                                            Run: rustup default stable
+Unable to locate package ov                 Not packaged for apt. fish-deps
+                                            offers Go and go install instead.
+unzip is required                           Install unzip and re-run.
+cannot find lms in the crate root           An unlocked cargo install picked
+                                            newer dependencies. fish-deps
+                                            passes --locked; for a manual
+                                            install, do the same.
 \f[R]
 .fi
 .PP
