@@ -286,6 +286,45 @@ _fish_deps_is_arch
 check "an unreadable os-release is not Arch" 1 $status
 
 # =============================================================================
+# 7b. _fish_deps_detect_pm (#301)
+# =============================================================================
+section _fish_deps_detect_pm
+
+# One directory of stub package-manager executables per scenario, and PATH
+# set to just that directory, so the host's real managers are never seen.
+# This config's own pkg function is on fish_function_path throughout: it is
+# the thing that must not be mistaken for a package manager.
+set -g _pm_root $work/detect
+for combo in empty dnf zypper yum apt+dnf paru+apt pkg
+    mkdir -p $_pm_root/$combo
+    for name in (string split + -- $combo)
+        test $name = empty; and continue
+        printf '#!/bin/sh\nexit 0\n' >$_pm_root/$combo/$name
+        chmod +x $_pm_root/$combo/$name
+    end
+end
+
+check "the pkg function exists, so the checks below mean something" true (functions -q pkg; and echo true; or echo false)
+
+set oldpath $PATH
+set -gx PATH $_pm_root/empty
+check "no package manager: nothing printed, despite the pkg function" "" (_fish_deps_detect_pm)
+set -gx PATH $_pm_root/dnf
+check "dnf alone is dnf, not the pkg function" dnf (_fish_deps_detect_pm)
+set -gx PATH $_pm_root/zypper
+check "zypper alone is zypper" zypper (_fish_deps_detect_pm)
+set -gx PATH $_pm_root/yum
+check "yum alone is yum" yum (_fish_deps_detect_pm)
+set -gx PATH $_pm_root/apt+dnf
+check "apt wins over dnf (priority order kept)" apt (_fish_deps_detect_pm)
+set -gx PATH $_pm_root/paru+apt
+check "paru wins over apt (priority order kept)" paru (_fish_deps_detect_pm)
+set -gx PATH $_pm_root/pkg
+check "a real pkg executable (FreeBSD) is still detected" pkg (_fish_deps_detect_pm)
+set -gx PATH $oldpath
+set -e _pm_root
+
+# =============================================================================
 # 8. _fish_deps_pm_pkg / _fish_deps_pm_has_pkg (#5, #6)
 # =============================================================================
 section _fish_deps_pm_pkg
@@ -489,20 +528,16 @@ _fish_deps_ensure go
 check "go accepted returns 0" 0 $status
 check "go is installed as golang-go under apt" "apt install -y golang-go" "$_sudo_log"
 
-# No package manager at all: manual instructions, and no prompt. detect_pm
-# is mocked because `type -q pkg` also matches this config's own pkg function.
+# No package manager at all: manual instructions, and no prompt. PATH holds
+# nothing, and the real detect_pm must not take this config's pkg function
+# for one (#301).
 ens_reset y
-functions -c _fish_deps_detect_pm _ens_real_detect_pm
-function _fish_deps_detect_pm
-    echo ""
-end
+mkdir -p $work/no-pm-bin
+set -gx PATH $work/no-pm-bin
 _fish_deps_ensure unzip >$work/out 2>&1
 check "no package manager returns 1" 1 $status
 check "no package manager prompts nothing" 0 (count $_ask_log)
 check "no package manager prints how to fix it" true (string match -q '*install the unzip package*' -- (string collect <$work/out); and echo true; or echo false)
-functions -e _fish_deps_detect_pm
-functions -c _ens_real_detect_pm _fish_deps_detect_pm
-functions -e _ens_real_detect_pm
 
 ens_reset
 _fish_deps_ensure nonsense
