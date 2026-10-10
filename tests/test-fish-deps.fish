@@ -161,6 +161,44 @@ if test (uname -m) = x86_64
 end
 
 # =============================================================================
+# 4b. _fish_deps_release_tag (#300)
+# =============================================================================
+section _fish_deps_release_tag
+
+# A throwaway repository with one empty commit and the given lightweight
+# tags. Signing is switched off so the user's git config cannot interfere.
+function mk_tag_repo --argument-names dir
+    git init -q $dir
+    git -C $dir -c user.name=t -c user.email=t@example.test -c commit.gpgsign=false commit -q --allow-empty -m init
+    for t in $argv[2..]
+        git -C $dir -c tag.gpgsign=false tag $t
+    end
+end
+
+# Upstream's real mix: releases, a beta, pre-release numbering that sorts
+# above a release as a string, and the historical markers.
+mk_tag_repo $work/tags-mixed 3.7.1 4.0b1 4.9.2 4.9.3 4.10.0 4.10.0b1 LastC++03 official fish-1.0
+check "the newest release wins, compared as versions not strings" 4.10.0 (_fish_deps_release_tag $work/tags-mixed)
+
+_fish_deps_release_tag $work/tags-mixed >/dev/null
+check "a release tag exits 0" 0 $status
+
+mk_tag_repo $work/tags-pre 4.0b1 4.1b2 official LastC++03 fish-1.0
+set -l got (_fish_deps_release_tag $work/tags-pre)
+set -l rc $status
+check "betas and markers are never picked" "" "$got"
+check "no release tag exits 1" 1 $rc
+
+mk_tag_repo $work/tags-none
+_fish_deps_release_tag $work/tags-none >/dev/null
+check "a repository with no tags exits 1" 1 $status
+
+_fish_deps_release_tag $work/not-a-repo >/dev/null 2>&1
+check "a directory that is not a repository exits 1" 1 $status
+
+functions -e mk_tag_repo
+
+# =============================================================================
 # 5. _fish_deps_update exit status (#228)
 # =============================================================================
 section _fish_deps_update
