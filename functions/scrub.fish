@@ -209,13 +209,13 @@ function scrub --description 'Recursively purge OS, editor, and compiler garbage
     if test $count -gt 0
         switch $delete_mode
             case custom_rm
-                echo (__fish_color --bold green)"✔ Clean Sweep:"(__fish_color normal) "Safely processed" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) using smart-rm."
+                echo (__fish_color --bold green)(__fish_mark ok)" Clean Sweep:"(__fish_color normal) "Safely processed" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) using smart-rm."
             case trashy
-                echo (__fish_color --bold green)"✔ Clean Sweep:"(__fish_color normal) "Safely moved" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) to the system trash via trashy."
+                echo (__fish_color --bold green)(__fish_mark ok)" Clean Sweep:"(__fish_color normal) "Safely moved" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) to the system trash via trashy."
             case trash_cli
-                echo (__fish_color --bold green)"✔ Clean Sweep:"(__fish_color normal) "Safely moved" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) to the system trash via trash-put."
+                echo (__fish_color --bold green)(__fish_mark ok)" Clean Sweep:"(__fish_color normal) "Safely moved" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) to the system trash via trash-put."
             case fallback_rm
-                echo (__fish_color --bold red)"⚠ Hard Purge:"(__fish_color normal) "Permanently deleted" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) via native rm -rf."
+                echo (__fish_color --bold red)(__fish_mark warn)" Hard Purge:"(__fish_color normal) "Permanently deleted" (__fish_color --bold yellow)$count(__fish_color normal) "target(s) via native rm -rf."
         end
     else
         echo (__fish_color --bold green)"✨ Clean Sweep:"(__fish_color normal) "No garbage targets found. Environment is pristine."

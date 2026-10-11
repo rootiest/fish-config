@@ -81,12 +81,21 @@ roles, and the functions that colour their output directly (through
 `__fish_color`, a `NO_COLOR`-aware `set_color`) print no escape sequences
 either. That covers `--help` text, errors and warnings, `fish-deps` status,
 `config-help`, `gi`, `scrub` and the rest of the user-facing functions. The
-status marks (`✓`, `✗`, `⚠`) are unchanged, so they still show.
+status marks become words, since without colour a `✔` and a `✘` are easy to
+confuse and a screen reader or `grep` cannot tell them apart: `✔`/`✓` print
+as `[ok]`, `✘`/`✗` as `[error]` and `⚠` as `[warn]`.
+
+The `config-settings` interface switches to its `mono` style: no colour, with
+the selected row in reverse video. Its values are always spelled out (`ON`,
+`OFF`, `DEFAULT`), so nothing is lost. A `contrast` style is also available
+for low-contrast terminals or low vision: it keeps the colours, replaces the
+dim grey and blue with white, and bolds every line. Pick one explicitly with
+`config-settings --style color|mono|contrast`, which takes precedence over
+`NO_COLOR`.
 
 What it does not change: your prompt and theme, fish's syntax highlighting
-(the `fish_color_*` variables), the Python `config-settings` interface, the
-vendored fzf, autopair, done and puffer plugins, and the output of external
-tools that colour themselves. Export it from your environment, or put
+(the `fish_color_*` variables), the vendored fzf, autopair, done and puffer
+plugins, and the output of external tools that colour themselves. Export it from your environment, or put
 `set -gx NO_COLOR 1` in `local.fish`, to apply it everywhere.
 
 ## Other

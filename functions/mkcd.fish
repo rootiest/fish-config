@@ -75,7 +75,7 @@ function mkcd --description 'Create a directory (with parents) and cd into it'
     or return $status
 
     if test $is_new -eq 1
-        echo "$c_ok""✔$c_reset  Created and entered $c_arg$dir$c_reset"
+        echo "$c_ok"(__fish_mark ok)"$c_reset  Created and entered $c_arg$dir$c_reset"
     else
         echo "$c_warn""→$c_reset  $c_arg$dir$c_reset already exists — entered"
     end

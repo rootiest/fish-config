@@ -12,7 +12,7 @@
 #   bypasses-shadow(rm)
 #
 # SYNOPSIS
-#   config-settings [-h | --help]
+#   config-settings [-s | --style color|mono|contrast] [-h | --help]
 #
 # DESCRIPTION
 #   Opens an interactive full-screen TUI for managing fish config settings
@@ -60,6 +60,14 @@
 #   curses module, which owns the cell arithmetic, the alternate screen and the
 #   redraw diffing. It resizes with the terminal and needs no width tiers.
 #
+#   Three display styles: color (the default), mono and contrast. mono draws
+#   in the terminal's own colours only, marking the selection with reverse
+#   video; values always read as text (ON / OFF / DEFAULT), so nothing is lost
+#   without colour. contrast keeps the colours but replaces the dim grey and
+#   blue with white, bolds every line and marks the selection in reverse
+#   video. NO_COLOR set to a non-empty value (https://no-color.org) selects
+#   mono unless --style says otherwise.
+#
 #   Navigation:
 #     ↑ ↓ / k j     Move cursor
 #     ← → / h l     Toggle rows: OFF ← DEFAULT → ON
@@ -73,50 +81,66 @@
 #     q             Apply pending edits and exit
 #
 # ARGUMENTS
-#   -h, --help  Print usage and exit
+#   -s, --style <name>  Display style: color, mono or contrast (default:
+#                       mono when NO_COLOR is set, color otherwise)
+#   -h, --help          Print usage and exit
 #
 # EXIT STATUS
 #   0  Exited normally
 #   1  No TTY, or python3/curses unavailable
-#   2  Unknown flag
+#   2  Unknown flag, or an unknown --style
 #
 # EXAMPLE
 #   config-settings
+#   config-settings --style contrast
 function config-settings --description 'Interactive TUI for managing fish config settings'
     __fish_palette
 
     # ── Argument parsing ──────────────────────────────────
-    for arg in $argv
-        switch $arg
-            case -h --help
-                echo "$c_head""Usage:$c_reset $c_cmd""config-settings$c_reset $c_flag""[-h]$c_reset"
-                echo
-                echo "  Interactive TUI for managing fish config settings."
-                echo "  Edits are applied in one batch when the TUI exits."
-                echo
-                echo "$c_head""Navigation:$c_reset"
-                echo "  $c_flag↑ ↓$c_reset or $c_flag""k j$c_reset    Move cursor up / down"
-                echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Toggle rows: OFF ← DEFAULT → ON"
-                echo "  $c_flag""Enter$c_reset         Open sub-category page (Universal / Session);"
-                echo "                edit value (Sponge / Paths pages)"
-                echo "  $c_flag← / h$c_reset         Reset value to default (value rows)"
-                echo "  $c_flag/$c_reset             Filter rows, sub-categories included"
-                echo "  $c_flag""Tab / S-Tab$c_reset   Next / previous page"
-                echo "  $c_flag""Esc$c_reset           Leave sub-category page / clear filter"
-                echo "  $c_flag?$c_reset             Help overlay"
-                echo "  $c_flag""q$c_reset             Apply pending edits and exit"
-                echo
-                echo "$c_head""Pages:$c_reset"
-                echo "  $c_flag""Universal$c_reset   Toggles, persistent ($c_dim""set -U$c_reset)"
-                echo "  $c_flag""Session$c_reset     Toggles, this shell ($c_dim""set -g$c_reset)"
-                echo "  $c_flag""Sponge$c_reset      sponge history-scrubbing settings"
-                echo "  $c_flag""Paths$c_reset       scrollback & user-dots paths"
-                return 0
-            case '*'
-                echo "$c_err""Unknown option: $arg$c_reset" >&2
-                echo "Run $c_cmd""config-settings --help$c_reset for usage." >&2
-                return 2
+    argparse --name=config-settings h/help s/style= -- $argv
+    or return 2
+    if set -q _flag_help
+        echo "$c_head""Usage:$c_reset $c_cmd""config-settings$c_reset $c_flag""[-s color|mono|contrast] [-h]$c_reset"
+        echo
+        echo "  Interactive TUI for managing fish config settings."
+        echo "  Edits are applied in one batch when the TUI exits."
+        echo
+        echo "$c_head""Navigation:$c_reset"
+        echo "  $c_flag↑ ↓$c_reset or $c_flag""k j$c_reset    Move cursor up / down"
+        echo "  $c_flag← →$c_reset or $c_flag""h l$c_reset    Toggle rows: OFF ← DEFAULT → ON"
+        echo "  $c_flag""Enter$c_reset         Open sub-category page (Universal / Session);"
+        echo "                edit value (Sponge / Paths pages)"
+        echo "  $c_flag← / h$c_reset         Reset value to default (value rows)"
+        echo "  $c_flag/$c_reset             Filter rows, sub-categories included"
+        echo "  $c_flag""Tab / S-Tab$c_reset   Next / previous page"
+        echo "  $c_flag""Esc$c_reset           Leave sub-category page / clear filter"
+        echo "  $c_flag?$c_reset             Help overlay"
+        echo "  $c_flag""q$c_reset             Apply pending edits and exit"
+        echo
+        echo "$c_head""Pages:$c_reset"
+        echo "  $c_flag""Universal$c_reset   Toggles, persistent ($c_dim""set -U$c_reset)"
+        echo "  $c_flag""Session$c_reset     Toggles, this shell ($c_dim""set -g$c_reset)"
+        echo "  $c_flag""Sponge$c_reset      sponge history-scrubbing settings"
+        echo "  $c_flag""Paths$c_reset       scrollback & user-dots paths"
+        echo
+        echo "$c_head""Styles$c_reset ($c_flag""--style$c_reset):"
+        echo "  $c_flag""color$c_reset       Default"
+        echo "  $c_flag""mono$c_reset        No colour; selection in reverse video (default under $c_arg""NO_COLOR$c_reset)"
+        echo "  $c_flag""contrast$c_reset    Bold, no dim text; selection in reverse video"
+        return 0
+    end
+    if test (count $argv) -gt 0
+        echo "$c_err""config-settings: unexpected argument: $argv[1]$c_reset" >&2
+        echo "Run $c_cmd""config-settings --help$c_reset for usage." >&2
+        return 2
+    end
+    set -l style_args
+    if set -q _flag_style
+        if not contains -- $_flag_style color mono contrast
+            echo "$c_err""config-settings: --style must be color, mono or contrast$c_reset" >&2
+            return 2
         end
+        set style_args --style $_flag_style
     end
 
     # ── Dependencies ──────────────────────────────────────
@@ -166,7 +190,7 @@ function config-settings --description 'Interactive TUI for managing fish config
         return 1
     end
 
-    python3 $tui --state $work/state --emit $work/edits
+    python3 $tui --state $work/state --emit $work/edits $style_args
     set -l rc $status
 
     if test $rc -eq 0 -a -s $work/edits

@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # SYNOPSIS
-#   config-settings-tui.py [--state <file>] [--emit <file>] [--self-test]
+#   config-settings-tui.py [--state <file>] [--emit <file>]
+#                          [--style color|mono|contrast] [--self-test]
 #
 # DESCRIPTION
 #   Front-end for `config-settings`, rendered with Python's stdlib `curses`.
@@ -32,12 +33,19 @@
 #   --emit <file>   Write the resulting fish script here. Without it, the
 #                   script is printed to stdout after the TUI exits, applying
 #                   nothing -- useful for inspecting a session by hand.
+#   --style <name>  color (default), mono or contrast. mono draws no colour
+#                   at all: the terminal's own foreground and background, with
+#                   bold and reverse video for structure. contrast keeps the
+#                   colours but drops the dim greys, bolds everything and marks
+#                   the selection in reverse video. When --style is not given,
+#                   a non-empty NO_COLOR (https://no-color.org) selects mono.
 #   --self-test     Exercise the pure logic with no terminal and exit non-zero
 #                   on failure. Needs no TTY and no fish.
 #
 # EXIT STATUS
 #   0  Clean exit, or --self-test passed
 #   1  --self-test failed, or the state dump could not be obtained
+#   2  Unknown --style
 #
 # EXAMPLE
 #   config-settings                                  # the normal entry point
@@ -295,15 +303,32 @@ MIN_W, MIN_H = 60, 14
 
 C_FRAME, C_TITLE, C_SEL, C_ON, C_OFF, C_DEF, C_DIM, C_HINT, C_BAR = range(1, 10)
 
+STYLES = ("color", "mono", "contrast")
+STYLE = "color"     # set once by main() before the first draw
 
-def init_colors():
-    curses.start_color()
-    try:
-        curses.use_default_colors()
-        bg = -1
-    except curses.error:
-        bg = curses.COLOR_BLACK
-    for pair, fg in {
+
+def pick_style(argv, environ):
+    """--style wins; otherwise a non-empty NO_COLOR means mono.
+
+    Returns None for an unknown --style value.
+    """
+    if "--style" in argv:
+        i = argv.index("--style") + 1
+        name = argv[i] if i < len(argv) else ""
+        return name if name in STYLES else None
+    return "mono" if environ.get("NO_COLOR") else "color"
+
+
+def palette(style):
+    """Foreground per colour pair, or None for mono (no colour at all).
+
+    contrast swaps the two low-contrast foregrounds -- COLOR_BLACK for dim
+    text, which vanishes on a dark background, and COLOR_BLUE for the frame
+    -- for white, and maps the title to yellow.
+    """
+    if style == "mono":
+        return None
+    fg = {
         C_FRAME: curses.COLOR_BLUE,
         C_TITLE: curses.COLOR_MAGENTA,
         C_SEL: curses.COLOR_CYAN,
@@ -313,8 +338,50 @@ def init_colors():
         C_DIM: curses.COLOR_BLACK,
         C_HINT: curses.COLOR_CYAN,
         C_BAR: curses.COLOR_WHITE,
-    }.items():
-        curses.init_pair(pair, fg, bg)
+    }
+    if style == "contrast":
+        fg.update({C_FRAME: curses.COLOR_WHITE, C_TITLE: curses.COLOR_YELLOW,
+                   C_DIM: curses.COLOR_WHITE})
+    return fg
+
+
+def style_attr(attr):
+    """Adjust a drawing attribute for STYLE. Every draw goes through put().
+
+    mono strips colour pairs, so only bold / reverse / dim reach the screen.
+    contrast drops A_DIM and adds A_BOLD everywhere.
+    """
+    if STYLE == "mono":
+        return attr & ~curses.A_COLOR
+    if STYLE == "contrast":
+        return (attr & ~curses.A_DIM) | curses.A_BOLD
+    return attr
+
+
+def sel_attr(pair=C_SEL):
+    """The selected-item attribute: colour + bold, plus reverse video when the
+    style cannot rely on colour (mono) or wants it unmistakable (contrast)."""
+    attr = curses.color_pair(pair) | curses.A_BOLD
+    return attr if STYLE == "color" else attr | curses.A_REVERSE
+
+
+def init_colors():
+    if not curses.has_colors():
+        return
+    # curses.wrapper() has already called start_color(), which makes pair 0
+    # white-on-black; use_default_colors() puts it back to the terminal's own
+    # colours -- the only pair mono ever draws with.
+    curses.start_color()
+    try:
+        curses.use_default_colors()
+        bg = -1
+    except curses.error:
+        bg = curses.COLOR_BLACK
+    fg = palette(STYLE)
+    if fg is None:
+        return
+    for pair, colour in fg.items():
+        curses.init_pair(pair, colour, bg)
 
 
 def put(win, y, x, text, attr=0, limit=None):
@@ -333,6 +400,7 @@ def put(win, y, x, text, attr=0, limit=None):
     text = text[:room]
     if not text:
         return
+    attr = style_attr(attr)
     try:
         if y == h - 1 and x + len(text) >= w:
             if len(text) > 1:
@@ -432,7 +500,7 @@ class App:
             if y > bot:
                 break
             sel = i == self.page and self.drill is None
-            attr = curses.color_pair(C_SEL) | curses.A_BOLD if sel else 0
+            attr = sel_attr() if sel else 0
             put(scr, y, 2, ("▸ " if sel else "  ") + name, attr, SIDEBAR_W - 2)
         y = top + len(PAGES) + 2
         if y <= bot:
@@ -478,7 +546,7 @@ class App:
                 cell, cattr = badge(self.value_of(row), row.kind, row.hint)
                 cell = ell(cell, width - 4)
 
-            lattr = curses.color_pair(C_SEL) | curses.A_BOLD if sel else curses.A_BOLD
+            lattr = sel_attr() if sel else curses.A_BOLD
             put(scr, y, left, ("▸ " if sel else "  ") + row.label, lattr,
                 max(0, width - len(cell) - 2))
             put(scr, y, left + width - len(cell), cell,
@@ -541,8 +609,8 @@ class App:
         bw = min(w - 4, max(len(x) for x in lines) + 4)
         bh = min(h - 2, len(lines) + 2)
         win = curses.newwin(bh, bw, (h - bh) // 2, (w - bw) // 2)
-        win.bkgd(" ", curses.color_pair(C_BAR))
-        win.attrset(curses.color_pair(C_FRAME))
+        win.bkgd(" ", style_attr(curses.color_pair(C_BAR)))
+        win.attrset(style_attr(curses.color_pair(C_FRAME)))
         win.box()
         put(win, 0, 3, " Help ", curses.color_pair(C_TITLE) | curses.A_BOLD)
         for i, line in enumerate(lines[: bh - 2], start=1):
@@ -789,6 +857,21 @@ def self_test():
     # -- nothing changed emits nothing -----------------------------------
     assert emit(State(dump), by_var) == ""
 
+    # -- styles ----------------------------------------------------------
+    assert pick_style([], {}) == "color"
+    assert pick_style([], {"NO_COLOR": "1"}) == "mono"
+    assert pick_style([], {"NO_COLOR": ""}) == "color"       # empty: no-op
+    assert pick_style(["--style", "contrast"], {"NO_COLOR": "1"}) == "contrast"
+    assert pick_style(["--style", "color"], {"NO_COLOR": "1"}) == "color"
+    assert pick_style(["--style", "neon"], {}) is None
+    assert pick_style(["--style"], {}) is None
+    assert palette("mono") is None
+    hc, full = palette("contrast"), palette("color")
+    assert hc is not None and full is not None
+    assert curses.COLOR_BLACK not in hc.values()
+    assert curses.COLOR_BLUE not in hc.values()
+    assert hc[C_ON] == full[C_ON]
+
     # -- badges and clipping ---------------------------------------------
     assert badge("on", "tri", "")[1] == C_ON
     assert badge("true", "bool", "")[1] == C_ON
@@ -809,9 +892,17 @@ def main(argv):
         return self_test()
     if "-h" in argv or "--help" in argv:
         print("usage: config-settings-tui.py [--state <file>] [--emit <file>] "
-              "[--self-test]\n\nNormally launched by the `config-settings` "
-              "fish function.")
+              "[--style color|mono|contrast] [--self-test]\n\nNormally "
+              "launched by the `config-settings` fish function.")
         return 0
+
+    global STYLE
+    style = pick_style(argv, os.environ)
+    if style is None:
+        sys.stderr.write("config-settings-tui.py: --style must be one of: "
+                         + ", ".join(STYLES) + "\n")
+        return 2
+    STYLE = style
 
     def opt(name):
         return argv[argv.index(name) + 1] if name in argv else None
