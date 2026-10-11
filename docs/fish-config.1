@@ -623,7 +623,7 @@ Directories prepended to PATH in this order (first wins):
 .PP
 .TS
 tab(@);
-l l.
+lw(35.0n) lw(35.0n).
 T{
 Directory
 T}@T{
@@ -646,9 +646,14 @@ T}@T{
 Personal shell scripts
 T}
 T{
-\f[V]\[ti]/bin\f[R]
+\f[V]$CARGO_HOME/bin\f[R]
 T}@T{
 Cargo binaries (appended \[em] lowest priority)
+T}
+T{
+\f[V]$GOPATH/bin\f[R]
+T}@T{
+Go binaries from \f[V]go install\f[R] (appended \[em] lowest priority)
 T}
 T{
 \f[V]$BUN_INSTALL/bin\f[R]
@@ -677,8 +682,8 @@ T}@T{
 T}
 .TE
 .PP
-Cargo binaries are intentionally appended (lowest priority) to avoid
-shadowing system-installed Rust tools.
+Cargo and Go binaries are intentionally appended (lowest priority) to
+avoid shadowing system-installed Rust and Go tools.
 .PP
 NOTE: While these directories are merged with your system\[cq]s existing
 \f[V]$PATH\f[R] values, any executables in the prepended directories
