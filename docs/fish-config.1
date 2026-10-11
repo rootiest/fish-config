@@ -394,14 +394,27 @@ either.
 That covers \f[V]--help\f[R] text, errors and warnings,
 \f[V]fish-deps\f[R] status, \f[V]config-help\f[R], \f[V]gi\f[R],
 \f[V]scrub\f[R] and the rest of the user-facing functions.
-The status marks (\f[V]✓\f[R], \f[V]✗\f[R], \f[V]⚠\f[R]) are unchanged,
-so they still show.
+The status marks become words, since without colour a \f[V]✔\f[R] and a
+\f[V]✘\f[R] are easy to confuse and a screen reader or \f[V]grep\f[R]
+cannot tell them apart: \f[V]✔\f[R]/\f[V]✓\f[R] print as \f[V][ok]\f[R],
+\f[V]✘\f[R]/\f[V]✗\f[R] as \f[V][error]\f[R] and \f[V]⚠\f[R] as
+\f[V][warn]\f[R].
+.PP
+The \f[V]config-settings\f[R] interface switches to its \f[V]mono\f[R]
+style: no colour, with the selected row in reverse video.
+Its values are always spelled out (\f[V]ON\f[R], \f[V]OFF\f[R],
+\f[V]DEFAULT\f[R]), so nothing is lost.
+A \f[V]contrast\f[R] style is also available for low-contrast terminals
+or low vision: it keeps the colours, replaces the dim grey and blue with
+white, and bolds every line.
+Pick one explicitly with
+\f[V]config-settings --style color|mono|contrast\f[R], which takes
+precedence over \f[V]NO_COLOR\f[R].
 .PP
 What it does not change: your prompt and theme, fish\[cq]s syntax
-highlighting (the \f[V]fish_color_*\f[R] variables), the Python
-\f[V]config-settings\f[R] interface, the vendored \f[V]fzf\f[R],
-autopair, done and puffer plugins, and the output of external tools that
-colour themselves.
+highlighting (the \f[V]fish_color_*\f[R] variables), the vendored
+\f[V]fzf\f[R], autopair, done and puffer plugins, and the output of
+external tools that colour themselves.
 Export it from your environment, or put \f[V]set -gx NO_COLOR 1\f[R] in
 \f[V]local.fish\f[R], to apply it everywhere.
 .SS Other
@@ -2135,7 +2148,7 @@ not, so they are chained with the git commands that do the linking:
 .fi
 .PP
 \f[B]Dependencies:\f[R] \f[V]_fish_mkdir_p\f[R],
-\f[V]__fish_palette\f[R], \f[V]_mkrep_say\f[R],
+\f[V]__fish_palette\f[R], \f[V]__fish_mark\f[R], \f[V]_mkrep_say\f[R],
 \f[V]_mkrep_add_origin\f[R], \f[V]_mkrep_default_remote_cmd\f[R],
 \f[V]_mkrep_expand_template\f[R], \f[V]_mkrep_remote_url\f[R],
 \f[V]_mkrep_repo_exists\f[R], \f[V]git\f[R]
@@ -4372,7 +4385,7 @@ config-help pkg --man
 .IP
 .nf
 \f[C]
-Synopsis:  config-settings [-h | --help]
+Synopsis:  config-settings [-s | --style color|mono|contrast] [-h | --help]
 
 Opens an interactive full-screen TUI for managing fish config settings
 across four pages, without having to type or remember variable names:
@@ -4419,6 +4432,14 @@ The panel is drawn by scripts/config-settings-tui.py using Python\[aq]s stdlib
 curses module, which owns the cell arithmetic, the alternate screen and the
 redraw diffing. It resizes with the terminal and needs no width tiers.
 
+Three display styles: color (the default), mono and contrast. mono draws
+in the terminal\[aq]s own colours only, marking the selection with reverse
+video; values always read as text (ON / OFF / DEFAULT), so nothing is lost
+without colour. contrast keeps the colours but replaces the dim grey and
+blue with white, bolds every line and marks the selection in reverse
+video. NO_COLOR set to a non-empty value (https://no-color.org) selects
+mono unless --style says otherwise.
+
 Navigation:
   ↑ ↓ / k j     Move cursor
   ← → / h l     Toggle rows: OFF ← DEFAULT → ON
@@ -4432,15 +4453,18 @@ Navigation:
   q             Apply pending edits and exit
 
 Arguments:
-  -h, --help  Print usage and exit
+  -s, --style <name>  Display style: color, mono or contrast (default:
+                      mono when NO_COLOR is set, color otherwise)
+  -h, --help          Print usage and exit
 
 Exit Status:
   0  Exited normally
   1  No TTY, or python3/curses unavailable
-  2  Unknown flag
+  2  Unknown flag, or an unknown --style
 
 Example:
 config-settings
+config-settings --style contrast
 \f[R]
 .fi
 .PP
