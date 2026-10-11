@@ -209,7 +209,7 @@ function gi --description 'Generate .gitignore files using the gitignore.io API'
                     printf "\n%s\n" "$sig" >>"$gitignore_path"
                     cat "$boilerplate_path" >>"$gitignore_path"
                     if not set -q _flag_silent
-                        echo (__fish_color green)"✔"(__fish_color normal)" Appended boilerplate to "(__fish_color cyan)"$readable_path"(__fish_color normal)
+                        echo (__fish_color green)(__fish_mark ok)(__fish_color normal)" Appended boilerplate to "(__fish_color cyan)"$readable_path"(__fish_color normal)
                     end
                 end
             end
@@ -324,7 +324,7 @@ function __gi_append_dedup
     else
         printf "\n%s\n%s\n" "$sig" "$content" >>"$gitignore_path"
         if test "$silent" != 1
-            echo (__fish_color green)"✔"(__fish_color normal)" Appended $label patterns to "(__fish_color cyan)"$readable_path"(__fish_color normal)
+            echo (__fish_color green)(__fish_mark ok)(__fish_color normal)" Appended $label patterns to "(__fish_color cyan)"$readable_path"(__fish_color normal)
         end
     end
 end

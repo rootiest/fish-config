@@ -24,7 +24,7 @@ function _fish_deps_status
                 if test -n "$_major"; and test "$_major" -lt 4
                     set -l _ver (fish --version 2>&1 | string replace 'fish, ' '')
                     echo -n (__fish_color yellow)
-                    echo -n " ⚠ "
+                    echo -n " "(__fish_mark warn)" "
                     echo -n (__fish_color normal)
                     echo -n "$bin "
                     echo -n (__fish_color brblack)
@@ -34,7 +34,7 @@ function _fish_deps_status
                 end
             end
             echo -n (__fish_color green)
-            echo -n " ✓ "
+            echo -n " "(__fish_mark ok ✓)" "
             echo -n (__fish_color normal)
             echo -n "$bin "
             echo -n (__fish_color brblack)
@@ -47,7 +47,7 @@ function _fish_deps_status
             echo -n (__fish_color normal)
         else if test "$tier" = req
             echo -n (__fish_color red)
-            echo -n " ✗ "
+            echo -n " "(__fish_mark err ✗)" "
             echo -n (__fish_color normal)
             echo -n "$bin "
             echo -n (__fish_color brblack)
@@ -55,7 +55,7 @@ function _fish_deps_status
             echo -n (__fish_color normal)
         else if test "$tier" = rec
             echo -n (__fish_color yellow)
-            echo -n " ⚠ "
+            echo -n " "(__fish_mark warn)" "
             echo -n (__fish_color normal)
             echo -n "$bin "
             echo -n (__fish_color brblack)

@@ -78,10 +78,10 @@ function dockup --description 'Pull and restart docker compose containers'
 
     set -l rc 0
     if docker compose pull && docker compose up -d --remove-orphans
-        echo $clr_success"✔ Upgrade complete!"$clr_off
+        echo $clr_success(__fish_mark ok)" Upgrade complete!"$clr_off
         docker image prune -f
     else
-        echo $clr_error"✘ Upgrade failed."$clr_off >&2
+        echo $clr_error(__fish_mark err)" Upgrade failed."$clr_off >&2
         set rc 2
     end
 
