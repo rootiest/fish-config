@@ -180,6 +180,7 @@ if __fish_config_op_enabled (status basename) path-setup
     fish_add_path $HOME/Applications # User-installed applications and standalone apps
     fish_add_path $HOME/scripts # Custom personal shell scripts and automation
     fish_add_path -mga $CARGO_HOME/bin # Rust binaries and tools installed via Cargo
+    fish_add_path -mga $GOPATH/bin # Go binaries and tools installed via Go modules
     fish_add_path $BUN_INSTALL/bin # Bun runtime executables and globally installed packages
     fish_add_path $XDG_DATA_HOME/npm-global/bin # Global Node.js/npm packages (XDG compliant location)
     fish_add_path $HOME/.lmstudio/bin # LM Studio CLI tools for local LLM management
