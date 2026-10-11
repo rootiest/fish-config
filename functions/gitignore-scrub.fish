@@ -111,7 +111,7 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
 
     if set -q _flag_force
         git rm --cached -- $pending >/dev/null
-        echo (__fish_color green)"✔"(__fish_color normal)" Untracked "(count $pending)" file(s)."
+        echo (__fish_color green)(__fish_mark ok)(__fish_color normal)" Untracked "(count $pending)" file(s)."
         return 0
     end
 
@@ -120,7 +120,7 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
             read -P "Remove '$f' from git tracking? [y/N] " confirm
             if string match -qir '^y' -- "$confirm"
                 git rm --cached -- "$f" >/dev/null
-                echo (__fish_color green)"✔"(__fish_color normal)" Untracked $f"
+                echo (__fish_color green)(__fish_mark ok)(__fish_color normal)" Untracked $f"
             else
                 git config --local --add gitignore-scrub.skip "$f"
             end
@@ -136,7 +136,7 @@ function gitignore-scrub --description 'Find and optionally untrack files newly 
     read -P "Remove from git tracking? [y/N] " confirm
     if string match -qir '^y' -- "$confirm"
         git rm --cached -- $pending >/dev/null
-        echo (__fish_color green)"✔"(__fish_color normal)" Untracked "(count $pending)" file(s)."
+        echo (__fish_color green)(__fish_mark ok)(__fish_color normal)" Untracked "(count $pending)" file(s)."
     else
         for f in $pending
             git config --local --add gitignore-scrub.skip "$f"

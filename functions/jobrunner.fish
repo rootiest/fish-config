@@ -254,10 +254,10 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
             end
 
             if set -q pid[1]
-                echo "$c_ok""✔$c_reset  Started job $c_arg$name$c_reset $c_dim(PID $pid)$c_reset"
+                echo "$c_ok"(__fish_mark ok)"$c_reset  Started job $c_arg$name$c_reset $c_dim(PID $pid)$c_reset"
             else
                 # The job may have finished (or failed) before we looked.
-                echo "$c_ok""✔$c_reset  Started job $c_arg$name$c_reset $c_dim(already exited)$c_reset"
+                echo "$c_ok"(__fish_mark ok)"$c_reset  Started job $c_arg$name$c_reset $c_dim(already exited)$c_reset"
             end
 
         case list -l --list
@@ -310,7 +310,7 @@ function jobrunner --description 'Manage detached background jobs with tmux or G
                 echo "$c_err""jobrunner:$c_reset failed to terminate job '$c_arg$name$c_reset'." >&2
                 return 1
             end
-            echo "$c_ok""✔$c_reset  Terminated job $c_arg$name$c_reset"
+            echo "$c_ok"(__fish_mark ok)"$c_reset  Terminated job $c_arg$name$c_reset"
 
         case logs -o --output
             if test (count $argv) -ne 2

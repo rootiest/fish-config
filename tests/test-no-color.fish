@@ -87,6 +87,25 @@ set -e NO_COLOR
 check "NO_COLOR unset: emits an escape" true (__fish_color red | string match -qr \e; and echo true; or echo false)
 check "NO_COLOR unset: matches set_color exactly" (set_color --bold red | string escape) (__fish_color --bold red | string escape)
 
+section "NO_COLOR: __fish_mark"
+
+set -gx NO_COLOR 1
+check "NO_COLOR=1: ok is a text label" "[ok]" (__fish_mark ok)
+check "NO_COLOR=1: err is a text label" "[error]" (__fish_mark err)
+check "NO_COLOR=1: warn is a text label" "[warn]" (__fish_mark warn)
+check "NO_COLOR=1: a glyph override is ignored" "[ok]" (__fish_mark ok ✓)
+check "NO_COLOR=1: concatenation keeps its text" "[ok] done" (echo (__fish_mark ok)" done")
+
+set -gx NO_COLOR ''
+check "NO_COLOR='': ok is the glyph" "✔" (__fish_mark ok)
+
+set -e NO_COLOR
+check "NO_COLOR unset: ok is the glyph" "✔" (__fish_mark ok)
+check "NO_COLOR unset: err is the glyph" "✘" (__fish_mark err)
+check "NO_COLOR unset: warn is the glyph" "⚠" (__fish_mark warn)
+check "NO_COLOR unset: a glyph override wins" "✓" (__fish_mark ok ✓)
+check "NO_COLOR unset: yields exactly one element" 1 (count (__fish_mark ok))
+
 # ---- Half 2: user-facing functions as children ------------------------------
 
 # probe <mode> <command...>: run the command in a sandboxed --no-config fish
@@ -155,6 +174,15 @@ check "NO_COLOR='': $parts[1]: emits ESC" true (has_esc (probe empty $parts[2]))
 section "NO_COLOR: messages survive with colour off"
 check "poke: error text intact" "poke: no file specified" (probe nocolor poke)
 check "open-url: error text intact" "error: open-url requires a URL argument" (probe nocolor open-url)
+
+section "NO_COLOR: status marks become text labels"
+function marks_in --argument-names out
+    string match -q '*[ok] fish*' -- $out; and echo label
+    string match -q '*✓*' -- $out; and echo glyph
+end
+check "fish-deps status: [ok] label, no glyph" label (marks_in (probe nocolor fish-deps status))
+check "fish-deps status: glyph with colour on" glyph (marks_in (probe unset fish-deps status))
+check "mkcd: [ok] label" true (probe nocolor mkcd $sb/work/newdir | string match -q '[ok]  Created*'; and echo true; or echo false)
 
 command rm -rf $sb
 report

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # DEPENDENCIES
-#   _mkrep_say, __fish_palette, git
+#   _mkrep_say, __fish_palette, __fish_mark, git
 #
 # SYNOPSIS
 #   _mkrep_add_origin <silent> <url>
@@ -36,10 +36,10 @@ function _mkrep_add_origin --argument-names silent url
     if test -z "$existing"
         git remote add origin $url
         or begin
-            echo "$c_err""✘$c_reset  Failed to add remote $c_arg$url$c_reset" >&2
+            echo "$c_err"(__fish_mark err)"$c_reset  Failed to add remote $c_arg$url$c_reset" >&2
             return 1
         end
-        _mkrep_say $silent "$c_ok""✔$c_reset  Linked remote $c_arg$url$c_reset"
+        _mkrep_say $silent "$c_ok"(__fish_mark ok)"$c_reset  Linked remote $c_arg$url$c_reset"
         return 0
     end
 
@@ -48,6 +48,6 @@ function _mkrep_add_origin --argument-names silent url
         return 0
     end
 
-    echo "$c_err""✘$c_reset  origin already points at $c_arg$existing$c_reset, not $c_arg$url$c_reset — run $c_cmd""git remote set-url origin $url$c_reset to repoint it" >&2
+    echo "$c_err"(__fish_mark err)"$c_reset  origin already points at $c_arg$existing$c_reset, not $c_arg$url$c_reset — run $c_cmd""git remote set-url origin $url$c_reset to repoint it" >&2
     return 1
 end

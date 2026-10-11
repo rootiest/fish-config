@@ -225,12 +225,21 @@ roles, and the functions that colour their output directly (through
 `__fish_color`, a `NO_COLOR`-aware `set_color`) print no escape sequences
 either. That covers `--help` text, errors and warnings, `fish-deps` status,
 `config-help`, `gi`, `scrub` and the rest of the user-facing functions. The
-status marks (`✓`, `✗`, `⚠`) are unchanged, so they still show.
+status marks become words, since without colour a `✔` and a `✘` are easy to
+confuse and a screen reader or `grep` cannot tell them apart: `✔`/`✓` print
+as `[ok]`, `✘`/`✗` as `[error]` and `⚠` as `[warn]`.
+
+The `config-settings` interface switches to its `mono` style: no colour, with
+the selected row in reverse video. Its values are always spelled out (`ON`,
+`OFF`, `DEFAULT`), so nothing is lost. A `contrast` style is also available
+for low-contrast terminals or low vision: it keeps the colours, replaces the
+dim grey and blue with white, and bolds every line. Pick one explicitly with
+`config-settings --style color|mono|contrast`, which takes precedence over
+`NO_COLOR`.
 
 What it does not change: your prompt and theme, fish's syntax highlighting
-(the `fish_color_*` variables), the Python `config-settings` interface, the
-vendored `fzf`, autopair, done and puffer plugins, and the output of external
-tools that colour themselves. Export it from your environment, or put
+(the `fish_color_*` variables), the vendored `fzf`, autopair, done and puffer
+plugins, and the output of external tools that colour themselves. Export it from your environment, or put
 `set -gx NO_COLOR 1` in `local.fish`, to apply it everywhere.
 
 ## Other
@@ -1680,7 +1689,7 @@ functions). They are active in all interactive sessions.
       GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
       Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 
-**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `_mkrep_say`, `_mkrep_add_origin`, `_mkrep_default_remote_cmd`, `_mkrep_expand_template`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
+**Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `__fish_mark`, `_mkrep_say`, `_mkrep_add_origin`, `_mkrep_default_remote_cmd`, `_mkrep_expand_template`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
 
 **Classification:** `bypasses-shadow(cd)`, `self-limiting(rm)`, `destructive`, `network`
 
@@ -3701,7 +3710,7 @@ functions). They are active in all interactive sessions.
 
 ### config-settings
 
-    Synopsis:  config-settings [-h | --help]
+    Synopsis:  config-settings [-s | --style color|mono|contrast] [-h | --help]
 
     Opens an interactive full-screen TUI for managing fish config settings
     across four pages, without having to type or remember variable names:
@@ -3748,6 +3757,14 @@ functions). They are active in all interactive sessions.
     curses module, which owns the cell arithmetic, the alternate screen and the
     redraw diffing. It resizes with the terminal and needs no width tiers.
 
+    Three display styles: color (the default), mono and contrast. mono draws
+    in the terminal's own colours only, marking the selection with reverse
+    video; values always read as text (ON / OFF / DEFAULT), so nothing is lost
+    without colour. contrast keeps the colours but replaces the dim grey and
+    blue with white, bolds every line and marks the selection in reverse
+    video. NO_COLOR set to a non-empty value (https://no-color.org) selects
+    mono unless --style says otherwise.
+
     Navigation:
       ↑ ↓ / k j     Move cursor
       ← → / h l     Toggle rows: OFF ← DEFAULT → ON
@@ -3761,15 +3778,18 @@ functions). They are active in all interactive sessions.
       q             Apply pending edits and exit
 
     Arguments:
-      -h, --help  Print usage and exit
+      -s, --style <name>  Display style: color, mono or contrast (default:
+                          mono when NO_COLOR is set, color otherwise)
+      -h, --help          Print usage and exit
 
     Exit Status:
       0  Exited normally
       1  No TTY, or python3/curses unavailable
-      2  Unknown flag
+      2  Unknown flag, or an unknown --style
 
     Example:
     config-settings
+    config-settings --style contrast
 
 **Dependencies:** `__fish_palette`, `__config_settings_state`, `__config_settings_apply`, `__config_settings_set_value`, `python3`
 

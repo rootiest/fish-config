@@ -5,7 +5,7 @@
 #   04-git-and-version-control
 #
 # DEPENDENCIES
-#   _fish_mkdir_p, __fish_palette, _mkrep_say,
+#   _fish_mkdir_p, __fish_palette, __fish_mark, _mkrep_say,
 #   _mkrep_add_origin, _mkrep_default_remote_cmd, _mkrep_expand_template,
 #   _mkrep_remote_url, _mkrep_repo_exists, git
 #
@@ -238,7 +238,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     end
 
     if test (count $argv) -ne 1
-        echo "$c_err""✘$c_reset  mkrep takes exactly one directory argument" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  mkrep takes exactly one directory argument" >&2
         if set -q _flag_new_remote; and test -z "$_flag_new_remote"
             echo "   To pass a command, put it right after $c_flag--new-remote$c_reset (or use $c_flag--new-remote=<cmd>$c_reset)" >&2
         end
@@ -255,28 +255,28 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     end
 
     if set -q _flag_remote; and set -q _flag_new_remote
-        echo "$c_err""✘$c_reset  --remote and --new-remote are mutually exclusive" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  --remote and --new-remote are mutually exclusive" >&2
         return 2
     end
     if set -q _flag_server; and set -q _flag_remote
-        echo "$c_err""✘$c_reset  --server and --remote are mutually exclusive" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  --server and --remote are mutually exclusive" >&2
         return 2
     end
     if set -q _flag_server; and set -q _flag_new_remote
-        echo "$c_err""✘$c_reset  --server and --new-remote are mutually exclusive" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  --server and --new-remote are mutually exclusive" >&2
         return 2
     end
     if set -q _flag_check_existing; and set -q _flag_remote
-        echo "$c_err""✘$c_reset  --check-existing and --remote are mutually exclusive" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  --check-existing and --remote are mutually exclusive" >&2
         return 2
     end
     if set -q _flag_check_existing; and set -q _flag_new_remote
-        echo "$c_err""✘$c_reset  --check-existing and --new-remote are mutually exclusive" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  --check-existing and --new-remote are mutually exclusive" >&2
         return 2
     end
     if set -q _flag_no_git
         if set -q _flag_remote; or set -q _flag_new_remote; or set -q _flag_server
-            echo "$c_err""✘$c_reset  --remote/--new-remote/--server require --git" >&2
+            echo "$c_err"(__fish_mark err)"$c_reset  --remote/--new-remote/--server require --git" >&2
             return 2
         end
     end
@@ -311,14 +311,14 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                 case github
                     # gh defaults to github.com; no base url needed
                 case '*'
-                    echo "$c_err""✘$c_reset  Unrecognized server type $c_arg$srv_type$c_reset (expected gitea, gitlab, or github)" >&2
+                    echo "$c_err"(__fish_mark err)"$c_reset  Unrecognized server type $c_arg$srv_type$c_reset (expected gitea, gitlab, or github)" >&2
                     return 2
             end
         end
     end
 
     if set -q _flag_check_existing; and test -z "$srv_type"
-        echo "$c_err""✘$c_reset  --check-existing needs a resolved server (--server, \$GIT_SERVER, or \$GITEA_URL/\$GITEA_HOST/\$GITLAB_URL/\$GITLAB_HOST)" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  --check-existing needs a resolved server (--server, \$GIT_SERVER, or \$GITEA_URL/\$GITEA_HOST/\$GITLAB_URL/\$GITLAB_HOST)" >&2
         return 1
     end
 
@@ -344,14 +344,14 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         test $verbose = 1; and _mkrep_say $silent "$c_dim""Removing existing $dir$c_reset"
         rm -rf -- $dir
         or begin
-            echo "$c_err""✘$c_reset  Failed to remove existing $c_arg$dir$c_reset" >&2
+            echo "$c_err"(__fish_mark err)"$c_reset  Failed to remove existing $c_arg$dir$c_reset" >&2
             return 1
         end
         _mkrep_say $silent "$c_warn""⌫$c_reset  Removed existing $c_arg$dir$c_reset"
     end
 
     if set -q _flag_strict; and test -d $dir
-        echo "$c_err""✘$c_reset  $c_arg$dir$c_reset already exists (--strict)" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  $c_arg$dir$c_reset already exists (--strict)" >&2
         return 1
     end
 
@@ -366,19 +366,19 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         end
         or return 1
     else if not test -d $dir
-        echo "$c_err""✘$c_reset  $c_arg$dir$c_reset does not exist and --no-mkdir was given" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  $c_arg$dir$c_reset does not exist and --no-mkdir was given" >&2
         return 1
     end
 
     if test $is_new -eq 1
-        _mkrep_say $silent "$c_ok""✔$c_reset  Created $c_arg$dir$c_reset"
+        _mkrep_say $silent "$c_ok"(__fish_mark ok)"$c_reset  Created $c_arg$dir$c_reset"
     else
         _mkrep_say $silent "$c_warn""→$c_reset  $c_arg$dir$c_reset already exists"
     end
 
     builtin cd $dir
     or begin
-        echo "$c_err""✘$c_reset  Failed to enter $c_arg$dir$c_reset" >&2
+        echo "$c_err"(__fish_mark err)"$c_reset  Failed to enter $c_arg$dir$c_reset" >&2
         return 1
     end
 
@@ -397,7 +397,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
             git init $git_init_args >/dev/null
         end
         or begin
-            echo "$c_err""✘$c_reset  git init failed in $c_arg$dir$c_reset" >&2
+            echo "$c_err"(__fish_mark err)"$c_reset  git init failed in $c_arg$dir$c_reset" >&2
             builtin cd $orig_pwd
             return 1
         end
@@ -405,7 +405,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         if test $was_repo -eq 1
             _mkrep_say $silent "$c_warn""→$c_reset  $c_arg$dir$c_reset is already a git repository"
         else
-            _mkrep_say $silent "$c_ok""✔$c_reset  Initialized git repository"
+            _mkrep_say $silent "$c_ok"(__fish_mark ok)"$c_reset  Initialized git repository"
         end
     end
 
@@ -422,7 +422,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         set -l cmd $_flag_new_remote
         test -z "$cmd"; and set cmd $MKREP_REMOTE_CMD
         if test -z "$cmd"
-            echo "$c_err""✘$c_reset  --new-remote given no command and \$MKREP_REMOTE_CMD is unset" >&2
+            echo "$c_err"(__fish_mark err)"$c_reset  --new-remote given no command and \$MKREP_REMOTE_CMD is unset" >&2
             builtin cd $orig_pwd
             return 1
         end
@@ -433,7 +433,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
         # come from a $GIT_SERVER-resolved base URL. Refuse rather than eval a
         # literal {server}.
         if string match -q '*{server}*' -- $cmd; and test -z "$srv_url"
-            echo "$c_err""✘$c_reset  Template uses {server} but no base URL resolved (set \$GIT_SERVER to gitea/gitlab and \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
+            echo "$c_err"(__fish_mark err)"$c_reset  Template uses {server} but no base URL resolved (set \$GIT_SERVER to gitea/gitlab and \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
             builtin cd $orig_pwd
             return 1
         end
@@ -446,11 +446,11 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
             eval $cmd
         end
         or begin
-            echo "$c_err""✘$c_reset  Remote-create command failed" >&2
+            echo "$c_err"(__fish_mark err)"$c_reset  Remote-create command failed" >&2
             builtin cd $orig_pwd
             return 1
         end
-        _mkrep_say $silent "$c_ok""✔$c_reset  Ran remote-create command"
+        _mkrep_say $silent "$c_ok"(__fish_mark ok)"$c_reset  Ran remote-create command"
     end
 
     if not set -q _flag_remote; and not set -q _flag_new_remote
@@ -461,7 +461,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
             if _mkrep_repo_exists $srv_type $USER $name
                 _mkrep_say $silent "$c_warn""→$c_reset  $c_arg$USER/$name$c_reset already exists on $srv_type"
             else
-                _mkrep_say $silent "$c_ok""✔$c_reset  $c_arg$USER/$name$c_reset does not exist on $srv_type"
+                _mkrep_say $silent "$c_ok"(__fish_mark ok)"$c_reset  $c_arg$USER/$name$c_reset does not exist on $srv_type"
             end
         else if test -n "$srv_type"; and test $do_git -eq 1
             if _mkrep_repo_exists $srv_type $USER $name
@@ -499,7 +499,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
 
                     if string match -q '*{server}*' -- $cmd
                         if test -z "$srv_url"
-                            echo "$c_err""✘$c_reset  No base URL resolved for $srv_type (set \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
+                            echo "$c_err"(__fish_mark err)"$c_reset  No base URL resolved for $srv_type (set \$GITEA_URL/\$GITEA_HOST or \$GITLAB_URL/\$GITLAB_HOST)" >&2
                             builtin cd $orig_pwd
                             return 1
                         end
@@ -513,12 +513,12 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
                         eval $cmd
                     end
                     or begin
-                        echo "$c_err""✘$c_reset  Remote-create command failed" >&2
+                        echo "$c_err"(__fish_mark err)"$c_reset  Remote-create command failed" >&2
                         builtin cd $orig_pwd
                         return 1
                     end
                     set -l url (_mkrep_remote_url $srv_type $USER $name $srv_url)
-                    _mkrep_say $silent "$c_ok""✔$c_reset  Created new remote $c_arg$url$c_reset on $srv_type"
+                    _mkrep_say $silent "$c_ok"(__fish_mark ok)"$c_reset  Created new remote $c_arg$url$c_reset on $srv_type"
                 end
             end
         end
@@ -527,7 +527,7 @@ function mkrep --description 'Create a directory, cd into it, and git init it'
     if test $do_cd -eq 0
         builtin cd $orig_pwd
     else
-        _mkrep_say $silent "$c_ok""✔$c_reset  Entered $c_arg$dir$c_reset"
+        _mkrep_say $silent "$c_ok"(__fish_mark ok)"$c_reset  Entered $c_arg$dir$c_reset"
     end
 
     return 0

@@ -88,7 +88,7 @@ function config-update --description 'Pull latest fish config from upstream'
     set -l remote_sha (git -C "$CONFIG_DIR" rev-parse _config_update/main 2>/dev/null)
 
     if test "$local_sha" = "$remote_sha"
-        echo "$c_ok""✓ Already up to date.$c_reset"
+        echo "$c_ok"(__fish_mark ok ✓)" Already up to date.$c_reset"
         git -C "$CONFIG_DIR" branch -D -r _config_update/main 2>/dev/null 1>/dev/null
         return 0
     end
@@ -159,7 +159,7 @@ function config-update --description 'Pull latest fish config from upstream'
 
     # ── success summary ───────────────────────────────────────────
     set -l new_sha (git -C "$CONFIG_DIR" rev-parse --short HEAD 2>/dev/null)
-    echo "$c_ok""✓ Config updated to $new_sha ($ahead commit(s) applied).$c_reset"
+    echo "$c_ok"(__fish_mark ok ✓)" Config updated to $new_sha ($ahead commit(s) applied).$c_reset"
     echo
     echo "$c_dim""Reload your shell or run $c_cmd""exec fish$c_dim to apply changes.$c_reset"
 

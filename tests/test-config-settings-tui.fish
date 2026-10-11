@@ -43,6 +43,9 @@ check "--self-test passes" 0 (python3 $tui --self-test >/dev/null 2>&1; echo $st
 section "config-settings: launcher"
 check "--help exits 0" 0 (config-settings --help >/dev/null 2>&1; echo $status)
 check "an unknown flag exits 2" 2 (config-settings --nope >/dev/null 2>&1; echo $status)
+check "an unknown --style exits 2" 2 (config-settings --style neon >/dev/null 2>&1; echo $status)
+check "a stray argument exits 2" 2 (config-settings extra >/dev/null 2>&1; echo $status)
+check "the TUI rejects an unknown --style with 2" 2 (python3 $tui --style neon >/dev/null 2>&1; echo $status)
 
 # stdout is a pipe here, so the isatty guard fires before curses ever starts.
 # Without it the TUI would fail deep inside setupterm and leave the terminal
