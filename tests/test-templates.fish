@@ -168,6 +168,12 @@ _tpl_gen $tmp co "__ft_use command confirm" "command_cmd probe" "confirm_prompt 
 check "only_if miss: no question" "args=x st=7" "$(_tpl_out $tmp 'co x </dev/null; echo st=$status')"
 set -l out (_tpl_run $tmp "echo n | co --force; echo st=\$status")
 check "only_if hit: asks" st=1 "$out[-1]"
+# A recipe hand-edited to an invalid regex fails closed: it still asks.
+string replace -- 'set -l confirm_only_if --force' "set -l confirm_only_if '*.txt'" <$tmp/functions/co.fish >$tmp/functions/cx.fish.tmp
+string replace -- 'function co ' 'function cx ' <$tmp/functions/cx.fish.tmp >$tmp/functions/cx.fish
+rm $tmp/functions/cx.fish.tmp
+set -l out (_tpl_run $tmp "echo n | cx a.txt; echo st=\$status")
+check "only_if invalid regex: still asks, declined is Aborted and 1" yes (string match -q -- '*Aborted.*st=1' "$out"; and not string match -q -- '*args=*' "$out"; and echo yes; or echo no)
 rm -rf $tmp
 
 section "templates: in-dir"
@@ -237,6 +243,16 @@ check "fail only: a success stays quiet" no (test -e $tmp/notified; and echo yes
 _tpl_gen $tmp na "__ft_use command notify" "command_cmd ok" "notify_on always" "notify_title Backup"
 _tpl_run $tmp na >/dev/null
 check "always: notifies success with the title" "--|Backup|Finished successfully|" (cat $tmp/notified)
+# Without notify-send on kitty, the OSC 777 escape goes to the terminal,
+# never to stdout, so $(fn) and pipes stay clean.
+mkdir $tmp/osc
+for b in sh fish
+    ln -s (command -s $b) $tmp/osc/$b
+end
+set -l out (env TERM=xterm-kitty PATH=$tmp/osc fish --no-config -c "set -g fish_function_path $tmp/functions $repo_root/functions \$fish_function_path
+    function ok; return 0; end
+    set -l x (na); echo \"[\$x]\" st=\$status" 2>/dev/null </dev/null | string escape)
+check "OSC 777 fallback never writes to stdout" "'[] st=0'" "$out"
 rm -rf $tmp
 
 section "templates: full stack"

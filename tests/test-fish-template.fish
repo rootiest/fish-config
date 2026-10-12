@@ -100,6 +100,11 @@ check "names, file lookup, traversal refused, dir override" "demo $f st=1 $tmp/t
 set -l out (_ft $tmp "$pre; __fish_template_key_info demo_mode; __fish_template_key_info nope; echo st=\$status")
 check "key_info: owner and type; unknown is 1" (printf 'demo\tdemo_mode\tchoice:a b\t0\tMode to use.')" st=1" "$out"
 
+printf '%s\n' '# TEMPLATE  ph' '# PHRASE    {name} runs [{ph_k}] [{each:ph_k}] [{keys:ph_k}] [{ph_none}]' >$tmp/ph.fish
+set -l out (_ft $tmp "__fish_template_store set ph_k a=1 'b=2 3'
+    __fish_template_phrase $tmp/ph.fish PHRASE fn; __fish_template_phrase $tmp/ph.fish SYNOPSIS fn; echo st=\$status")
+check "__fish_template_phrase fills {name}, {key}, {each:key}, {keys:key}" "fn runs [a=1 b=2 3] [a=1, b=2 3] [a, b] [] st=1" "$out"
+
 section "helpers: setting checks"
 set -l out (_ft $tmp "set -gx HOME /h
     __fish_template_check k path 0 '~/x'
@@ -128,6 +133,30 @@ set -l out (_ft $tmp "__fish_template_store load $tmp/tpl.fish
     __fish_template_store has t; and echo t-set
     __fish_template_store has u; and echo u-set")
 check "load stops at the Fragment banner" t-set "$out"
+
+section "helpers: generated-file detection"
+# The marker text inside a string (as in fish-template's own code) is not a recipe.
+printf '%s\n' 'function quoted' "    echo '# ── fish-template recipe ──'" "    echo '# ── end recipe ──'" \
+    "    set -l k '*# ── fish-template recipe ──*'" end >$tmp/quoted.fish
+printf '%s\n' 'function nofin' '    # ── fish-template recipe ──' '    set -l k 1' end >$tmp/nofin.fish
+set -l out (_ft $tmp "__fish_template_is_generated $tmp/gen.fish; echo gen=\$status
+    __fish_template_is_generated $tmp/quoted.fish; echo quoted=\$status
+    __fish_template_is_generated $tmp/nofin.fish; echo nofin=\$status
+    __fish_template_is_generated $tmp/missing.fish; echo missing=\$status")
+check "__fish_template_is_generated needs both markers on their own lines" "gen=0 quoted=1 nofin=1 missing=1" "$out"
+set -l out (_ft $tmp "__fish_template_store load $tmp/quoted.fish; __fish_template_store has k; and echo k-set; or echo k-unset")
+check "load treats a quoted marker as no recipe" k-set "$out"
+set -l out (_ft $tmp "for f in $repo_root/functions/*.fish; __fish_template_is_generated \$f; and echo \$f; end; echo done")
+check "no repo function counts as generated" done "$out"
+set -l out (_ft $tmp "__fish_template_generated $repo_root/functions; fish-template ls -o $repo_root/functions; echo done")
+check "__fish_template_generated and ls -o list nothing in the repo functions" done "$out"
+cp $tmp/gen.fish $tmp/demo.fish
+set -l out (_ft $tmp "__fish_template_locate demo $tmp; echo st=\$status
+    __fish_template_locate quoted $tmp; echo st=\$status
+    __fish_template_locate fish-template $tmp; echo st=\$status")
+check "__fish_template_locate finds NAME.fish only when generated" yes (string match -q -- "$tmp/demo.fish st=0 *not a function made by fish-template* st=1 *not a function made by fish-template* st=1" "$out"; and echo yes; or echo no)
+set -l out (_ft $tmp "__fish_template_locate nope $tmp >/dev/null 2>&1; echo st=\$status")
+check "__fish_template_locate refuses a missing name" st=1 "$out"
 rm -rf $tmp
 
 section "helpers: validate"
@@ -140,12 +169,30 @@ for row in "no target chosen|set __ft_use" \
     "cannot be used with a sequence target|set __ft_use sequence timeout; __fish_template_store set sequence_steps true" \
     "env_unset needs a command or fallback target|set __ft_use sequence env; __fish_template_store set sequence_steps true; __fish_template_store set env_unset X" \
     "retry_attempts: expects a whole number|set __ft_use command retry; __fish_template_store set command_cmd x; __fish_template_store set retry_attempts many" \
-    "is listed twice|set __ft_use command retry retry; __fish_template_store set command_cmd x"
+    "is listed twice|set __ft_use command retry retry; __fish_template_store set command_cmd x" \
+    "confirm_only_if: not a valid regular expression|set __ft_use command confirm; __fish_template_store set command_cmd x; __fish_template_store set confirm_only_if '*.txt'" \
+    "dispatcher_subcommands: 'nope' is not name=command line|set __ft_use dispatcher; __fish_template_store set dispatcher_subcommands 'a=echo a' nope" \
+    "dispatcher_subcommands: '=echo' is not name=command line|set __ft_use dispatcher; __fish_template_store set dispatcher_subcommands =echo" \
+    "dispatcher_subcommands: 'a=' is not name=command line|set __ft_use dispatcher; __fish_template_store set dispatcher_subcommands a=" \
+    "dispatcher_default: 'zz' is not one of the subcommands|set __ft_use dispatcher; __fish_template_store set dispatcher_subcommands 'a=echo a'; __fish_template_store set dispatcher_default zz" \
+    "env_set: '1X=2' is not NAME=value|set __ft_use command env; __fish_template_store set command_cmd x; __fish_template_store set env_set A=1 1X=2" \
+    "env_set: 'NOEQ' is not NAME=value|set __ft_use command env; __fish_template_store set command_cmd x; __fish_template_store set env_set NOEQ"
     set -l want (string split -m1 '|' -- $row)
     set -l out (_ft $tmp "__fish_template_store $want[2]; __fish_template_validate 2>&1 >/dev/null; echo st=\$status")
     check "rejected with 2: $want[2]" st=2 "$out[-1]"
     check "  and says: $want[1]" yes (string match -q -- "*$want[1]*" "$out"; and echo yes; or echo no)
 end
+set -l out (_ft $tmp "__fish_template_store set __ft_use dispatcher
+    __fish_template_store set dispatcher_subcommands 'a=echo a=b' 'b-c=true'
+    __fish_template_store set dispatcher_default b-c
+    __fish_template_validate; echo st=\$status")
+check "a valid dispatcher with a default passes" st=0 "$out"
+set -l out (_ft $tmp "__fish_template_store set __ft_use command env confirm
+    __fish_template_store set command_cmd x
+    __fish_template_store set env_set _A=1 B2='x y'
+    __fish_template_store set confirm_only_if '(^| )-f'
+    __fish_template_validate; echo st=\$status")
+check "valid env_set entries and confirm_only_if pass" st=0 "$out"
 set -l out (_ft $tmp "__fish_template_store set __ft_use command
     __fish_template_store set command_cmd x
     __fish_template_store set bogus_key 1
@@ -195,13 +242,24 @@ for case in "new -x --target command --set command_cmd=a --yes" \
     check "usage error 2: $case" st=2 "$out[-1]"
 end
 
+set -l out (_ft $tmp "fish-template new rx --target command --with confirm --set command_cmd=probe --set 'confirm_only_if=*.txt' --yes $o; echo st=\$status")
+check "an invalid confirm_only_if regex is a usage error" yes (string match -q -- '*confirm_only_if: not a valid regular expression*st=2' "$out"; and not test -e $tmp/out/rx.fish; and echo yes; or echo no)
+
 for w in set end
     set -l out (_ft $tmp "fish-template new $w --target command --set command_cmd=probe --yes $o; echo st=\$status")
     check "reserved word $w: exit 2, says so, writes nothing" yes (string match -q -- "*'$w' is a reserved word in fish*st=2" "$out"; and not test -e $tmp/out/$w.fish; and echo yes; or echo no)
 end
-printf 'function set\n    echo hi\nend\n' >$tmp/src-set.fish
+printf 'function set --description x\n    echo hi\nend\n' >$tmp/src-set.fish
 set -l out (_ft $tmp "__fish_template_write set $tmp/src-set.fish $tmp/out; echo st=\$status")
-check "a function fish cannot load fails the write and leaves no file" yes (string match -q -- '*st=1' "$out"; and not string match -q -- '*is ready*' "$out"; and not test -e $tmp/out/set.fish; and echo yes; or echo no)
+check "a function fish cannot load fails the write and leaves no file" yes (string match -q -- '*could not load*st=1' "$out"; and not string match -q -- '*is ready*' "$out"; and not test -e $tmp/out/set.fish; and echo yes; or echo no)
+printf 'function other --description x\n    echo hi\nend\n' >$tmp/src-other.fish
+set -l out (_ft $tmp "__fish_template_write wrongname $tmp/src-other.fish $tmp/out; echo st=\$status")
+check "write refuses code that does not define NAME" yes (string match -q -- '*does not define wrongname*st=1' "$out"; and not test -e $tmp/out/wrongname.fish; and echo yes; or echo no)
+set -l out (_ft $tmp "function __fish_template_assemble; echo partial; return 1; end
+    fish-template new af --target command --set command_cmd=probe --yes $o; echo st=\$status")
+check "new fails when assembly fails, and writes nothing" yes (string match -q -- '*could not assemble af*st=1' "$out"; and not test -e $tmp/out/af.fish; and echo yes; or echo no)
+set -l out (_ft $tmp "__fish_template_new dn --target command --set command_cmd=probe --yes --dry-run $o; echo st=\$status")
+check "__fish_template_new --yes --dry-run prints the function" yes (string match -q -- '*function dn *st=0' "$out"; and not test -e $tmp/out/dn.fish; and echo yes; or echo no)
 
 section "cli: --from, --preset, list, info, ls"
 printf '%s\n' "set -l __ft_use command" "set -l command_cmd probe (touch $tmp/canary)" >$tmp/recipe.fish
@@ -280,8 +338,32 @@ string replace 'set -l command_cmd probe' 'set -l command_cmd probe
 set -l out (_ft $tmp "fish-template regen --all $o; echo st=\$status")
 check "regen --all drops unknown settings with a warning" yes (string match -q -- '*ignoring unknown setting stale_key*st=0' "$out"; and not string match -q '*stale_key*' <$tmp/out/rt.fish; and echo yes; or echo no)
 printf 'function hand\n    echo hi\nend\n' >$tmp/out/hand.fish
+cp $tmp/out/hand.fish $tmp/hand.before
 set -l out (_ft $tmp "fish-template regen hand $o; echo st=\$status")
-check "regen refuses a hand-written function" st=1 "$out[-1]"
+check "regen refuses a hand-written function and leaves it alone" "st=1 same" "$out[-1] $(cmp -s $tmp/hand.before $tmp/out/hand.fish; and echo same; or echo differs)"
+printf '%s\n' 'function hq' "    echo '# ── fish-template recipe ──'" "    echo '# ── end recipe ──'" end >$tmp/out/hq.fish
+cp $tmp/out/hq.fish $tmp/hq.before
+set -l out (_ft $tmp "fish-template regen hq $o; echo st=\$status; fish-template edit hq $o </dev/null; echo st=\$status; fish-template ls $o")
+check "a hand-written function quoting the markers is not generated" yes (string match -q -- '*not a function made by fish-template*st=1*not a function made by fish-template*st=1*' "$out"; and not contains -- hq $out; and cmp -s $tmp/hq.before $tmp/out/hq.fish; and echo yes; or echo no)
+for case in "edit fish-template" "regen __fish_template_store" "regen fish-template __fish_template_locate" "show fish-template"
+    set -l words (string split ' ' -- $case)
+    set -l before
+    for w in $words[2..]
+        set -a before (cksum $repo_root/functions/$w.fish)
+    end
+    set -l out (_ft $tmp "fish-template $case $o </dev/null; echo st=\$status")
+    set -l after
+    for w in $words[2..]
+        set -a after (cksum $repo_root/functions/$w.fish)
+    end
+    check "$case: refused, repo files untouched" yes (string match -q -- '*not a function made by fish-template*st=1' "$out"; and test "$before" = "$after"; and echo yes; or echo no)
+end
+cp $tmp/out/rt.fish $tmp/rt.before
+set -l out (_ft $tmp "__fish_template_regen -o $tmp/out rt; echo st=\$status")
+check "__fish_template_regen rebuilds directly" "same st=0" "$(cmp -s $tmp/rt.before $tmp/out/rt.fish; and echo same; or echo differs) $out[-1]"
+set -l out (_ft $tmp "function __fish_template_assemble; return 1; end
+    __fish_template_regen -o $tmp/out rt; echo st=\$status")
+check "regen fails when assembly fails and leaves the file alone" yes (string match -q -- '*could not assemble rt*st=1' "$out"; and cmp -s $tmp/rt.before $tmp/out/rt.fish; and echo yes; or echo no)
 set -l out (_ft $tmp "fish-template regen $o; echo st=\$status")
 check "regen with no names is a usage error" st=2 "$out[-1]"
 rm -rf $tmp
