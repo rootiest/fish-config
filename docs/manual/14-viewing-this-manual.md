@@ -1,8 +1,8 @@
 ---
 title: Viewing This Manual
-manTitle: 13. VIEWING THIS MANUAL
+manTitle: 14. VIEWING THIS MANUAL
 sidebar:
-  order: 17
+  order: 18
 helpKeywords:
 - viewing
 - manual

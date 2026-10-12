@@ -10,7 +10,7 @@
 #   _agents_repo_install_tools, _private_dir, git, hostname
 #
 # CLASSIFICATION
-#   self-limiting(rm,mkdir), manual-section(16-agent-tooling)
+#   self-limiting(rm,mkdir), manual-section(17-agent-tooling)
 #
 # SYNOPSIS
 #   agents-vault [--link] [--push] [--restore] [--status]
@@ -222,7 +222,7 @@
 #   This header covers usage only. The full concept/behavior/purpose
 #   write-up -- how this relates to the per-project AGENTS/ repository
 #   agents-init manages, and where each kind of agent state actually lives
-#   -- is in docs/manual/16-agent-tooling.md. Update that section in the
+#   -- is in docs/manual/17-agent-tooling.md. Update that section in the
 #   same change whenever this function's behavior changes; see "Dedicated
 #   manual sections for complex subsystems" in CONTRIBUTING.md.
 function agents-vault --description 'track curated agent memory in a host-scoped vault repo'

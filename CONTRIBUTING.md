@@ -533,7 +533,7 @@ header useless as a quick reference. When that happens, give the
 subsystem its own numbered top-level section under `docs/manual/`
 (follow the sibling sections' frontmatter shape: `title`, `manTitle`,
 `sidebar.order`, `helpKeywords`) instead of stretching the header.
-`docs/manual/16-agent-tooling.md` (`agents-init`/`agents-vault`/the
+`docs/manual/17-agent-tooling.md` (`agents-init`/`agents-vault`/the
 `AGENTS/` sub-repository) is the existing example — its own doc-headers
 stay short and point there for the full picture, the same way this
 document points at other reference files rather than repeating them.

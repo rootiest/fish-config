@@ -1027,7 +1027,7 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
         assert (out / "11-personalization.mdx").exists(), "FileTree page was not promoted to .mdx"
         assert not (out / "11-personalization.md").exists(), "old .md sibling was left behind"
 
-        assert (out / "13-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
+        assert (out / "14-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
 
         assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
 
@@ -1039,7 +1039,7 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
         text = (out / "11-personalization.mdx").read_text()
         assert "FileTree" in text.split("from '@astrojs/starlight/components';")[0]
 
-        text2 = (out / "13-viewing-this-manual.mdx").read_text()
+        text2 = (out / "14-viewing-this-manual.mdx").read_text()
         assert "Aside" in text2.split("from '@astrojs/starlight/components';")[0]
 
 
@@ -1981,6 +1981,24 @@ def test_as_ruled_table_accepts_one_row_under_a_per_column_rule():
         ["Name  Value", "──────────────", "a     b"]
     )
     assert solid is None, "a solid rule over one row should stay a code block"
+
+
+def test_site_redirects_point_at_real_pages():
+    """Every Astro redirect target is a page the manual actually builds."""
+    docs = Path(__file__).parent
+    config = (docs / "site" / "astro.config.mjs").read_text()
+    block = re.search(r"redirects:\s*\{(.*?)\}", config, re.S)
+    assert block, "no redirects block in astro.config.mjs"
+    targets = re.findall(r"'/[^']*'\s*:\s*'(/[^']*)'", block.group(1))
+    assert targets, "no redirects found in astro.config.mjs"
+    slugs = {p.stem for p in (docs / "manual").glob("*.md")} | {
+        p.name for p in (docs / "manual").iterdir() if p.is_dir()
+    }
+    bad = [t for t in targets if t.split("#")[0].strip("/") not in slugs]
+    assert not bad, f"redirect targets with no manual page: {bad}"
+    sources = re.findall(r"'(/[^']*)'\s*:", block.group(1))
+    shadowed = [src for src in sources if src.strip("/") in slugs]
+    assert not shadowed, f"redirects hide real pages: {shadowed}"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

@@ -1,8 +1,8 @@
 ---
 title: Troubleshooting
-manTitle: 12. TROUBLESHOOTING
+manTitle: 13. TROUBLESHOOTING
 sidebar:
-  order: 16
+  order: 17
 helpKeywords:
 - troubleshooting
 - troubleshoot
