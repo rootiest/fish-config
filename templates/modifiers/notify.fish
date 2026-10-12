@@ -29,6 +29,9 @@ if test "$notify_on" = always; or test "$notify_on" = $__ft_outcome
     if command -q notify-send
         command notify-send -- "$__ft_title" "$__ft_body"
     else if test "$TERM" = xterm-kitty; or test "$TERM_PROGRAM" = WezTerm
-        printf '\e]777;notify;%s;%s\e\\' "$__ft_title" "$__ft_body"
+        # Straight to the terminal, so the escape never lands in a pipe or
+        # $(...); sh opens /dev/tty so a missing terminal fails quietly.
+        test -w /dev/tty
+        and command sh -c 'printf %s "$1" >/dev/tty' sh "$(printf '\e]777;notify;%s;%s\e\\' "$__ft_title" "$__ft_body")" 2>/dev/null
     end
 end
