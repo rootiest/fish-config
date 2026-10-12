@@ -263,4 +263,27 @@ set -l out (_ft $tmp "__fish_template_name_ok set; and echo ok; __fish_template_
 check "__fish_template_name_ok accepts only usable names" ok "$out"
 rm -rf $tmp
 
+section "cli: show, --from and regen round trips"
+set -l tmp (mktemp -d)
+set -l o "--output $tmp/out"
+# Awkward values: a quote, a $, parentheses and a leading dash.
+set -l sets (string escape -- 'env_set=A=it'\''s a $test' 'env_set=B=(x)' confirm_only_if=--force)
+_ft $tmp "fish-template new rt --target command --with env,confirm --set command_cmd=probe --set $sets[1] --set $sets[2] --set $sets[3] --yes $o" >/dev/null
+_ft $tmp "fish-template show rt $o" >$tmp/rt.recipe
+_ft $tmp "fish-template new rt --from $tmp/rt.recipe --yes --output $tmp/out2" >/dev/null
+check "show then --from rebuilds a byte-identical file" same (cmp -s $tmp/out/rt.fish $tmp/out2/rt.fish; and echo same; or echo differs)
+cp $tmp/out/rt.fish $tmp/before.fish
+set -l out (_ft $tmp "fish-template regen rt $o; echo st=\$status")
+check "regen is idempotent" "same st=0" "$(cmp -s $tmp/before.fish $tmp/out/rt.fish; and echo same; or echo differs) $out[-1]"
+string replace 'set -l command_cmd probe' 'set -l command_cmd probe
+    set -l stale_key 1' <$tmp/before.fish >$tmp/out/rt.fish
+set -l out (_ft $tmp "fish-template regen --all $o; echo st=\$status")
+check "regen --all drops unknown settings with a warning" yes (string match -q -- '*ignoring unknown setting stale_key*st=0' "$out"; and not string match -q '*stale_key*' <$tmp/out/rt.fish; and echo yes; or echo no)
+printf 'function hand\n    echo hi\nend\n' >$tmp/out/hand.fish
+set -l out (_ft $tmp "fish-template regen hand $o; echo st=\$status")
+check "regen refuses a hand-written function" st=1 "$out[-1]"
+set -l out (_ft $tmp "fish-template regen $o; echo st=\$status")
+check "regen with no names is a usage error" st=2 "$out[-1]"
+rm -rf $tmp
+
 report
