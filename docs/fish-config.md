@@ -143,13 +143,14 @@ The configuration uses a structured file tree:
     9. Fisher Plugins
     10. Installation
     11. Personalization
-    12. Troubleshooting
-    13. Viewing This Manual
-    14. Testing
-    15. Contributing
-    16. AI Agent Tooling
-    17. Attribution
-    18. License
+    12. Function Templates
+    13. Troubleshooting
+    14. Viewing This Manual
+    15. Testing
+    16. Contributing
+    17. AI Agent Tooling
+    18. Attribution
+    19. License
 
 ---
 
@@ -2735,7 +2736,7 @@ functions). They are active in all interactive sessions.
       file that differs from its AGENTS/ copy, and a restored AGENTS.md always
       differs -- then agents-init --enable. The full write-up -- what is
       kept, what is removed, and how the markers interact -- is in
-      docs/manual/16-agent-tooling.md. Update that section in the same
+      docs/manual/17-agent-tooling.md. Update that section in the same
       change whenever this function's behavior changes.
 
     Example:
@@ -2745,9 +2746,9 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `_agents_init_find`, `_agents_init_stub`, `_agents_repo_slug`, `_agents_repo_sync`
 
-**Classification:** `destructive`, `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(16-agent-tooling)`
+**Classification:** `destructive`, `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(17-agent-tooling)`
 
-**See also:** 16. AI AGENT TOOLING (`docs/manual/16-agent-tooling.md`)
+**See also:** 17. AI AGENT TOOLING (`docs/manual/17-agent-tooling.md`)
 
 ### agents-init
 
@@ -2895,7 +2896,7 @@ functions). They are active in all interactive sessions.
       write-up -- the AGENTS.md convention, the AGENTS/ sub-repository, the
       discovery and safety model, and a complete scenario-by-scenario
       reference table -- lives in its own manual section:
-      docs/manual/16-agent-tooling.md. Update that section in the same
+      docs/manual/17-agent-tooling.md. Update that section in the same
       change whenever this function's behavior changes; see "Dedicated
       manual sections for complex subsystems" in CONTRIBUTING.md.
 
@@ -2908,11 +2909,11 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `_agents_init_find`, `_agents_init_sync_instructions`, `_agents_init_sync_public`, `_agents_init_migrate_public`, `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
 
-**Classification:** `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(16-agent-tooling)`
+**Classification:** `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(17-agent-tooling)`
 
 **Used by:** `agy`, `claude`
 
-**See also:** 16. AI AGENT TOOLING (`docs/manual/16-agent-tooling.md`)
+**See also:** 17. AI AGENT TOOLING (`docs/manual/17-agent-tooling.md`)
 
 ### agents-vault
 
@@ -3116,7 +3117,7 @@ functions). They are active in all interactive sessions.
       This header covers usage only. The full concept/behavior/purpose
       write-up -- how this relates to the per-project AGENTS/ repository
       agents-init manages, and where each kind of agent state actually lives
-      -- is in docs/manual/16-agent-tooling.md. Update that section in the
+      -- is in docs/manual/17-agent-tooling.md. Update that section in the
       same change whenever this function's behavior changes; see "Dedicated
       manual sections for complex subsystems" in CONTRIBUTING.md.
 
@@ -3130,11 +3131,11 @@ functions). They are active in all interactive sessions.
 
 **Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `_private_dir`, `git`, `hostname`
 
-**Classification:** `self-limiting(rm,mkdir)`, `manual-section(16-agent-tooling)`
+**Classification:** `self-limiting(rm,mkdir)`, `manual-section(17-agent-tooling)`
 
 **Used by:** `agy`, `claude`
 
-**See also:** 16. AI AGENT TOOLING (`docs/manual/16-agent-tooling.md`)
+**See also:** 17. AI AGENT TOOLING (`docs/manual/17-agent-tooling.md`)
 
 ### agy
 
@@ -3924,6 +3925,8 @@ functions). They are active in all interactive sessions.
       from this config. fish-template warns when a name shadows a builtin,
       a function or a command, and never replaces a file it did not make.
 
+      Full guide, with every template's settings: help config templates
+
     Example:
     fish-template new
     fish-template new claude --preset allow-telemetry --yes
@@ -3931,6 +3934,10 @@ functions). They are active in all interactive sessions.
     fish-template edit deploy
 
 **Dependencies:** `fzf`
+
+**Classification:** `manual-section(12-function-templates)`
+
+**See also:** 12. FUNCTION TEMPLATES (`docs/manual/12-function-templates.md`)
 
 ### fzf_configure_bindings
 
@@ -5509,7 +5516,442 @@ if you created it.
 
 ---
 
-# 12. TROUBLESHOOTING
+# 12. FUNCTION TEMPLATES
+
+`fish-template` builds your own fish functions from templates, without
+writing any code. You answer a few questions and it writes a finished,
+documented function with its own `--help`, saved where fish finds it in
+every new shell.
+
+## What it is
+
+A function made by `fish-template` has two parts you choose:
+
+- A **target**: what runs. One command, the first installed of several
+  commands, a list of steps, or a set of subcommands.
+- Any number of **modifiers**: how it runs. Extra arguments, environment
+  changes, a confirmation question, a fixed directory, retries, a time
+  limit, a log file, a desktop notification.
+
+Your answers are kept inside the function as its **recipe**, so you can
+change them later, rebuild the function when the templates improve, or
+copy the recipe to another machine.
+
+## Quick start
+
+Run the guided wizard and answer its questions:
+
+    fish-template new
+
+Or give everything on the command line and skip the questions:
+
+    fish-template new rg --target command --set command_cmd=rg --with args --set args_prepend=--smart-case --yes
+
+Start from a ready-made recipe (a preset). The wizard offers the
+preset's answers as defaults; afterwards, `rmr --help` describes the new
+function:
+
+    fish-template new rmr --preset safe-rm
+
+See what is available, and what a template asks for:
+
+    fish-template list
+    fish-template info retry
+
+## The wizard step by step
+
+`fish-template new` asks only for what you have not already given with
+`--target`, `--with`, `--set` or `--from`:
+
+1. Function name: letters, digits and _ . + - (not as the first
+   character). Fish keywords such as set or end are refused.
+2. Target: picked from a menu when `fzf` is installed, otherwise typed.
+3. Modifiers: a space-separated list. Type ? to list the modifiers that
+   work with your target, or - for none.
+4. Each setting of the target and the modifiers, in turn. The value in
+   square brackets is the default: press Enter to keep it, or type - to
+   clear it. Settings that take several lines (sequence steps,
+   subcommands) are entered one per line, ending with a blank line.
+5. Preview the function? Shows the generated code.
+6. Write it? Answer n and nothing is written.
+
+With `--yes` nothing is asked: every setting you did not give takes its
+default, and a required setting with no value is an error. `--dry-run`
+prints the function instead of writing it.
+
+On the command line, a list setting takes space-separated words in one
+`--set` (quote the whole thing), and a line setting takes one entry per
+`--set`, repeated:
+
+    fish-template new edit-config --target command --set 'command_cmd=nvim -p' --with in-dir --set indir_dir=~/.config/fish --yes
+
+## How stacking works
+
+Modifiers always run in a fixed order, whatever order you list them in.
+Every generated function is built from these phases:
+
+    Phase    What runs                       Used by
+    ───────  ──────────────────────────────  ─────────────────────────────
+    guard    The target, then the modifiers  confirm, fallback's search
+    seed     The target                      command
+    prepare  The modifiers, in ORDER         in-dir, args, env, timeout,
+                                             retry, log
+    run      The target, in the retry loop   every target; its output also
+                                             goes to the log file with log
+    finally  The modifiers, in ORDER         in-dir, notify
+
+ORDER is the fixed position each modifier has: in-dir first, then args,
+env, confirm, timeout, retry, log and notify.
+
+So confirm asks before the command or any other modifier does anything,
+in-dir changes directory before the command starts and returns you to
+where you were afterwards, and notify reports the final result once.
+
+Together, retry, log and notify do what you would hope: each attempt's
+output is shown and saved to the log file (with `log_mode` overwrite, the
+file is replaced on the first attempt and the later attempts add to it),
+the next attempt waits `retry_delay` seconds, and one notification at the
+end says whether the last attempt succeeded.
+
+Functions can also call each other. A sequence step or a dispatcher
+subcommand can be any command, including a function you made earlier
+with `fish-template`.
+
+## Targets
+
+The catalog in this section and the next two is generated from the
+templates/ directory, so it always matches what `fish-template list` and
+`fish-template info` show. Defaults are shown exactly as the template
+writes them; — means empty.
+
+A function has exactly one target.
+
+### command
+
+Run one command, passing your arguments through.
+
+    Setting      Type  Required  Default  Description
+    ───────────  ────  ────────  ───────  ──────────────────────────────────────
+    command_cmd  list  yes       —        Command to run, with any fixed
+                                          arguments.
+
+### dispatcher
+
+One command with subcommands, each running its own command line.
+
+    Setting                 Type   Required  Default  Description
+    ──────────────────────  ─────  ────────  ───────  ──────────────────────────
+    dispatcher_subcommands  lines  yes       —        Subcommands, one per line,
+                                                      as name=command line; your
+                                                      extra arguments are added
+                                                      to the end.
+    dispatcher_default      text   no        —        Subcommand to run when
+                                                      none is given; empty shows
+                                                      the help.
+
+### fallback
+
+Run the first of several commands that is installed.
+
+    Setting              Type  Required  Default  Description
+    ───────────────────  ────  ────────  ───────  ──────────────────────────────
+    fallback_candidates  list  yes       —        Commands to try, in order of
+                                                  preference.
+
+### sequence
+
+Run several command lines, one after another.
+
+    Setting           Type                    Required  Default  Description
+    ────────────────  ──────────────────────  ────────  ───────  ────────────────────────
+    sequence_steps    lines                   yes       —        Command lines to run, in
+                                                                 order; each can be any
+                                                                 command, including your
+                                                                 own functions.
+    sequence_on_fail  one of: stop, continue  no        stop     What to do when a step
+                                                                 fails.
+
+## Modifiers
+
+Stack any number of modifiers on a target, each at most once. The
+Works with line names the targets a modifier accepts.
+
+### args
+
+Always add arguments before and/or after yours.
+
+Works with: command, fallback.
+
+    Setting       Type  Required  Default  Description
+    ────────────  ────  ────────  ───────  ─────────────────────────────────────
+    args_prepend  list  no        —        Arguments placed before yours.
+    args_append   list  no        —        Arguments placed after yours.
+
+### confirm
+
+Ask before running, optionally only for matching arguments.
+
+Works with: command, fallback, sequence, dispatcher.
+
+    Setting          Type  Required  Default          Description
+    ───────────────  ────  ────────  ───────────────  ──────────────────────────
+    confirm_prompt   text  no        'Are you sure?'  Question to ask before
+                                                      running.
+    confirm_only_if  text  no        —                Only ask when your
+                                                      arguments match this
+                                                      regular expression; empty
+                                                      means always ask.
+
+### env
+
+Set or remove environment variables for this command only.
+
+Works with: command, fallback, sequence, dispatcher.
+
+    Setting    Type   Required  Default  Description
+    ─────────  ─────  ────────  ───────  ───────────────────────────────────────
+    env_set    lines  no        —        Variables to set, one per line as
+                                         NAME=value.
+    env_unset  list   no        —        Variables to remove (command and
+                                         fallback targets only).
+
+### in-dir
+
+Run inside a fixed directory, then return to where you were.
+
+Works with: command, fallback, sequence, dispatcher.
+
+    Setting    Type  Required  Default  Description
+    ─────────  ────  ────────  ───────  ────────────────────────────────────────
+    indir_dir  path  yes       —        Directory to run in.
+
+### log
+
+Save the output to a log file as well as showing it.
+
+Works with: command, fallback, sequence, dispatcher.
+
+    Setting   Type                       Required  Default  Description
+    ────────  ─────────────────────────  ────────  ───────  ────────────────────────
+    log_file  path                       yes       —        File to save the output
+                                                            in.
+    log_mode  one of: append, overwrite  no        append   Add each run to the
+                                                            file, or replace it.
+
+### notify
+
+Send a desktop notification when it finishes.
+
+Works with: command, fallback, sequence, dispatcher.
+
+    Setting       Type                           Required  Default  Description
+    ────────────  ─────────────────────────────  ────────  ───────  ────────────────────────
+    notify_on     one of: always, fail, success  no        always   When to notify.
+    notify_title  text                           no        —        Notification title;
+                                                                    empty uses the function
+                                                                    name.
+
+### retry
+
+Try again when the command fails.
+
+Works with: command, fallback, sequence, dispatcher.
+
+    Setting         Type  Required  Default  Description
+    ──────────────  ────  ────────  ───────  ───────────────────────────────────
+    retry_attempts  int   yes       3        How many times to try in total.
+    retry_delay     int   no        2        Seconds to wait between attempts.
+
+### timeout
+
+Stop the command if it runs too long (external commands only).
+
+Works with: command, fallback.
+
+    Setting          Type  Required  Default  Description
+    ───────────────  ────  ────────  ───────  ──────────────────────────────────
+    timeout_seconds  int   yes       60       Time limit in seconds.
+
+## Presets
+
+A preset is a ready-made recipe. Its values are offered as the defaults,
+so the wizard still asks and you can change any of them.
+
+### allow-telemetry
+
+Run one command without `DO_NOT_TRACK` and `DISABLE_TELEMETRY`.
+
+    fish-template new NAME --preset allow-telemetry
+
+The recipe it starts from:
+
+    set -l __ft_use command env
+    set -l command_cmd claude
+    set -l env_unset DO_NOT_TRACK DISABLE_TELEMETRY
+
+### safe-rm
+
+rm that asks first when you delete recursively.
+
+    fish-template new NAME --preset safe-rm
+
+The recipe it starts from:
+
+    set -l __ft_use command confirm
+    set -l command_cmd rm
+    set -l confirm_prompt 'Delete recursively?'
+    set -l confirm_only_if '(^| )(-[a-zA-Z]*[rR]|--recursive)'
+
+### update-all
+
+Update everything in one go, with a log and a notification.
+
+    fish-template new NAME --preset update-all
+
+The recipe it starts from:
+
+    set -l __ft_use sequence log notify
+    set -l sequence_steps 'type -q fisher; and fisher update' 'if type -q flatpak; flatpak update -y; end' 'if type -q tldr; tldr --update; end'
+    set -l sequence_on_fail continue
+    set -l log_file ~/.local/state/fish-template/update-all.log
+    set -l log_mode overwrite
+    set -l notify_on always
+
+## Worked examples
+
+Each command here was checked with `--dry-run`. Leave out `--yes` to be
+asked about anything you want to change.
+
+A deploy script that runs in its project directory, tries up to three
+times and tells you when it is done:
+
+    fish-template new deploy --target command --set command_cmd=./deploy.sh --with in-dir,retry,notify --set indir_dir=~/projects/site --set retry_attempts=3 --yes
+
+A safe wrapper that asks before doing something destructive:
+
+    fish-template new git-wipe --target command --set 'command_cmd=git clean -fdx' --with confirm --set 'confirm_prompt=Delete every untracked file?' --yes
+
+Update everything at once, from the update-all preset, or your own list
+of steps (here calling the function made by the first line):
+
+    fish-template new update-all --preset update-all --yes
+    fish-template new morning --target sequence --set sequence_steps=update-all --set 'sequence_steps=git -C ~/notes pull' --set sequence_on_fail=continue --yes
+
+One command for a project, with subcommands, run in the project
+directory, used as proj build, proj test or proj serve:
+
+    fish-template new proj --target dispatcher --set 'dispatcher_subcommands=build=make build' --set 'dispatcher_subcommands=test=make test' --set 'dispatcher_subcommands=serve=python3 -m http.server' --with in-dir --set indir_dir=~/code/proj --yes
+
+proj help, or proj on its own when no default subcommand is set,
+lists the subcommands; an unknown
+subcommand exits with status 2. Any extra words after the subcommand
+are added to the end of its command line.
+
+## Recipes
+
+Change a function by answering the questions again, with its current
+answers as the defaults:
+
+    fish-template edit deploy
+
+Rebuild functions from their recipes, for example after updating this
+config brings improved templates:
+
+    fish-template regen deploy
+    fish-template regen --all
+
+List the functions you made, and print one's recipe:
+
+    fish-template ls
+    fish-template show deploy
+
+To move a function to another machine, save the output of `show` to a
+file, copy it over, and build from it there. Values from `--from` count as
+given, so the wizard does not ask for them again:
+
+    fish-template show deploy > deploy.recipe
+    fish-template new deploy --from deploy.recipe --yes
+
+A recipe file is only read, never run: `fish-template` splits its
+`set -l` lines into plain words, so nothing in them is expanded or
+executed.
+
+## Where functions live
+
+Generated functions are written to the functions/ directory inside your
+private user-dots directory, `$__fish_user_dots_path` (by default
+`~/.config/.user-dots/fish`), one file per function. With `--output DIR`
+they are written to DIR instead.
+
+`conf.d/user-dots-functions.fish` puts that directory first on
+`$fish_function_path` at startup, so the functions autoload in every
+shell. It is deliberately not an opinionated component: it does nothing
+until the directory exists, and switching it off would silently unload
+your own functions.
+
+Because it comes first, a function you make overrides one of the same
+name from this config. `fish-template` warns you when that happens, and
+when a name shadows a fish builtin or a command. To undo an override,
+delete your file.
+
+## Safety guarantees
+
+- **No surprise overwrites.** `fish-template new` refuses to replace an existing file
+  unless you add `--force`.
+- **Only its own files.** edit and regen only touch a file that contains
+  both recipe marker lines, each on a line of its own. Anything else is
+  reported as not a function made by `fish-template` and left alone.
+- **Recipes are never executed.** Recipes, presets and `--from` files are
+  read as plain words.
+- **Checked before installing.** The generated code must define the
+  function you named, pass `fish -n` and `fish_indent --check`, and load
+  in fish; if any check fails, nothing is installed (or the new file is
+  removed again).
+- **Atomic writes.** The file is written to a temporary file next to its
+  destination and moved into place, so a half-written function never
+  appears.
+- **Reserved names are rejected.** Fish keywords and builtins that cannot
+  be functions (set, end, test, ...) are refused.
+- **Shadowing is reported.** You are warned when a name hides a builtin,
+  a function or a command.
+- **confirm fails closed.** A `confirm_only_if` pattern is checked when the
+  function is generated, and an invalid one is refused. If a pattern ever
+  cannot be evaluated, the function asks anyway.
+
+## Troubleshooting
+
+**'set' is a reserved word in fish.** The name is a fish keyword or
+builtin that cannot be redefined. Choose another name.
+
+**NAME is not a function made by `fish-template`.** edit, regen and show
+only work on files `fish-template` wrote. The file was written by hand, or
+its recipe marker lines were edited away.
+
+**timeout cannot be used with a sequence target**, or **`env_unset` needs
+a command or fallback target.** The timeout modifier and `env_unset` run
+your command through the external timeout and env programs, which can
+only start other programs. Use them with a command or fallback target
+that runs a program, not a fish function. If timeout is not installed,
+the function warns and runs without a time limit.
+
+**`confirm_only_if`: not a valid regular expression.** The pattern is a
+PCRE2 regular expression, matched against your arguments joined by
+spaces. Fix the pattern, or leave it empty to always ask.
+
+**A function named after its command.** When a command target has the
+same name as the program it wraps (a function ls that runs `ls -l`), the
+function runs the program by its full path, so it never calls itself.
+It also leaves `--help` to the program.
+
+## Writing your own template
+
+Templates are plain fish files under templates/targets/,
+templates/modifiers/ and templates/presets/: a few metadata lines, the
+settings with a comment above each, and the code fragments for each
+phase. See Adding a template in `CONTRIBUTING.md` for the format; the
+catalog above picks up a new template automatically.
+
+# 13. TROUBLESHOOTING
 
 This section covers common issues, their solutions, and how to safely revert changes or uninstall the configuration entirely.
 
@@ -5780,7 +6222,7 @@ For an interactive alternative to setting these variables by hand, run `config-s
 
 ---
 
-# 13. VIEWING THIS MANUAL
+# 14. VIEWING THIS MANUAL
 
 There are four ways to read this manual.
 
@@ -5869,7 +6311,7 @@ to correct its documentation, open the function itself:
 The files under `docs/manual/05-functions/` carry only the category
 titles, ordering, and search keywords.
 
-# 14. TESTING
+# 15. TESTING
 
     fish tests/run-tests.fish
 
@@ -5881,7 +6323,7 @@ To get exactly the result CI would, run the same checks in the CI container inst
 
 It tests a pristine copy of your working tree (uncommitted changes included, git-ignored files such as Fisher-installed plugins left out) inside the `fish-ci` image CI uses, and runs both the test job and the docs checks. `--tests-only` skips the docs checks and `--pull` refreshes the image first.
 
-# 15. CONTRIBUTING
+# 16. CONTRIBUTING
 
 Interested in contributing? See [`CONTRIBUTING.md`](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/CONTRIBUTING.md) for the
 branching/PR workflow, commit conventions, fish coding standards, and the
@@ -5895,7 +6337,7 @@ side aren't fed back upstream, so they risk being silently overwritten by
 the next mirror push. Until two-way sync exists, please fork, branch, and
 open issues/PRs from the Gitea repository rather than the GitHub mirror.
 
-# 16. AI AGENT TOOLING
+# 17. AI AGENT TOOLING
 
 This section explains the machinery behind AI coding agents (Claude Code,
 Antigravity/agy) working in a project checked out from this configuration:
@@ -6399,11 +6841,11 @@ something removed on purpose. To restore devlogs on a new machine, copy the
 entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
 `cp -rn`.
 
-# 17. ATTRIBUTION
+# 18. ATTRIBUTION
 
 The core of the [Zoxide integration](https://fish.rootiest.fyi/02-path-setup/) in this repository was originally adapted from the [icezyclon/zoxide.fish](https://github.com/icezyclon/zoxide.fish) plugin (MIT Licensed) and has since been heavily customized for performance and Fish 4.x compatibility.
 
-# 18. LICENSE
+# 19. LICENSE
 
 Copyright (C) 2026 Rootiest
 
