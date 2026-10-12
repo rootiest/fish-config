@@ -124,14 +124,14 @@ check "sbver --brief plus another argument exits 2" 2 $status
 check "sbver usage errors never run sbctl" "" (_log)
 
 _path sudo
-set -l out (sbver 2>/dev/null)
+set -l err (sbver 2>&1 >/dev/null)
 check "sbver without sbctl exits 1" 1 $status
-check "sbver without sbctl explains why" "Error: 'sbctl' is not installed." "$out"
+check "sbver without sbctl explains why on stderr" "sbver: sbctl is not installed" "$err"
 check "sbver without sbctl never calls sudo" "" (_log)
 
 _path sudo sbctl
 set -l out (sbver)
-check "sbver exits 0 after a scan" 0 $status
+check "sbver exits 1 when an image is unsigned" 1 $status
 check "sbver runs sbctl verify through sudo" "sudo: sbctl verify" (_log)[1]
 check "sbver prints the verified line" true (contains -- "✓ /boot/EFI/a.efi is signed" $out; and echo true; or echo false)
 check "sbver prints the unsigned line" true (contains -- "✗ /boot/EFI/b.efi is not signed" $out; and echo true; or echo false)
@@ -149,7 +149,15 @@ check "sbver --brief still prints the summary" "❌ Some images are not signed (
 _stub sbctl 'printf "%s\n" "✓ /boot/EFI/a.efi is signed" "✓ /boot/EFI/c.efi is signed"'
 _path sudo sbctl
 set -l out (sbver --brief)
+check "sbver exits 0 when every image is signed" 0 $status
 check "sbver all-signed summary" "✅ All images are signed (2 verified)" $out[-1]
+
+# Nothing verified (sudo refused, or sbctl tracks nothing) is not a pass.
+_stub sbctl
+_path sudo sbctl
+set -l out (sbver --brief)
+check "sbver exits 1 when nothing was verified" 1 $status
+check "sbver says nothing was verified" "❌ No images were verified" $out[-1]
 
 # ── steam-dl ─────────────────────────────────────────────────────────────
 section steam-dl
@@ -224,6 +232,21 @@ check "swapstat skips the ratio without a zram0 device" false \
 check "swapstat still reports swappiness without zram0" true \
     (contains -- "Kernel Swappiness: 60" $out; and echo true; or echo false)
 set -e ZDATA
+
+# Each missing tool is reported and its sections skipped, not a raw
+# "Unknown command" with exit 0 (#315).
+for missing in sysctl zramctl swapon
+    _path (string match -v -- $missing sysctl zramctl swapon)
+    set -l err (swapstat 2>&1 >/dev/null)
+    check "swapstat without $missing exits 1" 1 $status
+    check "swapstat without $missing says so on stderr" true \
+        (string match -q "swapstat: $missing is not installed*" -- "$err"; and echo true; or echo false)
+end
+_path zramctl swapon
+set -l out (swapstat 2>/dev/null)
+check "swapstat without sysctl still prints the zramctl table" true (contains -- "/dev/zram0 zstd" $out; and echo true; or echo false)
+check "swapstat without sysctl skips swappiness" false \
+    (string match -q 'Kernel Swappiness*' -- $out; and echo true; or echo false)
 
 rm -rf $tmp
 report
