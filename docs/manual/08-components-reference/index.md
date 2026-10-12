@@ -50,3 +50,9 @@ tag enables it unconditionally, ignoring the state of every other tagged
 sub-category. This is a per-function escape hatch for cases too granular
 or too idiosyncratic to justify a taxonomy entry -- edit the header
 directly and run `__fish_config_op_registry_rebuild` to apply the change.
+
+Not every startup action is a component. Adding the user-dots `functions/`
+directory to the front of `$fish_function_path`
+(`conf.d/user-dots-functions.fish`) is deliberately unguarded: the
+directory exists only if you created it, and gating it would silently
+unload your own functions.

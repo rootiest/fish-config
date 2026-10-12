@@ -347,11 +347,36 @@ To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots li
 
 ### Function templates
 
-`templates/` holds starting points for your own functions. Each one has a short settings block at the top; edit it and save the file as `<name>.fish` in a directory on `$fish_function_path`.
+`fish-template` builds your own functions from templates without any code. Pick a **target** (what runs), stack any **modifiers** (how it runs), and answer a few questions. The result is a documented function with its own `--help`, saved in `$__fish_user_dots_path/functions/`, which is first on `$fish_function_path`, so it autoloads everywhere and overrides a function of the same name from this config.
 
-| Template | Purpose |
-|---|---|
-| `allow-telemetry.fish` | Wrap one command and remove environment variables (default: `DO_NOT_TRACK`, `DISABLE_TELEMETRY`) from that command's process only |
+```fish
+fish-template new                                  # guided: asks for everything
+fish-template new claude --preset allow-telemetry  # start from a ready-made recipe
+fish-template new rg --target command --set command_cmd=rg \
+    --with args --set args_prepend=--smart-case --yes
+fish-template edit deploy                          # ask again, current answers as defaults
+```
+
+| Kind | Template | What it does |
+|---|---|---|
+| target | `command` | Run one command, passing your arguments through |
+| target | `fallback` | Run the first of several commands that is installed |
+| target | `sequence` | Run several command lines in order (stop or continue on failure) |
+| target | `dispatcher` | One command with subcommands, each running its own command line |
+| modifier | `args` | Always add arguments before and/or after yours |
+| modifier | `env` | Set or remove environment variables for this command only |
+| modifier | `confirm` | Ask first, optionally only when your arguments match a pattern |
+| modifier | `in-dir` | Run inside a fixed directory, then return to where you were |
+| modifier | `retry` | Try again when it fails |
+| modifier | `timeout` | Stop it if it runs too long |
+| modifier | `log` | Save the output to a file as well as showing it |
+| modifier | `notify` | Send a desktop notification when it finishes |
+
+Presets: `allow-telemetry` (run one command without `DO_NOT_TRACK`/`DISABLE_TELEMETRY`), `safe-rm` (ask before a recursive delete), `update-all` (update everything, with a log and a notification).
+
+Stacking works two ways. **Layering:** modifiers stack on one function and always apply in a fixed, sensible order, so `retry` + `log` + `notify` logs every attempt and notifies once at the end. **Chaining:** a `sequence` step or a `dispatcher` subcommand can call any command, including functions you made earlier.
+
+Each generated function keeps its answers (its recipe) as settings at the top of its body. `fish-template show NAME` prints the recipe, `--from FILE` rebuilds it on another machine, and `fish-template regen --all` rebuilds everything after the templates improve. `fish-template list` and `fish-template info TEMPLATE` show what is available. fish-template warns when a name shadows a builtin, function or command, and never replaces a file it did not make.
 
 ### Session-wide variables
 
