@@ -231,7 +231,7 @@ chmod +x $tmp/bin/probe
 set -l o "--output $tmp/out"
 # name, target, modifiers, command_cmd, retry_attempts, retry_delay, preview, write
 set -l out (printf '%s\n' wz command retry probe 4 0 n y | _ft $tmp "fish-template new $o; echo st=\$status")
-check "new from scratch through the wizard" st=0 "$out[-1]"
+check "new from scratch through __fish_template_wizard" st=0 "$out[-1]"
 check "answers land in the recipe" "set -l retry_attempts 4" (string trim -- (string match -r '.*set -l retry_attempts .*' <$tmp/out/wz.fish))
 
 set -l out (printf '%s\n' wz2 bogus command '' probe | _ft $tmp "fish-template new $o; echo st=\$status")
