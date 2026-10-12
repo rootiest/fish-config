@@ -64,6 +64,7 @@ The configuration uses a structured file tree:
     │   ├── theme.fish              Saves the Catppuccin theme; FZF colors
     │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
+    │   ├── user-dots-functions.fish  Puts your user-dots functions/ first
     │   ├── wakatime.fish           WakaTime shell hook
     │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
@@ -78,8 +79,10 @@ The configuration uses a structured file tree:
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
     ├── data/                       gi templates, session-env catalog, word lists
-    ├── templates/                  Function templates to copy and adapt
-    │   └── allow-telemetry.fish    Per-command telemetry opt-out wrapper
+    ├── templates/                  fish-template building blocks
+    │   ├── modifiers/              How it runs: args, env, retry, log, ...
+    │   ├── presets/                Ready-made recipes: allow-telemetry, ...
+    │   └── targets/                What runs: command, fallback, sequence, ...
     ├── themes/                     Catppuccin color themes
     │   ├── catppuccin-frappe.theme     Frappé; Latte on light terminals
     │   ├── catppuccin-latte.theme      Latte (light)
@@ -3867,6 +3870,68 @@ functions). They are active in all interactive sessions.
 
 **Used by:** `cffetch`
 
+### fish-template
+
+    Synopsis:  fish-template [list|info|new|edit|regen|show|ls|help] [ARGS...]
+
+    Builds your own fish functions from templates, without writing code.
+    Pick a target (what runs: one command, the first installed of several,
+    a sequence of steps, or a set of subcommands), stack any modifiers on
+    it (how it runs: extra arguments, environment changes, a confirmation
+    question, a working directory, retries, a time limit, a log file, a
+    desktop notification), and answer a few questions. fish-template
+    writes a documented function with its own --help to the user-dots
+    functions/ directory, where it autoloads in every shell. Functions can
+    call each other, so a sequence can chain functions you made earlier.
+
+    Each generated function keeps its answers (its recipe) as settings at
+    the top of its body. edit asks the questions again with those answers
+    as defaults; regen rebuilds after fish-template improves; show prints
+    the recipe so you can copy it to another machine.
+
+    Arguments:
+      list                 List the templates and presets
+      info NAME            Show a template's settings and defaults, or a preset
+      new [NAME]           Create a function (asks for anything not given)
+      edit NAME            Change a function made by fish-template
+      regen NAME...|--all  Rebuild functions from their recipes
+      show NAME            Print a function's recipe, ready for --from
+      ls                   List the functions you made
+      help, -h, --help     Show this help
+
+      Options for new and edit:
+      -t, --target T       Target: command, fallback, sequence or dispatcher
+      -w, --with M[,M]     Modifiers to stack (repeatable)
+      -s, --set KEY=VAL    Give a setting. List settings take space-separated
+                           words; line settings take one entry per --set
+      -f, --from FILE      Read settings from a recipe file (never executed)
+      -p, --preset P       Start from a preset (see list)
+      -o, --output DIR     Write to DIR instead of the user-dots functions/
+      -n, --dry-run        Print the function instead of writing it
+      -y, --yes            Ask nothing; unset settings take their defaults
+          --force          Replace an existing file
+
+    Exit Status:
+      0  Success, or help was shown
+      1  Refused (file exists or was not made by fish-template), cancelled,
+         or failed
+      2  Usage error: unknown subcommand, template or setting, or a bad value
+
+    Notes:
+      Templates live in templates/ (targets/, modifiers/, presets/). Output
+      goes to $__fish_user_dots_path/functions/, which conf.d puts first on
+      $fish_function_path, so your function overrides one of the same name
+      from this config. fish-template warns when a name shadows a builtin,
+      a function or a command, and never replaces a file it did not make.
+
+    Example:
+    fish-template new
+    fish-template new claude --preset allow-telemetry --yes
+    fish-template new rg --target command --set command_cmd=rg --with args --set args_prepend=--smart-case --yes
+    fish-template edit deploy
+
+**Dependencies:** `fzf`
+
 ### fzf_configure_bindings
 
     Synopsis:  fzf_configure_bindings [--directory=<key>] [--git_log=<key>] [--git_status=<key>]
@@ -4612,6 +4677,12 @@ tag enables it unconditionally, ignoring the state of every other tagged
 sub-category. This is a per-function escape hatch for cases too granular
 or too idiosyncratic to justify a taxonomy entry -- edit the header
 directly and run `__fish_config_op_registry_rebuild` to apply the change.
+
+Not every startup action is a component. Adding the user-dots `functions/`
+directory to the front of `$fish_function_path`
+(`conf.d/user-dots-functions.fish`) is deliberately unguarded: the
+directory exists only if you created it, and gating it would silently
+unload your own functions.
 
 ## C1 — Command Shadows
 
@@ -5424,6 +5495,17 @@ wrong on any other system.
 `local.fish` is sourced at the end of `config.fish` with an existence check so
 the public config works cleanly on any machine without the private repo.
 `local.fish` in turn sources `secrets.fish` when it exists.
+
+## functions/
+
+Functions in `$__fish_user_dots_path/functions/` autoload in every shell
+and take precedence over this config's functions of the same name. The
+directory is put first on `$fish_function_path` at startup if it exists;
+this is not behind any component guard, because the directory only exists
+if you created it.
+
+`fish-template` writes the functions it generates there. See
+`fish-template help`.
 
 ---
 
