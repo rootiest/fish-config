@@ -22,6 +22,7 @@ import generate_component_registry
 DOCS = Path(__file__).parent
 MANUAL = DOCS / "manual"
 FUNCTIONS = DOCS.parent / "functions"
+TEMPLATES = DOCS.parent / "templates"
 COMPLETIONS = DOCS.parent / "completions"
 README = DOCS.parent / "README.md"
 REPO_BLOB_BASE = "https://git.rootiest.dev/rootiest/fish-config/src/branch/main/"
@@ -83,6 +84,95 @@ def _with_abbreviations(body: str, abbrs: dict[str, list[dict]]) -> str:
         placeholder = f"<!-- GENERATED: {cat} -->"
         body = body.replace(placeholder, table)
 
+    return body
+
+
+TEMPLATE_PLACEHOLDERS = {
+    "targets": "<!-- GENERATED: template-targets -->",
+    "modifiers": "<!-- GENERATED: template-modifiers -->",
+    "presets": "<!-- GENERATED: template-presets -->",
+}
+TEMPLATE_TABLE_WIDTH = 76
+
+
+def _wrap(text: str, width: int) -> list[str]:
+    """Greedy word wrap; a word longer than `width` gets a line of its own."""
+    lines: list[str] = []
+    for word in text.split():
+        if lines and len(lines[-1]) + 1 + len(word) <= width:
+            lines[-1] += " " + word
+        else:
+            lines.append(word)
+    return lines or [""]
+
+
+def _template_type(kind: str) -> str:
+    """A setting's type as the catalog shows it (`choice:a b` -> one of: a, b)."""
+    if kind.startswith("choice:"):
+        return "one of: " + ", ".join(kind[len("choice:") :].split())
+    return kind
+
+
+def _settings_table(settings: list[dict]) -> list[str]:
+    """One template's settings as an indented, ruled table.
+
+    Same shape as the abbreviation and component tables: header, rule, rows
+    split on runs of two or more spaces. The description column is
+    word-wrapped onto continuation lines (one cell each), which the site's
+    `_as_ruled_table` folds back into the row and the man page shows as is.
+    """
+    header = ["Setting", "Type", "Required", "Default", "Description"]
+    rows = [
+        [
+            s["key"],
+            _template_type(s["type"]),
+            "yes" if s["required"] else "no",
+            s["default"] or "—",
+            s["prompt"],
+        ]
+        for s in settings
+    ]
+    widths = [max(len(r[i]) for r in [header] + rows) for i in range(4)]
+    lead = sum(widths) + 2 * 4
+    desc_width = max(24, TEMPLATE_TABLE_WIDTH - lead)
+
+    def line(cells: list[str]) -> str:
+        fixed = "".join(c.ljust(w + 2) for c, w in zip(cells[:4], widths))
+        return f"    {fixed}{cells[4]}".rstrip()
+
+    out = [line(header), "    " + "  ".join("─" * w for w in widths + [desc_width])]
+    for row in rows:
+        desc = _wrap(row[4], desc_width)
+        out.append(line(row[:4] + [desc[0]]))
+        out += ["    " + " " * lead + more for more in desc[1:]]
+    return out
+
+
+def _render_templates(group: str, catalog: dict[str, list[dict]]) -> str:
+    """Render one part of the fish-template catalog (targets, modifiers or presets)."""
+    blocks: list[str] = []
+    for t in catalog[group]:
+        parts = [f"### {t['name']}", t["summary"] + ("" if t["summary"].endswith(".") else ".")]
+        if group == "presets":
+            parts.append(f"    fish-template new NAME --preset {t['name']}")
+            parts.append("The recipe it starts from:")
+            parts.append("\n".join("    " + ln for ln in t["recipe"]))
+        else:
+            if group == "modifiers" and t["applies"]:
+                parts.append("Works with: " + ", ".join(t["applies"]) + ".")
+            if t["settings"]:
+                parts.append("\n".join(_settings_table(t["settings"])))
+        blocks.append("\n\n".join(parts))
+    return "\n\n".join(blocks)
+
+
+def _with_templates(body: str) -> str:
+    """Inject the fish-template catalog placeholders, generated from templates/."""
+    if not any(p in body for p in TEMPLATE_PLACEHOLDERS.values()):
+        return body
+    catalog = mt.parse_templates(TEMPLATES)
+    for group, placeholder in TEMPLATE_PLACEHOLDERS.items():
+        body = body.replace(placeholder, _render_templates(group, catalog))
     return body
 
 
@@ -219,6 +309,7 @@ def build_concat(root: Path) -> str:
         elif "04-abbreviations" in path.parts:
             abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
             body = _with_abbreviations(body, abbrs)
+        body = _with_templates(body)
         body = _with_readme(body)
         body = _with_toc(body, root)
         if body:
@@ -462,7 +553,7 @@ def _as_ruled_table(para: list[str]) -> str | None:
     else that doesn't match the header's column count is a source alignment
     bug, so bail out to the code-block fallback rather than guess.
     """
-    if len(para) < 4:
+    if len(para) < 3:
         return None
     rule_cells = CELL_SPLIT.split(para[1].strip())
     if not all(RULE_CELL_RE.match(cell) for cell in rule_cells):
@@ -480,7 +571,10 @@ def _as_ruled_table(para: list[str]) -> str | None:
             rows[-1][-1] += " " + parts[0].strip()
         else:
             return None
-    if len(rows) < 2:
+    # One data row is a table only under a per-column rule (one dash run per
+    # header cell), the explicit shape the generated template-settings
+    # tables use; a solid rule still needs two rows to be trusted.
+    if not rows or (len(rows) < 2 and len(rule_cells) != n):
         return None
 
     # Unlike _as_table's prose column, these tables legitimately contain
@@ -1121,6 +1215,7 @@ def build_site(root: Path, out: Path) -> list[dict]:
             if "04-abbreviations" in path.parts:
                 abbrs = mt.parse_abbreviations(DOCS.parent / "conf.d")
                 body = _with_abbreviations(body, abbrs)
+            body = _with_templates(body)
             body = _with_readme(body)
             target.parent.mkdir(parents=True, exist_ok=True)
             body = _inject_subheading_cards(body)
