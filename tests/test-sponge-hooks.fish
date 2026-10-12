@@ -21,6 +21,18 @@
 # the history file), hence the re-exec rather than a `set -gx`. The sponge
 # settings are set as globals here, never universals, and conf.d/sponge.fish
 # (which writes universals) is not sourced.
+#
+# sponge is installed by Fisher from fish_plugins, and its files are
+# git-ignored, so a plain checkout (CI) does not have them. With the plugin
+# absent the suite reports zero assertions instead of failing; it bites
+# wherever sponge is actually installed.
+
+if not test -f (realpath (dirname (status filename)))/../functions/_sponge_on_postexec.fish
+    echo "  SKIP  sponge plugin not installed (functions/_sponge_*.fish come from Fisher)"
+    source (realpath (dirname (status filename)))/lib.fish
+    report
+    exit
+end
 
 if not set -q __FISH_CONFIG_SPONGE_SANDBOX
     set -l sb (mktemp -d)
