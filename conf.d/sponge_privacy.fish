@@ -87,28 +87,33 @@ set -a _privacy_patterns 'docker\s+login\s.*(?:-p|--password)\s+\S+'
 # openssl passphrase arguments: -passin pass:xxx, -passout env:VAR
 set -a _privacy_patterns 'openssl\s.*-pass(?:in|out)\s+\S+'
 
-# Stale stored patterns, removed from the universal list on load:
-#   - anything beginning with `--` (left over from before commit 13eb93c;
-#     string match passes patterns before its own -- sentinel and would treat
-#     them as flags);
+# Stored patterns are repaired or pruned on load:
+#   - a leading `-` is escaped as `\-`. sponge_filter_matched passes the
+#     pattern to `string match` before its own `--` sentinel, so a pattern
+#     such as `-p\s+\S+` is parsed as an option: the match errors and the
+#     command stays in history. `\-` matches the same literal dash. This also
+#     turns the pre-13eb93c `--(?:password|...)` form into the current
+#     `\-\-(?:password|...)` one, so the registration below doesn't add it twice.
 #   - retired patterns: earlier versions registered these, a later version
 #     replaced them. Exact-string match only. Append here whenever a pattern
 #     in the list above is changed or dropped.
-# User-added patterns are never touched: only a `--` prefix or an exact
-# retired string is removed.
+# User-added patterns are otherwise never touched. A dash-led pattern added
+# mid-session is repaired when the next shell starts.
 set -l _retired_patterns \
     'curl\s.*[Aa]uthorization:' \
     '(?i)curl\s.*authorization:'
-# The list is rebuilt and reassigned (only when something was dropped) rather
+# The list is rebuilt and reassigned (only when something changed) rather
 # than edited by index: `set -Ue name[N]` silently does nothing on a universal
 # variable.
 set -l _kept_patterns
 for _pattern in $sponge_regex_patterns
-    string match --quiet -- '--*' $_pattern; and continue
     contains -- "$_pattern" $_retired_patterns; and continue
-    set -a _kept_patterns $_pattern
+    # \G anchors each match to the end of the previous one, so only the
+    # leading run of dashes is escaped.
+    set -a _kept_patterns (string replace --regex --all -- '\G-' '\\\\-' $_pattern)
 end
-if test (count $_kept_patterns) -ne (count $sponge_regex_patterns)
+if test "$_kept_patterns" != "$sponge_regex_patterns"
+    or test (count $_kept_patterns) -ne (count $sponge_regex_patterns)
     set -U sponge_regex_patterns $_kept_patterns
 end
 
