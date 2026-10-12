@@ -9,8 +9,11 @@
 #   target followed by distinct modifiers whose APPLIES list includes that
 #   target. Every used template's defaults are filled in, then every
 #   setting is checked and normalized (__fish_template_check). Settings
-#   that belong to no used template are dropped with a warning. Errors go
-#   to stderr, prefixed "fish-template:".
+#   that belong to no used template are dropped with a warning. Finally,
+#   confirm_only_if must be a valid regular expression, each
+#   dispatcher_subcommands entry must be name=command line,
+#   dispatcher_default must name one of them, and each env_set entry must
+#   be NAME=value. Errors go to stderr, prefixed "fish-template:".
 #
 # EXIT STATUS
 #   0  The recipe is valid
@@ -70,6 +73,34 @@ function __fish_template_validate --description 'Validate a fish-template recipe
         contains -- $k $known; and continue
         echo "fish-template: ignoring unknown setting $k" >&2
         set -eg __ftv_$k __ftm_$k
+    end
+
+    #   ── Settings whose format the type alone cannot check ──
+    if test -n "$__ftv_confirm_only_if[1]"
+        string match -qr -- $__ftv_confirm_only_if[1] '' 2>/dev/null
+        if test $status -eq 2
+            echo "fish-template: confirm_only_if: not a valid regular expression" >&2
+            set failed 1
+        end
+    end
+    for e in $__ftv_dispatcher_subcommands
+        if not string match -qr -- '^[^=[:space:]]+=.+' $e
+            echo "fish-template: dispatcher_subcommands: '$e' is not name=command line" >&2
+            set failed 1
+        end
+    end
+    if test -n "$__ftv_dispatcher_default[1]"
+        set -l subs (string replace -r -- '=.*' '' $__ftv_dispatcher_subcommands)
+        if not contains -- $__ftv_dispatcher_default[1] $subs
+            echo "fish-template: dispatcher_default: '$__ftv_dispatcher_default[1]' is not one of the subcommands ($subs)" >&2
+            set failed 1
+        end
+    end
+    for e in $__ftv_env_set
+        if not string match -qr -- '^[A-Za-z_][A-Za-z0-9_]*=' $e
+            echo "fish-template: env_set: '$e' is not NAME=value" >&2
+            set failed 1
+        end
     end
     test $failed -eq 0; or return 2
     return 0

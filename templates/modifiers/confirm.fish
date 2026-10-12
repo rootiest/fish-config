@@ -20,7 +20,10 @@ set -l confirm_only_if
 
 #   ─────────────────────────────── Fragment ───────────────────────────────
 
-if test -z "$confirm_only_if"; or string match -qr -- "$confirm_only_if" "$argv"
+# Ask unless the pattern clearly did not match: an empty pattern matches
+# everything, and an invalid one (status 2) fails closed and still asks.
+string match -qr -- "$confirm_only_if" "$argv"
+if test $status -ne 1
     read -l -P "$confirm_prompt [y/N] " __ft_answer
     set -l __ft_answer_lc (string lower -- "$__ft_answer")
     if not contains -- "$__ft_answer_lc" y yes
