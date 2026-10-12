@@ -7281,13 +7281,15 @@ fish tests/run-tests.fish
 .PP
 Runs before every push (and gates the documentation
 build (https://git.rootiest.dev/rootiest/fish-config/src/branch/main/.github/workflows/ci.yml)
-in CI, so a broken config can\[cq]t get published): syntax-lints every
-\f[V].fish\f[R] file, then loads the config in an isolated
-\f[V]HOME\f[R]/XDG sandbox \[em] never this checkout itself, since it
-doubles as a real \f[V]\[ti]/.config/fish\f[R] \[em] and runs functional
-checks against foundational behavior (XDG/PATH/CDPATH setup, key
-bindings, abbreviations, core functions, the opinionated-component
-registry, and more).
+in CI, so a broken config can\[cq]t get published).
+First it lints: every \f[V].fish\f[R] file must pass a syntax check and
+an indent check, bare calls to shadowed commands must be declared, and
+every tracked function must be named by a test suite or listed with a
+reason in \f[V]tests/coverage-allowlist.txt\f[R].
+Then it runs the \f[V]tests/test-*.fish\f[R] suites, each in a throwaway
+XDG sandbox.
+The sandbox is always a copy, never this checkout, because this checkout
+doubles as a real \f[V]\[ti]/.config/fish\f[R].
 .SH 15. CONTRIBUTING
 .PP
 Interested in contributing?
