@@ -195,6 +195,14 @@ for case in "new -x --target command --set command_cmd=a --yes" \
     check "usage error 2: $case" st=2 "$out[-1]"
 end
 
+for w in set end
+    set -l out (_ft $tmp "fish-template new $w --target command --set command_cmd=probe --yes $o; echo st=\$status")
+    check "reserved word $w: exit 2, says so, writes nothing" yes (string match -q -- "*'$w' is a reserved word in fish*st=2" "$out"; and not test -e $tmp/out/$w.fish; and echo yes; or echo no)
+end
+printf 'function set\n    echo hi\nend\n' >$tmp/src-set.fish
+set -l out (_ft $tmp "__fish_template_write set $tmp/src-set.fish $tmp/out; echo st=\$status")
+check "a function fish cannot load fails the write and leaves no file" yes (string match -q -- '*st=1' "$out"; and not string match -q -- '*is ready*' "$out"; and not test -e $tmp/out/set.fish; and echo yes; or echo no)
+
 section "cli: --from, --preset, list, info, ls"
 printf '%s\n' "set -l __ft_use command" "set -l command_cmd probe (touch $tmp/canary)" >$tmp/recipe.fish
 set -l out (_ft $tmp "fish-template new fr --from $tmp/recipe.fish --yes $o >/dev/null; echo st=\$status")

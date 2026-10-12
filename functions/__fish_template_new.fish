@@ -41,6 +41,12 @@ function __fish_template_new --description 'Create or edit a function with fish-
         echo "$c_err""fish-template: '$name' is not a valid function name$c_reset" >&2
         return 2
     end
+    # Names that pass the regex can still be fish keywords or builtins that
+    # fish refuses to define as functions (set, end, test, ...).
+    if test -n "$name"; and not fish --no-config -c "function $name; end" 2>/dev/null
+        echo "$c_err""fish-template: '$name' is a reserved word in fish and cannot be a function name$c_reset" >&2
+        return 2
+    end
 
     __fish_template_store reset
     set -l write_flags
