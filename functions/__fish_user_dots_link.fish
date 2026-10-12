@@ -56,4 +56,6 @@ function __fish_user_dots_link --description 'Manage the user-dots convenience s
     else if not test -e "$link"
         ln -s "$__fish_user_dots_path" "$link"
     end
+    # A link already at the right target leaves the `test` above at 1.
+    return 0
 end

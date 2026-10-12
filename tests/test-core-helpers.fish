@@ -218,8 +218,8 @@ check "target changed: link repointed" $sandbox/dots-b (readlink $link)
 # link would drop a nested link inside the old target instead.
 check "repoint left nothing inside the old target" "" (ls -A $sandbox/dots-a | string collect)
 
-# Already correct: side effect only (see the bug note on its exit status).
 __fish_user_dots_link
+check "already correct: exits 0" 0 $status
 check "already correct: link unchanged" $sandbox/dots-b (readlink $link)
 check "already correct: no nested link in target" "" (ls -A $sandbox/dots-b | string collect)
 

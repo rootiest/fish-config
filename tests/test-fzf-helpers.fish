@@ -250,6 +250,13 @@ set -l out (__preview "two words.txt")
 check "untracked: banner" "│ Untracked │" "$out[2]"
 check "untracked: file contents previewed" untracked-body "$out[-1]"
 
+# git leaves a name with a single quote unquoted; it must not be unescaped
+# into a different name (#316).
+echo quote-body >"it's.txt"
+set -l out (__preview "it's.txt")
+check "untracked single-quote name: file found" quote-body "$out[-1]"
+command rm "it's.txt"
+
 echo staged-line >new.txt
 git add new.txt
 set -l out (__preview new.txt)

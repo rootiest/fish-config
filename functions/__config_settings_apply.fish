@@ -61,4 +61,6 @@ function __config_settings_apply
                     set -eg $varname 2>/dev/null
             end
     end
+    # Erasing an unset variable leaves status 4; the contract is "always 0".
+    return 0
 end

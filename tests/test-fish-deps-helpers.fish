@@ -142,6 +142,7 @@ set cases \
     "brew|brew upgrade ripgrep" \
     "pkg|sudo pkg upgrade -y ripgrep | pkg upgrade -y ripgrep" \
     "dnf|sudo dnf upgrade -y ripgrep | dnf upgrade -y ripgrep" \
+    "zypper|sudo zypper --non-interactive update ripgrep | zypper --non-interactive update ripgrep" \
     "yum|sudo yum update -y ripgrep | yum update -y ripgrep"
 for c in $cases
     set -l pm (string split -m1 '|' -- $c)[1]
@@ -161,8 +162,14 @@ for c in $cases
 end
 set -gx FAKE_PM_RC 0
 
-# zypper is detected by _fish_deps_detect_pm but has no upgrade branch. Not
-# asserted here: see the bug report for #238 (it returns 0 and runs nothing).
+# An unrecognized manager must fail loudly, never read as an upgrade (#311).
+function _fish_deps_detect_pm
+    echo nosuch
+end
+set err (_fish_deps_pm_upgrade ripgrep 2>&1)
+check "an unsupported manager returns 1" 1 $status
+check "an unsupported manager is reported" true (string match -q "*unsupported package manager 'nosuch'*" -- "$err"; and echo true; or echo false)
+functions -e _fish_deps_detect_pm
 
 set -gx PATH $_real_path
 
