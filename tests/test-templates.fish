@@ -193,6 +193,9 @@ check "succeeds on the third try" "st=0 3" "$(_tpl_out $tmp 'rt; echo st=$status
 rm $tmp/count
 _tpl_gen $tmp r2 "__ft_use command retry" "command_cmd flaky" "retry_attempts 2" "retry_delay 0"
 check "gives up after the last attempt" "st=1 2" "$(_tpl_out $tmp 'r2; echo st=$status')"" "(cat $tmp/count)
+_tpl_stub $tmp once 'echo run >>'$tmp'/once.count; exit 5'
+_tpl_gen $tmp r0 "__ft_use command retry" "command_cmd once" "retry_attempts 0" "retry_delay 0"
+check "retry_attempts 0 still runs the command once, status passes through" "st=5 1" "$(_tpl_out $tmp 'r0; echo st=$status')"" "(count (cat $tmp/once.count))
 rm -rf $tmp
 
 section "templates: timeout"
