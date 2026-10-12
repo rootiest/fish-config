@@ -7,6 +7,9 @@
 # DEPENDENCIES
 #   fzf
 #
+# CLASSIFICATION
+#   manual-section(12-function-templates)
+#
 # SYNOPSIS
 #   fish-template [list|info|new|edit|regen|show|ls|help] [ARGS...]
 #
@@ -66,6 +69,8 @@
 #   $fish_function_path, so your function overrides one of the same name
 #   from this config. fish-template warns when a name shadows a builtin,
 #   a function or a command, and never replaces a file it did not make.
+#
+#   Full guide, with every template's settings: help config templates
 function fish-template --description 'Build your own functions from templates, without writing code'
     if test "$argv[1]" = help; or not set -q argv[1]; or __fish_help_requested $argv
         __fish_help_header (status current-function) --help

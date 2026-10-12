@@ -357,22 +357,7 @@ fish-template new rg --target command --set command_cmd=rg \
 fish-template edit deploy                          # ask again, current answers as defaults
 ```
 
-| Kind | Template | What it does |
-|---|---|---|
-| target | `command` | Run one command, passing your arguments through |
-| target | `fallback` | Run the first of several commands that is installed |
-| target | `sequence` | Run several command lines in order (stop or continue on failure) |
-| target | `dispatcher` | One command with subcommands, each running its own command line |
-| modifier | `args` | Always add arguments before and/or after yours |
-| modifier | `env` | Set or remove environment variables for this command only |
-| modifier | `confirm` | Ask first, optionally only when your arguments match a pattern |
-| modifier | `in-dir` | Run inside a fixed directory, then return to where you were |
-| modifier | `retry` | Try again when it fails |
-| modifier | `timeout` | Stop it if it runs too long |
-| modifier | `log` | Save the output to a file as well as showing it |
-| modifier | `notify` | Send a desktop notification when it finishes |
-
-Presets: `allow-telemetry` (run one command without `DO_NOT_TRACK`/`DISABLE_TELEMETRY`), `safe-rm` (ask before a recursive delete), `update-all` (update everything, with a log and a notification).
+See [Function Templates](https://fish.rootiest.fyi/12-function-templates/) in the project wiki (or run `help config templates`) for every target, modifier and preset with its settings, worked examples, and the safety guarantees.
 
 Stacking works two ways. **Layering:** modifiers stack on one function and always apply in a fixed, sensible order, so `retry` + `log` + `notify` logs every attempt and notifies once at the end. **Chaining:** a `sequence` step or a `dispatcher` subcommand can call any command, including functions you made earlier.
 
