@@ -52,9 +52,20 @@ set -gx PATH $only
 set -l err (ld 2>&1 >/dev/null)
 check "ld without lazydocker exits 1" 1 $status
 check "ld names the missing lazydocker" "ld: lazydocker is not installed" "$err"
-# No "docker missing" case: functions/docker.fish defines a `docker`
-# wrapper, so ld's `type -q docker` guard is always true and that branch is
-# unreachable (tracked as its own issue).
+
+# functions/docker.fish defines a `docker` wrapper function, so the guard
+# must look for the binary, not just the name (#315).
+set -gx PATH $real_path
+set -l nodocker $stubs/nodocker
+command mkdir -p $nodocker
+ln -s $stubs/lazydocker $nodocker/lazydocker
+ln -s (command -s env) $nodocker/env
+command rm -f $log
+set -gx PATH $nodocker
+set -l err (ld 2>&1 >/dev/null)
+check "ld without docker exits 1" 1 $status
+check "ld names the missing docker" "ld: docker is not installed" "$err"
+check "ld without docker launches nothing" false (test -e $log; and echo true; or echo false)
 
 section ports
 

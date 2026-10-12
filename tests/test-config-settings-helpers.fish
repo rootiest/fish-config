@@ -35,9 +35,22 @@ end
 
 set -g v __fish_test_cs238
 
-# Exit status is deliberately not asserted for apply/set_value: both document
-# "0 Always" but actually return whatever their last `set` left behind (4 for
-# erasing an unset variable, or the caller's stale $status). Reported on #238.
+# Both document "0 Always": erasing an unset variable, or a stale non-zero
+# $status from the caller, must not leak through (#314).
+section "exit status"
+
+set -e $v
+false
+__config_settings_apply $v universal DEFAULT
+check "apply: erasing an unset universal exits 0" 0 $status
+false
+__config_settings_apply $v session DEFAULT
+check "apply: erasing an unset global exits 0" 0 $status
+false
+__config_settings_apply $v bogus on
+check "apply: an unknown scope exits 0" 0 $status
+check "set_value: erasing an unset universal exits 0" 0 \
+    (uvar_run "false; __config_settings_set_value $v int ''; echo \$status")
 
 # =============================================================================
 # 1. __config_settings_apply -- universal scope

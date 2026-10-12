@@ -24,7 +24,9 @@ function ld --description 'Run lazydocker on the current Docker context'
     __fish_help_header (status current-function) $argv; and return 0
     __fish_no_args (status current-function) $argv; or return
 
-    if not type -q docker
+    # command -q, not type -q: functions/docker.fish defines a docker
+    # wrapper, so type -q succeeds even when the binary is missing.
+    if not command -q docker
         echo "ld: docker is not installed" >&2
         return 1
     end

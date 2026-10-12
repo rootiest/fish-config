@@ -4,14 +4,28 @@
 #  D README.md
 # R  LICENSE -> "New License"
 function _fzf_preview_changed_file --argument-names path_status --description "Show the git diff of the given file."
-    # remove quotes because they'll be interpreted literally by git diff
-    # no need to requote when referencing $path because fish does not perform word splitting
-    # https://fishshell.com/docs/current/fish_for_bash_users.html
-    set -f path (string unescape (string sub --start 4 $path_status))
     # first letter of short format shows index, second letter shows working tree
     # https://git-scm.com/docs/git-status/2.35.0#_short_format
-    set -f index_status (string sub --length 1 $path_status)
-    set -f working_tree_status (string sub --start 2 --length 1 $path_status)
+    set -f index_status (string sub --length 1 -- $path_status)
+    set -f working_tree_status (string sub --start 2 --length 1 -- $path_status)
+
+    # a rename reads "original -> current"; split it before unquoting so each
+    # name is handled on its own
+    set -f paths (string sub --start 4 -- $path_status)
+    if test $index_status = R
+        set paths (string split --max 1 -- ' -> ' $paths)
+    end
+    # git C-quotes only names with special characters, and those start with
+    # a double quote: unescape just those, so a bare name such as it's.txt
+    # keeps its literal quote. No need to requote afterwards because fish
+    # does not perform word splitting.
+    # https://fishshell.com/docs/current/fish_for_bash_users.html
+    for i in (seq (count $paths))
+        if string match -q -- '"*' $paths[$i]
+            set paths[$i] (string unescape -- $paths[$i])
+        end
+    end
+    set -f path $paths[-1]
 
     set -f diff_opts --color=always
 
@@ -32,10 +46,7 @@ function _fzf_preview_changed_file --argument-names path_status --description "S
             # https://stackoverflow.com/questions/73954214
             if test $index_status = R
                 # diff the post-rename path with the original path, otherwise the diff will show the entire file as being added
-                set -f orig_and_new_path (string split --max 1 -- ' -> ' $path)
-                git diff --staged $diff_opts -- $orig_and_new_path[1] $orig_and_new_path[2]
-                # path currently has the form of "original -> current", so we need to correct it before it's used below
-                set path $orig_and_new_path[2]
+                git diff --staged $diff_opts -- $paths[1] $paths[2]
             else
                 git diff --staged $diff_opts -- $path
             end

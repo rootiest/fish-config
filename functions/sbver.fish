@@ -23,8 +23,8 @@
 #   --brief  Suppress per-file output; show only the final summary
 #
 # EXIT STATUS
-#   0  All binaries verified (or summary shown)
-#   1  sbctl is not installed
+#   0  Every binary verified
+#   1  sbctl is not installed, an image is unsigned, or nothing was verified
 #   2  Any argument other than --brief
 #
 # EXAMPLE
@@ -42,7 +42,8 @@ function sbver --description 'Verifies Secure Boot status of EFI binaries using 
     end
 
     if not type -q sbctl
-        echo "Error: 'sbctl' is not installed."
+        __fish_palette
+        echo "$c_err""sbver: sbctl is not installed$c_reset" >&2
         return 1
     end
 
@@ -83,9 +84,13 @@ function sbver --description 'Verifies Secure Boot status of EFI binaries using 
 
     # Summary
     echo
-    if test $fail_count -eq 0
-        echo -e "$GREEN✅ All images are signed ($pass_count verified)$NC"
-    else
+    if test $fail_count -gt 0
         echo -e "$RED❌ Some images are not signed ($fail_count failed, $pass_count passed)$NC"
+        return 1
+    else if test $pass_count -eq 0
+        # sudo refused, or sbctl tracks nothing: no evidence of a signed boot.
+        echo -e "$RED❌ No images were verified$NC"
+        return 1
     end
+    echo -e "$GREEN✅ All images are signed ($pass_count verified)$NC"
 end
