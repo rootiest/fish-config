@@ -163,5 +163,56 @@ set -l out (_ft $tmp "__fish_template_store set __ft_use command
     __fish_template_store load $tmp/my-fn.fish; __fish_template_store get command_cmd")
 check "generated file: valid, formatted, literal name, recipe readable" "syntax-ok indent-ok no-dollar-function literal-name probe" "$out"
 rm -rf $tmp
+section "cli: new, safety and output"
+set -l tmp (mktemp -d)
+mkdir -p $tmp/bin
+printf '#!/bin/sh\necho "args=$*"; exit 7\n' >$tmp/bin/probe
+chmod +x $tmp/bin/probe
+set -l o "--output $tmp/out"
+set -l out (_ft $tmp "fish-template new pw --target command --set command_cmd=probe --with retry --set retry_delay=0 --yes $o
+    echo st=\$status; pw a; echo st=\$status")
+check "writes, loads and runs immediately" yes (string match -q -- '*pw is ready*st=0*args=a*st=7' "$out"; and echo yes; or echo no)
+set -l before (cat $tmp/out/pw.fish | string collect)
+set -l out (_ft $tmp "fish-template new pw --target command --set command_cmd=other --yes $o; echo st=\$status")
+check "refuses to overwrite without --force" yes (string match -q -- '*already exists*st=1' "$out"; and test "$before" = "$(cat $tmp/out/pw.fish | string collect)"; and echo yes; or echo no)
+set -l out (_ft $tmp "fish-template new pw --target command --set command_cmd=other --yes --force $o; echo st=\$status")
+check "--force replaces it" st=0 "$out[-1]"
+set -l out (_ft $tmp "fish-template new dry --target command --set command_cmd=probe --yes --dry-run $o; echo st=\$status")
+check "--dry-run prints and writes nothing" yes (string match -q -- '*function dry *st=0' "$out"; and not test -e $tmp/out/dry.fish; and echo yes; or echo no)
+set -l out (_ft $tmp "fish-template new printf --target command --set command_cmd=probe --yes $o 2>&1")
+check "warns when shadowing a builtin" yes (string match -q -- '*shadows the fish builtin printf*' "$out"; and echo yes; or echo no)
+set -l out (_ft $tmp "fish-template new probe --target command --set command_cmd=probe --yes $o 2>&1")
+check "notes a same-name wrapper instead of warning" yes (string match -q -- '*wraps the probe command*' "$out"; and echo yes; or echo no)
+for case in "new -x --target command --set command_cmd=a --yes" \
+    "new a --target nope --yes" \
+    "new a --target sequence --with timeout --set 'sequence_steps=true' --yes" \
+    "new a --target command --set bogus=1 --yes" \
+    "new a --target command --set command_cmd=a --set retry_attempts=abc --with retry --yes" \
+    "new a --target command --yes" \
+    "new --target command --set command_cmd=a --yes" \
+    "new a --from x --preset safe-rm --yes"
+    set -l out (_ft $tmp "fish-template $case $o >/dev/null 2>&1; echo st=\$status")
+    check "usage error 2: $case" st=2 "$out[-1]"
+end
+
+section "cli: --from, --preset, list, info, ls"
+printf '%s\n' "set -l __ft_use command" "set -l command_cmd probe (touch $tmp/canary)" >$tmp/recipe.fish
+set -l out (_ft $tmp "fish-template new fr --from $tmp/recipe.fish --yes $o >/dev/null; echo st=\$status")
+check "--from builds from a recipe file and never runs it" "st=0 no" "$out[-1] $(test -e $tmp/canary; and echo yes; or echo no)"
+for p in (path change-extension '' (path basename $repo_root/templates/presets/*.fish))
+    set -l out (_ft $tmp "fish-template new tp-$p --preset $p --yes --dry-run $o >$tmp/p.fish; echo st=\$status; fish -n $tmp/p.fish; and echo ok")
+    check "preset $p generates valid code" "st=0 ok" "$out"
+end
+set -l out (_ft $tmp "fish-template list")
+check "list shows every kind" yes (string match -q -- '*command*retry*allow-telemetry*' "$out"; and echo yes; or echo no)
+set -l out (_ft $tmp "fish-template info retry")
+check "info shows settings and defaults" yes (string match -q -- '*retry_attempts*default: 3*' "$out"; and echo yes; or echo no)
+set -l out (_ft $tmp "fish-template info nope; echo st=\$status")
+check "info on an unknown template is 2" st=2 "$out[-1]"
+printf 'function hand\n    echo hi\nend\n' >$tmp/out/hand.fish
+set -l out (_ft $tmp "fish-template ls $o")
+set -l names (string match -v -- probe $out | string match -v -- printf | path sort)
+check "ls lists only generated functions" "fr pw" "$names"
+rm -rf $tmp
 
 report
