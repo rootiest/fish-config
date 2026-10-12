@@ -136,6 +136,67 @@ if test $class_issues -ne 0
     set overall_failed 1
 end
 
+# ---- Phase 1c: test-reference lint ---------------------------------------
+# Every functions/<name>.fish must be named by at least one suite
+# (tests/test-*.fish, tests/test_*.py) or carry a reviewed entry with a
+# reason in tests/coverage-allowlist.txt. Stale entries fail too: an
+# allow-listed function that a suite now references, or that no longer
+# exists, must come off the list, so the gap can only shrink (issue #238).
+#
+# "Referenced" means the name appears as a whole token, split on anything
+# outside [A-Za-z0-9_-] (the characters fish function names here use). A
+# plain substring match is not enough: it counted `ld` as covered by
+# `build` and `hist` by `history`. This driver and lib.fish are not suites,
+# so the shadow-name list above does not count as testing `less` or `ping`.
+echo
+echo "== Test-reference lint =="
+
+set -l ref_tokens (command grep -ohE '[A-Za-z0-9_-]+' \
+        (find $script_dir -maxdepth 1 \( -name 'test-*.fish' -o -name 'test_*.py' \)) | sort -u)
+
+set -l allow_file $script_dir/coverage-allowlist.txt
+set -l allow_names
+set -l ref_issues 0
+if test -f $allow_file
+    for line in (string match -rv '^\s*(#|$)' <$allow_file)
+        set -l parts (string split -m1 ' -- ' -- $line)
+        set -l name (string trim -- $parts[1])
+        if test (count $parts) -lt 2; or test -z (string trim -- $parts[2])
+            echo "  FAIL (allowlist) $name: entry has no reason (expected 'name -- reason')"
+            set ref_issues (math $ref_issues + 1)
+        end
+        set -a allow_names $name
+        if not test -f $repo_root/functions/$name.fish
+            echo "  FAIL (allowlist) $name: no functions/$name.fish; remove the stale entry"
+            set ref_issues (math $ref_issues + 1)
+        else if contains -- $name $ref_tokens
+            echo "  FAIL (allowlist) $name: now referenced by a suite; remove the stale entry"
+            set ref_issues (math $ref_issues + 1)
+        end
+    end
+end
+
+# Tracked files only: Fisher installs plugin functions (sponge, fisher
+# itself) into functions/ on the user's machine, git-ignored. They are
+# upstream code, absent from a CI checkout, and must not change the result.
+set -l tracked_functions (git -C $repo_root ls-files 'functions/*.fish')
+or set tracked_functions (string replace $repo_root/ '' $repo_root/functions/*.fish)
+
+set -l ref_checked 0
+set -l ref_missing 0
+for f in $tracked_functions
+    set -l name (path change-extension '' (path basename $f))
+    set ref_checked (math $ref_checked + 1)
+    contains -- $name $ref_tokens; and continue
+    contains -- $name $allow_names; and continue
+    echo "  FAIL (untested) functions/$name.fish: no suite references it and it is not in tests/coverage-allowlist.txt"
+    set ref_missing (math $ref_missing + 1)
+end
+echo (math $ref_checked - $ref_missing)"/$ref_checked functions referenced by a suite or allow-listed"
+if test $ref_missing -ne 0 -o $ref_issues -ne 0
+    set overall_failed 1
+end
+
 # ---- Phase 2: discover suites --------------------------------------------
 # Mode is declared by the suite, not by this driver. Detection is
 # case-insensitive so a near-miss like "# Mode: in-session" is caught rather

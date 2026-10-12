@@ -1,0 +1,9 @@
+# Functions exempt from the test-reference lint in tests/run-tests.fish
+# (Phase 1c). Every functions/<name>.fish must be named by a suite in
+# tests/ or listed here with a reason. Format, one per line:
+#
+#   <function-name> -- <why it has no test>
+#
+# Entries are reviewed exceptions, not a backlog. The lint fails on an
+# entry with no reason, on one whose function no longer exists, and on one
+# that a suite now references, so this list can only shrink.
