@@ -31,7 +31,9 @@ function __auto_source_fallback_venv --on-variable PWD
         # Check if the current PWD is still within the directory that owns the venv
         # (Assuming the venv is at the root of the project)
         set -l venv_root (string replace -r '/.venv$' '' $VIRTUAL_ENV)
-        if not string match -q "$venv_root*" "$PWD"
+        # Exact match or a path below it: a bare prefix would also match a
+        # sibling such as $venv_root-old or ${venv_root}2.
+        if test "$PWD" != "$venv_root"; and not string match -q -- "$venv_root/*" "$PWD"
             type -q deactivate; and deactivate
         end
         return
