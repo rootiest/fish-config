@@ -5788,7 +5788,7 @@ titles, ordering, and search keywords.
 
     fish tests/run-tests.fish
 
-Runs before every push (and gates the [documentation build](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/.github/workflows/ci.yml) in CI, so a broken config can't get published): syntax-lints every `.fish` file, then loads the config in an isolated `HOME`/XDG sandbox — never this checkout itself, since it doubles as a real `~/.config/fish` — and runs functional checks against foundational behavior (XDG/PATH/CDPATH setup, key bindings, abbreviations, core functions, the opinionated-component registry, and more).
+Runs before every push (and gates the [documentation build](https://git.rootiest.dev/rootiest/fish-config/src/branch/main/.github/workflows/ci.yml) in CI, so a broken config can't get published). First it lints: every `.fish` file must pass a syntax check and an indent check, bare calls to shadowed commands must be declared, and every tracked function must be named by a test suite or listed with a reason in `tests/coverage-allowlist.txt`. Then it runs the `tests/test-*.fish` suites, each in a throwaway XDG sandbox. The sandbox is always a copy, never this checkout, because this checkout doubles as a real `~/.config/fish`.
 
 # 15. CONTRIBUTING
 

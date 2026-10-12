@@ -748,21 +748,34 @@ Two rules apply to backticks you write under `docs/manual/` as well:
 fish tests/run-tests.fish
 ```
 
-Runs before every push and gates the documentation build in CI. Two phases:
+Runs before every push and gates the documentation build in CI. It must
+**exit 0**: check its exit status, not only the final `TOTAL` line, because
+the lint phases fail separately from the assertion count.
 
-1. **Syntax lint** — every tracked `.fish` file (`config.fish`, `functions/`,
-   `conf.d/`, `completions/`, `templates/`, `tests/`) is checked with `fish -n`.
-2. **Sandboxed functional checks** — the config is copied into a throwaway
-   `HOME`/`XDG_CONFIG_HOME` sandbox (never this checkout itself, since it
-   doubles as a real `~/.config/fish`) and loaded as an isolated interactive
-   session. `tests/functional.fish` then runs against foundational behavior:
-   XDG/PATH/CDPATH setup, key bindings, abbreviations, core functions, the
-   opinionated-component registry, and more.
+1. **Syntax and indent lint:** every `.fish` file (`config.fish`,
+   `functions/`, `conf.d/`, `completions/`, `templates/`, `tests/`) must
+   pass `fish -n` and `fish_indent --check`.
+2. **Shadow-classification lint:** a function body that calls a C1-shadowed
+   command bare must declare it in its `CLASSIFICATION` header
+   (`docs/function-classification-schema.md`).
+3. **Test-reference lint:** every tracked `functions/<name>.fish` must be
+   named, as a whole word, by a suite in `tests/`, or be listed in
+   `tests/coverage-allowlist.txt` as `<name> -- <reason>`. Stale entries fail
+   too: a function that no longer exists, or one a suite now references, must
+   come off the list, so the untested set can only shrink. Functions Fisher
+   installs (git-ignored) are not checked.
+4. **Suites:** each `tests/test-*.fish` uses `section`/`check`/`report` from
+   `tests/lib.fish` and declares how it runs in its header. Isolated suites
+   (the default, or `# MODE: isolated`) each run as their own
+   `fish --no-config` with throwaway XDG directories. `# MODE: in-session`
+   suites are all sourced into one sandboxed interactive session built from
+   a copy of the config, never this checkout, since it doubles as a real
+   `~/.config/fish`.
 
-To add a new functional check, add a `test_*` function to
-`tests/functional.fish` — it's picked up automatically by
-`functional_test_main`, no registration needed. Return 0 on pass, non-zero
-on fail; print a short diagnostic on failure.
+To add tests, create a new `tests/test-<area>.fish`. The runner discovers
+it automatically. Stub external binaries with fake scripts placed first on
+`$PATH` inside a `mktemp -d` directory, so no suite touches the network, a
+package manager, or real user state.
 
 ## Secrets & Machine-Specific Config
 
