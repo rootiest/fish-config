@@ -113,4 +113,21 @@ for case in "int 0 abc" "choice:a\\ b 0 c" "list 1" "text 0 a b" "bool 0 maybe" 
 end
 rm -rf $tmp
 
+section "helpers: store load markers"
+set -l tmp (mktemp -d)
+printf '%s\n' 'set -l a 1' 'function demo' '    # ── fish-template recipe ──' "    set -l b 'x  y' ~/z" \
+    '    # ── end recipe ──' end 'set -l c 3' >$tmp/gen.fish
+set -l out (_ft $tmp "__fish_template_store load $tmp/gen.fish
+    printf '[%s]' (__fish_template_store get b)
+    __fish_template_store has a; and echo ' a-set'
+    __fish_template_store has c; and echo ' c-set'")
+check "load reads only the recipe block, literally, indented" "[x  y][~/z]" "$out"
+
+printf '%s\n' 'set -l t 1' '#   ── Fragment ──' 'set -l u 2' >$tmp/tpl.fish
+set -l out (_ft $tmp "__fish_template_store load $tmp/tpl.fish
+    __fish_template_store has t; and echo t-set
+    __fish_template_store has u; and echo u-set")
+check "load stops at the Fragment banner" t-set "$out"
+rm -rf $tmp
+
 report
