@@ -130,4 +130,35 @@ set -l out (_ft $tmp "__fish_template_store load $tmp/tpl.fish
 check "load stops at the Fragment banner" t-set "$out"
 rm -rf $tmp
 
+section "helpers: validate"
+set -l tmp (mktemp -d)
+for case in "set __ft_use" \
+    "set __ft_use nope" \
+    "set __ft_use command; __fish_template_store set retry_attempts 3" \
+    "set __ft_use command" \
+    "set __ft_use sequence timeout; __fish_template_store set sequence_steps true" \
+    "set __ft_use sequence env; __fish_template_store set sequence_steps true; __fish_template_store set env_unset X" \
+    "set __ft_use command retry; __fish_template_store set command_cmd x; __fish_template_store set retry_attempts many" \
+    "set __ft_use command retry retry; __fish_template_store set command_cmd x"
+    set -l out (_ft $tmp "__fish_template_store $case; __fish_template_validate >/dev/null 2>&1; echo st=\$status")
+    check "rejected with 2: $case" st=2 "$out[-1]"
+end
+set -l out (_ft $tmp "__fish_template_store set __ft_use command
+    __fish_template_store set command_cmd x
+    __fish_template_store set bogus_key 1
+    __fish_template_validate; echo st=\$status; __fish_template_store has bogus_key; or echo dropped")
+check "unknown keys are dropped with a warning" "fish-template: ignoring unknown setting bogus_key st=0 dropped" "$out"
+
+section "helpers: assemble"
+set -l out (_ft $tmp "__fish_template_store set __ft_use command
+    __fish_template_store set command_cmd probe
+    __fish_template_validate; and __fish_template_assemble my-fn >$tmp/my-fn.fish
+    fish -n $tmp/my-fn.fish; and echo syntax-ok
+    fish_indent --check <$tmp/my-fn.fish; and echo indent-ok
+    string match -qr '^\s*function \\\$' <$tmp/my-fn.fish; or echo no-dollar-function
+    string match -q 'function my-fn *' <$tmp/my-fn.fish; and echo literal-name
+    __fish_template_store load $tmp/my-fn.fish; __fish_template_store get command_cmd")
+check "generated file: valid, formatted, literal name, recipe readable" "syntax-ok indent-ok no-dollar-function literal-name probe" "$out"
+rm -rf $tmp
+
 report
