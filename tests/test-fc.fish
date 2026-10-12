@@ -10,13 +10,27 @@
 # a throwaway one under a temp XDG_DATA_HOME, and `commandline` is replaced by
 # a recorder (fc only works at an interactive prompt otherwise).
 
+# fish reads XDG_DATA_HOME only at startup, so setting it mid-run would still
+# write the history session into the real data dir when this suite is run by
+# hand (#317). Re-execute in a child fish whose XDG_DATA_HOME / XDG_CONFIG_HOME
+# / HOME point into a temp dir instead.
+if not set -q __FISH_CONFIG_FC_SANDBOX
+    set -l sb (mktemp -d)
+    mkdir -p $sb/data $sb/cfg $sb/home
+    env __FISH_CONFIG_FC_SANDBOX=$sb XDG_DATA_HOME=$sb/data \
+        XDG_CONFIG_HOME=$sb/cfg HOME=$sb/home \
+        fish --no-config (status filename)
+    set -l rc $status
+    command rm -rf $sb
+    exit $rc
+end
+
 source (realpath (dirname (status filename)))/lib.fish
 set -p fish_function_path $repo_root/functions
 
 set -l sandbox (path resolve (mktemp -d))
-mkdir -p $sandbox/tmp $sandbox/data $sandbox/rec
+mkdir -p $sandbox/tmp $sandbox/rec
 set -gx TMPDIR $sandbox/tmp
-set -gx XDG_DATA_HOME $sandbox/data
 set -g fish_history fc_test
 set -gx REC $sandbox/rec
 
@@ -102,6 +116,6 @@ check "vi is the fallback" vi (begin
 end)
 
 functions -e commandline
-set -e TMPDIR XDG_DATA_HOME REC
+set -e TMPDIR REC
 rm -rf $sandbox
 report

@@ -7286,10 +7286,10 @@ fish tests/run-tests.fish
 Runs before every push (and gates the documentation
 build (https://git.rootiest.dev/rootiest/fish-config/src/branch/main/.github/workflows/ci.yml)
 in CI, so a broken config can\[cq]t get published).
-First it lints: every \f[V].fish\f[R] file must pass a syntax check and
-an indent check, bare calls to shadowed commands must be declared, and
-every tracked function must be named by a test suite or listed with a
-reason in \f[V]tests/coverage-allowlist.txt\f[R].
+First it lints: every \f[V].fish\f[R] file git does not ignore must pass
+a syntax check and an indent check, bare calls to shadowed commands must
+be declared, and every tracked function must be named by a test suite or
+listed with a reason in \f[V]tests/coverage-allowlist.txt\f[R].
 Then it runs the \f[V]tests/test-*.fish\f[R] suites, each in a throwaway
 XDG sandbox.
 The sandbox is always a copy, never this checkout, because this checkout
