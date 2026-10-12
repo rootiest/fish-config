@@ -1941,6 +1941,29 @@ def test_template_settings_match_fish():
     assert not mismatched, "template settings drift from fish:\n  " + "\n  ".join(mismatched)
 
 
+def test_template_catalog_reaches_both_builds():
+    """Every template and preset name is in the concat and the site page; no placeholder survives."""
+    import build_manual
+
+    docs = Path(__file__).parent
+    catalog = mt.parse_templates(TEMPLATES_DIR)
+    names = [t["name"] for group in catalog.values() for t in group]
+    concat = build_manual.build_concat(docs / "manual")
+    with tempfile.TemporaryDirectory() as d:
+        build_manual.build_site(docs / "manual", Path(d))
+        pages = list(Path(d).glob(f"{TEMPLATE_PAGE}.md*"))
+        assert len(pages) == 1, f"site page for {TEMPLATE_PAGE} missing: {pages}"
+        site = pages[0].read_text()
+    for label, text in (("concat", concat), ("site", site)):
+        assert "GENERATED: template-" not in text, f"{label}: a template placeholder was not replaced"
+        missing = [n for n in names if f"### {n}\n" not in text]
+        assert not missing, f"{label}: catalog headings missing for {missing}"
+    assert "| Setting | Type | Required | Default | Description |" in site, (
+        "settings tables were not converted to markdown tables on the site"
+    )
+
+
+
 def test_as_ruled_table_accepts_one_row_under_a_per_column_rule():
     """A single-setting template table is still a table; a solid rule with one row is not."""
     import build_manual
