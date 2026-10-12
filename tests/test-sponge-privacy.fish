@@ -4,7 +4,7 @@
 #
 # MODE: isolated
 #
-# conf.d/sponge_privacy.fish stale-pattern migrations (issues #253, #267). The file
+# conf.d/sponge_privacy.fish stale-pattern migrations (issues #253, #267, #312). The file
 # is sourced in a child interactive fish with a throwaway HOME / XDG dirs, so
 # the universal sponge_regex_patterns it edits lives in a sandboxed
 # fish_variables and never touches the real one.
@@ -43,25 +43,47 @@ check "user-added pattern preserved" true (contains -- $custom $got; and echo tr
 check "replacement registered exactly once (idempotent)" 1 (count (string match -- $new_pat $got))
 check "custom pattern kept exactly once" 1 (count (string match -- $custom $got))
 
-section "sponge_privacy: stale -- patterns are purged"
+section "sponge_privacy: dash-led patterns are escaped (#312)"
 
+# sponge_filter_matched runs `string match --regex --quiet $pattern -- $cmd`,
+# so a pattern starting with `-` is parsed as an option and never matches.
 set -l stale '--password=\S+'
 set -l stale2 --token
+set -l single '-p\s+\S+'
 set -l custom2 'my-custom-token-\d+'
-set got (run_sponge $stale $custom2 $stale2)
-check "stored -- entry removed" false (contains -- $stale $got; and echo true; or echo false)
-check "second stored -- entry removed" false (contains -- $stale2 $got; and echo true; or echo false)
-check "custom pattern preserved beside -- entries" true (contains -- $custom2 $got; and echo true; or echo false)
+set got (run_sponge $stale $custom2 $stale2 $single)
+check "stored -- entry escaped" true (contains -- '\-\-password=\S+' $got; and echo true; or echo false)
+check "second stored -- entry escaped" true (contains -- '\-\-token' $got; and echo true; or echo false)
+check "single-dash entry escaped" true (contains -- '\-p\s+\S+' $got; and echo true; or echo false)
+check "custom pattern preserved beside dash-led entries" true (contains -- $custom2 $got; and echo true; or echo false)
 check "custom pattern kept exactly once" 1 (count (string match -- $custom2 $got))
-check "no entry left beginning with --" 0 (count (string match -- '--*' $got))
-check "static pattern registered after purge" true (contains -- $new_pat $got; and echo true; or echo false)
+check "no entry left beginning with -" 0 (count (string match -- '-*' $got))
+check "static pattern registered after the rewrite" true (contains -- $new_pat $got; and echo true; or echo false)
+
+# Every stored pattern must survive sponge's own call order (pattern before
+# the -- sentinel); the escaped single-dash one now catches its secret.
+set -l errors
+for p in $got
+    string match --regex --quiet $p -- probe 2>/dev/null
+    test $status -le 1; or set -a errors $p
+end
+check "no stored pattern is parsed as an option" "" "$errors"
+check "escaped -p pattern matches in sponge's call order" 0 \
+    (string match --regex --quiet '\-p\s+\S+' -- 'mysql -p hunter2'; echo $status)
+
+# The pre-13eb93c `--(?:password|...)` form becomes the current static
+# pattern, so it is not registered twice.
+set -l legacy '--(?:password|passwd|passphrase|token|secret|api[-_]key)(?:\s+|=)\S+'
+set got (run_sponge $legacy)
+check "legacy -- pattern folds into the current one" 1 \
+    (count (string match -- '\-\-(?:password|passwd|passphrase|token|secret|api[-_]key)(?:\s+|=)\S+' $got))
 
 set got (run_sponge $stale $old_pat $custom2)
-check "-- and retired entries purged together" 0 (count (string match -- '--*' $got) (string match -- $old_pat $got))
-check "custom preserved when both kinds purged" true (contains -- $custom2 $got; and echo true; or echo false)
+check "dash-led entry escaped and retired entry purged together" 0 (count (string match -- '-*' $got) (string match -- $old_pat $got))
+check "custom preserved when both kinds handled" true (contains -- $custom2 $got; and echo true; or echo false)
 
 set got (run_sponge 'a--b' $custom2)
-check "-- in the middle of a user pattern is not a stale entry" true (contains -- 'a--b' $got; and echo true; or echo false)
+check "-- in the middle of a user pattern is left alone" true (contains -- 'a--b' $got; and echo true; or echo false)
 
 section "sponge_privacy: superseded curl-only pattern is migrated (#254)"
 

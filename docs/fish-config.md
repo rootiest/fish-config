@@ -1976,8 +1976,8 @@ functions). They are active in all interactive sessions.
       --brief  Suppress per-file output; show only the final summary
 
     Exit Status:
-      0  All binaries verified (or summary shown)
-      1  sbctl is not installed
+      0  Every binary verified
+      1  sbctl is not installed, an image is unsigned, or nothing was verified
       2  Any argument other than --brief
 
     Example:
@@ -2074,10 +2074,13 @@ functions). They are active in all interactive sessions.
 
     Exit Status:
       0  Report shown
+      1  sysctl, zramctl or swapon is missing (the rest of the report is shown)
       2  Unexpected argument (takes none)
 
     Example:
     swapstat
+
+**Dependencies:** `sysctl`, `zramctl`, `swapon`
 
 ### top
 
