@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # CI test runner for this fish configuration.
-#   1. Syntax-lints and indent-checks every tracked .fish file (fish -n, fish_indent --check).
+#   1. Syntax-lints and indent-checks every .fish file git does not ignore (fish -n, fish_indent --check).
 #   2. Discovers tests/test-*.fish and reads the mode each suite declares
 #      in its own header (`# MODE: isolated` or `# MODE: in-session`).
 #   3. Runs each isolated suite as its own --no-config fish process with
@@ -26,9 +26,21 @@ set -l overall_failed 0
 
 # ---- Phase 1: syntax & indent lint ---------------------------------------
 echo "== Syntax & indent lint =="
-set -l lint_files $repo_root/config.fish
-for dir in functions conf.d completions templates tests
-    set -a lint_files (find $repo_root/$dir -name '*.fish' | sort)
+# Skip git-ignored files: on a live install Fisher writes its plugin files
+# into functions/, conf.d/ and completions/, and their style is not ours to
+# lint (#321). New files not yet added are still linted. Outside git, fall
+# back to every file on disk.
+set -l lint_dirs functions conf.d completions templates tests
+set -l lint_files (git -C $repo_root ls-files --cached --others --exclude-standard \
+    config.fish $lint_dirs/'*.fish' 2>/dev/null)
+if test $status -eq 0; and set -q lint_files[1]
+    # path filter drops index entries deleted from the working tree.
+    set lint_files (path filter -f $repo_root/$lint_files)
+else
+    set lint_files $repo_root/config.fish
+    for dir in $lint_dirs
+        set -a lint_files (find $repo_root/$dir -name '*.fish' | sort)
+    end
 end
 
 set -l syntax_failed 0

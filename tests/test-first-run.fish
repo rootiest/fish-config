@@ -33,6 +33,17 @@ set -l sandbox (mktemp -d)
 set -l stub_bin $sandbox/bin
 mkdir -p $stub_bin $sandbox/home $sandbox/cfg $sandbox/data
 
+# On a live install the checkout is ~/.config/fish, so Fisher has written its
+# own (git-ignored) functions/fisher.fish there. Link only the functions git
+# doesn't ignore into a sandbox dir, so an installed Fisher can't stand in for
+# the stub (#321). Outside git, every file is linked.
+mkdir -p $sandbox/functions
+set -l fr_functions (git -C $repo_root ls-files --cached --others --exclude-standard 'functions/*.fish' 2>/dev/null)
+or set fr_functions (string replace $repo_root/ '' $repo_root/functions/*.fish)
+for f in (path filter -f $repo_root/$fr_functions | string replace $repo_root/ '')
+    ln -s $repo_root/$f $sandbox/functions/
+end
+
 # printf, not echo: the heredoc-ish body must stay byte-exact.
 printf '%s\n' \
     '#!/bin/sh' \
@@ -79,7 +90,7 @@ function run_first_run --inherit-variable sandbox --inherit-variable stub_bin --
     command rm -rf $sandbox/cfg $sandbox/home $sandbox/state.txt
     mkdir -p $sandbox/cfg $sandbox/home
     set -l state_cmd "begin; set -q __fish_config_bootstrap_pending; and echo pending=\$__fish_config_bootstrap_pending; or echo pending=unset; set -q __fish_config_first_run_complete; and echo complete=\$__fish_config_first_run_complete; or echo complete=unset; end >$sandbox/state.txt"
-    set -l script "set fish_function_path $repo_root/functions \$__fish_data_dir/functions; source $repo_root/conf.d/__fish_config_op_registry.fish; $pre; source $repo_root/conf.d/first_run.fish; $post; $state_cmd"
+    set -l script "set fish_function_path $sandbox/functions \$__fish_data_dir/functions; source $repo_root/conf.d/__fish_config_op_registry.fish; $pre; source $repo_root/conf.d/first_run.fish; $post; $state_cmd"
     env HOME=$sandbox/home XDG_CONFIG_HOME=$sandbox/cfg XDG_DATA_HOME=$sandbox/data XDG_DATA_DIRS=$sandbox/data \
         PATH="$stub_bin:$PATH" TERM=xterm CURL_STUB_MODE=$mode \
         CURL_STUB_LOG=$fr_curl_log FISHER_STUB_LOG=$fr_fisher_log $extra \
