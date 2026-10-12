@@ -280,3 +280,98 @@ def walk(root: Path, depth: int = 0) -> list[tuple[Path, int]]:
         elif entry.name != "index.md" or depth == 0:
             result.append((entry, depth))
     return result
+
+
+TEMPLATE_META_RE = re.compile(r"^# ([A-Z]+)\s+(\S.*)$")
+TEMPLATE_SETTING_RE = re.compile(r"^set -l ([a-z][a-z0-9_]*)(?:\s|$)")
+TEMPLATE_FRAGMENT_RE = re.compile(r"^#\s+─+ Fragment")
+TEMPLATE_HINT_RE = re.compile(r"\(([^()]*)\)$")
+
+
+def _template_meta(lines: list[str]) -> dict[str, str]:
+    """First `# KEY  value` line per upper-case KEY (like __fish_template_meta)."""
+    meta: dict[str, str] = {}
+    for line in lines:
+        m = TEMPLATE_META_RE.match(line)
+        if m:
+            meta.setdefault(m.group(1), m.group(2).rstrip())
+    return meta
+
+
+def _template_settings(lines: list[str]) -> list[dict]:
+    """A template's settings, by the rules of functions/__fish_template_settings.fish.
+
+    A setting is a `set -l KEY` line before the first Fragment banner (with
+    or without a `: phase` suffix, so in-dir's split fragments are covered).
+    Its prompt is the line directly above, minus `# ` and a trailing type
+    hint such as `(int)`, `(list, required)` or `(choice: a b)`; no hint
+    means type `text`, not required. `default` is the fish text after
+    `set -l KEY ` exactly as written: fish quoting is never re-tokenized.
+    """
+    out: list[dict] = []
+    prev = ""
+    for line in lines:
+        if TEMPLATE_FRAGMENT_RE.match(line):
+            break
+        m = TEMPLATE_SETTING_RE.match(line)
+        if m:
+            prompt = re.sub(r"^#\s*", "", prev)
+            kind, required = "text", False
+            hint = TEMPLATE_HINT_RE.search(prompt)
+            if hint:
+                prompt = re.sub(r"\s*\([^()]*\)$", "", prompt)
+                for h in (p for p in hint.group(1).split(", ") if p):
+                    if h == "required":
+                        required = True
+                    else:
+                        kind = re.sub(r"^choice:\s*", "choice:", h)
+            out.append(
+                {
+                    "key": m.group(1),
+                    "type": kind,
+                    "required": required,
+                    "prompt": prompt,
+                    "default": line[m.end() :].strip(),
+                }
+            )
+        prev = line
+    return out
+
+
+def parse_templates(root: Path) -> dict[str, list[dict]]:
+    """Parse the fish-template catalog under `root` (the repo's templates/).
+
+    Returns {"targets": [...], "modifiers": [...], "presets": [...]}, each
+    sorted by file name (the order `fish-template list` uses). A template is
+    {"name", "path", "kind", "summary", "applies", "order", "settings"}; a
+    preset is {"name", "path", "summary", "recipe"} where `recipe` is its
+    `set -l` lines verbatim.
+    """
+    out: dict[str, list[dict]] = {"targets": [], "modifiers": [], "presets": []}
+    for group in ("targets", "modifiers"):
+        for path in sorted((root / group).glob("*.fish")):
+            lines = path.read_text(encoding="utf-8").split("\n")
+            meta = _template_meta(lines)
+            out[group].append(
+                {
+                    "name": meta.get("TEMPLATE", path.stem),
+                    "path": path,
+                    "kind": meta.get("KIND", ""),
+                    "summary": meta.get("SUMMARY", ""),
+                    "applies": meta.get("APPLIES", "").split(),
+                    "order": meta.get("ORDER", ""),
+                    "settings": _template_settings(lines),
+                }
+            )
+    for path in sorted((root / "presets").glob("*.fish")):
+        lines = path.read_text(encoding="utf-8").split("\n")
+        meta = _template_meta(lines)
+        out["presets"].append(
+            {
+                "name": meta.get("PRESET", path.stem),
+                "path": path,
+                "summary": meta.get("SUMMARY", ""),
+                "recipe": [ln.rstrip() for ln in lines if ln.startswith("set -l ")],
+            }
+        )
+    return out

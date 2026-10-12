@@ -66,4 +66,15 @@ local.fish is sourced at the end of config.fish with an existence check so
 the public config works cleanly on any machine without the private repo.
 local.fish in turn sources secrets.fish when it exists.
 
+## functions/
+
+Functions in `$__fish_user_dots_path/functions/` autoload in every shell
+and take precedence over this config's functions of the same name. The
+directory is put first on `$fish_function_path` at startup if it exists;
+this is not behind any component guard, because the directory only exists
+if you created it.
+
+`fish-template` writes the functions it generates there. See
+`fish-template help`.
+
 ---

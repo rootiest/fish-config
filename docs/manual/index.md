@@ -53,6 +53,7 @@ The configuration uses a structured file tree:
     │   ├── theme.fish              Saves the Catppuccin theme; FZF colors
     │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
+    │   ├── user-dots-functions.fish  Puts your user-dots functions/ first
     │   ├── wakatime.fish           WakaTime shell hook
     │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
     │   └── zoxide.fish             Zoxide z/zi integration; overrides cd
@@ -67,8 +68,10 @@ The configuration uses a structured file tree:
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
     ├── data/                       gi templates, session-env catalog, word lists
-    ├── templates/                  Function templates to copy and adapt
-    │   └── allow-telemetry.fish    Per-command telemetry opt-out wrapper
+    ├── templates/                  fish-template building blocks
+    │   ├── modifiers/              How it runs: args, env, retry, log, ...
+    │   ├── presets/                Ready-made recipes: allow-telemetry, ...
+    │   └── targets/                What runs: command, fallback, sequence, ...
     ├── themes/                     Catppuccin color themes
     │   ├── catppuccin-frappe.theme     Frappé; Latte on light terminals
     │   ├── catppuccin-latte.theme      Latte (light)

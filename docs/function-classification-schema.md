@@ -82,8 +82,8 @@ it empty as a placeholder.
   it themselves.
 - **`manual-section(<slug>)`** — this function has a dedicated manual
   section beyond its own header; `<slug>` is that page's filename under
-  `docs/manual/` with the extension dropped (`16-agent-tooling` for
-  `docs/manual/16-agent-tooling.md`; a directory-based section like
+  `docs/manual/` with the extension dropped (`17-agent-tooling` for
+  `docs/manual/17-agent-tooling.md`; a directory-based section like
   `08-components-reference` uses its directory name the same way, resolved
   against its `index.md`). `docs/build-manual.py` reads the target page's
   own `manTitle`/`title` at build time and renders a **See also** line on
@@ -92,7 +92,7 @@ it empty as a placeholder.
   the tag, so it can't go stale on its own if the manual gets renumbered.
   `docs/verify-manual.py` fails if the slug doesn't resolve to a real page.
   Multiple functions may carry the same slug (`agents-init` and
-  `agents-vault` both point at `16-agent-tooling`, one section covering
+  `agents-vault` both point at `17-agent-tooling`, one section covering
   both). See [Dedicated manual sections for complex subsystems](../CONTRIBUTING.md#dedicated-manual-sections-for-complex-subsystems)
   in `CONTRIBUTING.md` for when a function's behavior has outgrown its
   header and belongs in one of these instead.

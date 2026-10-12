@@ -9,6 +9,17 @@ import sidebar from './src/sidebar.json' with { type: 'json' };
 export default defineConfig({
   prerenderConflictBehavior: 'ignore',
   site: 'https://fish.rootiest.fyi',
+  // Sections 12-18 moved down one when "12. Function Templates" was added;
+  // keep the old URLs working (checked by docs/verify-manual.py).
+  redirects: {
+    '/12-troubleshooting': '/13-troubleshooting/',
+    '/13-viewing-this-manual': '/14-viewing-this-manual/',
+    '/14-testing': '/15-testing/',
+    '/15-contributing': '/16-contributing/',
+    '/16-agent-tooling': '/17-agent-tooling/',
+    '/17-attribution': '/18-attribution/',
+    '/18-license': '/19-license/',
+  },
   integrations: [
     UnoCSS(),
     ...Icons({

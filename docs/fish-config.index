@@ -176,6 +176,7 @@ qc=### qc
 quick-chat=### qc
 aichat=### qc
 superpowers=### superpowers
+fish-template=### fish-template
 media=## 5.13 Media and Utilities
 dng2avif=### dng2avif
 play-media=### play-media
@@ -380,10 +381,15 @@ personalize=# 11. PERSONALIZATION
 secrets-file=## secrets.fish
 local-config=## local.fish
 
-# ── Section 12: Troubleshooting ──────────────────────────────
-troubleshooting=# 12. TROUBLESHOOTING
-troubleshoot=# 12. TROUBLESHOOTING
-faq=# 12. TROUBLESHOOTING
+# ── Section 12: Function Templates ───────────────────────────
+templates=# 12. FUNCTION TEMPLATES
+template=# 12. FUNCTION TEMPLATES
+function-templates=# 12. FUNCTION TEMPLATES
+
+# ── Section 13: Troubleshooting ──────────────────────────────
+troubleshooting=# 13. TROUBLESHOOTING
+troubleshoot=# 13. TROUBLESHOOTING
+faq=# 13. TROUBLESHOOTING
 uninstall=## Uninstalling and Reverting to Backup
 revert=## Uninstalling and Reverting to Backup
 fish-version=## Fish Version Requirement
@@ -402,9 +408,9 @@ vi-trouble=## Vi Mode Keybindings
 emacs-mode=## Vi Mode Keybindings
 minimal-trouble=## What's with the C1-C6 stuff?
 
-# ── Section 13: Viewing This Manual ──────────────────────────
-viewing=# 13. VIEWING THIS MANUAL
-manual=# 13. VIEWING THIS MANUAL
+# ── Section 14: Viewing This Manual ──────────────────────────
+viewing=# 14. VIEWING THIS MANUAL
+manual=# 14. VIEWING THIS MANUAL
 ov=## In the terminal
 manpage=## As a man page
 jump=## In the terminal
@@ -414,30 +420,30 @@ site=## The project wiki
 source=## Reading the source directly
 raw-source=## Reading the source directly
 
-# ── Section 14: Testing ───────────────────────────────────────
-testing=# 14. TESTING
-tests=# 14. TESTING
+# ── Section 15: Testing ───────────────────────────────────────
+testing=# 15. TESTING
+tests=# 15. TESTING
 
-# ── Section 15: Contributing ──────────────────────────────────
-contributing=# 15. CONTRIBUTING
-contribute=# 15. CONTRIBUTING
-forge=# 15. CONTRIBUTING
+# ── Section 16: Contributing ──────────────────────────────────
+contributing=# 16. CONTRIBUTING
+contribute=# 16. CONTRIBUTING
+forge=# 16. CONTRIBUTING
 
-# ── Section 16: AI Agent Tooling ──────────────────────────────
-agent=# 16. AI AGENT TOOLING
-agent-tooling=# 16. AI AGENT TOOLING
-agents.md=# 16. AI AGENT TOOLING
-claude-code=# 16. AI AGENT TOOLING
-antigravity=# 16. AI AGENT TOOLING
+# ── Section 17: AI Agent Tooling ──────────────────────────────
+agent=# 17. AI AGENT TOOLING
+agent-tooling=# 17. AI AGENT TOOLING
+agents.md=# 17. AI AGENT TOOLING
+claude-code=# 17. AI AGENT TOOLING
+antigravity=# 17. AI AGENT TOOLING
 
-# ── Section 17: Attribution ───────────────────────────────────
-attribution=# 17. ATTRIBUTION
-credits=# 17. ATTRIBUTION
+# ── Section 18: Attribution ───────────────────────────────────
+attribution=# 18. ATTRIBUTION
+credits=# 18. ATTRIBUTION
 
-# ── Section 18: License ────────────────────────────────────────
-license=# 18. LICENSE
-licensing=# 18. LICENSE
-agpl=# 18. LICENSE
-copyright=# 18. LICENSE
+# ── Section 19: License ────────────────────────────────────────
+license=# 19. LICENSE
+licensing=# 19. LICENSE
+agpl=# 19. LICENSE
+copyright=# 19. LICENSE
 
 

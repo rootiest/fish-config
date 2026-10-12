@@ -533,7 +533,7 @@ header useless as a quick reference. When that happens, give the
 subsystem its own numbered top-level section under `docs/manual/`
 (follow the sibling sections' frontmatter shape: `title`, `manTitle`,
 `sidebar.order`, `helpKeywords`) instead of stretching the header.
-`docs/manual/16-agent-tooling.md` (`agents-init`/`agents-vault`/the
+`docs/manual/17-agent-tooling.md` (`agents-init`/`agents-vault`/the
 `AGENTS/` sub-repository) is the existing example — its own doc-headers
 stay short and point there for the full picture, the same way this
 document points at other reference files rather than repeating them.
@@ -575,6 +575,16 @@ Give every function a `--description`, since it's what shows up in `fish -c
 ```fish
 function my_function --description 'Short, imperative description'
 ```
+
+### Adding a template
+
+Templates live in `templates/targets/` (what runs) and `templates/modifiers/` (how it runs); presets (recipes made only of `set -l` lines) live in `templates/presets/`. A template is a fragment, not a function:
+
+1. **Metadata** at the top: `TEMPLATE` (its name), `KIND` (`target` or `modifier`), `SUMMARY`, `PHRASE` (description text; `{setting}`, `{each:setting}`, `{keys:setting}` and `{name}` are filled in). Targets add `SYNOPSIS`, `STATUS` and `EXAMPLE`. Modifiers add `PHASE` (`guard`, `prepare` or `finally`), `ORDER` (the canonical position: in-dir 10, args 20, env 30, confirm 40, timeout 50, retry 60, log 70, notify 80) and `APPLIES` (the targets it works with); an optional `STATUS` adds an exit-status line.
+2. **Settings** under the `Settings` banner: each is `set -l <template>_<name> <default>`, with the template name minus dashes as the prefix, preceded by a one-line prompt comment ending in an optional hint: `(int)`, `(bool)`, `(path)`, `(list)`, `(lines)`, `(choice: a b)`, with `, required` when it cannot be empty. Values live only in `set -l` lines; the generator parses those, never comments.
+3. **Fragments** under `Fragment` banners (`Fragment: <phase>` for a second phase; targets use `Fragment: seed` and `Fragment: run`). They are pasted into the generated function verbatim, so they read their own settings and may change only `cmd` and the `__ft_*` core variables. A run fragment must set `__ft_status`. Use `builtin cd`, `command mkdir` etc., since generated functions run where those names are shadowed.
+
+`tests/test-templates.fish` checks the contract for every template automatically; add a behavior section for the new template that generates it with `_tpl_gen` and runs it against a stub with `_tpl_run`.
 
 ### Help requests
 

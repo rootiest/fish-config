@@ -1,8 +1,8 @@
 ---
 title: License
-manTitle: 18. LICENSE
+manTitle: 19. LICENSE
 sidebar:
-  order: 22
+  order: 23
 helpKeywords:
 - license
 - licensing

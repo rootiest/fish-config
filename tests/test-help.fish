@@ -273,12 +273,13 @@ end
 # new subcommand-style functions here AND to __help_subcommands below;
 # test_help_subcommand_list_is_complete fails if either is forgotten.
 set -g __help_subcommand_fns \
-    auto-pull fish-deps jobrunner kitty-logging session-env superpowers
+    auto-pull fish-deps fish-template jobrunner kitty-logging session-env superpowers
 
 # Each function's documented subcommands, one "fn sub sub ..." row each.
 set -g __help_subcommands \
     'auto-pull list add remove status' \
     'fish-deps status install update sync' \
+    'fish-template list info new edit regen show ls' \
     'jobrunner run list attach kill logs' \
     'kitty-logging install uninstall status dismiss' \
     'session-env install preview uninstall status list' \
@@ -412,7 +413,7 @@ function test_help_bare_invocation
     # print the help on stdout and exit 0.
     set -l tmp (_help_sandbox_new)
     set -l failed 0
-    for fn in kitty-logging session-env superpowers
+    for fn in fish-template kitty-logging session-env superpowers
         set -l want (_help_sandbox_run $tmp "$fn --help" 2>/dev/null | string collect)
         set -l got (_help_sandbox_run $tmp $fn 2>/dev/null | string collect)
         set -l code $pipestatus[1]

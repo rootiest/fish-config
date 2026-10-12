@@ -8,7 +8,7 @@
 #   _agents_init_find, _agents_init_sync_instructions, _agents_init_sync_public, _agents_init_migrate_public, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
 #
 # CLASSIFICATION
-#   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
+#   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(17-agent-tooling)
 #
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-e | --enable]
@@ -163,7 +163,7 @@
 #   write-up -- the AGENTS.md convention, the AGENTS/ sub-repository, the
 #   discovery and safety model, and a complete scenario-by-scenario
 #   reference table -- lives in its own manual section:
-#   docs/manual/16-agent-tooling.md. Update that section in the same
+#   docs/manual/17-agent-tooling.md. Update that section in the same
 #   change whenever this function's behavior changes; see "Dedicated
 #   manual sections for complex subsystems" in CONTRIBUTING.md.
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
@@ -304,7 +304,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l migrate 0
     if set -q _flag_private
         if test "$mode" = public; and test $fresh -eq 0
-            echo "$c_err""Error: this project is in public mode; its AGENTS.md is meant to be published. Going back to private is done by hand -- see docs/manual/16-agent-tooling.md$c_reset" >&2
+            echo "$c_err""Error: this project is in public mode; its AGENTS.md is meant to be published. Going back to private is done by hand -- see docs/manual/17-agent-tooling.md$c_reset" >&2
             return 1
         end
         set mode private

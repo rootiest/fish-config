@@ -1027,7 +1027,7 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
         assert (out / "11-personalization.mdx").exists(), "FileTree page was not promoted to .mdx"
         assert not (out / "11-personalization.md").exists(), "old .md sibling was left behind"
 
-        assert (out / "13-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
+        assert (out / "14-viewing-this-manual.mdx").exists(), "Aside page (NOTE) was not promoted to .mdx"
 
         assert (out / "07-customization.mdx").exists(), "Aside page (rewritten NOTE) was not promoted to .mdx"
 
@@ -1039,7 +1039,7 @@ def test_site_promotes_pages_with_asides_or_filetrees_to_mdx():
         text = (out / "11-personalization.mdx").read_text()
         assert "FileTree" in text.split("from '@astrojs/starlight/components';")[0]
 
-        text2 = (out / "13-viewing-this-manual.mdx").read_text()
+        text2 = (out / "14-viewing-this-manual.mdx").read_text()
         assert "Aside" in text2.split("from '@astrojs/starlight/components';")[0]
 
 
@@ -1865,6 +1865,140 @@ def test_real_manual_section_tags_resolve():
             f"docs/manual/{slug}.md or docs/manual/{slug}/index.md"
         )
     assert checked > 0, "expected at least one real function to carry manual-section(...)"
+
+
+TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
+TEMPLATE_PAGE = "12-function-templates"
+
+
+def test_parse_templates_covers_every_template_file():
+    """Every templates/**/*.fish file is parsed, with a name and a summary."""
+    catalog = mt.parse_templates(TEMPLATES_DIR)
+    parsed = {t["path"] for group in catalog.values() for t in group}
+    on_disk = set(TEMPLATES_DIR.glob("*/*.fish"))
+    assert parsed == on_disk, f"unparsed template files: {sorted(map(str, on_disk - parsed))}"
+    for group, items in catalog.items():
+        assert items, f"no {group} found under templates/"
+        for t in items:
+            assert t["name"] == t["path"].stem, f"{t['path']}: name {t['name']!r} != file stem"
+            assert t["summary"], f"{t['path']}: no SUMMARY"
+    for t in catalog["targets"] + catalog["modifiers"]:
+        assert t["settings"], f"{t['path']}: no settings parsed"
+    for p in catalog["presets"]:
+        assert p["recipe"] and p["recipe"][0].startswith("set -l __ft_use "), (
+            f"{p['path']}: recipe should start with its __ft_use line"
+        )
+
+
+def test_parse_templates_reads_split_fragments_and_hints():
+    """in-dir (no PHASE line, two Fragment banners) and typed hints parse like fish."""
+    catalog = mt.parse_templates(TEMPLATES_DIR)
+    mods = {t["name"]: t for t in catalog["modifiers"]}
+    assert [s["key"] for s in mods["in-dir"]["settings"]] == ["indir_dir"]
+    log = {s["key"]: s for s in mods["log"]["settings"]}
+    assert log["log_file"]["type"] == "path" and log["log_file"]["required"]
+    assert log["log_mode"]["type"] == "choice:append overwrite"
+    assert log["log_mode"]["default"] == "append"
+    confirm = {s["key"]: s for s in mods["confirm"]["settings"]}
+    assert confirm["confirm_prompt"]["default"] == "'Are you sure?'", "default must stay literal fish text"
+    assert confirm["confirm_only_if"]["type"] == "text" and not confirm["confirm_only_if"]["required"]
+
+
+def test_template_settings_match_fish():
+    """Python's settings parse equals __fish_template_settings for every template."""
+    import shutil
+    import subprocess
+
+    fish = shutil.which("fish")
+    if fish is None:
+        print("  SKIP  test_template_settings_match_fish (fish not installed)")
+        return
+    functions = Path(__file__).parent.parent / "functions"
+    catalog = mt.parse_templates(TEMPLATES_DIR)
+    mismatched = []
+    for t in catalog["targets"] + catalog["modifiers"]:
+        res = subprocess.run(
+            [
+                fish,
+                "--no-config",
+                "-c",
+                "set -g fish_function_path $argv[1] $fish_function_path; __fish_template_settings $argv[2]",
+                str(functions),
+                str(t["path"]),
+            ],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            check=False,
+        )
+        want = [tuple(row.split("\t")) for row in res.stdout.splitlines()]
+        got = [
+            (s["key"], s["type"], "1" if s["required"] else "0", s["prompt"])
+            for s in t["settings"]
+        ]
+        if res.returncode != 0 or got != want:
+            mismatched.append(f"{t['name']}: python {got} != fish {want} {res.stderr.strip()}")
+    assert not mismatched, "template settings drift from fish:\n  " + "\n  ".join(mismatched)
+
+
+def test_template_catalog_reaches_both_builds():
+    """Every template and preset name is in the concat and the site page; no placeholder survives."""
+    import build_manual
+
+    docs = Path(__file__).parent
+    catalog = mt.parse_templates(TEMPLATES_DIR)
+    names = [t["name"] for group in catalog.values() for t in group]
+    concat = build_manual.build_concat(docs / "manual")
+    with tempfile.TemporaryDirectory() as d:
+        build_manual.build_site(docs / "manual", Path(d))
+        pages = list(Path(d).glob(f"{TEMPLATE_PAGE}.md*"))
+        assert len(pages) == 1, f"site page for {TEMPLATE_PAGE} missing: {pages}"
+        site = pages[0].read_text()
+    for label, text in (("concat", concat), ("site", site)):
+        assert "GENERATED: template-" not in text, f"{label}: a template placeholder was not replaced"
+        missing = [n for n in names if f"### {n}\n" not in text]
+        assert not missing, f"{label}: catalog headings missing for {missing}"
+    assert "| Setting | Type | Required | Default | Description |" in site, (
+        "settings tables were not converted to markdown tables on the site"
+    )
+
+
+
+def test_as_ruled_table_accepts_one_row_under_a_per_column_rule():
+    """A single-setting template table is still a table; a solid rule with one row is not."""
+    import build_manual
+
+    out = build_manual._as_ruled_table(
+        [
+            "Setting      Type  Description",
+            "───────────  ────  ──────────────",
+            "command_cmd  list  Command to run,",
+            "                   with arguments.",
+        ]
+    )
+    assert out is not None and "| `command_cmd` | list | Command to run, with arguments. |" in out, out
+    solid = build_manual._as_ruled_table(
+        ["Name  Value", "──────────────", "a     b"]
+    )
+    assert solid is None, "a solid rule over one row should stay a code block"
+
+
+def test_site_redirects_point_at_real_pages():
+    """Every Astro redirect target is a page the manual actually builds."""
+    docs = Path(__file__).parent
+    config = (docs / "site" / "astro.config.mjs").read_text()
+    block = re.search(r"redirects:\s*\{(.*?)\}", config, re.S)
+    assert block, "no redirects block in astro.config.mjs"
+    targets = re.findall(r"'/[^']*'\s*:\s*'(/[^']*)'", block.group(1))
+    assert targets, "no redirects found in astro.config.mjs"
+    slugs = {p.stem for p in (docs / "manual").glob("*.md")} | {
+        p.name for p in (docs / "manual").iterdir() if p.is_dir()
+    }
+    bad = [t for t in targets if t.split("#")[0].strip("/") not in slugs]
+    assert not bad, f"redirect targets with no manual page: {bad}"
+    sources = re.findall(r"'(/[^']*)'\s*:", block.group(1))
+    shadowed = [src for src in sources if src.strip("/") in slugs]
+    assert not shadowed, f"redirects hide real pages: {shadowed}"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

@@ -1,8 +1,8 @@
 ---
 title: AI Agent Tooling
-manTitle: 16. AI AGENT TOOLING
+manTitle: 17. AI AGENT TOOLING
 sidebar:
-  order: 20
+  order: 21
 helpKeywords:
 - agent
 - agents-init

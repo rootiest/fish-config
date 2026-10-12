@@ -229,7 +229,7 @@ See [OS Compatibility](https://fish.rootiest.fyi/10-installation/#os-compatibili
 
 ## Installation
 
-This config requires **Fish 4.x or newer** (check with `fish --version`; distro-packaged 3.x is too old, see [Fish Version Requirement](https://fish.rootiest.fyi/12-troubleshooting/#fish-version-requirement) for upgrade steps).
+This config requires **Fish 4.x or newer** (check with `fish --version`; distro-packaged 3.x is too old, see [Fish Version Requirement](https://fish.rootiest.fyi/13-troubleshooting/#fish-version-requirement) for upgrade steps).
 
 This config is managed as a Git repository. To use it on a new machine:
 
@@ -347,11 +347,21 @@ To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots li
 
 ### Function templates
 
-`templates/` holds starting points for your own functions. Each one has a short settings block at the top; edit it and save the file as `<name>.fish` in a directory on `$fish_function_path`.
+`fish-template` builds your own functions from templates without any code. Pick a **target** (what runs), stack any **modifiers** (how it runs), and answer a few questions. The result is a documented function with its own `--help`, saved in `$__fish_user_dots_path/functions/`, which is first on `$fish_function_path`, so it autoloads everywhere and overrides a function of the same name from this config.
 
-| Template | Purpose |
-|---|---|
-| `allow-telemetry.fish` | Wrap one command and remove environment variables (default: `DO_NOT_TRACK`, `DISABLE_TELEMETRY`) from that command's process only |
+```fish
+fish-template new                                  # guided: asks for everything
+fish-template new claude --preset allow-telemetry  # start from a ready-made recipe
+fish-template new rg --target command --set command_cmd=rg \
+    --with args --set args_prepend=--smart-case --yes
+fish-template edit deploy                          # ask again, current answers as defaults
+```
+
+See [Function Templates](https://fish.rootiest.fyi/12-function-templates/) in the project wiki (or run `help config templates`) for every target, modifier and preset with its settings, worked examples, and the safety guarantees.
+
+Stacking works two ways. **Layering:** modifiers stack on one function and always apply in a fixed, sensible order, so `retry` + `log` + `notify` logs every attempt and notifies once at the end. **Chaining:** a `sequence` step or a `dispatcher` subcommand can call any command, including functions you made earlier.
+
+Each generated function keeps its answers (its recipe) as settings at the top of its body. `fish-template show NAME` prints the recipe, `--from FILE` rebuilds it on another machine, and `fish-template regen --all` rebuilds everything after the templates improve. `fish-template list` and `fish-template info TEMPLATE` show what is available. fish-template warns when a name shadows a builtin, function or command, and never replaces a file it did not make.
 
 ### Session-wide variables
 

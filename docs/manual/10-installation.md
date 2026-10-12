@@ -64,7 +64,7 @@ are skipped unless you add `--optional`, `--terminals` or `--all`.
 TIP: `fish-deps sync` installs what is missing and then updates everything
 installed. The full subcommand reference, including exit codes, is on the
 [fish-deps function page](/reference/dependency-management/fish-deps/), and
-[Missing Dependencies](/12-troubleshooting/#missing-dependencies) covers what
+[Missing Dependencies](/13-troubleshooting/#missing-dependencies) covers what
 to do when an install step fails.
 
 ## OS Compatibility

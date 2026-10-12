@@ -1,8 +1,8 @@
 ---
 title: Contributing
-manTitle: 15. CONTRIBUTING
+manTitle: 16. CONTRIBUTING
 sidebar:
-  order: 19
+  order: 20
 helpKeywords:
 - contributing
 - contribute

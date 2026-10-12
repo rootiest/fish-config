@@ -8,7 +8,7 @@
 #   _agents_init_find, _agents_init_stub, _agents_repo_slug, _agents_repo_sync
 #
 # CLASSIFICATION
-#   destructive, self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(16-agent-tooling)
+#   destructive, self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(17-agent-tooling)
 #
 # SYNOPSIS
 #   agents-cleanup [-n | --dry-run] [--drop-extras] [-f | --force] [--marker-file]
@@ -108,7 +108,7 @@
 #   file that differs from its AGENTS/ copy, and a restored AGENTS.md always
 #   differs -- then agents-init --enable. The full write-up -- what is
 #   kept, what is removed, and how the markers interact -- is in
-#   docs/manual/16-agent-tooling.md. Update that section in the same
+#   docs/manual/17-agent-tooling.md. Update that section in the same
 #   change whenever this function's behavior changes.
 function agents-cleanup --description 'undo agents-init: restore real files, archive and remove AGENTS/, disable agents-init'
     __fish_palette
