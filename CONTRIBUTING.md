@@ -752,6 +752,24 @@ Runs before every push and gates the documentation build in CI. It must
 **exit 0**: check its exit status, not only the final `TOTAL` line, because
 the lint phases fail separately from the assertion count.
 
+On a live install, where this checkout is your real `~/.config/fish`, the
+runner also sees machine state CI never has: plugins Fisher installed into
+`functions/` and `conf.d/`, git-ignored local files, your git config. Some
+suites can fail locally for that reason alone (#321). To get the result CI
+would, use:
+
+```fish
+fish tests/run-ci-local.fish
+```
+
+It clones `HEAD`, applies your uncommitted changes (staged, unstaged and
+untracked-but-not-ignored files), and streams that copy into a throwaway
+container from the `fish-ci` image CI uses, so git-ignored files never reach
+it and nothing is written back to your checkout. It then runs the CI test job
+and the docs job's checks (concat, `verify-manual.py`, pandoc) and exits 0
+only if both pass. It needs Docker or Podman; `--tests-only` skips the docs
+checks, `--pull` refreshes the image, and `--image` points at another one.
+
 1. **Syntax and indent lint:** every `.fish` file (`config.fish`,
    `functions/`, `conf.d/`, `completions/`, `templates/`, `tests/`) must
    pass `fish -n` and `fish_indent --check`.
