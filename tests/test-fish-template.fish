@@ -223,4 +223,44 @@ set -l names (string match -v -- probe $out | string match -v -- printf | path s
 check "ls lists only generated functions" "fr pw" "$names"
 rm -rf $tmp
 
+section "cli: wizard and edit"
+set -l tmp (mktemp -d)
+mkdir -p $tmp/bin
+printf '#!/bin/sh\necho "args=$*"; exit 7\n' >$tmp/bin/probe
+chmod +x $tmp/bin/probe
+set -l o "--output $tmp/out"
+# name, target, modifiers, command_cmd, retry_attempts, retry_delay, preview, write
+set -l out (printf '%s\n' wz command retry probe 4 0 n y | _ft $tmp "fish-template new $o; echo st=\$status")
+check "new from scratch through the wizard" st=0 "$out[-1]"
+check "answers land in the recipe" "set -l retry_attempts 4" (string trim -- (string match -r '.*set -l retry_attempts .*' <$tmp/out/wz.fish))
+
+set -l out (printf '%s\n' wz2 bogus command '' probe | _ft $tmp "fish-template new $o; echo st=\$status")
+check "an invalid target is asked again; EOF at the write question writes nothing" yes (string match -q -- '*Choose one of*Nothing written.*st=1' "$out"; and not test -e $tmp/out/wz2.fish; and echo yes; or echo no)
+
+set -l out (printf '%s\n' wz3 command '' | _ft $tmp "fish-template new $o; echo st=\$status")
+check "EOF mid-wizard cancels and writes nothing" yes (string match -q -- '*Cancelled*st=1' "$out"; and not test -e $tmp/out/wz3.fish; and echo yes; or echo no)
+
+set -l out (printf '%s\n' wz4 sequence '' 'echo one' 'echo two' '' '' n y | _ft $tmp "fish-template new $o; echo st=\$status")
+check "line settings take one entry per line" "set -l sequence_steps 'echo one' 'echo two'" (string trim -- (string match -r '.*set -l sequence_steps .*' <$tmp/out/wz4.fish))
+
+# edit: keep the target and modifiers, keep command_cmd, change retry_attempts to 6, keep the delay
+set -l out (printf '%s\n' '' '' '' 6 '' n y | _ft $tmp "fish-template edit wz $o; echo st=\$status")
+check "edit offers current values as defaults" "set -l retry_attempts 6" (string trim -- (string match -r '.*set -l retry_attempts .*' <$tmp/out/wz.fish))
+check "edit keeps untouched values" "set -l command_cmd probe" (string trim -- (string match -r '.*set -l command_cmd .*' <$tmp/out/wz.fish))
+
+printf 'function hand\n    echo hi\nend\n' >$tmp/out/hand.fish
+set -l before (cat $tmp/out/hand.fish | string collect)
+set -l out (_ft $tmp "fish-template edit hand $o </dev/null; echo st=\$status")
+check "edit refuses a hand-written function" yes (string match -q -- '*not a function made by fish-template*st=1' "$out"; and test "$before" = "$(cat $tmp/out/hand.fish | string collect)"; and echo yes; or echo no)
+
+set -l out (_ft $tmp "__fish_template_prompt command command_cmd list 1 'Command' </dev/null; echo st=\$status")
+check "prompt returns 1 on EOF" st=1 "$out[-1]"
+
+# reserved word, then a valid name: asked again, the valid name is used
+set -l out (printf '%s\n' set wz5 command '' probe 1 0 n y | _ft $tmp "fish-template new $o; echo st=\$status")
+check "the wizard re-asks a reserved-word name" yes (string match -q -- "*'set' is a reserved word in fish*st=0" "$out"; and test -e $tmp/out/wz5.fish; and not test -e $tmp/out/set.fish; and echo yes; or echo no)
+set -l out (_ft $tmp "__fish_template_name_ok set; and echo ok; __fish_template_name_ok good_name; and echo ok; __fish_template_name_ok -bad; and echo ok")
+check "__fish_template_name_ok accepts only usable names" ok "$out"
+rm -rf $tmp
+
 report
