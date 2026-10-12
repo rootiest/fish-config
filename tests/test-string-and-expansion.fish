@@ -4,6 +4,21 @@
 #
 # MODE: isolated
 
+# fish reads XDG_DATA_HOME only at startup, so setting it mid-run would still
+# write the history session into the real data dir when this suite is run by
+# hand (#317). Re-execute in a child fish whose XDG_DATA_HOME / XDG_CONFIG_HOME
+# / HOME point into a temp dir instead.
+if not set -q __FISH_CONFIG_STRING_EXPANSION_SANDBOX
+    set -l sb (mktemp -d)
+    mkdir -p $sb/data $sb/cfg $sb/home
+    env __FISH_CONFIG_STRING_EXPANSION_SANDBOX=$sb XDG_DATA_HOME=$sb/data \
+        XDG_CONFIG_HOME=$sb/cfg HOME=$sb/home \
+        fish --no-config (status filename)
+    set -l rc $status
+    command rm -rf $sb
+    exit $rc
+end
+
 source (realpath (dirname (status filename)))/lib.fish
 set -p fish_function_path $repo_root/functions
 set -gx TERM xterm-256color
