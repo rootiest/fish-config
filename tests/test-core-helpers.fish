@@ -117,10 +117,15 @@ _fish_source_scoped $sandbox
 check "a directory is not sourced -> 0" 0 $status
 
 _fish_source_scoped ''
-check "empty-string path -> 0, nothing sourced" 0 $status
-# Not covered: a call with NO argument at all. `test -f $file` with an
-# empty list collapses to `test -f`, which is true, so the helper then
-# runs a bare `source` and executes stdin. Reported as a bug, not pinned.
+check "empty-string path -> 2, nothing sourced" 2 $status
+
+# No argument at all: `test -f $file` once collapsed to `test -f` (true)
+# and the bare `source` then executed stdin (#310). Feed stdin a probe so
+# a regression shows up as the global landing, not just a wrong status.
+set -e __probe_stdin
+echo 'set -g __probe_stdin sourced' | _fish_source_scoped
+check "no argument -> 2" 2 $pipestatus[2]
+check "no argument does not source stdin" false (set -q __probe_stdin; and echo true; or echo false)
 
 #   ───────────────────────── __fish_real_command ──────────────────────
 
