@@ -772,6 +772,12 @@ the lint phases fail separately from the assertion count.
    a copy of the config, never this checkout, since it doubles as a real
    `~/.config/fish`.
 
+Two suites are repository lints rather than behavior tests:
+`tests/test-license-headers.fish` (see [Vendored files](#vendored-files)) and
+`tests/test-invisible-unicode.fish`, which fails on any tracked text file
+containing a no-break space (U+00A0), zero-width space (U+200B) or byte-order
+mark (U+FEFF). Use a plain space; the suite prints `path:line` for each hit.
+
 To add tests, create a new `tests/test-<area>.fish`. The runner discovers
 it automatically. Stub external binaries with fake scripts placed first on
 `$PATH` inside a `mktemp -d` directory, so no suite touches the network, a
