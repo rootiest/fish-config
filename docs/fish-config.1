@@ -7290,6 +7290,22 @@ Then it runs the \f[V]tests/test-*.fish\f[R] suites, each in a throwaway
 XDG sandbox.
 The sandbox is always a copy, never this checkout, because this checkout
 doubles as a real \f[V]\[ti]/.config/fish\f[R].
+.PP
+To get exactly the result CI would, run the same checks in the CI
+container instead (needs Docker or Podman):
+.IP
+.nf
+\f[C]
+fish tests/run-ci-local.fish
+\f[R]
+.fi
+.PP
+It tests a pristine copy of your working tree (uncommitted changes
+included, git-ignored files such as Fisher-installed plugins left out)
+inside the \f[V]fish-ci\f[R] image CI uses, and runs both the test job
+and the docs checks.
+\f[V]--tests-only\f[R] skips the docs checks and \f[V]--pull\f[R]
+refreshes the image first.
 .SH 15. CONTRIBUTING
 .PP
 Interested in contributing?
