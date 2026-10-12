@@ -132,16 +132,19 @@ rm -rf $tmp
 
 section "helpers: validate"
 set -l tmp (mktemp -d)
-for case in "set __ft_use" \
-    "set __ft_use nope" \
-    "set __ft_use command; __fish_template_store set retry_attempts 3" \
-    "set __ft_use command" \
-    "set __ft_use sequence timeout; __fish_template_store set sequence_steps true" \
-    "set __ft_use sequence env; __fish_template_store set sequence_steps true; __fish_template_store set env_unset X" \
-    "set __ft_use command retry; __fish_template_store set command_cmd x; __fish_template_store set retry_attempts many" \
-    "set __ft_use command retry retry; __fish_template_store set command_cmd x"
-    set -l out (_ft $tmp "__fish_template_store $case; __fish_template_validate >/dev/null 2>&1; echo st=\$status")
-    check "rejected with 2: $case" st=2 "$out[-1]"
+# Each row: expected stderr fragment, then the recipe setup.
+for row in "no target chosen|set __ft_use" \
+    "unknown target|set __ft_use nope" \
+    "a value is required|set __ft_use command; __fish_template_store set retry_attempts 3" \
+    "a value is required|set __ft_use command" \
+    "cannot be used with a sequence target|set __ft_use sequence timeout; __fish_template_store set sequence_steps true" \
+    "env_unset needs a command or fallback target|set __ft_use sequence env; __fish_template_store set sequence_steps true; __fish_template_store set env_unset X" \
+    "retry_attempts: expects a whole number|set __ft_use command retry; __fish_template_store set command_cmd x; __fish_template_store set retry_attempts many" \
+    "is listed twice|set __ft_use command retry retry; __fish_template_store set command_cmd x"
+    set -l want (string split -m1 '|' -- $row)
+    set -l out (_ft $tmp "__fish_template_store $want[2]; __fish_template_validate 2>&1 >/dev/null; echo st=\$status")
+    check "rejected with 2: $want[2]" st=2 "$out[-1]"
+    check "  and says: $want[1]" yes (string match -q -- "*$want[1]*" "$out"; and echo yes; or echo no)
 end
 set -l out (_ft $tmp "__fish_template_store set __ft_use command
     __fish_template_store set command_cmd x

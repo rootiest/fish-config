@@ -135,4 +135,131 @@ _tpl_gen $tmp dd "__ft_use dispatcher" "dispatcher_subcommands 'hi=echo hello'" 
 check "bare call runs the default" hello "$(_tpl_out $tmp dd)"
 rm -rf $tmp
 
+section "templates: args"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp probe 'echo "args=$*"; exit 7'
+_tpl_gen $tmp ag "__ft_use command args" "command_cmd probe" "args_prepend -x" "args_append --end"
+check "prepend before, append after your arguments" "args=-x a --end" "$(_tpl_out $tmp 'ag a')"
+rm -rf $tmp
+
+section "templates: env"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp envp 'echo "FOO=[$FOO] DNT=[$DNT] KEEP=[$KEEP]"'
+_tpl_gen $tmp ev "__ft_use command env" "command_cmd envp" "env_set 'FOO=bar baz'" "env_unset DNT"
+set -l out (_tpl_run $tmp "set -gx DNT 1; set -gx KEEP 1; ev; echo parent=\$DNT foo=\"\$FOO\"")
+check "sets and removes variables for the command only" "FOO=[bar baz] DNT=[] KEEP=[1]" "$out[1]"
+check "the calling shell is untouched" "parent=1 foo=" "$out[2]"
+_tpl_gen $tmp envp "__ft_use command env" "command_cmd envp" "env_unset DNT"
+check "same-name wrapper with env -u does not recurse" "FOO=[] DNT=[] KEEP=[]" "$(_tpl_out $tmp 'set -gx DNT 1; envp')"
+_tpl_stub $tmp probe 'echo "args=$*"; exit 7'
+_tpl_gen $tmp ee "__ft_use command env" "command_cmd probe" env_set env_unset
+check "empty lists change nothing" "args=q st=7" "$(_tpl_out $tmp 'ee q; echo st=$status')"
+rm -rf $tmp
+
+section "templates: confirm"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp probe 'echo "args=$*"; exit 7'
+_tpl_gen $tmp cf "__ft_use command confirm" "command_cmd probe" "confirm_prompt 'Go?'" confirm_only_if
+set -l out (_tpl_run $tmp "echo n | cf x; echo st=\$status")
+check "declined: Aborted and 1, command not run" yes (string match -q -- '*Aborted.*st=1' "$out"; and not string match -q -- '*args=*' "$out"; and echo yes; or echo no)
+set -l out (_tpl_run $tmp "echo y | cf x; echo st=\$status")
+check "accepted: runs" yes (string match -q -- '*args=x*st=7' "$out"; and echo yes; or echo no)
+_tpl_gen $tmp co "__ft_use command confirm" "command_cmd probe" "confirm_prompt 'Go?'" "confirm_only_if --force"
+check "only_if miss: no question" "args=x st=7" "$(_tpl_out $tmp 'co x </dev/null; echo st=$status')"
+set -l out (_tpl_run $tmp "echo n | co --force; echo st=\$status")
+check "only_if hit: asks" st=1 "$out[-1]"
+rm -rf $tmp
+
+section "templates: in-dir"
+set -l tmp (mktemp -d)
+mkdir $tmp/work
+_tpl_stub $tmp wd 'echo "$PWD"; exit 7'
+_tpl_gen $tmp iw "__ft_use command in-dir" "command_cmd wd" "indir_dir $tmp/work"
+set -l out (_tpl_run $tmp "builtin cd /; iw; echo st=\$status; pwd")
+check "runs inside the directory and returns, even on failure" "$tmp/work st=7 /" "$out"
+_tpl_gen $tmp im "__ft_use command in-dir" "command_cmd wd" "indir_dir $tmp/nope"
+set -l out (_tpl_run $tmp "builtin cd /; im; echo st=\$status; pwd")
+check "missing directory: 1, PWD unchanged" "st=1 /" "$out[-2..-1]"
+_tpl_gen $tmp ic "__ft_use command in-dir confirm" "command_cmd wd" "indir_dir $tmp/work" "confirm_prompt 'Go?'" confirm_only_if
+set -l out (_tpl_run $tmp "builtin cd /; echo n | ic; pwd")
+check "declined confirm leaves PWD alone" / "$out[-1]"
+rm -rf $tmp
+
+section "templates: retry"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp flaky 'n=$(cat '$tmp'/count 2>/dev/null || echo 0); n=$((n+1)); echo $n >'$tmp'/count; [ $n -ge 3 ]'
+_tpl_gen $tmp rt "__ft_use command retry" "command_cmd flaky" "retry_attempts 3" "retry_delay 0"
+check "succeeds on the third try" "st=0 3" "$(_tpl_out $tmp 'rt; echo st=$status')"" "(cat $tmp/count)
+rm $tmp/count
+_tpl_gen $tmp r2 "__ft_use command retry" "command_cmd flaky" "retry_attempts 2" "retry_delay 0"
+check "gives up after the last attempt" "st=1 2" "$(_tpl_out $tmp 'r2; echo st=$status')"" "(cat $tmp/count)
+rm -rf $tmp
+
+section "templates: timeout"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp slow 'sleep 3'
+_tpl_gen $tmp to "__ft_use command timeout" "command_cmd slow" "timeout_seconds 1"
+check "stops a long run with 124" st=124 "$(_tpl_out $tmp 'to; echo st=$status')"
+_tpl_gen $tmp slow "__ft_use command env timeout" "command_cmd slow" "env_unset DNT" "timeout_seconds 1"
+check "same-name wrapper with env and timeout does not recurse" st=124 "$(_tpl_out $tmp 'slow; echo st=$status')"
+rm -rf $tmp
+
+section "templates: log"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp say 'echo hi; exit 7'
+_tpl_gen $tmp lg "__ft_use command log" "command_cmd say" "log_file $tmp/logs/out.log" "log_mode append"
+set -l out (_tpl_run $tmp "lg; echo st=\$status; lg >/dev/null")
+check "output is shown and the status survives the pipe" "hi st=7" "$out"
+check "append mode keeps every run (directory created)" 2 (count (cat $tmp/logs/out.log))
+_tpl_gen $tmp lo "__ft_use command log" "command_cmd say" "log_file $tmp/o.log" "log_mode overwrite"
+_tpl_run $tmp "lo; lo" >/dev/null
+check "overwrite mode keeps only the last run" 1 (count (cat $tmp/o.log))
+_tpl_gen $tmp lr "__ft_use command log retry" "command_cmd say" "log_file $tmp/r.log" "log_mode overwrite" "retry_attempts 2" "retry_delay 0"
+_tpl_run $tmp lr >/dev/null
+check "overwrite still logs every attempt of one run" 2 (count (cat $tmp/r.log))
+rm -rf $tmp
+
+section "templates: notify"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp say 'echo hi; exit 7'
+_tpl_stub $tmp ok 'exit 0'
+_tpl_stub $tmp notify-send 'printf "%s|" "$@" >'$tmp'/notified'
+_tpl_gen $tmp nf "__ft_use command notify" "command_cmd say" "notify_on fail" notify_title
+_tpl_run $tmp nf >/dev/null
+check "fail: notifies with the status" "--|nf|Failed with exit status 7|" (cat $tmp/notified)
+rm -f $tmp/notified
+_tpl_gen $tmp ns "__ft_use command notify" "command_cmd ok" "notify_on fail" "notify_title Backup"
+_tpl_run $tmp ns >/dev/null
+check "fail only: a success stays quiet" no (test -e $tmp/notified; and echo yes; or echo no)
+_tpl_gen $tmp na "__ft_use command notify" "command_cmd ok" "notify_on always" "notify_title Backup"
+_tpl_run $tmp na >/dev/null
+check "always: notifies success with the title" "--|Backup|Finished successfully|" (cat $tmp/notified)
+rm -rf $tmp
+
+section "templates: full stack"
+set -l tmp (mktemp -d)
+mkdir $tmp/work
+_tpl_stub $tmp probe 'echo "args=$* dir=$PWD FOO=$FOO"; exit 0'
+_tpl_stub $tmp notify-send 'exit 0'
+_tpl_gen $tmp all "__ft_use command notify log retry timeout env args confirm in-dir" "command_cmd probe" \
+    "indir_dir $tmp/work" "args_prepend -v" "env_set FOO=1" "confirm_prompt 'Go?'" "timeout_seconds 5" \
+    "retry_attempts 2" "log_file $tmp/all.log" "notify_on always"
+set -l out (_tpl_run $tmp "builtin cd /; echo y | all a; echo st=\$status; pwd")
+check "every modifier at once" yes (string match -q -- "*args=-v a dir=$tmp/work FOO=1*st=0 /" "$out"; and echo yes; or echo no)
+check "recipe is written in canonical order" "set -l __ft_use command in-dir args env confirm timeout retry log notify" (string trim -- (string match -r '.*set -l __ft_use .*' <$tmp/functions/all.fish))
+rm -rf $tmp
+
+section "templates: command and fallback, same-name edge cases"
+set -l tmp (mktemp -d)
+_tpl_gen $tmp nobin "__ft_use command" "command_cmd nobin"
+set -l out (_tpl_run $tmp "nobin; echo st=\$status")
+check "same-name command with no binary: 127" st=127 "$out[-1]"
+check "same-name command with no binary: says command not found" yes (string match -q -- '*command not found*' "$out"; and echo yes; or echo no)
+_tpl_stub $tmp probe 'echo "args=$*"; exit 7'
+_tpl_gen $tmp fbs "__ft_use fallback" "fallback_candidates fbs probe"
+check "same-name fallback candidate without a binary falls through to the next" "args=q st=7" "$(_tpl_out $tmp 'fbs q; echo st=$status')"
+_tpl_stub $tmp fbs 'echo "fbs-binary $*"; exit 3'
+check "same-name fallback candidate with a binary runs the binary" "fbs-binary q st=3" "$(_tpl_out $tmp 'fbs q; echo st=$status')"
+rm -rf $tmp
+
 report

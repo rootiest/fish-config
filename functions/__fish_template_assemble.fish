@@ -105,7 +105,8 @@ function __fish_template_assemble --argument-names name --description 'Print the
     end
     set -l frag (__fish_template_fragment $tfile seed)
     and set -a out '' "# $target: seed" $frag
-    for i in (seq 2 (count $files))
+    for i in (seq (count $files))
+        test $i -eq 1; and continue
         set -l frag (__fish_template_fragment $files[$i] prepare)
         and set -a out '' "# $names[$i]: prepare" $frag
     end
@@ -118,7 +119,8 @@ function __fish_template_assemble --argument-names name --description 'Print the
     end
     set -a out 'test $__ft_status -eq 0; and break' \
         'test $__ft_try -lt $__ft_attempts; and sleep $__ft_delay' end
-    for i in (seq 2 (count $files))
+    for i in (seq (count $files))
+        test $i -eq 1; and continue
         set -l frag (__fish_template_fragment $files[$i] finally)
         and set -a out '' "# $names[$i]: finally" $frag
     end
