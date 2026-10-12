@@ -81,14 +81,14 @@ function __fish_template_store --argument-names op --description 'fish-template 
             set -l file $argv[1]
             test -f "$file"; and test -r "$file"; or return 1
             set -l recipe 0
-            string match -q -- '*# ── fish-template recipe ──*' <$file; and set recipe 1
+            __fish_template_is_generated $file; and set recipe 1
             set -l inside 0
             while read -l line
-                if string match -qr -- '^\s*# ── fish-template recipe ──' $line
+                if string match -qr -- '^\s*# ── fish-template recipe ──$' $line
                     set inside 1
                     continue
                 end
-                string match -qr -- '^\s*# ── end recipe ──' $line; and break
+                string match -qr -- '^\s*# ── end recipe ──$' $line; and break
                 string match -qr -- '^#\s+─+ Fragment' $line; and break
                 test $recipe -eq 1; and test $inside -eq 0; and continue
                 string match -qr -- '^\s*set -l [a-z_][a-z0-9_]*(\s|$)' $line; or continue

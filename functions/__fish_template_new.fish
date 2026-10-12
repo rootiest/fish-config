@@ -143,8 +143,13 @@ function __fish_template_new --description 'Create or edit a function with fish-
         __fish_template_store reset
         return 2
     end
-    set -l tmp (mktemp); or return 1
-    __fish_template_assemble $name >$tmp
+    set -l tmp (mktemp)
+    if test -z "$tmp"; or not __fish_template_assemble $name >$tmp
+        echo "$c_err""fish-template: could not assemble $name; nothing was written$c_reset" >&2
+        test -n "$tmp"; and command rm -f -- $tmp
+        __fish_template_store reset
+        return 1
+    end
     if set -q _flag_dry_run
         string collect -N <$tmp
         command rm -f -- $tmp

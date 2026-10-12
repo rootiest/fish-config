@@ -47,7 +47,12 @@ function __fish_template_regen --description 'Rebuild functions made by fish-tem
             continue
         end
         set -l tmp (mktemp)
-        __fish_template_assemble $n >$tmp
+        if test -z "$tmp"; or not __fish_template_assemble $n >$tmp
+            echo "$c_err""fish-template: could not assemble $n; it was left unchanged$c_reset" >&2
+            test -n "$tmp"; and command rm -f -- $tmp
+            set failed 1
+            continue
+        end
         __fish_template_write --managed $n $tmp (path dirname -- $file); or set failed 1
         command rm -f -- $tmp
     end

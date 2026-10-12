@@ -152,9 +152,9 @@ function fish-template --description 'Build your own functions from templates, w
             echo "# fish-template recipe for $argv[1]. Use: fish-template new NAME --from FILE"
             set -l inside 0
             while read -l line
-                if string match -qr -- '^\s*# ── fish-template recipe ──' $line
+                if string match -qr -- '^\s*# ── fish-template recipe ──$' $line
                     set inside 1
-                else if string match -qr -- '^\s*# ── end recipe ──' $line
+                else if string match -qr -- '^\s*# ── end recipe ──$' $line
                     break
                 else if test $inside -eq 1
                     string trim -- $line
