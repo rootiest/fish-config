@@ -64,4 +64,6 @@ function __config_settings_set_value
                 set -gx SCROLLBACK_HISTORY_MAX_FILES 100
             end
     end
+    # Erasing an unset variable leaves status 4; the contract is "always 0".
+    return 0
 end

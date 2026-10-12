@@ -184,7 +184,7 @@ section __auto_source_fallback_venv
 # A fake project whose .venv activate script records activation the way the
 # real one does: it sets VIRTUAL_ENV and defines deactivate.
 set -l proj $work/proj
-mkdir -p $proj/.venv/bin $proj/sub $work/elsewhere $work/direnv-proj/.venv/bin
+mkdir -p $proj/.venv/bin $proj/sub {$proj}2 $work/elsewhere $work/direnv-proj/.venv/bin
 set -l activate 'set -gx VIRTUAL_ENV (builtin realpath .venv)
 set -g _venv_activations (math $_venv_activations + 1)
 function deactivate
@@ -213,6 +213,13 @@ check "a subdirectory does not re-activate" 1 $_venv_activations
 builtin cd $work/elsewhere
 check "leaving the project deactivates" "" "$VIRTUAL_ENV"
 check "deactivate ran once" 1 $_venv_deactivations
+
+# A sibling sharing the project's name as a prefix is outside it (#313).
+builtin cd $proj
+builtin cd {$proj}2
+check "a prefix-sharing sibling deactivates" "" "$VIRTUAL_ENV"
+check "deactivate ran again" 2 $_venv_deactivations
+builtin cd $work/elsewhere
 
 builtin cd $work/direnv-proj
 check "a directory with .envrc is left to direnv" "" "$VIRTUAL_ENV"
