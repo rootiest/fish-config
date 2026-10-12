@@ -429,6 +429,14 @@ fish tests/run-tests.fish
 
 Runs before every push (and gates the [documentation build](.github/workflows/ci.yml) in CI, so a broken config can't get published). First it lints: every `.fish` file must pass a syntax check and an indent check, bare calls to shadowed commands must be declared, and every tracked function must be named by a test suite or listed with a reason in `tests/coverage-allowlist.txt`. Then it runs the `tests/test-*.fish` suites, each in a throwaway XDG sandbox. The sandbox is always a copy, never this checkout, because this checkout doubles as a real `~/.config/fish`.
 
+To get exactly the result CI would, run the same checks in the CI container instead (needs Docker or Podman):
+
+```fish
+fish tests/run-ci-local.fish
+```
+
+It tests a pristine copy of your working tree (uncommitted changes included, git-ignored files such as Fisher-installed plugins left out) inside the `fish-ci` image CI uses, and runs both the test job and the docs checks. `--tests-only` skips the docs checks and `--pull` refreshes the image first.
+
 ---
 
 ## Contributing

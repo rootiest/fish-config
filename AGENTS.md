@@ -18,7 +18,11 @@ Scoped rules live next to the code they govern:
   Conventions).
 - Before finishing, `fish tests/run-tests.fish` must **exit 0**. Check its exit
   status, not only the final `TOTAL` line: the lint phases (syntax, indent,
-  shadow classification) fail separately from the assertion count.
+  shadow classification) fail separately from the assertion count. On a live
+  install, failures that only come from local state (Fisher-installed
+  plugins, ignored files) are not regressions: confirm with
+  `fish tests/run-ci-local.fish`, which runs the same checks as CI in the CI
+  container against a pristine copy of the working tree.
 - Documentation changes: `python3 docs/verify-manual.py` must pass. See
   `docs/AGENTS.md` for which files are generated and must not be hand-edited.
 
