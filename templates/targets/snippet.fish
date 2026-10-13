@@ -3,7 +3,7 @@
 
 # TEMPLATE  snippet
 # KIND      target
-# SUMMARY   Fill your arguments into slots {1}, {2}, {@} of a long command line
+# SUMMARY   Fill your arguments into numbered slots in a long command line
 # PHRASE    Runs {snippet_cmd}
 # SYNOPSIS  {name} ARGS...
 # STATUS    Exit status of the command; 2 if an argument is missing or extra

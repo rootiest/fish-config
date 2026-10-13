@@ -167,14 +167,14 @@ lists the subcommands; an unknown
 subcommand exits with status 2. Any extra words after the subcommand
 are added to the end of its command line.
 
-A short name for a long command line, used as ytmp3 URL. Write {1},
-{2} and so on where your arguments go, and {@} for any arguments after
+A short name for a long command line, used as ytmp3 URL. Write `{1}`,
+`{2}` and so on where your arguments go, and `{@}` for any arguments after
 those:
 
     fish-template new ytmp3 --target snippet --set 'snippet_cmd=yt-dlp -x --audio-format mp3 {1}' --yes
 
 Calling it with fewer arguments than its highest slot, or with extra
-arguments when there is no {@}, prints its usage and exits with status
+arguments when there is no `{@}`, prints its usage and exits with status
 2. Each argument fills its slot as one word, exactly as given: spaces,
 quotes, $ and (...) in it are never read as fish code, so an argument
 cannot run anything. A snippet runs one program with its arguments, so
