@@ -4576,7 +4576,9 @@ Synopsis:  fish-template [list|info|new|edit|regen|show|ls|help] [ARGS...]
 
 Builds your own fish functions from templates, without writing code.
 Pick a target (what runs: one command, the first installed of several,
-a sequence of steps, or a set of subcommands), stack any modifiers on
+a sequence of steps, a set of subcommands, a command line with slots
+for your arguments, a command line per host or per operating system,
+or a jump to a directory), stack any modifiers on
 it (how it runs: extra arguments, environment changes, a confirmation
 question, a working directory, retries, a time limit, a log file, a
 desktop notification), and answer a few questions. fish-template
@@ -4600,7 +4602,8 @@ Arguments:
   help, -h, --help     Show this help
 
   Options for new and edit:
-  -t, --target T       Target: command, fallback, sequence or dispatcher
+  -t, --target T       Target: command, fallback, sequence, dispatcher,
+                       snippet, per-host, per-os or jump
   -w, --with M[,M]     Modifiers to stack (repeatable)
   -s, --set KEY=VAL    Give a setting. List settings take space-separated
                        words; line settings take one entry per --set
@@ -6860,8 +6863,10 @@ shell.
 A function made by \f[V]fish-template\f[R] has two parts you choose:
 .IP \[bu] 2
 A \f[B]target\f[R]: what runs.
-One command, the first installed of several commands, a list of steps,
-or a set of subcommands.
+One command, the first installed of several commands, a list of steps, a
+set of subcommands, a long command line with slots for your arguments, a
+different command line on each host or operating system, or a jump to a
+directory.
 .IP \[bu] 2
 Any number of \f[B]modifiers\f[R]: how it runs.
 Extra arguments, environment changes, a confirmation question, a fixed
@@ -6957,8 +6962,10 @@ Every generated function is built from these phases:
 \f[C]
 Phase    What runs                       Used by
 ───────  ──────────────────────────────  ─────────────────────────────
-guard    The target, then the modifiers  confirm, fallback\[aq]s search
-seed     The target                      command
+guard    The target, then the modifiers  confirm, fallback\[aq]s search,
+                                         snippet\[aq]s slots, per-host and
+                                         per-os matching
+seed     The target                      command, jump
 prepare  The modifiers, in ORDER         in-dir, args, env, timeout,
                                          retry, log
 run      The target, in the retry loop   every target; its output also
@@ -7034,6 +7041,54 @@ fallback_candidates  list  yes       \[em]        Commands to try, in order of
                                               preference.
 \f[R]
 .fi
+.SS jump
+.PP
+Go to a directory and stay there, optionally running a command line.
+.IP
+.nf
+\f[C]
+Setting   Type  Required  Default  Description
+────────  ────  ────────  ───────  ─────────────────────────────────────────
+jump_dir  path  yes       \[em]        Directory to go to.
+jump_cmd  text  no        \[em]        Command line to run there, if any; your
+                                   arguments are added to the end.
+\f[R]
+.fi
+.SS per-host
+.PP
+Run a different command line on each machine, by hostname.
+.IP
+.nf
+\f[C]
+Setting           Type   Required  Default  Description
+────────────────  ─────  ────────  ───────  ────────────────────────────────
+perhost_commands  lines  yes       \[em]        Command lines, one per line, as
+                                            hostname=command line; a|b
+                                            matches either host, * and ? are
+                                            wildcards, and your arguments
+                                            are added to the end.
+perhost_default   text   no        \[em]        Command line to run on any other
+                                            machine; empty means fail there.
+\f[R]
+.fi
+.SS per-os
+.PP
+Run a different command line on each operating system or distribution.
+.IP
+.nf
+\f[C]
+Setting         Type   Required  Default  Description
+──────────────  ─────  ────────  ───────  ──────────────────────────────────
+peros_commands  lines  yes       \[em]        Command lines, one per line, as
+                                          system=command line: linux,
+                                          darwin, freebsd, or a distribution
+                                          such as arch or debian; a|b
+                                          matches either, and your arguments
+                                          are added to the end.
+peros_default   text   no        \[em]        Command line to run on any other
+                                          system; empty means fail there.
+\f[R]
+.fi
 .SS sequence
 .PP
 Run several command lines, one after another.
@@ -7048,6 +7103,19 @@ sequence_steps    lines                   yes       \[em]        Command lines t
                                                              own functions.
 sequence_on_fail  one of: stop, continue  no        stop     What to do when a step
                                                              fails.
+\f[R]
+.fi
+.SS snippet
+.PP
+Fill your arguments into numbered slots in a long command line.
+.IP
+.nf
+\f[C]
+Setting      Type  Required  Default  Description
+───────────  ────  ────────  ───────  ──────────────────────────────────────
+snippet_cmd  list  yes       \[em]        Command to run, one program and its
+                                      arguments; write {1}, {2}... for your
+                                      arguments and {\[at]} for the rest.
 \f[R]
 .fi
 .SS Modifiers
@@ -7072,7 +7140,8 @@ args_append   list  no        \[em]        Arguments placed after yours.
 .PP
 Ask before running, optionally only for matching arguments.
 .PP
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host,
+per-os, jump.
 .IP
 .nf
 \f[C]
@@ -7090,7 +7159,8 @@ confirm_only_if  text  no        \[em]                Only ask when your
 .PP
 Set or remove environment variables for this command only.
 .PP
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host,
+per-os, jump.
 .IP
 .nf
 \f[C]
@@ -7098,15 +7168,16 @@ Setting    Type   Required  Default  Description
 ─────────  ─────  ────────  ───────  ───────────────────────────────────────
 env_set    lines  no        \[em]        Variables to set, one per line as
                                      NAME=value.
-env_unset  list   no        \[em]        Variables to remove (command and
-                                     fallback targets only).
+env_unset  list   no        \[em]        Variables to remove (command, fallback
+                                     and snippet targets only).
 \f[R]
 .fi
 .SS in-dir
 .PP
 Run inside a fixed directory, then return to where you were.
 .PP
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host,
+per-os.
 .IP
 .nf
 \f[C]
@@ -7119,7 +7190,8 @@ indir_dir  path  yes       \[em]        Directory to run in.
 .PP
 Save the output to a log file as well as showing it.
 .PP
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host,
+per-os, jump.
 .IP
 .nf
 \f[C]
@@ -7135,7 +7207,8 @@ log_mode  one of: append, overwrite  no        append   Add each run to the
 .PP
 Send a desktop notification when it finishes.
 .PP
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host,
+per-os, jump.
 .IP
 .nf
 \f[C]
@@ -7151,7 +7224,8 @@ notify_title  text                           no        \[em]        Notification
 .PP
 Try again when the command fails.
 .PP
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host,
+per-os, jump.
 .IP
 .nf
 \f[C]
@@ -7165,7 +7239,7 @@ retry_delay     int   no        2        Seconds to wait between attempts.
 .PP
 Stop the command if it runs too long (external commands only).
 .PP
-Works with: command, fallback.
+Works with: command, fallback, snippet.
 .IP
 .nf
 \f[C]
@@ -7286,6 +7360,62 @@ proj help, or proj on its own when no default subcommand is set, lists
 the subcommands; an unknown subcommand exits with status 2.
 Any extra words after the subcommand are added to the end of its command
 line.
+.PP
+A short name for a long command line, used as ytmp3 URL.
+Write \f[V]{1}\f[R], \f[V]{2}\f[R] and so on where your arguments go,
+and \f[V]{\[at]}\f[R] for any arguments after those:
+.IP
+.nf
+\f[C]
+fish-template new ytmp3 --target snippet --set \[aq]snippet_cmd=yt-dlp -x --audio-format mp3 {1}\[aq] --yes
+\f[R]
+.fi
+.PP
+Calling it with fewer arguments than its highest slot, or with extra
+arguments when there is no \f[V]{\[at]}\f[R], prints its usage and exits
+with status 2.
+Each argument fills its slot as one word, exactly as given: spaces,
+quotes, $ and (\&...)
+in it are never read as fish code, so an argument cannot run anything.
+A snippet runs one program with its arguments, so it has no pipes or
+redirections; use sequence for those.
+.PP
+One function that does the right thing on every machine sharing your
+user-dots, with a command line per hostname and a default for the rest.
+A key can list several hosts as a|b and use * and ?
+wildcards; the first matching line wins:
+.IP
+.nf
+\f[C]
+fish-template new backup --target per-host --set \[aq]perhost_commands=laptop|tablet=restic backup \[ti]/docs\[aq] --set \[aq]perhost_commands=nas-*=restic backup /srv\[aq] --set \[aq]perhost_default=echo no backup here\[aq] --yes
+\f[R]
+.fi
+.PP
+per-os does the same by operating system.
+A key is a kernel name (linux, darwin, freebsd) or a Linux
+distribution\[cq]s ID from \f[V]/etc/os-release\f[R] (arch, debian,
+fedora), and a distribution also matches the ones it is like, so ubuntu
+matches debian.
+Put distributions before linux, since the first match wins:
+.IP
+.nf
+\f[C]
+fish-template new upgrade-os --target per-os --set \[aq]peros_commands=arch=paru -Syu\[aq] --set \[aq]peros_commands=debian=sudo apt upgrade\[aq] --set \[aq]peros_commands=darwin=brew upgrade\[aq] --yes
+\f[R]
+.fi
+.PP
+With neither a match nor a default, per-host and per-os exit with status
+1, since the same function may work on another machine.
+.PP
+Go to a project and stay there, showing its status.
+Unlike in-dir, jump does not take you back afterwards; cd - returns you
+to where you were:
+.IP
+.nf
+\f[C]
+fish-template new proj-go --target jump --set jump_dir=\[ti]/code/proj --set \[aq]jump_cmd=git status -sb\[aq] --yes
+\f[R]
+.fi
 .SS Recipes
 .PP
 Change a function by answering the questions again, with its current
