@@ -31,6 +31,8 @@
 #   never block a shell or an agent launch. If a pre-commit or commit-msg
 #   hook rejects the commit (e.g. a secret scanner), that failure is
 #   surfaced too: nothing is committed and a diagnostic goes to stderr.
+#   A failure to stage is reported separately (exit 3), with git's own
+#   reason, so it is not mistaken for a rejected commit.
 #
 # ARGUMENTS
 #   dir      Absolute path to the git repository
@@ -42,6 +44,8 @@
 #      directory inside another repository counts as not), arguments were missing, or the commit
 #      itself failed (e.g. a pre-commit/commit-msg hook rejected it)
 #   2  A rebase is in progress; nothing committed, nothing touched
+#   3  Staging (git add -A) failed, e.g. on a nested repository with no
+#      commits; nothing committed, and git's own reason goes to stderr
 #
 # RETURNS
 #   A single "→ Committed (<sha>) <subject>" line on stdout when it
@@ -63,7 +67,15 @@ function _agents_repo_sync --argument-names dir msg
         return 2
     end
 
-    git -C "$dir" add -A 2>/dev/null
+    # Staging can fail on its own (e.g. a nested repository with no commits).
+    # Unchecked, the commit below then fails instead and blames a hook, so
+    # it is caught here and git's reason is passed on.
+    set -l add_err (git -C "$dir" add -A 2>&1 >/dev/null)
+    if test $status -ne 0
+        echo "_agents_repo_sync: staging failed in $dir; nothing committed" >&2
+        printf '  %s\n' $add_err >&2
+        return 3
+    end
     set -l status_out (git -C "$dir" status --porcelain 2>/dev/null)
     test -n "$status_out"; or return 0
 
