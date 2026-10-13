@@ -38,9 +38,12 @@ jobs:
     runs-on: racknerd-mini
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          token: ${{ secrets.GITEA_TOKEN }}
+          # Nothing below talks to Gitea through git, so don't persist the
+          # job token into .git/config (#241). GH_MIRROR_TOKEN stays scoped
+          # to the one step that needs it.
+          persist-credentials: false
 
       - name: Install Python
         run: |
@@ -56,6 +59,7 @@ jobs:
       - name: Sync labels
         env:
           GH_MIRROR_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           if [ -z "$GH_MIRROR_TOKEN" ]; then
             echo "::error::GH_MIRROR_TOKEN is not set in this repository's Actions secrets."
@@ -64,7 +68,7 @@ jobs:
             echo "GH_MIRROR_TOKEN under Settings -> Actions -> Secrets."
             exit 1
           fi
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
+          if [ "$DRY_RUN" = "true" ]; then
             python3 scripts/sync-labels.py --dry-run
           else
             python3 scripts/sync-labels.py
