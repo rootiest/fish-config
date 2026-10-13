@@ -609,7 +609,15 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         printf 'adopted: %s → %s (%s)\n' "$cur" "$_flag_adopt" (date -I) >>"$to/origin"
         test -n "$stash"; and rm -rf "$stash"
 
-        _agents_repo_sync "$vault" "chore: adopt $cur as $_flag_adopt" >/dev/null
+        # The rebinding is already done on disk; a failed commit only means the
+        # vault history does not record it yet (the next sync will). Still a
+        # failure: EXIT STATUS promises 1 when nothing was committed.
+        set -l adopt_out (_agents_repo_sync "$vault" "chore: adopt $cur as $_flag_adopt" 2>/dev/null)
+        set -l adopt_rc $status
+        if test $adopt_rc -ne 0
+            echo "$c_err""agents-vault: adopted $cur as $_flag_adopt, but the vault commit failed (status $adopt_rc); git -C $vault status shows what is pending$c_reset" >&2
+            return 1
+        end
         test $verbose -eq 1; and echo "$c_ok→ Adopted $cur as $_flag_adopt$c_reset"
         return 0
     end
@@ -1136,6 +1144,9 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         set -l sync_rc $status
         if test $sync_rc -eq 2
             echo "$c_err""agents-vault: unresolved rebase in the vault; nothing committed$c_reset" >&2
+            set failed 1
+        else if test $sync_rc -eq 3
+            echo "$c_err""agents-vault: could not stage the vault changes; nothing recorded (git -C $vault add -A shows why)$c_reset" >&2
             set failed 1
         else if test $sync_rc -ne 0
             echo "$c_err""agents-vault: the vault commit failed; nothing recorded$c_reset" >&2

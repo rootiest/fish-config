@@ -417,7 +417,11 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
         # command substitution's stderr ignores the caller's redirect); the
         # error below says the same thing.
         set -l sync_out (_agents_repo_sync "$agents_dir" "chore: final sync before agents-cleanup" 2>/dev/null)
-        if test $status -ne 0
+        set -l sync_rc $status
+        if test $sync_rc -eq 3
+            echo "$c_err""Error: could not stage pending AGENTS/ changes; nothing moved or removed (git -C $agents_dir add -A shows why)$c_reset" >&2
+            return 1
+        else if test $sync_rc -ne 0
             echo "$c_err""Error: could not commit pending AGENTS/ changes; nothing moved or removed$c_reset" >&2
             return 1
         end

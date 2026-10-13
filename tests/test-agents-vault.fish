@@ -315,6 +315,23 @@ set -l hrc (_agents_repo_sync $h "chore: blocked" 2>/dev/null; echo $status)
 check "commit hook rejection returns 1" 1 "$hrc"
 check "commit hook rejection commits nothing" $before_hook_count (git -C $h rev-list --count HEAD)
 
+# Staging failure: `git add -A` itself fails, here on a nested repository
+# with no commits (#331). It used to be ignored, so the commit that
+# followed failed instead and blamed a hook. It gets its own status and
+# names git's reason.
+set -l g (new_repo)
+echo first >$g/a.md
+_agents_repo_sync $g "chore: init" >/dev/null
+mkdir $g/sub
+git -C $g/sub init -q
+echo second >$g/b.md
+set -l before_add_count (git -C $g rev-list --count HEAD)
+set -l gerr (_agents_repo_sync $g "chore: blocked" 2>&1 >/dev/null; echo "rc=$status")
+check "staging failure returns 3" rc=3 "$gerr[-1]"
+check "staging failure commits nothing" $before_add_count (git -C $g rev-list --count HEAD)
+check "staging failure names staging, not a hook" true (string match -q '*staging failed*' -- $gerr; and echo true; or echo false)
+check "staging failure passes git's reason on" true (string match -q '*sub/*' -- $gerr; and echo true; or echo false)
+
 #   ──────────────────────── vault scaffold + link ────────────────────────
 echo ""
 echo "== agents-vault (scaffold + link) =="
