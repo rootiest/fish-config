@@ -800,11 +800,15 @@ checks, `--pull` refreshes the image, and `--image` points at another one.
    a copy of the config, never this checkout, since it doubles as a real
    `~/.config/fish`.
 
-Two suites are repository lints rather than behavior tests:
-`tests/test-license-headers.fish` (see [Vendored files](#vendored-files)) and
+Three suites are repository lints rather than behavior tests:
+`tests/test-license-headers.fish` (see [Vendored files](#vendored-files));
 `tests/test-invisible-unicode.fish`, which fails on any tracked text file
 containing a no-break space (U+00A0), zero-width space (U+200B) or byte-order
-mark (U+FEFF). Use a plain space; the suite prints `path:line` for each hit.
+mark (U+FEFF) (use a plain space; the suite prints `path:line` for each hit);
+and `tests/test-shellcheck.fish`, which runs `shellcheck -S warning` over
+every tracked file with a `sh`/`bash` shebang or a `.sh`/`.bash` extension.
+Without `shellcheck` installed it skips with a notice, except under CI
+(`$CI` set), where a missing `shellcheck` fails the suite.
 
 To add tests, create a new `tests/test-<area>.fish`. The runner discovers
 it automatically. Stub external binaries with fake scripts placed first on
