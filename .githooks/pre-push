@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
 # Rejects a push that would put an unsigned or bad-signature commit onto a
 # branch. Root cause this guards against: GUI git clients (e.g. Gittyup)
 # commit via libgit2 directly and never invoke gpg, silently ignoring
