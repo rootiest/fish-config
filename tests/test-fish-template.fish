@@ -167,7 +167,7 @@ for row in "no target chosen|set __ft_use" \
     "a value is required|set __ft_use command; __fish_template_store set retry_attempts 3" \
     "a value is required|set __ft_use command" \
     "cannot be used with a sequence target|set __ft_use sequence timeout; __fish_template_store set sequence_steps true" \
-    "env_unset needs a command or fallback target|set __ft_use sequence env; __fish_template_store set sequence_steps true; __fish_template_store set env_unset X" \
+    "env_unset needs a command, fallback or snippet target|set __ft_use sequence env; __fish_template_store set sequence_steps true; __fish_template_store set env_unset X" \
     "retry_attempts: expects a whole number|set __ft_use command retry; __fish_template_store set command_cmd x; __fish_template_store set retry_attempts many" \
     "is listed twice|set __ft_use command retry retry; __fish_template_store set command_cmd x" \
     "confirm_only_if: not a valid regular expression|set __ft_use command confirm; __fish_template_store set command_cmd x; __fish_template_store set confirm_only_if '*.txt'" \
@@ -176,7 +176,12 @@ for row in "no target chosen|set __ft_use" \
     "dispatcher_subcommands: 'a=' is not name=command line|set __ft_use dispatcher; __fish_template_store set dispatcher_subcommands a=" \
     "dispatcher_default: 'zz' is not one of the subcommands|set __ft_use dispatcher; __fish_template_store set dispatcher_subcommands 'a=echo a'; __fish_template_store set dispatcher_default zz" \
     "env_set: '1X=2' is not NAME=value|set __ft_use command env; __fish_template_store set command_cmd x; __fish_template_store set env_set A=1 1X=2" \
-    "env_set: 'NOEQ' is not NAME=value|set __ft_use command env; __fish_template_store set command_cmd x; __fish_template_store set env_set NOEQ"
+    "env_set: 'NOEQ' is not NAME=value|set __ft_use command env; __fish_template_store set command_cmd x; __fish_template_store set env_set NOEQ" \
+    "env_unset needs a command, fallback or snippet target|set __ft_use jump env; __fish_template_store set jump_dir /tmp; __fish_template_store set env_unset X" \
+    "cannot be used with a jump target|set __ft_use jump in-dir; __fish_template_store set jump_dir /tmp; __fish_template_store set indir_dir /tmp" \
+    "snippet_cmd: {@} must be a word of its own|set __ft_use snippet; __fish_template_store set snippet_cmd x '--a={@}'" \
+    "perhost_commands: 'laptop' is not key=command line|set __ft_use per-host; __fish_template_store set perhost_commands 'a=echo a' laptop" \
+    "peros_commands: '=echo' is not key=command line|set __ft_use per-os; __fish_template_store set peros_commands =echo"
     set -l want (string split -m1 '|' -- $row)
     set -l out (_ft $tmp "__fish_template_store $want[2]; __fish_template_validate 2>&1 >/dev/null; echo st=\$status")
     check "rejected with 2: $want[2]" st=2 "$out[-1]"
@@ -187,6 +192,11 @@ set -l out (_ft $tmp "__fish_template_store set __ft_use dispatcher
     __fish_template_store set dispatcher_default b-c
     __fish_template_validate; echo st=\$status")
 check "a valid dispatcher with a default passes" st=0 "$out"
+set -l out (_ft $tmp "__fish_template_store set __ft_use snippet env timeout
+    __fish_template_store set snippet_cmd yt-dlp -x '--out={1}.mp3' '{@}'
+    __fish_template_store set env_unset DNT
+    __fish_template_validate; echo st=\$status")
+check "a valid snippet with env_unset and timeout passes" st=0 "$out"
 set -l out (_ft $tmp "__fish_template_store set __ft_use command env confirm
     __fish_template_store set command_cmd x
     __fish_template_store set env_set _A=1 B2='x y'

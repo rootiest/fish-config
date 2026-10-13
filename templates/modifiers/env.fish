@@ -5,7 +5,7 @@
 # KIND      modifier
 # PHASE     prepare
 # ORDER     30
-# APPLIES   command fallback sequence dispatcher
+# APPLIES   command fallback sequence dispatcher snippet per-host per-os jump
 # SUMMARY   Set or remove environment variables for this command only
 # PHRASE    with a modified environment
 
@@ -14,7 +14,7 @@
 # Variables to set, one per line as NAME=value. (lines)
 set -l env_set
 
-# Variables to remove (command and fallback targets only). (list)
+# Variables to remove (command, fallback and snippet targets only). (list)
 set -l env_unset
 
 #   ─────────────────────────────── Fragment ───────────────────────────────

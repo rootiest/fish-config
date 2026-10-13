@@ -4,7 +4,7 @@
 # TEMPLATE  in-dir
 # KIND      modifier
 # ORDER     10
-# APPLIES   command fallback sequence dispatcher
+# APPLIES   command fallback sequence dispatcher snippet per-host per-os
 # SUMMARY   Run inside a fixed directory, then return to where you were
 # PHRASE    inside {indir_dir}
 # STATUS    1 if {indir_dir} cannot be entered

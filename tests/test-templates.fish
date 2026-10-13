@@ -135,6 +135,74 @@ _tpl_gen $tmp dd "__ft_use dispatcher" "dispatcher_subcommands 'hi=echo hello'" 
 check "bare call runs the default" hello "$(_tpl_out $tmp dd)"
 rm -rf $tmp
 
+section "templates: snippet"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp probe 'for a in "$@"; do printf "[%s]" "$a"; done; echo; exit 7'
+_tpl_gen $tmp sn "__ft_use snippet" "snippet_cmd probe -x --out={2}.mp3 {1} {@}"
+check "fills slots in place, the rest at {@}, status passes through" "[-x][--out=b c.mp3][a][d][e] st=7" "$(_tpl_out $tmp "sn a 'b c' d e; echo st=\$status")"
+check "arguments are never parsed again" '[-x][--out={1}.mp3][$(echo hi);][] st=7' "$(_tpl_out $tmp "sn '\$(echo hi);' '{1}' ''; echo st=\$status")"
+set -l out (_tpl_run $tmp "sn a; echo st=\$status")
+check "missing slot: usage and 2" yes (string match -q -- '*expected 2 argument(s), got 1*Usage: sn ARG1 ARG2 [ARGS...]*st=2' "$out"; and not string match -q -- '*[-x]*' "$out"; and echo yes; or echo no)
+_tpl_gen $tmp s1 "__ft_use snippet" "snippet_cmd probe {1}"
+set -l out (_tpl_run $tmp "s1 a b; echo st=\$status")
+check "no {@}: an extra argument is a usage error" yes (string match -q -- '*too many arguments*st=2' "$out"; and echo yes; or echo no)
+_tpl_gen $tmp probe "__ft_use snippet" "snippet_cmd probe -v {@}"
+check "a same-name snippet runs the binary, not itself" "[-v][q] st=7" "$(_tpl_out $tmp 'probe q; echo st=$status')"
+mkdir $tmp/work
+_tpl_stub $tmp envp 'echo "$PWD DNT=[$DNT] $*"'
+_tpl_gen $tmp se "__ft_use snippet in-dir env timeout" "snippet_cmd envp {1}" "indir_dir $tmp/work" "env_unset DNT" "timeout_seconds 5"
+check "stacks with in-dir, env_unset and timeout" "$tmp/work DNT=[] z /" "$(_tpl_out $tmp 'builtin cd /; set -gx DNT 1; se z; pwd')"
+rm -rf $tmp
+
+section "templates: per-host"
+set -l tmp (mktemp -d)
+set -l short (string split -f1 . -- $hostname)
+_tpl_gen $tmp ph "__ft_use per-host" "perhost_commands 'no-such-host=echo wrong' 'x|$(string upper -- $short)=echo here'" "perhost_default 'echo default'"
+check "the line for this host runs (a|b, any case), arguments added literally" "here a  b (x) st=0" "$(_tpl_out $tmp "ph 'a  b' '(x)'; echo st=\$status")"
+_tpl_gen $tmp pw "__ft_use per-host" "perhost_commands 'no-such-host=echo wrong' '*=echo wild'" perhost_default
+check "wildcards match" wild "$(_tpl_out $tmp pw)"
+_tpl_gen $tmp pd "__ft_use per-host" "perhost_commands 'no-such-host=echo wrong'" "perhost_default 'echo default'"
+check "another host runs the default" default "$(_tpl_out $tmp pd)"
+_tpl_gen $tmp pn "__ft_use per-host" "perhost_commands 'no-such-host=echo wrong'" perhost_default
+set -l out (_tpl_run $tmp "pn; echo st=\$status")
+check "no match and no default: message and 1" yes (string match -q -- "*no command line is set for host*st=1" "$out"; and echo yes; or echo no)
+rm -rf $tmp
+
+section "templates: per-os"
+set -l tmp (mktemp -d)
+_tpl_stub $tmp uname 'echo Plan9'
+_tpl_gen $tmp po "__ft_use per-os" "peros_commands 'darwin=echo mac' 'linux|plan9=echo nine'" "peros_default 'echo default'"
+check "matches the kernel name, ignoring case; arguments added" "nine a st=0" "$(_tpl_out $tmp 'po a; echo st=$status')"
+_tpl_gen $tmp pd "__ft_use per-os" "peros_commands 'darwin=echo mac'" "peros_default 'echo default'"
+check "another system runs the default" default "$(_tpl_out $tmp pd)"
+_tpl_gen $tmp pn "__ft_use per-os" "peros_commands 'darwin=echo mac'" peros_default
+set -l out (_tpl_run $tmp "pn; echo st=\$status")
+check "no match and no default: message and 1" yes (string match -q -- "*no command line is set for this system*st=1" "$out"; and echo yes; or echo no)
+set -l distro (string match -r --groups-only -- '^ID="?([^"]*)"?$' </etc/os-release 2>/dev/null)
+if set -q distro[1]
+    _tpl_gen $tmp pr "__ft_use per-os" "peros_commands '$distro=echo distro' 'plan9=echo kernel'" peros_default
+    check "a distribution from os-release matches, first line wins" distro "$(_tpl_out $tmp pr)"
+end
+rm -rf $tmp
+
+section "templates: jump"
+set -l tmp (mktemp -d)
+mkdir $tmp/work
+_tpl_stub $tmp wd 'echo "$PWD $*"; exit 7'
+_tpl_gen $tmp jp "__ft_use jump" "jump_dir $tmp/work" jump_cmd
+check "goes to the directory and stays there; cd - leads back" "st=0 $tmp/work /" "$(_tpl_out $tmp 'builtin cd /; jp; echo st=$status; pwd; cd -; pwd')"
+_tpl_gen $tmp jc "__ft_use jump" "jump_dir $tmp/work" "jump_cmd 'wd -l'"
+check "runs the command line there, with arguments, and stays even on failure" "$tmp/work -l a b st=7 $tmp/work" "$(_tpl_out $tmp "builtin cd /; jc 'a b'; echo st=\$status; pwd")"
+set -l out (_tpl_run $tmp "builtin cd /; jp x; echo st=\$status; pwd")
+check "arguments with no command line: 2, PWD unchanged" "st=2 /" "$out[-2..-1]"
+_tpl_gen $tmp jm "__ft_use jump" "jump_dir $tmp/nope" jump_cmd
+set -l out (_tpl_run $tmp "builtin cd /; jm; echo st=\$status; pwd")
+check "missing directory: 1, PWD unchanged" "st=1 /" "$out[-2..-1]"
+_tpl_gen $tmp jf "__ft_use jump confirm" "jump_dir $tmp/work" jump_cmd "confirm_prompt 'Go?'" confirm_only_if
+set -l out (_tpl_run $tmp "builtin cd /; echo n | jf; pwd")
+check "declined confirm does not move" / "$out[-1]"
+rm -rf $tmp
+
 section "templates: args"
 set -l tmp (mktemp -d)
 _tpl_stub $tmp probe 'echo "args=$*"; exit 7'

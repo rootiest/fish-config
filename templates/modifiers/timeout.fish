@@ -5,7 +5,7 @@
 # KIND      modifier
 # PHASE     prepare
 # ORDER     50
-# APPLIES   command fallback
+# APPLIES   command fallback snippet
 # SUMMARY   Stop the command if it runs too long (external commands only)
 # PHRASE    stopping it after {timeout_seconds} seconds
 # STATUS    124 if the time limit is reached

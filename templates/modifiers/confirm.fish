@@ -5,7 +5,7 @@
 # KIND      modifier
 # PHASE     guard
 # ORDER     40
-# APPLIES   command fallback sequence dispatcher
+# APPLIES   command fallback sequence dispatcher snippet per-host per-os jump
 # SUMMARY   Ask before running, optionally only for matching arguments
 # PHRASE    after asking for confirmation
 # STATUS    1 if you answer no at the confirmation prompt

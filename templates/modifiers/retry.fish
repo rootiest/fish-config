@@ -5,7 +5,7 @@
 # KIND      modifier
 # PHASE     prepare
 # ORDER     60
-# APPLIES   command fallback sequence dispatcher
+# APPLIES   command fallback sequence dispatcher snippet per-host per-os jump
 # SUMMARY   Try again when the command fails
 # PHRASE    trying up to {retry_attempts} times
 

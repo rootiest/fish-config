@@ -5,7 +5,7 @@
 # KIND      modifier
 # PHASE     prepare
 # ORDER     70
-# APPLIES   command fallback sequence dispatcher
+# APPLIES   command fallback sequence dispatcher snippet per-host per-os jump
 # SUMMARY   Save the output to a log file as well as showing it
 # PHRASE    saving its output to {log_file}
 
