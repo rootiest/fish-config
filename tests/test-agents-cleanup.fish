@@ -494,6 +494,50 @@ check "nested repo: file survives" precious (string collect <$q1/AGENTS/scratch/
 check "nested repo: message names it" true (string match -q -- '*AGENTS/scratch/tool/*nested repository*' "$q1err"; and echo true; or echo false)
 check "nested repo: git key not set" 1 (git -C $q1 config --get agents-init.disabled >/dev/null; echo $status)
 
+section "agents-cleanup: nested repository with no commits inside a kept target"
+# Covered by docs/plans, so it would travel out with the target -- but
+# `git add -A` cannot record a repository with no HEAD, so the final sync
+# would fail after the marker is set. Preflight names it instead.
+fresh_state
+set -l ne1 (scaffolded_repo)
+mkdir -p $ne1/AGENTS/plans/tool
+git -C $ne1/AGENTS/plans/tool init -q
+echo precious >$ne1/AGENTS/plans/tool/file.txt
+set -l ne1before (tree_hash $ne1)
+pushd $ne1 >/dev/null
+set -l ne1err (agents-cleanup --silent 2>&1 >/dev/null)
+set -l ne1rc $status
+set -l ne1dry (agents-cleanup --dry-run 2>&1 >/dev/null)
+set -l ne1dryrc $status
+popd >/dev/null
+check "empty nested repo: exits 1" 1 "$ne1rc"
+check "empty nested repo: tree unchanged" "$ne1before" (tree_hash $ne1)
+check "empty nested repo: git key not set" 1 (git -C $ne1 config --get agents-init.disabled >/dev/null; echo $status)
+check "empty nested repo: message names it and the cause" true (string match -q -- '*AGENTS/plans/tool/*no commits*' "$ne1err"; and echo true; or echo false)
+check "empty nested repo: --dry-run refuses too" 1 "$ne1dryrc"
+check "empty nested repo: --dry-run names it" true (string match -q -- '*AGENTS/plans/tool/*' "$ne1dry"; and echo true; or echo false)
+# Once it has a commit, it is recorded as a gitlink and the cleanup runs.
+git -C $ne1/AGENTS/plans/tool add -A
+git -C $ne1/AGENTS/plans/tool commit -qm init
+pushd $ne1 >/dev/null
+set -l ne2rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "empty nested repo, committed: exits 0" 0 "$ne2rc"
+check "empty nested repo, committed: travels out with docs/plans" precious (test -L $ne1/docs/plans; or string collect <$ne1/docs/plans/tool/file.txt)
+
+# Ignored inside AGENTS/: `git add -A` skips it, so nothing to refuse.
+fresh_state
+set -l ne3 (scaffolded_repo)
+mkdir -p $ne3/AGENTS/plans/tool
+git -C $ne3/AGENTS/plans/tool init -q
+echo scratch >$ne3/AGENTS/plans/tool/file.txt
+echo plans/tool/ >>$ne3/AGENTS/.git/info/exclude
+pushd $ne3 >/dev/null
+set -l ne3rc (agents-cleanup --silent 2>/dev/null; echo $status)
+popd >/dev/null
+check "empty nested repo, ignored: exits 0" 0 "$ne3rc"
+check "empty nested repo, ignored: travels out with docs/plans" scratch (test -L $ne3/docs/plans; or string collect <$ne3/docs/plans/tool/file.txt)
+
 section "agents-cleanup: a link to AGENTS/ itself is dropped, not moved"
 fresh_state
 set -l z1 (scaffolded_repo)

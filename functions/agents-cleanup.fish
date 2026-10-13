@@ -61,7 +61,11 @@
 #   the cleanup before anything changes. They are listed; --drop-extras
 #   discards them instead. A nested git repository inside AGENTS/ is always
 #   refused, --drop-extras or not: the bundle keeps only a pointer to it, so
-#   move it out first.
+#   move it out first. One inside a directory a kept link restores travels
+#   out with it, but only if it has a commit: a nested repository with no
+#   commits (and not ignored by AGENTS/) cannot be recorded by the final
+#   AGENTS/ commit, so it is refused by path too -- commit something in it,
+#   or remove its .git. --dry-run refuses the same way.
 #
 #   The disabled marker is the per-clone git config key
 #   agents-init.disabled, set on every run. --marker-file also writes
@@ -91,7 +95,8 @@
 # EXIT STATUS
 #   0  Cleanup finished, or nothing was left to do
 #   1  Refused (outside git without --marker-file, unresolved rebase in
-#      AGENTS/, unlinked files or a nested repository in AGENTS/, a damaged
+#      AGENTS/, unlinked files or a nested repository in AGENTS/, a nested
+#      repository with no commits inside a restored directory, a damaged
 #      AGENTS/.git without --force) or a step failed
 #   2  Unknown option
 #
@@ -241,6 +246,7 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
     set -l extras
     set -l extras_ignored
     set -l nested
+    set -l nested_empty
     set -l agents_re '^'(string escape --style=regex -- "$agents_dir")'(/|$)'
     if test $has_agents -eq 1
         set -l cover_re
@@ -258,7 +264,19 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
                     break
                 end
             end
-            test $covered -eq 1; or set -a nested (string replace -- "$agents_dir/" "" "$f")
+            set -l rel (string replace -- "$agents_dir/" "" "$f")
+            if test $covered -eq 0
+                set -a nested "$rel"
+            else if test $has_repo -eq 1
+                # Covered, so it travels out with its target -- but the final
+                # sync's `git add -A` cannot record a repository with no HEAD
+                # (unless it is ignored), and that failure would come after
+                # the marker is set. Name it now instead.
+                if not git -C "$f" rev-parse -q --verify HEAD >/dev/null 2>&1
+                    git -C "$agents_dir" check-ignore -q -- "$rel" 2>/dev/null
+                    or set -a nested_empty "$rel"
+                end
+            end
         end
         for f in (find "$agents_dir" -mindepth 1 \( -name .git -o -type d -exec test -e '{}/.git' \; \) -prune -o ! -type d -print)
             set -l rel (string replace -- "$agents_dir/" "" "$f")
@@ -292,6 +310,15 @@ function agents-cleanup --description 'undo agents-init: restore real files, arc
             echo "  AGENTS/$n/  (nested repository -- not in bundle)" >&2
         end
         echo "Move them out of AGENTS/ first; --drop-extras does not cover them." >&2
+        return 1
+    end
+
+    if set -q nested_empty[1]
+        echo "$c_err""Error: AGENTS/ holds nested git repositories with no commits; the final AGENTS/ commit cannot record them, so the cleanup would stop partway:$c_reset" >&2
+        for n in $nested_empty
+            echo "  AGENTS/$n/  (nested repository -- no commits)" >&2
+        end
+        echo "Commit something in each, or remove its .git if it is not meant to be a repository." >&2
         return 1
     end
 
