@@ -60,7 +60,7 @@ jobs:
       image: git.rootiest.dev/rootiest/fish-ci:latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           token: ${{ secrets.GITEA_TOKEN }}
           fetch-depth: 0
@@ -135,7 +135,7 @@ jobs:
       NODE_OPTIONS: --no-deprecation
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           # The job's built-in token is no real user, so main's branch
           # protection rejects its pushes (runs 983, 990) and it cannot be
