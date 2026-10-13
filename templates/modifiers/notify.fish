@@ -5,7 +5,7 @@
 # KIND      modifier
 # PHASE     finally
 # ORDER     80
-# APPLIES   command fallback sequence dispatcher
+# APPLIES   command fallback sequence dispatcher snippet per-host per-os jump
 # SUMMARY   Send a desktop notification when it finishes
 # PHRASE    notifying you when it finishes ({notify_on})
 

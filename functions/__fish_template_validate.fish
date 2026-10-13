@@ -12,8 +12,11 @@
 #   that belong to no used template are dropped with a warning. Finally,
 #   confirm_only_if must be a valid regular expression, each
 #   dispatcher_subcommands entry must be name=command line,
-#   dispatcher_default must name one of them, and each env_set entry must
-#   be NAME=value. Errors go to stderr, prefixed "fish-template:".
+#   dispatcher_default must name one of them, each perhost_commands and
+#   peros_commands entry must be key=command line, a {@} slot in
+#   snippet_cmd must be a word of its own, and each env_set entry must be
+#   NAME=value. env_unset needs a command, fallback or snippet target.
+#   Errors go to stderr, prefixed "fish-template:".
 #
 # EXIT STATUS
 #   0  The recipe is valid
@@ -48,8 +51,8 @@ function __fish_template_validate --description 'Validate a fish-template recipe
         set -a seen $m
         set -a files $f
     end
-    if contains -- $use[1] sequence dispatcher; and set -q __ftv_env_unset[1]
-        echo "fish-template: env_unset needs a command or fallback target" >&2
+    if not contains -- $use[1] command fallback snippet; and set -q __ftv_env_unset[1]
+        echo "fish-template: env_unset needs a command, fallback or snippet target" >&2
         return 2
     end
 
@@ -93,6 +96,21 @@ function __fish_template_validate --description 'Validate a fish-template recipe
         set -l subs (string replace -r -- '=.*' '' $__ftv_dispatcher_subcommands)
         if not contains -- $__ftv_dispatcher_default[1] $subs
             echo "fish-template: dispatcher_default: '$__ftv_dispatcher_default[1]' is not one of the subcommands ($subs)" >&2
+            set failed 1
+        end
+    end
+    for k in perhost_commands peros_commands
+        set -l v __ftv_$k
+        for e in $$v
+            if not string match -qr -- '^[^=[:space:]]+=.+' $e
+                echo "fish-template: $k: '$e' is not key=command line" >&2
+                set failed 1
+            end
+        end
+    end
+    for w in $__ftv_snippet_cmd
+        if test "$w" != '{@}'; and string match -q -- '*{@}*' $w
+            echo "fish-template: snippet_cmd: {@} must be a word of its own, got '$w'" >&2
             set failed 1
         end
     end

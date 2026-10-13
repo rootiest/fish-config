@@ -19,7 +19,9 @@ every new shell.
 A function made by fish-template has two parts you choose:
 
 - A **target**: what runs. One command, the first installed of several
-  commands, a list of steps, or a set of subcommands.
+  commands, a list of steps, a set of subcommands, a long command line
+  with slots for your arguments, a different command line on each host
+  or operating system, or a jump to a directory.
 - Any number of **modifiers**: how it runs. Extra arguments, environment
   changes, a confirmation question, a fixed directory, retries, a time
   limit, a log file, a desktop notification.
@@ -83,8 +85,10 @@ Every generated function is built from these phases:
 
     Phase    What runs                       Used by
     ───────  ──────────────────────────────  ─────────────────────────────
-    guard    The target, then the modifiers  confirm, fallback's search
-    seed     The target                      command
+    guard    The target, then the modifiers  confirm, fallback's search,
+                                             snippet's slots, per-host and
+                                             per-os matching
+    seed     The target                      command, jump
     prepare  The modifiers, in ORDER         in-dir, args, env, timeout,
                                              retry, log
     run      The target, in the retry loop   every target; its output also
@@ -162,6 +166,42 @@ proj help, or proj on its own when no default subcommand is set,
 lists the subcommands; an unknown
 subcommand exits with status 2. Any extra words after the subcommand
 are added to the end of its command line.
+
+A short name for a long command line, used as ytmp3 URL. Write `{1}`,
+`{2}` and so on where your arguments go, and `{@}` for any arguments after
+those:
+
+    fish-template new ytmp3 --target snippet --set 'snippet_cmd=yt-dlp -x --audio-format mp3 {1}' --yes
+
+Calling it with fewer arguments than its highest slot, or with extra
+arguments when there is no `{@}`, prints its usage and exits with status
+2. Each argument fills its slot as one word, exactly as given: spaces,
+quotes, $ and (...) in it are never read as fish code, so an argument
+cannot run anything. A snippet runs one program with its arguments, so
+it has no pipes or redirections; use sequence for those.
+
+One function that does the right thing on every machine sharing your
+user-dots, with a command line per hostname and a default for the
+rest. A key can list several hosts as a|b and use * and ? wildcards;
+the first matching line wins:
+
+    fish-template new backup --target per-host --set 'perhost_commands=laptop|tablet=restic backup ~/docs' --set 'perhost_commands=nas-*=restic backup /srv' --set 'perhost_default=echo no backup here' --yes
+
+per-os does the same by operating system. A key is a kernel name
+(linux, darwin, freebsd) or a Linux distribution's ID from
+/etc/os-release (arch, debian, fedora), and a distribution also matches
+the ones it is like, so ubuntu matches debian. Put distributions before
+linux, since the first match wins:
+
+    fish-template new upgrade-os --target per-os --set 'peros_commands=arch=paru -Syu' --set 'peros_commands=debian=sudo apt upgrade' --set 'peros_commands=darwin=brew upgrade' --yes
+
+With neither a match nor a default, per-host and per-os exit with
+status 1, since the same function may work on another machine.
+
+Go to a project and stay there, showing its status. Unlike in-dir, jump
+does not take you back afterwards; cd - returns you to where you were:
+
+    fish-template new proj-go --target jump --set jump_dir=~/code/proj --set 'jump_cmd=git status -sb' --yes
 
 ## Recipes
 
