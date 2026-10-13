@@ -40,7 +40,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          token: ${{ secrets.GITEA_TOKEN }}
+          # Nothing below talks to Gitea through git, so don't persist the
+          # job token into .git/config (#241). GH_MIRROR_TOKEN stays scoped
+          # to the one step that needs it.
+          persist-credentials: false
 
       - name: Install Python
         run: |

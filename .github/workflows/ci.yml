@@ -62,7 +62,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          token: ${{ secrets.GITEA_TOKEN }}
+          # This job runs pull-request code (including fork PRs) on the
+          # self-hosted runners, and needs no credentials past the
+          # checkout itself: the repo is public, so the relevance step's
+          # `git fetch` works anonymously, as it already does in the docs
+          # job. Don't persist the job token into .git/config where the
+          # PR's tests could read it (#241).
+          persist-credentials: false
           fetch-depth: 0
 
       # Runs unconditionally and always sets an output, so every step
