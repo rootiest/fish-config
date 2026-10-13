@@ -16,7 +16,9 @@
 # DESCRIPTION
 #   Builds your own fish functions from templates, without writing code.
 #   Pick a target (what runs: one command, the first installed of several,
-#   a sequence of steps, or a set of subcommands), stack any modifiers on
+#   a sequence of steps, a set of subcommands, a command line with slots
+#   for your arguments, a command line per host or per operating system,
+#   or a jump to a directory), stack any modifiers on
 #   it (how it runs: extra arguments, environment changes, a confirmation
 #   question, a working directory, retries, a time limit, a log file, a
 #   desktop notification), and answer a few questions. fish-template
@@ -40,7 +42,8 @@
 #   help, -h, --help     Show this help
 #
 #   Options for new and edit:
-#   -t, --target T       Target: command, fallback, sequence or dispatcher
+#   -t, --target T       Target: command, fallback, sequence, dispatcher,
+#                        snippet, per-host, per-os or jump
 #   -w, --with M[,M]     Modifiers to stack (repeatable)
 #   -s, --set KEY=VAL    Give a setting. List settings take space-separated
 #                        words; line settings take one entry per --set

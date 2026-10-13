@@ -357,6 +357,8 @@ fish-template new rg --target command --set command_cmd=rg \
 fish-template edit deploy                          # ask again, current answers as defaults
 ```
 
+Targets: `command`, `fallback` (first installed of several), `sequence`, `dispatcher` (subcommands), `snippet` (a long command line with argument slots, e.g. `ytmp3 URL` running `yt-dlp -x --audio-format mp3 {1}`; arguments fill slots as literal words, never as code), `per-host` and `per-os` (a command line per hostname or per OS/distribution, plus a default, so one function works on every machine sharing your user-dots), and `jump` (`cd` somewhere and stay, optionally running a command). Modifiers: `args`, `env`, `confirm`, `in-dir`, `retry`, `timeout`, `log`, `notify`.
+
 See [Function Templates](https://fish.rootiest.fyi/12-function-templates/) in the project wiki (or run `help config templates`) for every target, modifier and preset with its settings, worked examples, and the safety guarantees.
 
 Stacking works two ways. **Layering:** modifiers stack on one function and always apply in a fixed, sensible order, so `retry` + `log` + `notify` logs every attempt and notifies once at the end. **Chaining:** a `sequence` step or a `dispatcher` subcommand can call any command, including functions you made earlier.
