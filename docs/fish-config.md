@@ -2694,7 +2694,11 @@ functions). They are active in all interactive sessions.
     the cleanup before anything changes. They are listed; --drop-extras
     discards them instead. A nested git repository inside AGENTS/ is always
     refused, --drop-extras or not: the bundle keeps only a pointer to it, so
-    move it out first.
+    move it out first. One inside a directory a kept link restores travels
+    out with it, but only if it has a commit: a nested repository with no
+    commits (and not ignored by AGENTS/) cannot be recorded by the final
+    AGENTS/ commit, so it is refused by path too -- commit something in it,
+    or remove its .git. --dry-run refuses the same way.
 
     The disabled marker is the per-clone git config key
     agents-init.disabled, set on every run. --marker-file also writes
@@ -2724,7 +2728,8 @@ functions). They are active in all interactive sessions.
     Exit Status:
       0  Cleanup finished, or nothing was left to do
       1  Refused (outside git without --marker-file, unresolved rebase in
-         AGENTS/, unlinked files or a nested repository in AGENTS/, a damaged
+         AGENTS/, unlinked files or a nested repository in AGENTS/, a nested
+         repository with no commits inside a restored directory, a damaged
          AGENTS/.git without --force) or a step failed
       2  Unknown option
 
@@ -6833,7 +6838,11 @@ it changes anything, and are listed. Move them out yourself, or pass
 `--drop-extras` to discard them. `--dry-run` refuses the same way, unless
 you also give it `--drop-extras`. A git repository nested inside `AGENTS/`
 is always refused, even with `--drop-extras`: the bundle records only a
-pointer to it, so move it out first. A damaged `AGENTS/.git` (present but not
+pointer to it, so move it out first. One inside a directory a project link
+restores travels out with that directory instead, but only once it has a
+commit: a nested repository with no commits cannot be recorded by the final
+`AGENTS/` commit, so it is refused and named; commit something in it, or
+remove its `.git`. A damaged `AGENTS/.git` (present but not
 a valid repository) is refused too, because its history cannot be archived;
 repair it, or pass `--force` to remove `AGENTS/` without an archive (a warning
 says so). `agents-cleanup` also refuses to run
