@@ -24,7 +24,7 @@ new_repo() {
 }
 
 # ── precommit: baseline + PATCH + MINOR ──────────────────────────────────────
-r="$(new_repo)"; cd "$r"
+r="$(new_repo)"; cd "$r" || fail "cd $r"
 mkdir -p plans; : > plans/.gitkeep
 echo 1.0.0 > .version
 git add -A; "$SCRIPT" precommit; git commit -q -m init
@@ -46,7 +46,7 @@ cd /; rm -rf "$r"
 echo "precommit OK"
 
 # ── prepmsg: subject suffix + idempotency ────────────────────────────────────
-r="$(new_repo)"; cd "$r"
+r="$(new_repo)"; cd "$r" || fail "cd $r"
 echo 1.2.3 > .version
 msg="$(mktemp)"
 printf 'chore: do thing\n' > "$msg"
@@ -66,7 +66,7 @@ rm -f "$msg"; cd /; rm -rf "$r"
 echo "prepmsg OK"
 
 # ── end-to-end via real hooks + core.hooksPath ───────────────────────────────
-r="$(new_repo)"; cd "$r"
+r="$(new_repo)"; cd "$r" || fail "cd $r"
 mkdir -p .agents-tools/hooks
 cp "$HERE/version-bump" .agents-tools/version-bump
 cp "$HERE/hooks/pre-commit" .agents-tools/hooks/pre-commit
@@ -93,7 +93,7 @@ cd /; rm -rf "$r"
 echo "e2e OK"
 
 # ── corrupt .version recovers to a clean baseline ────────────────────────────
-r="$(new_repo)"; cd "$r"
+r="$(new_repo)"; cd "$r" || fail "cd $r"
 mkdir -p plans; : > plans/.gitkeep
 echo 1.0.0 > .version
 git add -A; "$SCRIPT" precommit; git commit -q -m init
@@ -105,7 +105,7 @@ cd /; rm -rf "$r"
 echo "corrupt-recovery OK"
 
 # ── hook never blocks a commit when version-bump is missing ──────────────────
-r="$(new_repo)"; cd "$r"
+r="$(new_repo)"; cd "$r" || fail "cd $r"
 mkdir -p .agents-tools/hooks
 cp "$HERE/hooks/pre-commit" .agents-tools/hooks/pre-commit
 cp "$HERE/hooks/prepare-commit-msg" .agents-tools/hooks/prepare-commit-msg
