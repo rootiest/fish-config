@@ -763,5 +763,24 @@ popd >/dev/null
 check "migrate: a user rule still ignoring AGENTS.md is reported" true (string match -q '*still ignored by a rule outside*' -- $gwarn; and echo true; or echo false)
 check "migrate: the user rule is not edited" true (grep -qx 'AGENTS.md' $g3/.gitignore; and echo true; or echo false)
 
+echo ""
+echo "== agents-init: a staging failure is named, not blamed on the commit =="
+
+# #331: an AGENTS/ the sync cannot stage (here a nested repository with no
+# commits) used to surface as "the AGENTS/ commit failed".
+set -l sf (new_repo)
+pushd $sf >/dev/null
+agents-init --silent 2>/dev/null
+popd >/dev/null
+mkdir $sf/AGENTS/tool
+git -C $sf/AGENTS/tool init -q
+echo note >$sf/AGENTS/note.md
+pushd $sf >/dev/null
+set -l sferr (agents-init 2>&1 >/dev/null | string replace -ra '\e\[[0-9;]*m' ''; echo "rc=$pipestatus[1]")
+popd >/dev/null
+check "staging failure: exits non-zero" true (test "$sferr[-1]" != rc=0; and echo true; or echo false)
+check "staging failure: says it could not stage" true (string match -q '*could not stage the AGENTS/ changes*' -- $sferr; and echo true; or echo false)
+check "staging failure: does not blame the commit" false (string match -q '*commit failed*' -- $sferr; and echo true; or echo false)
+
 cleanup
 report

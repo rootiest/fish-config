@@ -376,7 +376,11 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     # project itself is left uncommitted for the user to review.
     if test $migrate -eq 1
         set -l pre_out (_agents_repo_sync "$agents_dir" "chore: sync AGENTS repository" 2>/dev/null)
-        if test $status -ne 0
+        set -l pre_rc $status
+        if test $pre_rc -eq 3
+            echo "$c_err""Error: could not stage pending AGENTS/ changes before migrating; nothing migrated (git -C $agents_dir add -A shows why)$c_reset" >&2
+            return 1
+        else if test $pre_rc -ne 0
             echo "$c_err""Error: could not commit pending AGENTS/ changes before migrating; nothing migrated$c_reset" >&2
             return 1
         end
@@ -690,6 +694,9 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     set -l failed 0
     if test $sync_rc -eq 2
         echo "$c_warn→ AGENTS/ has an unresolved rebase; nothing committed$c_reset" >&2
+        set failed 1
+    else if test $sync_rc -eq 3
+        echo "$c_err""Error: could not stage the AGENTS/ changes; nothing recorded (git -C $agents_dir add -A shows why)$c_reset" >&2
         set failed 1
     else if test $sync_rc -ne 0
         echo "$c_err""Error: the AGENTS/ commit failed; nothing recorded$c_reset" >&2
