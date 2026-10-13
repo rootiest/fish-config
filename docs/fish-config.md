@@ -3877,7 +3877,9 @@ functions). They are active in all interactive sessions.
 
     Builds your own fish functions from templates, without writing code.
     Pick a target (what runs: one command, the first installed of several,
-    a sequence of steps, or a set of subcommands), stack any modifiers on
+    a sequence of steps, a set of subcommands, a command line with slots
+    for your arguments, a command line per host or per operating system,
+    or a jump to a directory), stack any modifiers on
     it (how it runs: extra arguments, environment changes, a confirmation
     question, a working directory, retries, a time limit, a log file, a
     desktop notification), and answer a few questions. fish-template
@@ -3901,7 +3903,8 @@ functions). They are active in all interactive sessions.
       help, -h, --help     Show this help
 
       Options for new and edit:
-      -t, --target T       Target: command, fallback, sequence or dispatcher
+      -t, --target T       Target: command, fallback, sequence, dispatcher,
+                           snippet, per-host, per-os or jump
       -w, --with M[,M]     Modifiers to stack (repeatable)
       -s, --set KEY=VAL    Give a setting. List settings take space-separated
                            words; line settings take one entry per --set
@@ -5528,7 +5531,9 @@ every new shell.
 A function made by `fish-template` has two parts you choose:
 
 - A **target**: what runs. One command, the first installed of several
-  commands, a list of steps, or a set of subcommands.
+  commands, a list of steps, a set of subcommands, a long command line
+  with slots for your arguments, a different command line on each host
+  or operating system, or a jump to a directory.
 - Any number of **modifiers**: how it runs. Extra arguments, environment
   changes, a confirmation question, a fixed directory, retries, a time
   limit, a log file, a desktop notification.
@@ -5592,8 +5597,10 @@ Every generated function is built from these phases:
 
     Phase    What runs                       Used by
     ───────  ──────────────────────────────  ─────────────────────────────
-    guard    The target, then the modifiers  confirm, fallback's search
-    seed     The target                      command
+    guard    The target, then the modifiers  confirm, fallback's search,
+                                             snippet's slots, per-host and
+                                             per-os matching
+    seed     The target                      command, jump
     prepare  The modifiers, in ORDER         in-dir, args, env, timeout,
                                              retry, log
     run      The target, in the retry loop   every target; its output also
@@ -5658,6 +5665,45 @@ Run the first of several commands that is installed.
     fallback_candidates  list  yes       —        Commands to try, in order of
                                                   preference.
 
+### jump
+
+Go to a directory and stay there, optionally running a command line.
+
+    Setting   Type  Required  Default  Description
+    ────────  ────  ────────  ───────  ─────────────────────────────────────────
+    jump_dir  path  yes       —        Directory to go to.
+    jump_cmd  text  no        —        Command line to run there, if any; your
+                                       arguments are added to the end.
+
+### per-host
+
+Run a different command line on each machine, by hostname.
+
+    Setting           Type   Required  Default  Description
+    ────────────────  ─────  ────────  ───────  ────────────────────────────────
+    perhost_commands  lines  yes       —        Command lines, one per line, as
+                                                hostname=command line; a|b
+                                                matches either host, * and ? are
+                                                wildcards, and your arguments
+                                                are added to the end.
+    perhost_default   text   no        —        Command line to run on any other
+                                                machine; empty means fail there.
+
+### per-os
+
+Run a different command line on each operating system or distribution.
+
+    Setting         Type   Required  Default  Description
+    ──────────────  ─────  ────────  ───────  ──────────────────────────────────
+    peros_commands  lines  yes       —        Command lines, one per line, as
+                                              system=command line: linux,
+                                              darwin, freebsd, or a distribution
+                                              such as arch or debian; a|b
+                                              matches either, and your arguments
+                                              are added to the end.
+    peros_default   text   no        —        Command line to run on any other
+                                              system; empty means fail there.
+
 ### sequence
 
 Run several command lines, one after another.
@@ -5670,6 +5716,16 @@ Run several command lines, one after another.
                                                                  own functions.
     sequence_on_fail  one of: stop, continue  no        stop     What to do when a step
                                                                  fails.
+
+### snippet
+
+Fill your arguments into numbered slots in a long command line.
+
+    Setting      Type  Required  Default  Description
+    ───────────  ────  ────────  ───────  ──────────────────────────────────────
+    snippet_cmd  list  yes       —        Command to run, one program and its
+                                          arguments; write {1}, {2}... for your
+                                          arguments and {@} for the rest.
 
 ## Modifiers
 
@@ -5691,7 +5747,7 @@ Works with: command, fallback.
 
 Ask before running, optionally only for matching arguments.
 
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host, per-os, jump.
 
     Setting          Type  Required  Default          Description
     ───────────────  ────  ────────  ───────────────  ──────────────────────────
@@ -5706,20 +5762,20 @@ Works with: command, fallback, sequence, dispatcher.
 
 Set or remove environment variables for this command only.
 
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host, per-os, jump.
 
     Setting    Type   Required  Default  Description
     ─────────  ─────  ────────  ───────  ───────────────────────────────────────
     env_set    lines  no        —        Variables to set, one per line as
                                          NAME=value.
-    env_unset  list   no        —        Variables to remove (command and
-                                         fallback targets only).
+    env_unset  list   no        —        Variables to remove (command, fallback
+                                         and snippet targets only).
 
 ### in-dir
 
 Run inside a fixed directory, then return to where you were.
 
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host, per-os.
 
     Setting    Type  Required  Default  Description
     ─────────  ────  ────────  ───────  ────────────────────────────────────────
@@ -5729,7 +5785,7 @@ Works with: command, fallback, sequence, dispatcher.
 
 Save the output to a log file as well as showing it.
 
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host, per-os, jump.
 
     Setting   Type                       Required  Default  Description
     ────────  ─────────────────────────  ────────  ───────  ────────────────────────
@@ -5742,7 +5798,7 @@ Works with: command, fallback, sequence, dispatcher.
 
 Send a desktop notification when it finishes.
 
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host, per-os, jump.
 
     Setting       Type                           Required  Default  Description
     ────────────  ─────────────────────────────  ────────  ───────  ────────────────────────
@@ -5755,7 +5811,7 @@ Works with: command, fallback, sequence, dispatcher.
 
 Try again when the command fails.
 
-Works with: command, fallback, sequence, dispatcher.
+Works with: command, fallback, sequence, dispatcher, snippet, per-host, per-os, jump.
 
     Setting         Type  Required  Default  Description
     ──────────────  ────  ────────  ───────  ───────────────────────────────────
@@ -5766,7 +5822,7 @@ Works with: command, fallback, sequence, dispatcher.
 
 Stop the command if it runs too long (external commands only).
 
-Works with: command, fallback.
+Works with: command, fallback, snippet.
 
     Setting          Type  Required  Default  Description
     ───────────────  ────  ────────  ───────  ──────────────────────────────────
@@ -5846,6 +5902,42 @@ proj help, or proj on its own when no default subcommand is set,
 lists the subcommands; an unknown
 subcommand exits with status 2. Any extra words after the subcommand
 are added to the end of its command line.
+
+A short name for a long command line, used as ytmp3 URL. Write `{1}`,
+`{2}` and so on where your arguments go, and `{@}` for any arguments after
+those:
+
+    fish-template new ytmp3 --target snippet --set 'snippet_cmd=yt-dlp -x --audio-format mp3 {1}' --yes
+
+Calling it with fewer arguments than its highest slot, or with extra
+arguments when there is no `{@}`, prints its usage and exits with status
+2. Each argument fills its slot as one word, exactly as given: spaces,
+quotes, $ and (...) in it are never read as fish code, so an argument
+cannot run anything. A snippet runs one program with its arguments, so
+it has no pipes or redirections; use sequence for those.
+
+One function that does the right thing on every machine sharing your
+user-dots, with a command line per hostname and a default for the
+rest. A key can list several hosts as a|b and use * and ? wildcards;
+the first matching line wins:
+
+    fish-template new backup --target per-host --set 'perhost_commands=laptop|tablet=restic backup ~/docs' --set 'perhost_commands=nas-*=restic backup /srv' --set 'perhost_default=echo no backup here' --yes
+
+per-os does the same by operating system. A key is a kernel name
+(linux, darwin, freebsd) or a Linux distribution's ID from
+`/etc/os-release` (arch, debian, fedora), and a distribution also matches
+the ones it is like, so ubuntu matches debian. Put distributions before
+linux, since the first match wins:
+
+    fish-template new upgrade-os --target per-os --set 'peros_commands=arch=paru -Syu' --set 'peros_commands=debian=sudo apt upgrade' --set 'peros_commands=darwin=brew upgrade' --yes
+
+With neither a match nor a default, per-host and per-os exit with
+status 1, since the same function may work on another machine.
+
+Go to a project and stay there, showing its status. Unlike in-dir, jump
+does not take you back afterwards; cd - returns you to where you were:
+
+    fish-template new proj-go --target jump --set jump_dir=~/code/proj --set 'jump_cmd=git status -sb' --yes
 
 ## Recipes
 
