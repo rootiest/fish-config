@@ -810,6 +810,14 @@ every tracked file with a `sh`/`bash` shebang or a `.sh`/`.bash` extension.
 Without `shellcheck` installed it skips with a notice, except under CI
 (`$CI` set), where a missing `shellcheck` fails the suite.
 
+One more suite is informational: `tests/test-startup-budget.fish` times
+interactive starts of a copy of the config and prints a `WARN` line, never a
+failure, when the median is over a budget (wall time on a shared runner is too
+noisy to gate on). `FISH_CONFIG_STARTUP_BUDGET_MS` sets the budget (default
+500), `FISH_CONFIG_STARTUP_BUDGET_RUNS` the number of timed starts (default
+5) and a non-empty `FISH_CONFIG_STARTUP_BUDGET_SKIP` turns it off. To see where
+the time goes, run `fish --profile-startup=/tmp/p.txt -i -c exit`.
+
 To add tests, create a new `tests/test-<area>.fish`. The runner discovers
 it automatically. Stub external binaries with fake scripts placed first on
 `$PATH` inside a `mktemp -d` directory, so no suite touches the network, a

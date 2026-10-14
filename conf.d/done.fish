@@ -202,18 +202,20 @@ function __done_humanize_duration -a milliseconds
     end
 end
 
-# verify that the system has graphical capabilities before initializing
+# verify that the system has graphical capabilities before initializing.
+# Local modification (#237): the capability probe (xprop and friends, ~2.5 ms
+# of forks) is deferred to the first command instead of running at startup.
 if test -z "$SSH_CLIENT" # not over ssh
-    and count (__done_get_focused_window_id) >/dev/null # is able to get window id
-    set __done_enabled
+    set -g __done_probe_pending
 end
 
 if set -q __done_allow_nongraphical
     and set -q __done_notification_command
     set __done_enabled
+    set -e __done_probe_pending
 end
 
-if set -q __done_enabled
+if set -q __done_enabled; or set -q __done_probe_pending
     set -g __done_initial_window_id ''
     set -q __done_min_cmd_duration; or set -g __done_min_cmd_duration 5000
     set -q __done_exclude; or set -g __done_exclude '^git (?!push|pull|fetch)'
@@ -223,11 +225,18 @@ if set -q __done_enabled
     set -q __done_notification_duration; or set -g __done_notification_duration 3000
 
     function __done_started --on-event fish_preexec
+        if set -q __done_probe_pending
+            set -e __done_probe_pending
+            count (__done_get_focused_window_id) >/dev/null # is able to get window id
+            and set -g __done_enabled
+        end
+        set -q __done_enabled; or return
         set __done_initial_window_id (__done_get_focused_window_id)
     end
 
     function __done_ended --on-event fish_postexec
         set -l exit_status $status
+        set -q __done_enabled; or return
 
         # backwards compatibility for fish < v3.0
         set -q cmd_duration; or set -l cmd_duration $CMD_DURATION
