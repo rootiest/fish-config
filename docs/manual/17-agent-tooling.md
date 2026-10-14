@@ -519,6 +519,17 @@ something removed on purpose. To restore devlogs on a new machine, copy the
 entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
 `cp -rn`.
 
+agy's knowledge store is copied, not linked, and unlike the devlogs the
+copy is a mirror: a note deleted from `~/.gemini/antigravity-cli/knowledge/`
+is removed from the vault's `global/agy/knowledge/` on the next run, so a
+restore does not bring it back. Only that one directory is ever pruned,
+symlinks are removed as links and never followed, and nothing is removed
+when the store is missing or unreadable, holds nothing the vault has a
+counterpart for (an unmounted or emptied store is not a deletion), or
+the copy failed in part. Deleting the very last note upstream therefore
+needs a by-hand removal from the vault; earlier commits keep any pruned
+file in the vault's history.
+
 ### Getting the vault off the machine
 
 The vault is a git repository, and the wrappers only ever *commit* to it:

@@ -7,7 +7,8 @@
 # DEPENDENCIES
 #   _agents_vault_dir, _agents_repo_slug, _agents_repo_local_slug,
 #   _agents_repo_ensure_symlink, _agents_repo_sync,
-#   _agents_repo_install_tools, _agents_vault_bgpush, _private_dir, git,
+#   _agents_repo_install_tools, _agents_vault_bgpush, _agents_vault_prune_agy,
+#   _private_dir, git,
 #   hostname
 #
 # CLASSIFICATION
@@ -208,14 +209,18 @@
 #   it as unplaceable rather than relinking the wrong directory. Rebind
 #   such an entry from the project itself with --adopt=SLUG.
 #
-#   The agy knowledge copy is merge-only. Files are copied into the vault
-#   but are never removed from it, so a fact deleted upstream from agy's
-#   knowledge store persists in the vault indefinitely, and a restore or a
-#   fresh clone brings it back. Prune such an entry from the vault by hand
-#   if it must really be gone.
+#   The agy knowledge copy is a mirror: a note deleted from agy's
+#   knowledge store is removed from the vault's global/agy/knowledge on
+#   the next run, so a restore or a fresh clone does not bring it back.
+#   Only that one directory is ever pruned. Nothing is removed when the
+#   store is missing, unreadable, or holds nothing the vault has a
+#   counterpart for (an unmounted or emptied store is not a deletion), nor
+#   after a copy that failed in part; deleting the very last note upstream
+#   therefore needs a by-hand removal from the vault. Earlier commits keep
+#   the deleted file in the vault's history.
 #
-#   The devlog copy is merge-only for the same reason, and it only ever
-#   goes one way. A log deleted or moved in AGENTS/devlogs/ stays in the
+#   The devlog copy, unlike the knowledge mirror, is merge-only, and it
+#   only ever goes one way. A log deleted or moved in AGENTS/devlogs/ stays in the
 #   vault, and an ordinary run never copies back out, because that would
 #   resurrect a file removed on purpose. To bring devlogs back on a new
 #   machine, copy the entry's agents/devlogs/ over AGENTS/devlogs/ without
@@ -820,6 +825,16 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         end
         if test $kfailed -eq 1
             echo "$c_warn""agents-vault: could not copy part of the agy knowledge store$c_reset" >&2
+        else
+            # Mirror deletions. Only after a copy that fully succeeded: a
+            # store that could not be read in part must not look like a
+            # store that no longer has those files. Guards and scope are in
+            # _agents_vault_prune_agy; a refusal (status 2) just leaves the
+            # vault as it was.
+            set -l kpruned (_agents_vault_prune_agy "$vault" "$knowledge")
+            set -l kprc $status
+            test "$kpruned" -gt 0 2>/dev/null; and set agy_copied 1
+            test $kprc -eq 1; and echo "$c_warn""agents-vault: could not prune part of the agy knowledge mirror$c_reset" >&2
         end
     end
     if test -f "$agy_root/settings.json"
