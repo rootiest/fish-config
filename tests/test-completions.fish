@@ -111,4 +111,13 @@ check "key-crypt offers --install as the only argument" true (contains -- --inst
 set -l got (_offered 'key-crypt --force --')
 check "key-crypt hides --install after another flag" false (contains -- --install $got; and echo true; or echo false)
 
+set -l got (_offered 'session-env ')
+check "session-env offers install" true (contains -- install $got; and echo true; or echo false)
+check "session-env offers desktop" true (contains -- desktop $got; and echo true; or echo false)
+set -l got (_offered 'session-env install --')
+check "session-env install offers --except" true (contains -- --except $got; and echo true; or echo false)
+check "session-env install offers --now" true (contains -- --now $got; and echo true; or echo false)
+set -l got (_offered 'session-env desktop install foo --')
+check "session-env desktop install offers --group" true (contains -- --group $got; and echo true; or echo false)
+
 report

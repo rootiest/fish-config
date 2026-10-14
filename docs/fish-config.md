@@ -59,6 +59,7 @@ The configuration uses a structured file tree:
     │   ├── logging-events.fish     C5 event handlers; syncs logging state
     │   ├── pkg-wrappers.fish       Auto-generates paru/yay logging wrappers
     │   ├── puffer.fish             !! / !$ / ./ expansion
+    │   ├── session-env-offer.fish  C6 one-time hint about session-env setup
     │   ├── sponge_privacy.fish     Sponge privacy patterns
     │   ├── starship.fish           fish_prompt shell-integration markers
     │   ├── theme.fish              Saves the Catppuccin theme; FZF colors
@@ -77,6 +78,7 @@ The configuration uses a structured file tree:
     │   ├── cli-agent.md            System prompt for the terminal assistant
     │   ├── config-settings-tui.py  curses front-end for config-settings
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
+    │   ├── session-env-select.py  curses checkbox picker for session-env select
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
     ├── data/                       gi templates, session-env catalog, word lists
     ├── templates/                  fish-template building blocks
@@ -2021,13 +2023,18 @@ functions). They are active in all interactive sessions.
 
 ### session-env
 
-    Synopsis:  session-env [install [GROUP...] | preview [GROUP...] | uninstall | status | list | help]
+    Synopsis:  session-env COMMAND [ARGS...]
+               session-env install [GROUP...] [--var NAME]... [--except NAME]... [--now]
+               session-env add|remove ITEM... [--now]
+               session-env sync [--now] | apply | preview [GROUP...] | uninstall
+               session-env select [--now] | status | list | setup | dismiss | help
+               session-env desktop install|uninstall|preview NAME | status
 
     Exports fish-config variables to the whole login session, not just fish.
     Variables set in config.fish only reach processes started from fish;
     anything launched from the desktop (IDEs, the Claude desktop app,
     systemd user services) never sees them. install writes the selected
-    groups from data/session-env.tsv to
+    variables from data/session-env.tsv to
     ~/.config/environment.d/fish-config.conf, which systemd applies to
     the user session at the next login. uninstall removes that file. The
     name has no numeric prefix so it sorts after numbered files such as
@@ -2041,24 +2048,99 @@ functions). They are active in all interactive sessions.
     to a value already present in the session, so it never overrides one
     set elsewhere.
 
+    Selection is per variable. A group is shorthand for all its variables;
+    --var adds one variable to an install and --except leaves one out.
+    add and remove change what is installed by variable or group and keep
+    the rest. The file records the choice in its header: "# groups:" names
+    the groups that have a selected variable, and a "# vars:" line (written
+    only when some group is partly selected) is the exact variable list.
+    status, list, sync and every later add or remove read the same header,
+    so the selection round-trips. A file with only "# groups:", as written
+    before per-variable selection, means every variable of those groups.
+
+    A copied value is a snapshot taken at install time. status compares the
+    file with what install would write now and lists every difference
+    (a copied value that changed, a variable fish stopped exporting, an
+    entry the catalog gained); sync rewrites the file from its own
+    selection to refresh it, without resetting to the default groups.
+
+    environment.d is read at login. With --now (or the apply command)
+    session-env also pushes the selection into the running user manager
+    (systemctl --user set-environment) and the D-Bus activation
+    environment (dbus-update-activation-environment), so programs started
+    afterwards see it without a re-login. Each is used only when
+    installed, nothing runs at shell startup, and programs already running
+    keep their environment. A catalog value is applied only when the
+    session does not already have the variable, like the file's fallback.
+
+    An interactive shell with no environment.d file yet is told once, at
+    startup, that setup exists (conf.d/session-env-offer.fish, part of the
+    C6 first-run greeting). setup asks whether to install the default
+    group, never blocks without a terminal, and records the answer;
+    dismiss records "no" without asking.
+
+    desktop manages user-level copies of .desktop launchers whose Exec
+    lines start with "env -u VAR ...", for apps that must not see some of
+    the exported variables. The motivating case is the privacy group:
+    DO_NOT_TRACK and DISABLE_TELEMETRY switch off claude-code's feature
+    flags, so the Claude desktop app's launcher needs them unset. Only
+    files in $XDG_DATA_HOME/applications (~/.local/share/applications) are
+    written, never the system copy, and each starts with a marker line so
+    uninstall removes exactly what install added and never a launcher you
+    edited yourself.
+
     Arguments:
       install [GROUP...]  Write the given groups (default groups when none)
+      --var NAME          install: include one more variable (repeatable)
+      --except NAME       install: leave a variable out (repeatable)
+      add ITEM...         Add variables or groups to the installed selection
+      remove ITEM...      Remove variables or groups from the installed selection
+      sync                Rewrite the file from its own selection
+      apply               Push the installed selection into the running session
+      --now               install, sync, add, remove: also apply immediately
       preview [GROUP...]  Print what install would write, without writing it
       uninstall           Remove the managed file
-      status              Show the managed file and the groups it holds
-      list                Show every group and variable in the catalog
+      select              Pick variables in a checkbox list (needs a terminal)
+      status              Show the file, its selection and whether it is stale
+      list                Show every group and variable, marking the selection
+      setup               Ask once whether to install the default group
+      dismiss             Record that setup is not wanted
+      desktop install NAME [--var VAR]... [--group GROUP]...
+                          Create the override (default: unset the privacy group)
+      desktop uninstall NAME   Remove the override
+      desktop preview NAME     Print the override without writing it
+      desktop status           List overrides this tool manages
       help, -h, --help    Show this help
 
     Exit Status:
       0  Success, or help was shown
-      1  Missing catalog, or a write failure
-      2  Unknown command or group
+      1  Missing catalog, nothing installed, or a write or apply failure
+      2  Unknown command, group or variable, or a usage error
+
+    Notes:
+      Known limits. environment.d applies at login only; --now reaches
+      programs started after it, not running ones. Hooks and MCP servers
+      that claude spawns do not get the privacy variables: the
+      CLAUDE_CODE_SHELL_PREFIX helper covers only the Bash tool, and putting
+      the variables in claude's own environment (settings.json env, or the
+      session) is what disables its feature flags. There is no central
+      setting for spawned hooks and MCP servers, so set them where they are
+      spawned: the "env" map of each stdio server in .mcp.json (or
+      claude mcp add --env NAME=value), and an "env NAME=value" prefix in a
+      hook's command string.
 
     Example:
     session-env install
     session-env install xdg xdg-tools editor
-    session-env preview xdg wayland
-    session-env uninstall
+    session-env install xdg privacy --except DISABLE_TELEMETRY
+    session-env add CARGO_HOME GOPATH
+    session-env remove telemetry
+    session-env status
+    session-env sync --now
+    session-env desktop install claude-desktop
+    session-env desktop uninstall claude-desktop
+
+**Dependencies:** `__session_env_apply_now`, `__session_env_desktop`
 
 **Classification:** `bypasses-shadow(mkdir,mv,rm)`
 
@@ -5222,6 +5304,8 @@ Kitty watcher scrollback capture, and `smart_exit`'s logging-guard path.
     Component                  What it shows
     ───────────────────────────────────────────────────────────────────────────
     First-run welcome banner   One-time message on first interactive session
+    session-env setup hint     One-time hint (systemd systems, no environment.d
+                               file yet) that `session-env setup` exists
     fish_greeting override     Empty function defined late in config.fish to
                                suppress distro greetings (e.g. CachyOS sets
                                fish_greeting to fastfetch by default)
@@ -5237,7 +5321,10 @@ with its own `__fish_config_op_greeting_<slug>` toggle:
 
 ### first-run
 
-The first-run welcome banner.
+The first-run welcome banner, and the one-time `session-env setup` hint.
+The hint is a single line that never asks a question; it is shown once and
+remembered in `__fish_config_session_env_offered`. Erase that variable to see
+it again.
 
 ### greeting-message
 

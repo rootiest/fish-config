@@ -282,7 +282,7 @@ set -g __help_subcommands \
     'fish-template list info new edit regen show ls' \
     'jobrunner run list attach kill logs' \
     'kitty-logging install uninstall status dismiss' \
-    'session-env install preview uninstall status list' \
+    'session-env install preview uninstall status list add remove sync apply select setup dismiss desktop' \
     'superpowers on off'
 
 # A sandbox for running those functions for real. Every external binary
@@ -298,7 +298,7 @@ function _help_sandbox_new
     for b in agy apt apt-get brew busctl cargo claude curl dnf docker fzf git \
         gpg kitty konsole lazydocker limine-enroll-config limine-mkinitcpio \
         loginctl lsof mpv nohup pacman paru pipx sbctl screen steam sudo \
-        sudoedit systemd-inhibit tmux uv vlc wezterm wget xdg-open yay
+        sudoedit systemctl systemd-inhibit tmux uv vlc wezterm wget xdg-open yay dbus-update-activation-environment
         printf '#!/bin/sh\necho "$(basename "$0") $*" >> %s\n' $tmp/invoked.log >$tmp/bin/$b
         chmod +x $tmp/bin/$b
     end
