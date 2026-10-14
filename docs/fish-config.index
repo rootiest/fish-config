@@ -280,6 +280,7 @@ toggles=## Opinionated Components (Minimal Mode)
 agent-vault=## Agent Memory Vault
 __fish_agent_vault_dir=## Agent Memory Vault
 __fish_agent_vault_autopush=## Agent Memory Vault
+__fish_agent_vault_bgpush=## Agent Memory Vault
 __fish_config_agent_vault_remote_hint_dismissed=## Agent Memory Vault
 component-reference=# 8. COMPONENTS REFERENCE
 components=# 8. COMPONENTS REFERENCE

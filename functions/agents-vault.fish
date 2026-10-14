@@ -7,13 +7,15 @@
 # DEPENDENCIES
 #   _agents_vault_dir, _agents_repo_slug, _agents_repo_local_slug,
 #   _agents_repo_ensure_symlink, _agents_repo_sync,
-#   _agents_repo_install_tools, _private_dir, git, hostname
+#   _agents_repo_install_tools, _agents_vault_bgpush, _private_dir, git,
+#   hostname
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir), manual-section(17-agent-tooling)
 #
 # SYNOPSIS
-#   agents-vault [--link] [--push] [--restore] [--status] [--dismiss-hint]
+#   agents-vault [--link] [--push] [--push-bg] [--restore] [--status]
+#                [--dismiss-hint]
 #                [--adopt=SLUG] [--remote=URL]
 #                [-v | --verbose] [-q | --quiet] [-s | --silent]
 #                [-h | --help]
@@ -119,6 +121,18 @@
 #   and would take the local commit down with it, leaving an offline
 #   machine with no backup at all.
 #
+#   --push-bg is what the claude and agy wrappers pass. After the ordinary
+#   commit it starts a detached worker that pushes the vault to its remote
+#   and returns immediately; the launch never waits on the network. It is
+#   started only when something is actually unpushed, the worker is
+#   bounded to 60 seconds, never prompts, never runs twice at once, and
+#   backs off for ten minutes after a failure. It only pushes: it does not
+#   pull or rebase, so a remote that has moved on makes it fail and
+#   --push is the way to reconcile. The outcome of the last attempt is
+#   kept in .git/agent-vault-bgpush.state and shown by --status, which is
+#   how a failure nobody was watching gets noticed. Set
+#   __fish_agent_vault_bgpush to 0 to switch it off.
+#
 #   A vault with no remote prints a hint once per interactive shell
 #   session (from a verbose or --quiet run, so the claude wrapper shows
 #   it) saying how to add one. It stops when a remote is set or after
@@ -128,6 +142,7 @@
 #   --link         Scaffold the vault and link this project's memory; skip
 #                  the final commit
 #   --push         Commit, pull, then push to the vault remote
+#   --push-bg      Commit, then push from a bounded background worker
 #   --restore      Walk the vault, relink what is possible, report the rest
 #   --status       Show entries, link health, remote state, and orphans
 #   --dismiss-hint Stop the no-remote hint (sets a universal variable)
@@ -156,6 +171,7 @@
 #   agents-vault --status
 #   agents-vault --remote=https://git.rootiest.dev/rootiest/agent-vault.git
 #   agents-vault --push
+#   agents-vault --quiet --push-bg
 #   agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
 #   agents-vault --restore
 #
@@ -234,12 +250,12 @@
 function agents-vault --description 'track curated agent memory in a host-scoped vault repo'
     __fish_palette
 
-    argparse h/help link push restore status dismiss-hint 'adopt=' 'remote=' \
+    argparse h/help link push push-bg restore status dismiss-hint 'adopt=' 'remote=' \
         v/verbose q/quiet s/silent -- $argv
     or return
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-vault$c_reset $c_flag""[--link] [--push] [--restore] [--status] [--dismiss-hint] [--adopt=SLUG] [--remote=URL] [-v] [-q] [-s] [-h]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-vault$c_reset $c_flag""[--link] [--push] [--push-bg] [--restore] [--status] [--dismiss-hint] [--adopt=SLUG] [--remote=URL] [-v] [-q] [-s] [-h]$c_reset"
         echo
         echo "  Track curated agent memory in a host-scoped vault repository."
         echo
@@ -247,8 +263,9 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         echo "  $c_flag-h$c_reset, $c_flag--help$c_reset       Show this help message"
         echo "  $c_flag--link$c_reset           Scaffold + link this project; skip the commit"
         echo "  $c_flag--push$c_reset           Commit, pull, then push to the remote"
+        echo "  $c_flag--push-bg$c_reset        Commit, then push in the background (what the wrappers use)"
         echo "  $c_flag--restore$c_reset        Relink everything possible, report the rest"
-        echo "  $c_flag--status$c_reset         Show entries, link health, remote, orphans"
+        echo "  $c_flag--status$c_reset         Show entries, link health, remote, background push, orphans"
         echo "  $c_flag--dismiss-hint$c_reset   Stop the one-per-session \"no remote\" hint"
         echo "  $c_flag--adopt$c_reset=SLUG     Bind this project to an existing vault entry"
         echo "  $c_flag--remote$c_reset=URL     Set the vault remote"
@@ -315,6 +332,21 @@ function agents-vault --description 'track curated agent memory in a host-scoped
 
         if test -d "$vault/.git/rebase-merge"; or test -d "$vault/.git/rebase-apply"
             echo "  $c_err""unresolved rebase in progress — resolve it before syncing$c_reset"
+        end
+
+        # How a commit leaves the machine. The background push records
+        # every outcome, so a failure that nobody was watching is reported
+        # here instead of vanishing.
+        set -l bg (_agents_vault_bgpush state "$vault")
+        set -l bgclass (string split -m 1 \t -- $bg)[1]
+        set -l bgtext (string split -m 1 \t -- $bg)[2]
+        set -l bgcolor $c_dim
+        test "$bgclass" = ok; and set bgcolor $c_ok
+        test "$bgclass" = warn; and set bgcolor $c_warn
+        test "$bgclass" = err; and set bgcolor $c_err
+        echo "$c_head""Push:$c_reset $bgcolor$bgtext$c_reset"
+        if test "$__fish_agent_vault_autopush" = 1
+            echo "$c_head""Autopush:$c_reset on — every wrapper launch pulls and pushes synchronously (20s cap each)"
         end
 
         set -l claude_root $__fish_agent_vault_claude_root
@@ -1308,6 +1340,19 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         end
     end
 
+    #   ──────────────────── background push (--push-bg) ──────────────────
+    # What the wrappers ask for. The commit above is the backup that must
+    # not fail; this only hands the result to a detached, bounded worker.
+    # Nothing here waits on the network: the due check reads local refs,
+    # and a launch with nothing new to send starts no process at all. A
+    # failed commit sends nothing, and an explicit --push has already
+    # pushed (and reported) synchronously.
+    if set -q _flag_push_bg; and not set -q _flag_push; and test $failed -eq 0
+        if _agents_vault_bgpush due "$vault" >/dev/null
+            _agents_vault_bgpush spawn "$vault"
+        end
+    end
+
     #   ─────────────────────── no-remote hint ───────────────────────────
     # The commit above never leaves the machine on its own, and a user with
     # no remote would otherwise sit in that state indefinitely. This is the
@@ -1323,7 +1368,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         and not git -C "$vault" remote get-url origin >/dev/null 2>&1
         set -g __agents_vault_hint_shown 1
         echo "$c_warn""Agent memory vault has no remote: nothing is backed up off this machine.$c_reset"
-        echo "  Set one:   $c_cmd""agents-vault --remote=<url>$c_reset"
+        echo "  Set one:   $c_cmd""agents-vault --remote=<url>$c_reset  (launches then push in the background)"
         echo "  Silence:   $c_cmd""agents-vault --dismiss-hint$c_reset"
     end
 

@@ -22,7 +22,8 @@
 #
 #   Also syncs the host-scoped agent memory vault (agents-vault). agy has
 #   no session-end hook, so its memory is captured on the next launch
-#   rather than at session end.
+#   rather than at session end; the same launch starts the vault's
+#   background push (agents-vault --push-bg) when something is unpushed.
 #
 #   Arguments are forwarded verbatim to the real agy binary, except for
 #   -r/--resume which use different syntax in agy than claude: bare
@@ -55,7 +56,7 @@ function agy --wraps=agy --description 'agy wrapper: auto-initializes AGENTS/ su
     end
 
     agents-init --quiet
-    agents-vault --quiet
+    agents-vault --quiet --push-bg
 
     for i in (seq (count $argv))
         switch "$argv[$i]"

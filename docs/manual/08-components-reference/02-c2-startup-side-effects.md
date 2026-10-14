@@ -15,12 +15,14 @@ These run automatically without any user action. Disabling
     Python venv activation     On every cd          Sources .venv/bin/activate.fish
     WakaTime command hook      On every command     Reports to WakaTime API
     Auto-pull fast-forward     On entering a repo   Background ff-only git pull
+    Vault background push      On claude/agy launch Background push of unpushed vault commits
     user-dots symlink          Every startup        Links $__fish_config_dir/user-dots
                                                     to $__fish_user_dots_path
 
 When C2 is disabled: no Fisher install, no theme application, no paru/yay
 wrapper generation, no automatic venv activation, no WakaTime reporting,
-no auto-pull (the PWD handler is never registered), and the user-dots
+no auto-pull (the PWD handler is never registered), no background push of
+the agent memory vault (`agents-vault --push-bg` still commits), and the user-dots
 convenience symlink is not created. The symlink is git-ignored and only ever
 managed as a symlink — a real file or directory at that path is left untouched.
 The symlink has its own opt-out independent of C2: set `__fish_user_dots_symlink`
