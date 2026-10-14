@@ -3554,7 +3554,8 @@ AI AGENT TOOLING (\f[V]docs/manual/17-agent-tooling.md\f[R])
 .IP
 .nf
 \f[C]
-Synopsis:  agents-vault [--link] [--push] [--restore] [--status]
+Synopsis:  agents-vault [--link] [--push] [--push-bg] [--restore] [--status]
+                        [--dismiss-hint]
                         [--adopt=SLUG] [--remote=URL]
                         [-v | --verbose] [-q | --quiet] [-s | --silent]
                         [-h | --help]
@@ -3659,12 +3660,31 @@ every launch for as long as an unreachable remote takes to time out --
 and would take the local commit down with it, leaving an offline
 machine with no backup at all.
 
+--push-bg is what the claude and agy wrappers pass. After the ordinary
+commit it starts a detached worker that pushes the vault to its remote
+and returns immediately; the launch never waits on the network. It is
+started only when something is actually unpushed, the worker is
+bounded to 60 seconds, never prompts, never runs twice at once, and
+backs off for ten minutes after a failure. It only pushes: it does not
+pull or rebase, so a remote that has moved on makes it fail and
+--push is the way to reconcile. The outcome of the last attempt is
+kept in .git/agent-vault-bgpush.state and shown by --status, which is
+how a failure nobody was watching gets noticed. Set
+__fish_agent_vault_bgpush to 0 to switch it off.
+
+A vault with no remote prints a hint once per interactive shell
+session (from a verbose or --quiet run, so the claude wrapper shows
+it) saying how to add one. It stops when a remote is set or after
+--dismiss-hint, and never appears in scripts or with --silent.
+
 Arguments:
   --link         Scaffold the vault and link this project\[aq]s memory; skip
                  the final commit
   --push         Commit, pull, then push to the vault remote
+  --push-bg      Commit, then push from a bounded background worker
   --restore      Walk the vault, relink what is possible, report the rest
   --status       Show entries, link health, remote state, and orphans
+  --dismiss-hint Stop the no-remote hint (sets a universal variable)
   --adopt=SLUG   Bind the current project to an existing vault entry
   --remote=URL   Set the vault remote
   -v, --verbose  Print all per-step output (default)
@@ -3763,6 +3783,7 @@ agents-vault
 agents-vault --status
 agents-vault --remote=https://git.rootiest.dev/rootiest/agent-vault.git
 agents-vault --push
+agents-vault --quiet --push-bg
 agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
 agents-vault --restore
 \f[R]
@@ -3771,8 +3792,8 @@ agents-vault --restore
 \f[B]Dependencies:\f[R] \f[V]_agents_vault_dir\f[R],
 \f[V]_agents_repo_slug\f[R], \f[V]_agents_repo_local_slug\f[R],
 \f[V]_agents_repo_ensure_symlink\f[R], \f[V]_agents_repo_sync\f[R],
-\f[V]_agents_repo_install_tools\f[R], \f[V]_private_dir\f[R],
-\f[V]git\f[R], \f[V]hostname\f[R]
+\f[V]_agents_repo_install_tools\f[R], \f[V]_agents_vault_bgpush\f[R],
+\f[V]_private_dir\f[R], \f[V]git\f[R], \f[V]hostname\f[R]
 .PP
 \f[B]Classification:\f[R] \f[V]self-limiting(rm,mkdir)\f[R],
 \f[V]manual-section(17-agent-tooling)\f[R]
@@ -3795,7 +3816,8 @@ subdirectory) is symlinked into AGENTS/ in the current project.
 
 Also syncs the host-scoped agent memory vault (agents-vault). agy has
 no session-end hook, so its memory is captured on the next launch
-rather than at session end.
+rather than at session end; the same launch starts the vault\[aq]s
+background push (agents-vault --push-bg) when something is unpushed.
 
 Arguments are forwarded verbatim to the real agy binary, except for
 -r/--resume which use different syntax in agy than claude: bare
@@ -3860,8 +3882,12 @@ AGENTS.md natively, so no CLAUDE.md is created or maintained.
 
 Also syncs the host-scoped agent memory vault (agents-vault), which
 tracks curated memory living outside the project tree. The vault
-commits on launch but does not push; pushing happens from the Claude
-Code SessionEnd hook or an explicit agents-vault --push.
+commits on launch and, when the vault has a remote and something new
+to send, starts a detached, time-bounded push in the background
+(agents-vault --push-bg); the launch never waits on the network. An
+explicit agents-vault --push still pushes synchronously. With no vault
+remote configured, the launch prints a one-per-session hint saying how
+to set one.
 
 All arguments are forwarded verbatim to the real claude binary.
 
@@ -5626,16 +5652,31 @@ root is tightened silently on the next agents-vault run.
 __fish_agent_vault_autopush
 
 When set to 1, agents-vault also pushes on wrapper launch. Defaults to
-off: the vault commits locally on every launch and pushes from the
-Claude Code SessionEnd hook or an explicit agents-vault --push. That
-push is synchronous, so with autopush on the pull and the push are
-each capped at 20 seconds; an explicit --push is left uncapped.
+off: the vault commits locally on every launch and the push happens in
+the background (see __fish_agent_vault_bgpush) or from an explicit
+agents-vault --push. The autopush push is synchronous, so with it on
+the pull and the push are each capped at 20 seconds; an explicit
+--push is left uncapped.
+
+__fish_agent_vault_bgpush
+
+Set to 0 to switch off the background push the claude and agy wrappers
+start (agents-vault --push-bg). On by default, and inert until the
+vault has a remote. Also off when auto-execution (C2) is disabled.
+
+__fish_config_agent_vault_remote_hint_dismissed
+
+Universal variable set by agents-vault --dismiss-hint. While it is set
+the once-per-session \[dq]vault has no remote\[dq] hint is not printed. Erase
+it (set -e -U __fish_config_agent_vault_remote_hint_dismissed) to see
+the hint again.
 \f[R]
 .fi
 .PP
-NOTE: With autopush off and no SessionEnd hook installed, backups
+NOTE: With the background push switched off and autopush off, backups
 accumulate locally and never reach the remote.
-Run \f[V]agents-vault --status\f[R] to check how far ahead the vault is.
+Run \f[V]agents-vault --status\f[R] to see the remote and what the last
+background push did.
 .SS Prompt and Theme
 .SS Starship
 .PP
@@ -5992,6 +6033,7 @@ yay wrapper                Every startup        Writes \[ti]/.local/bin/yay wrap
 Python venv activation     On every cd          Sources .venv/bin/activate.fish
 WakaTime command hook      On every command     Reports to WakaTime API
 Auto-pull fast-forward     On entering a repo   Background ff-only git pull
+Vault background push      On claude/agy launch Background push of unpushed vault commits
 user-dots symlink          Every startup        Links $__fish_config_dir/user-dots
                                                 to $__fish_user_dots_path
 \f[R]
@@ -6000,8 +6042,9 @@ user-dots symlink          Every startup        Links $__fish_config_dir/user-do
 When C2 is disabled: no Fisher install, no theme application, no
 \f[V]paru\f[R]/\f[V]yay\f[R] wrapper generation, no automatic venv
 activation, no WakaTime reporting, no \f[V]auto-pull\f[R] (the PWD
-handler is never registered), and the user-dots convenience symlink is
-not created.
+handler is never registered), no background push of the agent memory
+vault (\f[V]agents-vault --push-bg\f[R] still commits), and the
+user-dots convenience symlink is not created.
 The symlink is git-ignored and only ever managed as a symlink \[em] a
 real file or directory at that path is left untouched.
 The symlink has its own opt-out independent of C2: set
@@ -8819,6 +8862,63 @@ removed on purpose.
 To restore devlogs on a new machine, copy the entry\[cq]s
 \f[V]agents/devlogs/\f[R] over the project\[cq]s
 \f[V]AGENTS/devlogs/\f[R] with \f[V]cp -rn\f[R].
+.SS Getting the vault off the machine
+.PP
+The vault is a git repository, and the wrappers only ever
+\f[I]commit\f[R] to it: a push on every launch would block the launch
+for as long as an unreachable remote takes to time out.
+A commit leaves the machine only when a remote exists and something
+pushes, and nothing sets up the first on its own.
+.IP
+.nf
+\f[C]
+# Set a remote
+agents-vault --remote=git\[at]git.example.com:you/agent-vault.git
+\f[R]
+.fi
+.PP
+With a remote set there is nothing further to install.
+The \f[V]claude\f[R] and \f[V]agy\f[R] wrappers call
+\f[V]agents-vault --quiet --push-bg\f[R], which commits as always and
+then hands the push to a detached worker, the same pattern as the
+\f[V]auto-pull\f[R] component.
+The launch never waits on the network, and the worker is built so that
+it can be left on:
+.IP \[bu] 2
+It starts only when something is actually unpushed, decided from local
+refs, so a launch with nothing new starts no process.
+.IP \[bu] 2
+It never prompts for credentials, a passphrase or a host key, and it
+gives up after 60 seconds (git has no connect timeout of its own for
+https, so it runs under \f[V]timeout\f[R]; without \f[V]timeout\f[R] it
+does not start).
+.IP \[bu] 2
+Two pushes never run at once, and a failed attempt backs off for ten
+minutes, so an offline machine does not start a process per launch.
+.IP \[bu] 2
+It only pushes.
+It does not pull, rebase or touch the work tree, so it cannot collide
+with the next launch\[cq]s commit.
+A remote that has moved on rejects the push, and
+\f[V]agents-vault --push\f[R] is how to reconcile.
+.IP \[bu] 2
+Its outcome is recorded inside the vault\[cq]s \f[V].git\f[R], and
+\f[V]agents-vault --status\f[R] prints it, so a failure nobody was
+watching is not silent.
+.PP
+Set \f[V]__fish_agent_vault_bgpush\f[R] to \f[V]0\f[R] to turn it off.
+This mechanism writes nothing outside the vault and needs no change to
+\f[V]\[ti]/.claude/settings.json\f[R]; the price is that it pushes at
+the next launch, not when a session ends, so the newest session\[cq]s
+memory leaves the machine a launch late.
+.PP
+\f[V]agents-vault --status\f[R] reports the remote and the last
+background push.
+A vault with no remote prints a short hint the first time an interactive
+shell session runs \f[V]agents-vault\f[R] or the \f[V]claude\f[R]
+wrapper; the hint stops once a remote is set, or with
+\f[V]agents-vault --dismiss-hint\f[R].
+It never appears in scripts or with \f[V]--silent\f[R].
 .SH 18. ATTRIBUTION
 .PP
 The core of the Zoxide
