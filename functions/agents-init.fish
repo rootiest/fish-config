@@ -5,14 +5,14 @@
 #   12-ai-and-developer-tools
 #
 # DEPENDENCIES
-#   _agents_init_find, _agents_init_sync_instructions, _agents_init_sync_public, _agents_init_migrate_public, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore
+#   _agents_init_find, _agents_init_sync_instructions, _agents_init_sync_public, _agents_init_migrate_public, _agents_repo_install_tools, _agents_repo_sync, _agents_init_ensure_gitignore, _agents_init_pull
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir,grep), bypasses-shadow(mv), manual-section(17-agent-tooling)
 #
 # SYNOPSIS
 #   agents-init [-a | --agents] [-p | --plugins] [-e | --enable]
-#               [--public | --private]
+#               [--public | --private] [--pull]
 #               [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 #
 # DESCRIPTION
@@ -121,7 +121,12 @@
 #   call this synchronously before starting an agent, and a network round
 #   trip there blocks the launch until an unreachable remote times out and
 #   can prompt for credentials with nobody watching. A sub-repo that has an
-#   upstream is pulled by hand, on the user's own schedule.
+#   upstream is pulled by hand, on the user's own schedule: --pull does it
+#   on request. It pulls with a rebase after the local commit, cannot
+#   prompt, and is capped at 20 seconds (see _agents_repo_net_git); a
+#   conflicting rebase is aborted and the sub-repo is left at its local
+#   HEAD. A sub-repo with no upstream is not an error. The wrappers never
+#   pass it.
 #
 #   Called automatically by the claude and agy wrappers on every invocation.
 #
@@ -135,6 +140,8 @@
 #                  Private project: migrate it to public mode.
 #   --private      New project: scaffold private mode. Refused on a public
 #                  project.
+#   --pull         After the local commit, pull the AGENTS/ sub-repo from
+#                  its upstream (rebase, no prompts, 20 second cap)
 #   -v, --verbose  Print all per-step output (default)
 #   -q, --quiet    Print one summary line only if changes were made
 #   -s, --silent   Suppress all output; errors only (standard UNIX convention)
@@ -149,6 +156,8 @@
 #      unsetting the git key failed or the key is still
 #      in effect from another scope (global/system), which is reported on
 #      stderr with its origin
+#      or --pull could not reach the remote, hit a rebase conflict (aborted),
+#      or has no timeout(1) to bound it
 #   2  Unknown option, or both --public and --private given
 #
 # EXAMPLE
@@ -157,6 +166,7 @@
 #   agents-init --plugins
 #   agents-init --quiet
 #   agents-init --public
+#   agents-init --pull
 #
 # NOTES
 #   This header covers usage only. The full concept/behavior/purpose
@@ -169,11 +179,11 @@
 function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec files and plugin dirs'
     __fish_palette
 
-    argparse h/help a/agents p/plugins e/enable public private v/verbose q/quiet s/silent -- $argv
+    argparse h/help a/agents p/plugins e/enable public private pull v/verbose q/quiet s/silent -- $argv
     or return
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-e] [--public | --private] [-v] [-q] [-s] [-h | --help]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-init$c_reset $c_flag""[-a] [-p] [-e] [--public | --private] [--pull] [-v] [-q] [-s] [-h | --help]$c_reset"
         echo
         echo "  Scaffold an AGENTS/ sub-repository for tracking agent specifications."
         echo
@@ -184,6 +194,7 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
         echo "  $c_flag-e$c_reset, $c_flag--enable$c_reset    Re-enable a project agents-cleanup disabled"
         echo "      $c_flag--public$c_reset    New project: public AGENTS.md (default); private project: migrate"
         echo "      $c_flag--private$c_reset   New project: keep AGENTS.md private in AGENTS/"
+        echo "      $c_flag--pull$c_reset      Pull the AGENTS/ sub-repo from its upstream (bounded, no prompts)"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset   Print all per-step output (default)"
         echo "  $c_flag-q$c_reset, $c_flag--quiet$c_reset     Print one summary line only if changes were made"
         echo "  $c_flag-s$c_reset, $c_flag--silent$c_reset    Suppress all output; only errors are printed"
@@ -704,6 +715,36 @@ function agents-init --description 'scaffold AGENTS/ sub-repo with agent spec fi
     else if test -n "$sync_out"
         set changed 1
         test $verbose -eq 1; and echo "$c_ok$sync_out$c_reset"
+    end
+
+    #   ─────────────────────────────── --pull ───────────────────────────────
+    # Opt-in and explicit: the wrappers pass no flags, so a launch never
+    # reaches here. After the commit, so local edits are in the history that
+    # gets replayed, and skipped when the commit failed, so a rejected
+    # commit is not compounded by a rebase on top of it.
+    if set -q _flag_pull; and test $failed -eq 0
+        set -l pull_res (_agents_init_pull "$agents_dir")
+        set -l pull_rc $status
+        if test $pull_rc -eq 1
+            echo "$c_err""Error: could not reach the AGENTS/ remote; AGENTS/ is committed locally and was not updated$c_reset" >&2
+            set failed 1
+        else if test $pull_rc -eq 2
+            echo "$c_err""Error: rebase conflict pulling AGENTS/; aborted, local commits are intact$c_reset" >&2
+            set failed 1
+        else if test $pull_rc -eq 3
+            echo "$c_warn→ AGENTS/ has an unresolved rebase; not pulling$c_reset" >&2
+            set failed 1
+        else if test $pull_rc -eq 4
+            echo "$c_err""Error: timeout is unavailable, so the pull cannot be bounded; AGENTS/ was not pulled$c_reset" >&2
+            set failed 1
+        else if test "$pull_res" = updated
+            set changed 1
+            test $verbose -eq 1; and echo "$c_ok→ Pulled AGENTS/ from its upstream$c_reset"
+        else if test "$pull_res" = current
+            test $verbose -eq 1; and echo "$c_dim→ AGENTS/ is up to date with its upstream$c_reset"
+        else if test "$pull_res" = no-upstream
+            test $verbose -eq 1; and echo "$c_dim→ AGENTS/ has no upstream; nothing to pull$c_reset"
+        end
     end
 
     if test $migrate -eq 1; and test $failed -eq 0; and not set -q _flag_silent

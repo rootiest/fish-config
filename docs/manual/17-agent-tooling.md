@@ -495,7 +495,11 @@ strictly local: `agents-init` never fetches or pushes, because a network
 round trip running synchronously ahead of every agent launch would block
 the launch itself for as long as an unreachable remote takes to time out.
 A project's `AGENTS/` repository that has its own upstream is pulled and
-pushed by hand, on its owner's own schedule.
+pushed by hand, on its owner's own schedule. `agents-init --pull` does the
+pull on request: after the local commit it rebases onto the upstream,
+cannot prompt for credentials, and gives up after 20 seconds. A rebase
+that conflicts is aborted and leaves `AGENTS/` at its local commits. The
+wrappers never pass the flag, so a launch still never touches the network.
 
 `agents-vault` is a related but distinct tool: where `AGENTS/` holds
 *one project's* agent state, `agents-vault` backs up curated agent memory
@@ -518,6 +522,25 @@ an ordinary run never copies back out, since that would resurrect
 something removed on purpose. To restore devlogs on a new machine, copy the
 entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
 `cp -rn`.
+
+agy's knowledge store is copied, not linked, and unlike the devlogs the
+copy is a mirror: a note deleted from `~/.gemini/antigravity-cli/knowledge/`
+is removed from the vault's `global/agy/knowledge/` on the next run, so a
+restore does not bring it back. Only that one directory is ever pruned,
+symlinks are removed as links and never followed, and nothing is removed
+when the store is missing or unreadable, holds nothing the vault has a
+counterpart for (an unmounted or emptied store is not a deletion), or
+the copy failed in part. Deleting the very last note upstream therefore
+needs a by-hand removal from the vault; earlier commits keep any pruned
+file in the vault's history.
+
+The vault's own `.gitignore` is created when absent and line-merged when
+it already exists. The rules the vault relies on (`*.db` with its
+write-ahead-log and shared-memory sidecars, and the `/.adopt-stash` and
+`/.migrate-stash` fallbacks) are appended, as one commented block, only
+when they are not already present as a whole line. Your own lines are
+left exactly as they are, so a vault scaffolded by an earlier version
+picks up a rule added later without a manual step.
 
 ### Getting the vault off the machine
 

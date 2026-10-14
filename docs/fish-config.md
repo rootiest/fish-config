@@ -2850,7 +2850,7 @@ functions). They are active in all interactive sessions.
 ### agents-init
 
     Synopsis:  agents-init [-a | --agents] [-p | --plugins] [-e | --enable]
-                           [--public | --private]
+                           [--public | --private] [--pull]
                            [-v | --verbose] [-q | --quiet] [-s | --silent] [-h | --help]
 
     Scaffolds an AGENTS/ sub-repository inside a project directory. Creates
@@ -2958,7 +2958,12 @@ functions). They are active in all interactive sessions.
     call this synchronously before starting an agent, and a network round
     trip there blocks the launch until an unreachable remote times out and
     can prompt for credentials with nobody watching. A sub-repo that has an
-    upstream is pulled by hand, on the user's own schedule.
+    upstream is pulled by hand, on the user's own schedule: --pull does it
+    on request. It pulls with a rebase after the local commit, cannot
+    prompt, and is capped at 20 seconds (see _agents_repo_net_git); a
+    conflicting rebase is aborted and the sub-repo is left at its local
+    HEAD. A sub-repo with no upstream is not an error. The wrappers never
+    pass it.
 
     Called automatically by the claude and agy wrappers on every invocation.
 
@@ -2972,6 +2977,8 @@ functions). They are active in all interactive sessions.
                      Private project: migrate it to public mode.
       --private      New project: scaffold private mode. Refused on a public
                      project.
+      --pull         After the local commit, pull the AGENTS/ sub-repo from
+                     its upstream (rebase, no prompts, 20 second cap)
       -v, --verbose  Print all per-step output (default)
       -q, --quiet    Print one summary line only if changes were made
       -s, --silent   Suppress all output; errors only (standard UNIX convention)
@@ -2986,6 +2993,8 @@ functions). They are active in all interactive sessions.
          unsetting the git key failed or the key is still
          in effect from another scope (global/system), which is reported on
          stderr with its origin
+         or --pull could not reach the remote, hit a rebase conflict (aborted),
+         or has no timeout(1) to bound it
       2  Unknown option, or both --public and --private given
 
     Notes:
@@ -3003,8 +3012,9 @@ functions). They are active in all interactive sessions.
     agents-init --plugins
     agents-init --quiet
     agents-init --public
+    agents-init --pull
 
-**Dependencies:** `_agents_init_find`, `_agents_init_sync_instructions`, `_agents_init_sync_public`, `_agents_init_migrate_public`, `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`
+**Dependencies:** `_agents_init_find`, `_agents_init_sync_instructions`, `_agents_init_sync_public`, `_agents_init_migrate_public`, `_agents_repo_install_tools`, `_agents_repo_sync`, `_agents_init_ensure_gitignore`, `_agents_init_pull`
 
 **Classification:** `self-limiting(rm,mkdir,grep)`, `bypasses-shadow(mv)`, `manual-section(17-agent-tooling)`
 
@@ -3198,14 +3208,26 @@ functions). They are active in all interactive sessions.
       it as unplaceable rather than relinking the wrong directory. Rebind
       such an entry from the project itself with --adopt=SLUG.
 
-      The agy knowledge copy is merge-only. Files are copied into the vault
-      but are never removed from it, so a fact deleted upstream from agy's
-      knowledge store persists in the vault indefinitely, and a restore or a
-      fresh clone brings it back. Prune such an entry from the vault by hand
-      if it must really be gone.
+      The agy knowledge copy is a mirror: a note deleted from agy's
+      knowledge store is removed from the vault's global/agy/knowledge on
+      the next run, so a restore or a fresh clone does not bring it back.
+      Only that one directory is ever pruned. Nothing is removed when the
+      store is missing, unreadable, or holds nothing the vault has a
+      counterpart for (an unmounted or emptied store is not a deletion), nor
+      after a copy that failed in part; deleting the very last note upstream
+      therefore needs a by-hand removal from the vault. Earlier commits keep
+      the deleted file in the vault's history.
 
-      The devlog copy is merge-only for the same reason, and it only ever
-      goes one way. A log deleted or moved in AGENTS/devlogs/ stays in the
+      The vault's .gitignore is created when absent and line-merged when it
+      exists: each rule the vault relies on (*.db and its two sidecars, and
+      the /.adopt-stash and /.migrate-stash fallbacks) that is not already
+      there as a whole line is appended in one commented block. Lines of
+      your own are never reordered or removed, and a file that is already
+      complete is not touched, so a vault scaffolded by an earlier version
+      gains a rule added later without any manual step.
+
+      The devlog copy, unlike the knowledge mirror, is merge-only, and it
+      only ever goes one way. A log deleted or moved in AGENTS/devlogs/ stays in the
       vault, and an ordinary run never copies back out, because that would
       resurrect a file removed on purpose. To bring devlogs back on a new
       machine, copy the entry's agents/devlogs/ over AGENTS/devlogs/ without
@@ -3247,7 +3269,7 @@ functions). They are active in all interactive sessions.
     agents-vault --adopt=git.rootiest.dev-rootiest-fish-config
     agents-vault --restore
 
-**Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `_agents_vault_bgpush`, `_private_dir`, `git`, `hostname`
+**Dependencies:** `_agents_vault_dir`, `_agents_repo_slug`, `_agents_repo_local_slug`, `_agents_repo_ensure_symlink`, `_agents_repo_sync`, `_agents_repo_install_tools`, `_agents_vault_bgpush`, `_agents_vault_prune_agy`, `_private_dir`, `_agents_vault_ensure_gitignore`, `git`, `hostname`
 
 **Classification:** `self-limiting(rm,mkdir)`, `manual-section(17-agent-tooling)`
 
@@ -7086,7 +7108,11 @@ strictly local: `agents-init` never fetches or pushes, because a network
 round trip running synchronously ahead of every agent launch would block
 the launch itself for as long as an unreachable remote takes to time out.
 A project's `AGENTS/` repository that has its own upstream is pulled and
-pushed by hand, on its owner's own schedule.
+pushed by hand, on its owner's own schedule. `agents-init --pull` does the
+pull on request: after the local commit it rebases onto the upstream,
+cannot prompt for credentials, and gives up after 20 seconds. A rebase
+that conflicts is aborted and leaves `AGENTS/` at its local commits. The
+wrappers never pass the flag, so a launch still never touches the network.
 
 `agents-vault` is a related but distinct tool: where `AGENTS/` holds
 *one project's* agent state, `agents-vault` backs up curated agent memory
@@ -7109,6 +7135,25 @@ an ordinary run never copies back out, since that would resurrect
 something removed on purpose. To restore devlogs on a new machine, copy the
 entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
 `cp -rn`.
+
+`agy`'s knowledge store is copied, not linked, and unlike the devlogs the
+copy is a mirror: a note deleted from `~/.gemini/antigravity-cli/knowledge/`
+is removed from the vault's `global/agy/knowledge/` on the next run, so a
+restore does not bring it back. Only that one directory is ever pruned,
+symlinks are removed as links and never followed, and nothing is removed
+when the store is missing or unreadable, holds nothing the vault has a
+counterpart for (an unmounted or emptied store is not a deletion), or
+the copy failed in part. Deleting the very last note upstream therefore
+needs a by-hand removal from the vault; earlier commits keep any pruned
+file in the vault's history.
+
+The vault's own `.gitignore` is created when absent and line-merged when
+it already exists. The rules the vault relies on (`*.db` with its
+write-ahead-log and shared-memory sidecars, and the `/.adopt-stash` and
+`/.migrate-stash` fallbacks) are appended, as one commented block, only
+when they are not already present as a whole line. Your own lines are
+left exactly as they are, so a vault scaffolded by an earlier version
+picks up a rule added later without a manual step.
 
 ### Getting the vault off the machine
 
