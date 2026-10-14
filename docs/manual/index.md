@@ -48,6 +48,7 @@ The configuration uses a structured file tree:
     │   ├── logging-events.fish     C5 event handlers; syncs logging state
     │   ├── pkg-wrappers.fish       Auto-generates paru/yay logging wrappers
     │   ├── puffer.fish             !! / !$ / ./ expansion
+    │   ├── session-env-offer.fish  C6 one-time hint about session-env setup
     │   ├── sponge_privacy.fish     Sponge privacy patterns
     │   ├── starship.fish           fish_prompt shell-integration markers
     │   ├── theme.fish              Saves the Catppuccin theme; FZF colors
@@ -66,6 +67,7 @@ The configuration uses a structured file tree:
     │   ├── cli-agent.md            System prompt for the terminal assistant
     │   ├── config-settings-tui.py  curses front-end for config-settings
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
+    │   ├── session-env-select.py  curses checkbox picker for session-env select
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
     ├── data/                       gi templates, session-env catalog, word lists
     ├── templates/                  fish-template building blocks

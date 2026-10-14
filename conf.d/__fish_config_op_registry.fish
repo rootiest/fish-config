@@ -62,6 +62,7 @@ set -g __fish_config_op_registry_keys \
     "puffer:" \
     "rg:" \
     "rm:" \
+    "session-env-offer:" \
     "smart_exit:exit-plain" \
     "smart_exit:logging-guard" \
     "split:" \
@@ -131,6 +132,7 @@ set -g __fish_config_op_registry_values \
     overrides/key-bindings \
     aliases/search \
     aliases/filesystem \
+    greeting/first-run \
     overrides/key-bindings \
     logging/terminal-capture \
     integrations/window-mgmt \

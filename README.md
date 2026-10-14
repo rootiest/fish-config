@@ -372,9 +372,24 @@ Variables set in `config.fish` only reach programs started from fish. Apps launc
 | Command | Action |
 |---|---|
 | `session-env install [GROUP...]` | Write the groups; with none, the default `xdg` group (XDG base directories) |
+| `session-env install ... --var NAME --except NAME` | Add or leave out single variables; the choice is recorded in the file header and survives `status`, `sync` and later `add`/`remove` |
+| `session-env add ITEM...` / `remove ITEM...` | Change the installed selection by variable or group, keeping the rest |
+| `session-env select` | Pick individual variables in a checkbox list (needs a terminal and python3 with curses; starts from what is installed) |
+| `session-env sync` | Rewrite the file from its own selection, refreshing copied values (`install` with no groups resets to the default) |
+| `session-env status` | Show the file, its selection and whether copied values have gone stale |
+| `session-env install --now` / `apply` | Also push the selection into the running user session (`systemctl --user set-environment`, `dbus-update-activation-environment`); never done automatically |
 | `session-env preview [GROUP...]` | Print what `install` would write |
-| `session-env list` | Show every group and variable: `xdg-tools`, `editor`, `privacy`, `telemetry`, `wayland`, and more |
-| `session-env status` / `uninstall` | Show or remove the managed file |
+| `session-env list` | Show every group and variable, marking the selection: `xdg-tools`, `editor`, `privacy`, `telemetry`, `wayland`, and more |
+| `session-env uninstall` | Remove the managed file |
+| `session-env setup` / `dismiss` | Answer or silence the one-time first-run hint |
+| `session-env desktop install NAME` | Create a user-level copy of a `.desktop` launcher that starts the app with variables unset (default: the `privacy` group) |
+| `session-env desktop uninstall NAME` / `preview` / `status` | Remove what was added, print it, or list managed overrides |
+
+The file records the selection in its header: `# groups:` lists the groups, and a `# vars:` line (written only when a group is partly selected) is the exact variable list. Files that only have `# groups:` mean every variable of those groups.
+
+`.desktop` overrides are opt-in and reversible. They are written only to `~/.local/share/applications/` (never `/usr/share`), start with a marker line, and are the only files `desktop uninstall` removes; a launcher you edited by hand is refused, not overwritten.
+
+Known limits: `environment.d` applies at login (use `--now` for programs started afterwards); hooks and MCP servers spawned by claude do not get the privacy variables, because putting them in claude's own environment disables its feature flags and there is no central setting for spawned processes. Set them per server (`env` in `.mcp.json` or `claude mcp add --env`) and per hook (an `env NAME=value` prefix in the command).
 
 `privacy` is opt-in: claude-code turns off its feature flags (and Remote Control) when `DO_NOT_TRACK` or `DISABLE_TELEMETRY` is set, and a desktop-launched claude has no wrapper to strip them.
 
