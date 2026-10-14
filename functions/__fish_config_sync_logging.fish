@@ -8,7 +8,7 @@
 #   self-limiting(rm,mkdir)
 #
 # SYNOPSIS
-#   __fish_config_sync_logging
+#   __fish_config_sync_logging [--startup]
 #
 # DESCRIPTION
 #   Synchronises C5 logging state: creates or removes the Kitty sentinel
@@ -20,12 +20,26 @@
 #   Safe to call at any time; wrapper removal only affects files bearing
 #   the generated version-marker comment.
 #
+#   The sentinel is only touched when its state has to change: an existing
+#   sentinel is not re-created, a missing one is not re-removed, and the
+#   common already-in-sync start therefore forks nothing for it.
+#
+# ARGUMENTS
+#   --startup  Skip the paru/yay wrapper delegation. Used by
+#              conf.d/logging-events.fish, which runs just before fish
+#              sources conf.d/pkg-wrappers.fish itself; delegating here as
+#              well would execute that file twice per start. Every later
+#              call (variable-change handlers, manual) omits it.
+#
 # EXIT STATUS
 #   0  Always
 #
 # EXAMPLE
 #   __fish_config_sync_logging
 function __fish_config_sync_logging --description 'Sync C5 logging state: sentinel file, paru/yay wrappers, and tmux pipe-pane'
+    set -l startup 0
+    contains -- --startup $argv; and set startup 1
+
     set -l config_home $XDG_CONFIG_HOME
     if test -z "$config_home"
         set config_home "$HOME/.config"
@@ -33,15 +47,22 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     set -l sentinel "$config_home/fish/.logging_disabled"
 
     if __fish_config_op_enabled (status current-function)
-        # Logging enabled: remove sentinel
-        rm -f $sentinel
+        # Logging enabled: remove sentinel (only when there is one to remove)
+        if test -e $sentinel -o -L $sentinel
+            rm -f $sentinel
+        end
 
         # Restart tmux pipe-pane for the current pane if inside tmux
         _tmux_pipe_log
     else
-        # Logging disabled: create sentinel
-        mkdir -p (dirname $sentinel)
-        touch $sentinel
+        # Logging disabled: create sentinel. Skipped when it already exists:
+        # its directory is then known to exist and nothing reads its mtime
+        # (the Kitty watcher only tests for presence), so the default
+        # already-in-sync start spawns neither mkdir nor touch.
+        if not test -e $sentinel
+            mkdir -p (path dirname $sentinel)
+            touch $sentinel
+        end
 
         # Stop tmux pipe-pane for the current pane if inside tmux
         if set -q TMUX
@@ -62,7 +83,12 @@ function __fish_config_sync_logging --description 'Sync C5 logging state: sentin
     # Routed through _fish_source_scoped: the file `return`s early in a
     # non-interactive shell, and a sourced `return` exits the *calling*
     # function, which would otherwise abort this function.
-    _fish_source_scoped "$__fish_config_dir/conf.d/pkg-wrappers.fish"
+    #
+    # Skipped on the --startup call: fish sources pkg-wrappers.fish from
+    # conf.d right after logging-events.fish anyway.
+    if test $startup -eq 0
+        _fish_source_scoped "$__fish_config_dir/conf.d/pkg-wrappers.fish"
+    end
 
     # The sourced file returns early (status 1) in a non-interactive shell;
     # that is not a failure of this function.

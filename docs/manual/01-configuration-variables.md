@@ -110,6 +110,16 @@ Opinionated defaults (`CDPATH`, `PAGER`/`MANPAGER`, Vi mode, command shadows,
 terminal integrations) can be switched off per category with universal
 variables — see Section 7, "Opinionated Components (Minimal Mode)".
 
+## Startup Cache
+
+| Variable | Value | Notes |
+|---|---|---|
+| `__fish_config_init_cache` | unset (on) | set to `off`/`0`/`false` to stop caching the `fzf --fish` and `direnv hook fish` init output |
+
+Entries live in `$XDG_CACHE_HOME/fish-config/init/` and are invalidated when the
+tool binary changes. `__fish_init_cache --clear` removes them. See Section 13,
+Troubleshooting.
+
 ## Pager Hierarchy
 
 `$PAGER` is set to `ov` when available, falling back to `less`. The `less` wrapper

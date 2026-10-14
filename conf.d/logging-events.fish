@@ -13,8 +13,8 @@
 # solely in functions/ are never registered and their --on-variable triggers
 # never fire.
 
-# Calls __fish_config_sync_logging at every shell start, which mkdir+touches
-# the C5 sentinel on disk. Its only consumers — the Kitty watcher and the
+# Calls __fish_config_sync_logging at every shell start, which reconciles the
+# C5 sentinel on disk (creating it only when missing). Its only consumers — the Kitty watcher and the
 # paru/yay wrappers — are interactive-context; every interactive shell still
 # refreshes it.
 status is-interactive; or return
@@ -29,5 +29,8 @@ function __fish_config_opinionated_changed --on-variable __fish_config_opinionat
     __fish_config_sync_logging
 end
 
-# Sync once at startup so pre-set variable values take effect without a re-set
-__fish_config_sync_logging
+# Sync once at startup so pre-set variable values take effect without a re-set.
+# --startup leaves the paru/yay wrappers to conf.d/pkg-wrappers.fish, which
+# fish sources right after this file (alphabetical order) and which would
+# otherwise run a second time from inside the sync.
+__fish_config_sync_logging --startup
