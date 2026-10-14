@@ -40,10 +40,11 @@ if test -f /usr/share/cachyos-fish-config/cachyos-config.fish
     # Surgically overriding the distro config is opinionated (C3 overrides):
     # skip it entirely when overrides are disabled, keeping CachyOS defaults.
     if __fish_config_op_enabled (status basename) cachyos-tricks
-        # Source our tricks over the cachyOS config
-        test -f "$__fish_config_dir/conf.d/tricks.fish"
-        and source "$__fish_config_dir/conf.d/tricks.fish"
-        # Erase CachyOS aliases/functions that shadow our versions, then
+        # conf.d/tricks.fish is not re-sourced here (issue #335): every
+        # definition it shares with the distro config is identical, so the
+        # second pass only cost startup time. tests/test-cachyos-tricks.fish
+        # fails if the two drift apart. What does differ lives in functions/:
+        # erase CachyOS aliases/functions that shadow our versions, then
         # re-source our versions since functions --erase removes autoload entries.
         for _fname in ls lt cleanup copy
             functions --erase $_fname
