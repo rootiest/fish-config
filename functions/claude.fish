@@ -26,8 +26,12 @@
 #
 #   Also syncs the host-scoped agent memory vault (agents-vault), which
 #   tracks curated memory living outside the project tree. The vault
-#   commits on launch but does not push; pushing happens from the Claude
-#   Code SessionEnd hook or an explicit agents-vault --push.
+#   commits on launch and, when the vault has a remote and something new
+#   to send, starts a detached, time-bounded push in the background
+#   (agents-vault --push-bg); the launch never waits on the network. An
+#   explicit agents-vault --push still pushes synchronously. With no vault
+#   remote configured, the launch prints a one-per-session hint saying how
+#   to set one.
 #
 #   All arguments are forwarded verbatim to the real claude binary.
 #
@@ -71,7 +75,7 @@ function claude --wraps=claude --description 'claude wrapper: ensures AGENTS/ is
 
     if __fish_config_op_enabled (status current-function)
         agents-init --quiet
-        agents-vault --quiet
+        agents-vault --quiet --push-bg
     end
 
     env $strip claude $argv

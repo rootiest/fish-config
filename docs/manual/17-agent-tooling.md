@@ -518,3 +518,47 @@ an ordinary run never copies back out, since that would resurrect
 something removed on purpose. To restore devlogs on a new machine, copy the
 entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
 `cp -rn`.
+
+### Getting the vault off the machine
+
+The vault is a git repository, and the wrappers only ever *commit* to it:
+a push on every launch would block the launch for as long as an
+unreachable remote takes to time out. A commit leaves the machine only
+when a remote exists and something pushes, and nothing sets up the first
+on its own.
+
+    # Set a remote
+    agents-vault --remote=git@git.example.com:you/agent-vault.git
+
+With a remote set there is nothing further to install. The `claude` and
+`agy` wrappers call `agents-vault --quiet --push-bg`, which commits as
+always and then hands the push to a detached worker, the same pattern as
+the auto-pull component. The launch never waits on the network, and the
+worker is built so that it can be left on:
+
+- It starts only when something is actually unpushed, decided from local
+  refs, so a launch with nothing new starts no process.
+- It never prompts for credentials, a passphrase or a host key, and it
+  gives up after 60 seconds (git has no connect timeout of its own for
+  https, so it runs under `timeout`; without `timeout` it does not start).
+- Two pushes never run at once, and a failed attempt backs off for ten
+  minutes, so an offline machine does not start a process per launch.
+- It only pushes. It does not pull, rebase or touch the work tree, so it
+  cannot collide with the next launch's commit. A remote that has moved
+  on rejects the push, and `agents-vault --push` is how to reconcile.
+- Its outcome is recorded inside the vault's `.git`, and
+  `agents-vault --status` prints it, so a failure nobody was watching is
+  not silent.
+
+Set `__fish_agent_vault_bgpush` to `0` to turn it off. This mechanism
+writes nothing outside the vault and needs no change to
+`~/.claude/settings.json`; the price is that it pushes at the next launch,
+not when a session ends, so the newest session's memory leaves the machine
+a launch late.
+
+`agents-vault --status` reports the remote and the last background push.
+A vault with no remote prints
+a short hint the first time an interactive shell session runs
+`agents-vault` or the `claude` wrapper; the hint stops once a remote is
+set, or with `agents-vault --dismiss-hint`. It never appears in scripts or
+with `--silent`.

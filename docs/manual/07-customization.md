@@ -171,15 +171,29 @@ full sub-category breakdown of every category.
     __fish_agent_vault_autopush
 
     When set to 1, agents-vault also pushes on wrapper launch. Defaults to
-    off: the vault commits locally on every launch and pushes from the
-    Claude Code SessionEnd hook or an explicit agents-vault --push. That
-    push is synchronous, so with autopush on the pull and the push are
-    each capped at 20 seconds; an explicit --push is left uncapped.
+    off: the vault commits locally on every launch and the push happens in
+    the background (see __fish_agent_vault_bgpush) or from an explicit
+    agents-vault --push. The autopush push is synchronous, so with it on
+    the pull and the push are each capped at 20 seconds; an explicit
+    --push is left uncapped.
+
+    __fish_agent_vault_bgpush
+
+    Set to 0 to switch off the background push the claude and agy wrappers
+    start (agents-vault --push-bg). On by default, and inert until the
+    vault has a remote. Also off when auto-execution (C2) is disabled.
+
+    __fish_config_agent_vault_remote_hint_dismissed
+
+    Universal variable set by agents-vault --dismiss-hint. While it is set
+    the once-per-session "vault has no remote" hint is not printed. Erase
+    it (set -e -U __fish_config_agent_vault_remote_hint_dismissed) to see
+    the hint again.
 
 NOTE:
-With autopush off and no SessionEnd hook installed, backups accumulate
-locally and never reach the remote. Run agents-vault --status to check
-how far ahead the vault is.
+With the background push switched off and autopush off, backups accumulate
+locally and never reach the remote. Run agents-vault --status to see the
+remote and what the last background push did.
 
 
 ## Prompt and Theme

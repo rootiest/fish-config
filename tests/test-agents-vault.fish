@@ -2259,6 +2259,250 @@ set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
 set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 
+#   ─────────────────────── background push (--push-bg) ───────────────────
+# The worker is a detached `fish --no-config` child, so these tests wait on
+# observable effects (a commit arriving in a local bare repo, a state file)
+# rather than on a return value. Every remote is a bare repo or an
+# unreachable address under mktemp; nothing leaves the machine.
+echo ""
+echo "== agents-vault (background push) =="
+
+function bg_wait_for --argument-names bare file branch
+    for i in (seq 60)
+        git -C $bare cat-file -e $branch:$file 2>/dev/null; and return 0
+        sleep 0.25
+    end
+    return 1
+end
+function bg_wait_state --argument-names vault
+    for i in (seq 80)
+        test -s $vault/.git/agent-vault-bgpush.state; and return 0
+        sleep 0.25
+    end
+    return 1
+end
+
+set -l bgv (mktemp -d)
+set -ga TMPDIRS $bgv
+set -l bgc (mktemp -d)
+set -ga TMPDIRS $bgc
+set -l bgh (mktemp -d)
+set -ga TMPDIRS $bgh
+set -l bgagy (mktemp -d)
+set -ga TMPDIRS $bgagy
+set -l bgbare (mktemp -d)
+set -ga TMPDIRS $bgbare
+git init -q --bare $bgbare
+set -g __fish_agent_vault_dir $bgv/agent-vault
+set -g __fish_agent_vault_claude_root $bgc
+set -g __fish_agent_vault_claude_home $bgh
+set -g __fish_agent_vault_agy_root $bgagy
+set -l bgvault $bgv/agent-vault
+
+set -l bgp (new_repo https://git.rootiest.dev/rootiest/bgpush.git)
+set -l bgslug git.rootiest.dev-rootiest-bgpush
+set -l bgmang (string replace -a '/' '-' -- $bgp | string replace -a '.' '-')
+mkdir -p $bgc/$bgmang/memory
+echo one >$bgc/$bgmang/memory/one.md
+
+pushd $bgp >/dev/null
+# -- no remote: nothing is due, the status says so, nothing is spawned
+agents-vault --silent --push-bg
+check "bg: a run with no remote commits and succeeds" 0 $status
+set -l why (_agents_vault_bgpush due $bgvault)
+check "bg: no remote -> not due" 1 $status
+check "bg: no remote -> reason" "no remote" "$why"
+check "bg: no remote -> no state file" false (test -e $bgvault/.git/agent-vault-bgpush.state; and echo true; or echo false)
+check "bg: status says idle, no remote" true (string match -q '*Push:*idle*no remote*' -- (agents-vault --status | string collect); and echo true; or echo false)
+
+# -- with a remote: due, then pushed from the background
+agents-vault --remote=$bgbare --silent
+set -l bgbranch (git -C $bgvault rev-parse --abbrev-ref HEAD)
+_agents_vault_bgpush due $bgvault >/dev/null
+check "bg: remote + unpushed commit -> due" 0 $status
+set -l t0 (date +%s)
+echo two >$bgc/$bgmang/memory/two.md
+agents-vault --silent --push-bg
+set -l bgrc $status
+set -l bgel (math (date +%s) - $t0)
+check "bg: --push-bg exits 0" 0 $bgrc
+check "bg: the launch did not wait for the push" true (test $bgel -lt 5; and echo true; or echo false)
+check "bg: the worker pushed the commit" 0 (bg_wait_for $bgbare projects/$bgslug/claude/memory/two.md $bgbranch; echo $status)
+bg_wait_state $bgvault
+check "bg: outcome recorded as ok" ok (string split ' ' -- (head -n 1 $bgvault/.git/agent-vault-bgpush.state))[2]
+check "bg: lock released" false (test -d $bgvault/.git/agent-vault-bgpush.lock; and echo true; or echo false)
+check "bg: status reports the last push" true (string match -q '*Push:*last push succeeded*' -- (agents-vault --status | string collect); and echo true; or echo false)
+
+# -- nothing new: no process, state untouched
+set -l before (cat $bgvault/.git/agent-vault-bgpush.state)
+set why (_agents_vault_bgpush due $bgvault)
+check "bg: nothing new -> not due" 1 $status
+check "bg: nothing new -> reason" "nothing new to push" "$why"
+agents-vault --silent --push-bg
+sleep 1
+check "bg: nothing new -> state file untouched" "$before" (cat $bgvault/.git/agent-vault-bgpush.state)
+
+# -- the worker only pushes: HEAD and the work tree are not disturbed
+set -l head0 (git -C $bgvault rev-parse HEAD)
+_agents_vault_bgpush run $bgvault
+check "bg: run exits 0" 0 $status
+check "bg: run does not move HEAD" $head0 (git -C $bgvault rev-parse HEAD)
+check "bg: run leaves no index.lock" false (test -e $bgvault/.git/index.lock; and echo true; or echo false)
+
+# -- opt-out, and C2 guard
+echo three >$bgc/$bgmang/memory/three.md
+agents-vault --silent
+set -g __fish_agent_vault_bgpush 0
+set why (_agents_vault_bgpush due $bgvault)
+check "bg: opt-out -> not due" 1 $status
+check "bg: opt-out -> reason names the variable" true (string match -q '*__fish_agent_vault_bgpush*' -- "$why"; and echo true; or echo false)
+check "bg: status shows it is off" true (string match -q '*Push:*is off*' -- (agents-vault --status | string collect); and echo true; or echo false)
+set -e __fish_agent_vault_bgpush
+set -g __fish_config_op_registry_keys "_agents_vault_bgpush:"
+set -g __fish_config_op_registry_values autoexec/sync
+set -g __fish_config_op_autoexec 0
+set why (_agents_vault_bgpush due $bgvault)
+check "bg: C2 disabled -> not due" 1 $status
+check "bg: C2 disabled -> reason" true (string match -q '*auto-execution*' -- "$why"; and echo true; or echo false)
+set -e __fish_config_op_autoexec
+set -e __fish_config_op_registry_keys
+set -e __fish_config_op_registry_values
+_agents_vault_bgpush due $bgvault >/dev/null
+check "bg: due again once re-enabled" 0 $status
+
+# -- no stacking: a fresh lock blocks, a stale one is reclaimed
+mkdir $bgvault/.git/agent-vault-bgpush.lock
+set why (_agents_vault_bgpush due $bgvault)
+check "bg: fresh lock -> not due" 1 $status
+check "bg: fresh lock -> reason" "a background push is already running" "$why"
+set -l st_before (cat $bgvault/.git/agent-vault-bgpush.state)
+_agents_vault_bgpush run $bgvault
+check "bg: run under a held lock does nothing" "$st_before" (cat $bgvault/.git/agent-vault-bgpush.state)
+check "bg: run under a held lock leaves the lock alone" true (test -d $bgvault/.git/agent-vault-bgpush.lock; and echo true; or echo false)
+touch -d '10 minutes ago' $bgvault/.git/agent-vault-bgpush.lock
+_agents_vault_bgpush due $bgvault >/dev/null
+check "bg: stale lock is ignored by due" 0 $status
+_agents_vault_bgpush run $bgvault
+check "bg: stale lock reclaimed and the push done" 0 (bg_wait_for $bgbare projects/$bgslug/claude/memory/three.md $bgbranch; echo $status)
+check "bg: lock released after reclaim" false (test -d $bgvault/.git/agent-vault-bgpush.lock; and echo true; or echo false)
+
+# -- concurrent workers: exactly one push happens
+echo four >$bgc/$bgmang/memory/four.md
+agents-vault --silent
+set -l shimd (mktemp -d)
+set -ga TMPDIRS $shimd
+set -l realgit (command -s git)
+printf '%s\n' '#!/bin/sh' \
+    'case " $* " in *" push "*) echo "$GIT_TERMINAL_PROMPT|$GIT_ASKPASS|$SSH_ASKPASS|$GIT_SSH_COMMAND" >>'$shimd/push.log'; sleep 2 ;; esac' \
+    "exec $realgit \"\$@\"" >$shimd/git
+chmod +x $shimd/git
+set -l path_before $PATH
+set -gx PATH $shimd $PATH
+# Separate processes, as the real thing is: a backgrounded fish function
+# does not run concurrently with its caller.
+for i in 1 2 3
+    command fish --no-config -c 'set -p fish_function_path $argv[1]; _agents_vault_bgpush run $argv[2]' -- $repo_root/functions $bgvault &
+end
+wait
+set -gx PATH $path_before
+check "bg: three concurrent workers made one push" 1 (count (cat $shimd/push.log))
+check "bg: the push never prompts and neutralizes askpass" true (string match -q '0|true|true|*' -- (head -n 1 $shimd/push.log); and echo true; or echo false)
+check "bg: the push forces BatchMode and a connect timeout on ssh" true (string match -q '*BatchMode=yes*ConnectTimeout=10*' -- (head -n 1 $shimd/push.log); and echo true; or echo false)
+
+# -- failure is recorded, surfaced, and backs off
+echo five >$bgc/$bgmang/memory/five.md
+agents-vault --silent
+git -C $bgvault remote set-url origin $bgv/does-not-exist.git
+_agents_vault_bgpush run $bgvault
+set -l fl (string split ' ' -m 2 -- (head -n 1 $bgvault/.git/agent-vault-bgpush.state))
+check "bg: a failed push is recorded as fail" fail $fl[2]
+check "bg: the failure keeps git's reason" true (test -n "$fl[3]"; and echo true; or echo false)
+set -l fl_out (agents-vault --status | string collect)
+check "bg: --status surfaces the failure" true (string match -q '*Push:*FAILED*' -- "$fl_out"; and echo true; or echo false)
+set why (_agents_vault_bgpush due $bgvault)
+check "bg: backs off after a failure" 1 $status
+check "bg: backoff reason" "backing off after a recent failure" "$why"
+check "bg: a failed push still leaves the local commit" true (git -C $bgvault ls-files --error-unmatch projects/$bgslug/claude/memory/five.md >/dev/null 2>&1; and echo true; or echo false)
+
+# -- bounded: an address that never answers is cut off at the cap
+set -gx __fish_agent_vault_bgpush_timeout 2
+git -C $bgvault remote set-url origin http://192.0.2.1/vault.git
+command rm -f $bgvault/.git/agent-vault-bgpush.state
+set -l bt0 (date +%s)
+_agents_vault_bgpush run $bgvault
+set -l bgdur (math (date +%s) - $bt0)
+set -e __fish_agent_vault_bgpush_timeout
+check "bg: an unreachable remote is bounded" true (test $bgdur -lt 30; and echo true; or echo false)
+check "bg: ...and recorded as a failure" fail (string split ' ' -- (head -n 1 $bgvault/.git/agent-vault-bgpush.state))[2]
+check "bg: ...with the lock released" false (test -d $bgvault/.git/agent-vault-bgpush.lock; and echo true; or echo false)
+
+# -- spawn really detaches: the child outlives and outruns the caller
+git -C $bgvault remote set-url origin $bgbare
+command rm -f $bgvault/.git/agent-vault-bgpush.state
+_agents_vault_bgpush spawn $bgvault
+check "bg: spawn returns 0" 0 $status
+check "bg: spawned worker completes the push" 0 (bg_wait_for $bgbare projects/$bgslug/claude/memory/five.md $bgbranch; echo $status)
+popd >/dev/null
+
+# -- the wrappers ask for it
+check "bg: claude wrapper passes --push-bg" true (functions claude | string match -q '*agents-vault --quiet --push-bg*'; and echo true; or echo false)
+check "bg: agy wrapper passes --push-bg" true (functions agy | string match -q '*agents-vault --quiet --push-bg*'; and echo true; or echo false)
+
+functions -e bg_wait_for bg_wait_state
+set -e __fish_agent_vault_dir
+set -e __fish_agent_vault_claude_root
+set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
+set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
+
+#   ───────────────────────── no-remote hint ─────────────────────────
+echo ""
+echo "== agents-vault (no-remote hint) =="
+
+# The no-remote hint. Interactive-only by design, so each case runs in
+# a child `fish -i` with its own HOME / XDG_CONFIG_HOME: --dismiss-hint
+# writes a universal variable and that must land in a throwaway
+# fish_variables, never the real one. Not --no-config: that child does not
+# persist universal variables at all, and the empty XDG_CONFIG_HOME already
+# means there is no user configuration to load.
+function hint_run --argument-names vault proj xdg snippet
+    set -l fishbin (command -s fish)
+    env HOME=$xdg XDG_CONFIG_HOME=$xdg/.config XDG_DATA_HOME=$xdg/.local/share \
+        __fish_agent_vault_dir=$vault __fish_agent_vault_claude_home=$xdg/claude \
+        __fish_agent_vault_claude_root=$xdg/claude-projects __fish_agent_vault_agy_root=$xdg/agy \
+        GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t \
+        $fishbin -i -c "set -p fish_function_path $repo_root/functions; cd $proj; $snippet" 2>&1
+end
+set -l hx (mktemp -d)
+set -ga TMPDIRS $hx
+mkdir -p $hx/claude $hx/claude-projects $hx/agy
+set -l hproj (new_repo https://git.rootiest.dev/rootiest/hint.git)
+set -l hbare (mktemp -d)
+set -ga TMPDIRS $hbare
+git init -q --bare $hbare
+
+set -l o (hint_run $hx/vault $hproj $hx 'agents-vault' | string collect)
+check "hint: shown on a verbose interactive run with no remote" true (string match -q '*has no remote*--remote=<url>*' -- "$o"; and echo true; or echo false)
+check "hint: points at --remote and --dismiss-hint" true (string match -q '*--remote=<url>*--dismiss-hint*' -- "$o"; and echo true; or echo false)
+set o (hint_run $hx/vault $hproj $hx 'agents-vault --quiet; agents-vault --quiet' | string collect)
+check "hint: --quiet (the claude wrapper's call) shows it" true (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+check "hint: only once per shell session" 1 (printf '%s' "$o" | string match -r -a 'has no remote' | count)
+set o (hint_run $hx/vault $hproj $hx 'agents-vault --silent' | string collect)
+check "hint: --silent never shows it" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+set o (fish --no-config -c "set -p fish_function_path $repo_root/functions; set -gx __fish_agent_vault_dir $hx/vault; set -gx __fish_agent_vault_claude_home $hx/claude; set -gx __fish_agent_vault_claude_root $hx/claude-projects; set -gx __fish_agent_vault_agy_root $hx/agy; cd $hproj; agents-vault" 2>&1 | string collect)
+check "hint: never shown to a non-interactive shell" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+set o (hint_run $hx/vault $hproj $hx 'agents-vault --dismiss-hint; agents-vault; echo ---; fish -i -c "agents-vault"' | string collect)
+check "hint: --dismiss-hint is acknowledged" true (string match -q '*dismissed*' -- "$o"; and echo true; or echo false)
+check "hint: dismissed means silent afterwards" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+check "hint: dismissal persisted to the (sandboxed) universal variables" true (string match -q '*__fish_config_agent_vault_remote_hint_dismissed*' -- (cat $hx/.config/fish/fish_variables 2>/dev/null | string collect); and echo true; or echo false)
+git -C $hx/vault remote add origin $hbare
+set -l hx2 (mktemp -d)
+set -ga TMPDIRS $hx2
+mkdir -p $hx2/claude $hx2/claude-projects $hx2/agy
+set o (hint_run $hx/vault $hproj $hx2 'agents-vault' | string collect)
+check "hint: not shown once a remote exists" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+
+functions -e hint_run
+
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The
 # failure this guards is specific: a global-memory sync with no test

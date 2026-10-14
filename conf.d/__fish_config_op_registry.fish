@@ -16,6 +16,7 @@ set -g __fish_config_op_registry_keys \
     "__auto_source_fallback_venv:" \
     "__fish_config_sync_logging:" \
     "__fish_user_dots_link:" \
+    "_agents_vault_bgpush:" \
     "_zellij_dump_log:" \
     "abbr:abbr-integrations" \
     "abbr:abbr-overrides" \
@@ -83,6 +84,7 @@ set -g __fish_config_op_registry_keys \
 set -g __fish_config_op_registry_values \
     autoexec/venv \
     logging/terminal-capture \
+    autoexec/sync \
     autoexec/sync \
     logging/multiplexer-capture \
     integrations/terminal-abbrs \
