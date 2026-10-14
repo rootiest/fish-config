@@ -17,10 +17,11 @@
 # read, run alone (`fish tests/test-startup-budget.fish`) or deleted.
 #
 # Tunables (environment):
-#   FISH_CONFIG_STARTUP_BUDGET_MS    median budget in ms (default 500; the
-#                                    config starts in ~100 ms on a laptop,
-#                                    the default only trips on a regression
-#                                    of several times that)
+#   FISH_CONFIG_STARTUP_BUDGET_MS    median budget in ms (default 200; CI
+#                                    medians were 77-90 ms, no sample over
+#                                    98 ms, when it was set in issue #335,
+#                                    so the default trips on a regression
+#                                    of roughly double that)
 #   FISH_CONFIG_STARTUP_BUDGET_RUNS  timed starts per measurement (default 5,
 #                                    median taken; one extra warm-up first)
 #   FISH_CONFIG_STARTUP_BUDGET_SKIP  non-empty: do not measure at all
@@ -30,7 +31,7 @@
 
 source (realpath (dirname (status filename)))/lib.fish
 
-set -g budget_ms 500
+set -g budget_ms 200
 set -q FISH_CONFIG_STARTUP_BUDGET_MS
 and string match -qr '^[0-9]+$' -- $FISH_CONFIG_STARTUP_BUDGET_MS
 and set budget_ms $FISH_CONFIG_STARTUP_BUDGET_MS
