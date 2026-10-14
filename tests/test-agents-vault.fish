@@ -2259,6 +2259,55 @@ set -e __fish_agent_vault_claude_root
 set -g __fish_agent_vault_claude_home $HERMETIC_HOME/claude
 set -g __fish_agent_vault_agy_root $HERMETIC_HOME/agy
 
+#   ───────────────────────── no-remote hint ─────────────────────────
+echo ""
+echo "== agents-vault (no-remote hint) =="
+
+# The no-remote hint. Interactive-only by design, so each case runs in
+# a child `fish -i` with its own HOME / XDG_CONFIG_HOME: --dismiss-hint
+# writes a universal variable and that must land in a throwaway
+# fish_variables, never the real one. Not --no-config: that child does not
+# persist universal variables at all, and the empty XDG_CONFIG_HOME already
+# means there is no user configuration to load.
+function hint_run --argument-names vault proj xdg snippet
+    set -l fishbin (command -s fish)
+    env HOME=$xdg XDG_CONFIG_HOME=$xdg/.config XDG_DATA_HOME=$xdg/.local/share \
+        __fish_agent_vault_dir=$vault __fish_agent_vault_claude_home=$xdg/claude \
+        __fish_agent_vault_claude_root=$xdg/claude-projects __fish_agent_vault_agy_root=$xdg/agy \
+        GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t \
+        $fishbin -i -c "set -p fish_function_path $repo_root/functions; cd $proj; $snippet" 2>&1
+end
+set -l hx (mktemp -d)
+set -ga TMPDIRS $hx
+mkdir -p $hx/claude $hx/claude-projects $hx/agy
+set -l hproj (new_repo https://git.rootiest.dev/rootiest/hint.git)
+set -l hbare (mktemp -d)
+set -ga TMPDIRS $hbare
+git init -q --bare $hbare
+
+set -l o (hint_run $hx/vault $hproj $hx 'agents-vault' | string collect)
+check "hint: shown on a verbose interactive run with no remote" true (string match -q '*has no remote*--remote=<url>*' -- "$o"; and echo true; or echo false)
+check "hint: points at --remote and --dismiss-hint" true (string match -q '*--remote=<url>*--dismiss-hint*' -- "$o"; and echo true; or echo false)
+set o (hint_run $hx/vault $hproj $hx 'agents-vault --quiet; agents-vault --quiet' | string collect)
+check "hint: --quiet (the claude wrapper's call) shows it" true (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+check "hint: only once per shell session" 1 (printf '%s' "$o" | string match -r -a 'has no remote' | count)
+set o (hint_run $hx/vault $hproj $hx 'agents-vault --silent' | string collect)
+check "hint: --silent never shows it" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+set o (fish --no-config -c "set -p fish_function_path $repo_root/functions; set -gx __fish_agent_vault_dir $hx/vault; set -gx __fish_agent_vault_claude_home $hx/claude; set -gx __fish_agent_vault_claude_root $hx/claude-projects; set -gx __fish_agent_vault_agy_root $hx/agy; cd $hproj; agents-vault" 2>&1 | string collect)
+check "hint: never shown to a non-interactive shell" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+set o (hint_run $hx/vault $hproj $hx 'agents-vault --dismiss-hint; agents-vault; echo ---; fish -i -c "agents-vault"' | string collect)
+check "hint: --dismiss-hint is acknowledged" true (string match -q '*dismissed*' -- "$o"; and echo true; or echo false)
+check "hint: dismissed means silent afterwards" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+check "hint: dismissal persisted to the (sandboxed) universal variables" true (string match -q '*__fish_config_agent_vault_remote_hint_dismissed*' -- (cat $hx/.config/fish/fish_variables 2>/dev/null | string collect); and echo true; or echo false)
+git -C $hx/vault remote add origin $hbare
+set -l hx2 (mktemp -d)
+set -ga TMPDIRS $hx2
+mkdir -p $hx2/claude $hx2/claude-projects $hx2/agy
+set o (hint_run $hx/vault $hproj $hx2 'agents-vault' | string collect)
+check "hint: not shown once a remote exists" false (string match -q '*has no remote*' -- "$o"; and echo true; or echo false)
+
+functions -e hint_run
+
 #   ──────────────────────── hermeticity assertion ────────────────────────
 # The whole suite must never have touched the real global agent state. The
 # failure this guards is specific: a global-memory sync with no test

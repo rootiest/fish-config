@@ -27,7 +27,9 @@
 #   Also syncs the host-scoped agent memory vault (agents-vault), which
 #   tracks curated memory living outside the project tree. The vault
 #   commits on launch but does not push; pushing happens from the Claude
-#   Code SessionEnd hook or an explicit agents-vault --push.
+#   Code SessionEnd hook or an explicit agents-vault --push. With no vault
+#   remote configured, the launch prints a one-per-session hint saying how
+#   to set one.
 #
 #   All arguments are forwarded verbatim to the real claude binary.
 #

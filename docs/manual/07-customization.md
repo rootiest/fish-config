@@ -176,6 +176,13 @@ full sub-category breakdown of every category.
     push is synchronous, so with autopush on the pull and the push are
     each capped at 20 seconds; an explicit --push is left uncapped.
 
+    __fish_config_agent_vault_remote_hint_dismissed
+
+    Universal variable set by agents-vault --dismiss-hint. While it is set
+    the once-per-session "vault has no remote" hint is not printed. Erase
+    it (set -e -U __fish_config_agent_vault_remote_hint_dismissed) to see
+    the hint again.
+
 NOTE:
 With autopush off and no SessionEnd hook installed, backups accumulate
 locally and never reach the remote. Run agents-vault --status to check

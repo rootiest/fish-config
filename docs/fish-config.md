@@ -2922,7 +2922,7 @@ functions). They are active in all interactive sessions.
 
 ### agents-vault
 
-    Synopsis:  agents-vault [--link] [--push] [--restore] [--status]
+    Synopsis:  agents-vault [--link] [--push] [--restore] [--status] [--dismiss-hint]
                             [--adopt=SLUG] [--remote=URL]
                             [-v | --verbose] [-q | --quiet] [-s | --silent]
                             [-h | --help]
@@ -3027,12 +3027,18 @@ functions). They are active in all interactive sessions.
     and would take the local commit down with it, leaving an offline
     machine with no backup at all.
 
+    A vault with no remote prints a hint once per interactive shell
+    session (from a verbose or --quiet run, so the claude wrapper shows
+    it) saying how to add one. It stops when a remote is set or after
+    --dismiss-hint, and never appears in scripts or with --silent.
+
     Arguments:
       --link         Scaffold the vault and link this project's memory; skip
                      the final commit
       --push         Commit, pull, then push to the vault remote
       --restore      Walk the vault, relink what is possible, report the rest
       --status       Show entries, link health, remote state, and orphans
+      --dismiss-hint Stop the no-remote hint (sets a universal variable)
       --adopt=SLUG   Bind the current project to an existing vault entry
       --remote=URL   Set the vault remote
       -v, --verbose  Print all per-step output (default)
@@ -3214,7 +3220,9 @@ functions). They are active in all interactive sessions.
     Also syncs the host-scoped agent memory vault (agents-vault), which
     tracks curated memory living outside the project tree. The vault
     commits on launch but does not push; pushing happens from the Claude
-    Code SessionEnd hook or an explicit agents-vault --push.
+    Code SessionEnd hook or an explicit agents-vault --push. With no vault
+    remote configured, the launch prints a one-per-session hint saying how
+    to set one.
 
     All arguments are forwarded verbatim to the real claude binary.
 
@@ -4524,6 +4532,13 @@ full sub-category breakdown of every category.
     Claude Code SessionEnd hook or an explicit agents-vault --push. That
     push is synchronous, so with autopush on the pull and the push are
     each capped at 20 seconds; an explicit --push is left uncapped.
+
+    __fish_config_agent_vault_remote_hint_dismissed
+
+    Universal variable set by agents-vault --dismiss-hint. While it is set
+    the once-per-session "vault has no remote" hint is not printed. Erase
+    it (set -e -U __fish_config_agent_vault_remote_hint_dismissed) to see
+    the hint again.
 
 NOTE:
 With autopush off and no SessionEnd hook installed, backups accumulate
@@ -6941,6 +6956,23 @@ an ordinary run never copies back out, since that would resurrect
 something removed on purpose. To restore devlogs on a new machine, copy the
 entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
 `cp -rn`.
+
+### Getting the vault off the machine
+
+The vault is a git repository, and the wrappers only ever *commit* to it:
+a push on every launch would block the launch for as long as an
+unreachable remote takes to time out. A commit leaves the machine only
+when a remote exists and something pushes, and nothing sets up the first
+on its own.
+
+    # Set a remote
+    agents-vault --remote=git@git.example.com:you/agent-vault.git
+
+`agents-vault --status` reports the remote. A vault with no remote prints
+a short hint the first time an interactive shell session runs
+`agents-vault` or the `claude` wrapper; the hint stops once a remote is
+set, or with `agents-vault --dismiss-hint`. It never appears in scripts or
+with `--silent`.
 
 # 18. ATTRIBUTION
 

@@ -518,3 +518,21 @@ an ordinary run never copies back out, since that would resurrect
 something removed on purpose. To restore devlogs on a new machine, copy the
 entry's `agents/devlogs/` over the project's `AGENTS/devlogs/` with
 `cp -rn`.
+
+### Getting the vault off the machine
+
+The vault is a git repository, and the wrappers only ever *commit* to it:
+a push on every launch would block the launch for as long as an
+unreachable remote takes to time out. A commit leaves the machine only
+when a remote exists and something pushes, and nothing sets up the first
+on its own.
+
+    # Set a remote
+    agents-vault --remote=git@git.example.com:you/agent-vault.git
+
+`agents-vault --status` reports the remote. A vault with no remote prints
+a short hint the first time an interactive shell session runs
+`agents-vault` or the `claude` wrapper; the hint stops once a remote is
+set, or with `agents-vault --dismiss-hint`. It never appears in scripts or
+with `--silent`.
+

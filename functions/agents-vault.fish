@@ -13,7 +13,7 @@
 #   self-limiting(rm,mkdir), manual-section(17-agent-tooling)
 #
 # SYNOPSIS
-#   agents-vault [--link] [--push] [--restore] [--status]
+#   agents-vault [--link] [--push] [--restore] [--status] [--dismiss-hint]
 #                [--adopt=SLUG] [--remote=URL]
 #                [-v | --verbose] [-q | --quiet] [-s | --silent]
 #                [-h | --help]
@@ -119,12 +119,18 @@
 #   and would take the local commit down with it, leaving an offline
 #   machine with no backup at all.
 #
+#   A vault with no remote prints a hint once per interactive shell
+#   session (from a verbose or --quiet run, so the claude wrapper shows
+#   it) saying how to add one. It stops when a remote is set or after
+#   --dismiss-hint, and never appears in scripts or with --silent.
+#
 # ARGUMENTS
 #   --link         Scaffold the vault and link this project's memory; skip
 #                  the final commit
 #   --push         Commit, pull, then push to the vault remote
 #   --restore      Walk the vault, relink what is possible, report the rest
 #   --status       Show entries, link health, remote state, and orphans
+#   --dismiss-hint Stop the no-remote hint (sets a universal variable)
 #   --adopt=SLUG   Bind the current project to an existing vault entry
 #   --remote=URL   Set the vault remote
 #   -v, --verbose  Print all per-step output (default)
@@ -228,12 +234,12 @@
 function agents-vault --description 'track curated agent memory in a host-scoped vault repo'
     __fish_palette
 
-    argparse h/help link push restore status 'adopt=' 'remote=' \
+    argparse h/help link push restore status dismiss-hint 'adopt=' 'remote=' \
         v/verbose q/quiet s/silent -- $argv
     or return
 
     if set -q _flag_help
-        echo "$c_head""Usage:$c_reset $c_cmd""agents-vault$c_reset $c_flag""[--link] [--push] [--restore] [--status] [--adopt=SLUG] [--remote=URL] [-v] [-q] [-s] [-h]$c_reset"
+        echo "$c_head""Usage:$c_reset $c_cmd""agents-vault$c_reset $c_flag""[--link] [--push] [--restore] [--status] [--dismiss-hint] [--adopt=SLUG] [--remote=URL] [-v] [-q] [-s] [-h]$c_reset"
         echo
         echo "  Track curated agent memory in a host-scoped vault repository."
         echo
@@ -243,6 +249,7 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         echo "  $c_flag--push$c_reset           Commit, pull, then push to the remote"
         echo "  $c_flag--restore$c_reset        Relink everything possible, report the rest"
         echo "  $c_flag--status$c_reset         Show entries, link health, remote, orphans"
+        echo "  $c_flag--dismiss-hint$c_reset   Stop the one-per-session \"no remote\" hint"
         echo "  $c_flag--adopt$c_reset=SLUG     Bind this project to an existing vault entry"
         echo "  $c_flag--remote$c_reset=URL     Set the vault remote"
         echo "  $c_flag-v$c_reset, $c_flag--verbose$c_reset    Print all per-step output (default)"
@@ -258,6 +265,14 @@ function agents-vault --description 'track curated agent memory in a host-scoped
     else if set -q _flag_quiet
         set verbose 0
         set quiet 1
+    end
+
+    # --dismiss-hint only sets a universal variable, so like the hook modes
+    # it is answered ahead of every vault step.
+    if set -q _flag_dismiss_hint
+        set -U __fish_config_agent_vault_remote_hint_dismissed 1
+        test $verbose -eq 1; and echo "$c_ok→ Hint dismissed.$c_reset It also stops once a remote is set (agents-vault --remote=URL)."
+        return 0
     end
 
     if not type -q git
@@ -1291,6 +1306,25 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             echo "$c_err""agents-vault: no remote configured; set one with --remote=URL$c_reset" >&2
             return 1
         end
+    end
+
+    #   ─────────────────────── no-remote hint ───────────────────────────
+    # The commit above never leaves the machine on its own, and a user with
+    # no remote would otherwise sit in that state indefinitely. This is the
+    # kitty-logging reminder's mechanism, applied here: interactive only (so
+    # scripts and tests never see it), at most once per shell session, until
+    # dismissed with --dismiss-hint or until a remote exists. Silent runs
+    # and an explicit --push (which already fails loudly) skip it.
+    if test $verbose -eq 1 -o $quiet -eq 1
+        and not set -q _flag_push
+        and status is-interactive
+        and not set -q __fish_config_agent_vault_remote_hint_dismissed
+        and not set -q __agents_vault_hint_shown
+        and not git -C "$vault" remote get-url origin >/dev/null 2>&1
+        set -g __agents_vault_hint_shown 1
+        echo "$c_warn""Agent memory vault has no remote: nothing is backed up off this machine.$c_reset"
+        echo "  Set one:   $c_cmd""agents-vault --remote=<url>$c_reset"
+        echo "  Silence:   $c_cmd""agents-vault --dismiss-hint$c_reset"
     end
 
     if test $quiet -eq 1; and test $changed -eq 1
