@@ -139,5 +139,39 @@ check "variable-change handlers keep the full sync" 2 \
 check "pkg-wrappers.fish sorts after logging-events.fish" logging-events.fish,pkg-wrappers.fish \
     (string join , (path sort pkg-wrappers.fish logging-events.fish))
 
+section "startup-work: done.fish defers the graphical-capability probe"
+
+# conf.d/done.fish used to fork xprop at every start to decide whether the
+# session is graphical. It now sets a pending flag and probes on the first
+# command. A recording xprop stub on PATH counts the probes; the child is a
+# real `fish -i` because done.fish exits for non-interactive shells.
+set -l stubs $sandbox/stubs
+command mkdir -p $stubs
+# -root answers like a real X server: a tab, then the active window id.
+printf '#!/bin/sh\necho "$*" >>"$XPROBE_LOG"\ncase "$*" in *-root*) printf "\\t0x1c00007\\n" ;; esac\nexit 0\n' >$stubs/xprop
+chmod +x $stubs/xprop
+set -l probe_script "
+set -p fish_function_path $repo_root/functions
+source $repo_root/conf.d/__fish_config_op_registry.fish
+source $repo_root/conf.d/done.fish
+echo AFTER_SOURCE (count (cat \$XPROBE_LOG 2>/dev/null)) (set -q __done_enabled; and echo enabled; or echo off)
+emit fish_preexec x
+echo AFTER_PREEXEC (count (cat \$XPROBE_LOG 2>/dev/null)) (set -q __done_enabled; and echo enabled; or echo off)
+"
+set -l fishbin (command -s fish)
+set -l base_env XPROBE_LOG=$sandbox/xprobe.log HOME=$sandbox/home XDG_CONFIG_HOME=$sandbox/xdgcfg \
+    PATH=$stubs:(string join : $PATH) DISPLAY=:9
+command rm -f $sandbox/xprobe.log
+set -l out (env -u SSH_CLIENT -u SWAYSOCK -u HYPRLAND_INSTANCE_SIGNATURE -u XDG_SESSION_DESKTOP $base_env \
+    $fishbin --no-config -i -c $probe_script 2>/dev/null | string match -r '^AFTER_.*')
+check "no xprop fork while sourcing done.fish" "AFTER_SOURCE 0 off" $out[1]
+check "the first command runs the probe and enables notifications" true \
+    (yesno string match -q -r '^AFTER_PREEXEC [1-9][0-9]* enabled$' -- $out[2])
+
+command rm -f $sandbox/xprobe.log
+set out (env -u SWAYSOCK -u HYPRLAND_INSTANCE_SIGNATURE -u XDG_SESSION_DESKTOP SSH_CLIENT="1.2.3.4 1 2" $base_env \
+    $fishbin --no-config -i -c $probe_script 2>/dev/null | string match -r '^AFTER_.*')
+check "over ssh: never probes, never enables" "AFTER_PREEXEC 0 off" $out[2]
+
 command rm -rf $sandbox
 report
