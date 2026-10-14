@@ -2026,7 +2026,7 @@ functions). They are active in all interactive sessions.
                session-env install [GROUP...] [--var NAME]... [--except NAME]... [--now]
                session-env add|remove ITEM... [--now]
                session-env sync [--now] | apply | preview [GROUP...] | uninstall
-               session-env status | list | setup | dismiss | help
+               session-env select [--now] | status | list | setup | dismiss | help
                session-env desktop install|uninstall|preview NAME | status
 
     Exports fish-config variables to the whole login session, not just fish.
@@ -2099,6 +2099,7 @@ functions). They are active in all interactive sessions.
       --now               install, sync, add, remove: also apply immediately
       preview [GROUP...]  Print what install would write, without writing it
       uninstall           Remove the managed file
+      select              Pick variables in a checkbox list (needs a terminal)
       status              Show the file, its selection and whether it is stale
       list                Show every group and variable, marking the selection
       setup               Ask once whether to install the default group

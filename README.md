@@ -374,6 +374,7 @@ Variables set in `config.fish` only reach programs started from fish. Apps launc
 | `session-env install [GROUP...]` | Write the groups; with none, the default `xdg` group (XDG base directories) |
 | `session-env install ... --var NAME --except NAME` | Add or leave out single variables; the choice is recorded in the file header and survives `status`, `sync` and later `add`/`remove` |
 | `session-env add ITEM...` / `remove ITEM...` | Change the installed selection by variable or group, keeping the rest |
+| `session-env select` | Pick individual variables in a checkbox list (needs a terminal and python3 with curses; starts from what is installed) |
 | `session-env sync` | Rewrite the file from its own selection, refreshing copied values (`install` with no groups resets to the default) |
 | `session-env status` | Show the file, its selection and whether copied values have gone stale |
 | `session-env install --now` / `apply` | Also push the selection into the running user session (`systemctl --user set-environment`, `dbus-update-activation-environment`); never done automatically |
