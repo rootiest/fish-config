@@ -530,6 +530,14 @@ the copy failed in part. Deleting the very last note upstream therefore
 needs a by-hand removal from the vault; earlier commits keep any pruned
 file in the vault's history.
 
+The vault's own `.gitignore` is created when absent and line-merged when
+it already exists. The rules the vault relies on (`*.db` with its
+write-ahead-log and shared-memory sidecars, and the `/.adopt-stash` and
+`/.migrate-stash` fallbacks) are appended, as one commented block, only
+when they are not already present as a whole line. Your own lines are
+left exactly as they are, so a vault scaffolded by an earlier version
+picks up a rule added later without a manual step.
+
 ### Getting the vault off the machine
 
 The vault is a git repository, and the wrappers only ever *commit* to it:

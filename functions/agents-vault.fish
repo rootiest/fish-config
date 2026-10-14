@@ -8,8 +8,7 @@
 #   _agents_vault_dir, _agents_repo_slug, _agents_repo_local_slug,
 #   _agents_repo_ensure_symlink, _agents_repo_sync,
 #   _agents_repo_install_tools, _agents_vault_bgpush, _agents_vault_prune_agy,
-#   _private_dir, git,
-#   hostname
+#   _private_dir, _agents_vault_ensure_gitignore, git, hostname
 #
 # CLASSIFICATION
 #   self-limiting(rm,mkdir), manual-section(17-agent-tooling)
@@ -218,6 +217,14 @@
 #   after a copy that failed in part; deleting the very last note upstream
 #   therefore needs a by-hand removal from the vault. Earlier commits keep
 #   the deleted file in the vault's history.
+#
+#   The vault's .gitignore is created when absent and line-merged when it
+#   exists: each rule the vault relies on (*.db and its two sidecars, and
+#   the /.adopt-stash and /.migrate-stash fallbacks) that is not already
+#   there as a whole line is appended in one commented block. Lines of
+#   your own are never reordered or removed, and a file that is already
+#   complete is not touched, so a vault scaffolded by an earlier version
+#   gains a rule added later without any manual step.
 #
 #   The devlog copy, unlike the knowledge mirror, is merge-only, and it
 #   only ever goes one way. A log deleted or moved in AGENTS/devlogs/ stays in the
@@ -428,25 +435,14 @@ function agents-vault --description 'track curated agent memory in a host-scoped
         set changed 1
     end
 
-    if not test -f "$vault/.gitignore"
-        printf '%s\n' \
-            '# A SQLite database and its sidecars are never safe to commit' \
-            '# mid-write. Ignoring only the sidecars is worse than ignoring' \
-            '# none of them: a torn database then lands in the history with' \
-            '# the write-ahead log that would have completed it excluded.' \
-            '*.db' \
-            '*.db-wal' \
-            '*.db-shm' \
-            '' \
-            '# --adopt and the slug migration each stash the entry they are' \
-            '# about to overwrite inside .git/, out of reach of `git add -A`.' \
-            '# These cover the fallback locations they use when .git is not a' \
-            '# directory.' \
-            '/.adopt-stash' \
-            '/.migrate-stash' >"$vault/.gitignore"
-        command chmod 600 "$vault/.gitignore"
-        set changed 1
+    # Created when absent, line-merged when present, so a vault scaffolded
+    # before a rule existed still gains it. See the helper for the contract.
+    set -l gi_res (_agents_vault_ensure_gitignore "$vault")
+    or begin
+        echo "$c_err""agents-vault: could not write $vault/.gitignore$c_reset" >&2
+        return 1
     end
+    test -n "$gi_res"; and set changed 1
 
     if not test -f "$vault/README.md"
         printf '%s\n' \

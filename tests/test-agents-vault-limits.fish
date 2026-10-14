@@ -247,6 +247,96 @@ check "prunes stale, reports count" 0 $status
 check "count of removed files" 2 $n
 check "survivor kept" a (cat $hv/global/agy/knowledge/a.md)
 
+#   ─────────────────── vault .gitignore line-merge ───────────────────
+section "_agents_vault_ensure_gitignore: create"
+set -l gv (mkscratch)
+set -l res (_agents_vault_ensure_gitignore $gv)
+check "absent: created" created "$res"
+check "created file mode is 600" 600 (stat -c %a $gv/.gitignore)
+for rule in '*.db' '*.db-wal' '*.db-shm' /.adopt-stash /.migrate-stash
+    check "created file carries $rule" true (grep -qxF -- "$rule" $gv/.gitignore; and echo true; or echo false)
+end
+set -l sum (cksum <$gv/.gitignore)
+set res (_agents_vault_ensure_gitignore $gv)
+check "complete file: nothing printed" "" "$res"
+check "complete file: byte-identical" "$sum" (cksum <$gv/.gitignore)
+
+section "_agents_vault_ensure_gitignore: merge"
+set -l mv (mkscratch)
+printf '%s\n' '# mine' 'notes.tmp' '*.db' '!keep.db' scratch/ >$mv/.gitignore
+chmod 640 $mv/.gitignore
+set res (_agents_vault_ensure_gitignore $mv)
+check "partial file: merged" merged "$res"
+check "user lines kept in place at the top" "# mine notes.tmp *.db !keep.db scratch/" (head -5 $mv/.gitignore | string join ' ')
+check "existing *.db not duplicated" 1 (grep -cxF -- '*.db' $mv/.gitignore)
+for rule in '*.db-wal' '*.db-shm' /.adopt-stash /.migrate-stash
+    check "missing $rule appended once" 1 (grep -cxF -- "$rule" $mv/.gitignore)
+end
+check "negation line preserved" true (grep -qxF -- '!keep.db' $mv/.gitignore; and echo true; or echo false)
+check "file mode not changed by merge" 640 (stat -c %a $mv/.gitignore)
+set sum (cksum <$mv/.gitignore)
+set res (_agents_vault_ensure_gitignore $mv)
+check "merge is idempotent: nothing printed" "" "$res"
+check "merge is idempotent: byte-identical" "$sum" (cksum <$mv/.gitignore)
+
+# No trailing newline on the user's last line: the block must not fuse with it.
+set -l nv (mkscratch)
+printf userrule >$nv/.gitignore
+set res (_agents_vault_ensure_gitignore $nv)
+check "no trailing newline: merged" merged "$res"
+check "user's last rule intact" userrule (head -1 $nv/.gitignore)
+check "rules appended on their own lines" 1 (grep -cxF -- /.migrate-stash $nv/.gitignore)
+
+# An empty file is a file: merged, not mistaken for absent.
+set -l ev (mkscratch)
+: >$ev/.gitignore
+set res (_agents_vault_ensure_gitignore $ev)
+check "empty file: merged" merged "$res"
+
+# The merged rules actually do their job in git.
+set -l gr (new_repo)
+printf '%s\n' x >$gr/.gitignore
+_agents_vault_ensure_gitignore $gr >/dev/null
+touch $gr/data.db $gr/data.db-wal $gr/data.db-shm $gr/.adopt-stash $gr/.migrate-stash $gr/ok.md
+check "merged rules ignore db, sidecars and stashes" ok.md (git -C $gr status --porcelain --untracked-files=all | string match -rv '\.gitignore' | string replace -r '^\?\? ' '')
+
+# A write that cannot happen is reported, not swallowed.
+set -l rv (mkscratch)
+mkdir $rv/.gitignore
+_agents_vault_ensure_gitignore $rv >/dev/null 2>&1
+check "unwritable .gitignore: exit 1" 1 $status
+_agents_vault_ensure_gitignore >/dev/null 2>&1
+check "no vault argument: exit 1" 1 $status
+
+section "agents-vault: existing vault gains missing .gitignore rules"
+set -l gvroot (mkscratch)
+set -l gcroot (mkscratch)
+set -l gagy (mkscratch)
+set -g __fish_agent_vault_dir $gvroot/agent-vault
+set -g __fish_agent_vault_claude_root $gcroot
+set -g __fish_agent_vault_agy_root $gagy
+set -g proj (new_repo https://git.rootiest.dev/rootiest/gi.git)
+run_vault --silent
+# Rewind the file to what an older version scaffolded.
+printf '%s\n' '*.db' >$gvroot/agent-vault/.gitignore
+git -C $gvroot/agent-vault add -A
+git -C $gvroot/agent-vault commit -qm old-template
+set out (run_vault --quiet)
+for rule in '*.db-wal' '*.db-shm' /.adopt-stash /.migrate-stash
+    check "ordinary run appended $rule" 1 (grep -cxF -- "$rule" $gvroot/agent-vault/.gitignore)
+end
+check "the merge is reported by --quiet" true (test -n "$out"; and echo true; or echo false)
+check "the merge was committed" "" (git -C $gvroot/agent-vault status --porcelain)
+set out (run_vault --quiet)
+check "next run is silent" "" "$out"
+
+# A fresh scaffold is unchanged from before the refactor.
+set -l fresh (mkscratch)
+set -g __fish_agent_vault_dir $fresh/agent-vault
+run_vault --silent
+check "fresh vault scaffolds the full template" 14 (count (cat $fresh/agent-vault/.gitignore))
+check "fresh vault .gitignore is 600" 600 (stat -c %a $fresh/agent-vault/.gitignore)
+
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 cleanup
