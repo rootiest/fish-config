@@ -337,6 +337,67 @@ run_vault --silent
 check "fresh vault scaffolds the full template" 14 (count (cat $fresh/agent-vault/.gitignore))
 check "fresh vault .gitignore is 600" 600 (stat -c %a $fresh/agent-vault/.gitignore)
 
+#   ─────────────────── bounded, non-interactive network ───────────────────
+section _agents_repo_net_git
+
+# A stub standing in for ssh. git runs it as `sh -c "$GIT_SSH_COMMAND host
+# git-upload-pack ..."`, so it records exactly what a real ssh would have
+# been given -- arguments and the prompt-related environment -- and then
+# sleeps, which is the blackholed-address shape: connected to nothing,
+# answering nothing, never failing. The sleep is short and `exec`'d so
+# nothing outlives the suite for long.
+set -l stubdir (mkscratch)
+set -l dump $stubdir/seen
+printf '%s\n' '#!/bin/sh' \
+    "printf 'ARGS:%s\\n' \"\$*\" >>$dump" \
+    "printf 'TERMPROMPT:%s\\nASKPASS:%s\\nSSHASKPASS:%s\\n' \"\$GIT_TERMINAL_PROMPT\" \"\$GIT_ASKPASS\" \"\$SSH_ASKPASS\" >>$dump" \
+    'exec sleep 8' >$stubdir/ssh-stub
+chmod +x $stubdir/ssh-stub
+
+set -l nr (new_repo)
+git -C $nr remote add origin ssh://blackhole.invalid/repo.git
+
+set -l t0 (date +%s)
+GIT_SSH_COMMAND=$stubdir/ssh-stub _agents_repo_net_git $nr 1 fetch -q origin >/dev/null 2>&1
+set -l rc $status
+set -l elapsed (math (date +%s) - $t0)
+check "blackholed remote: killed by the cap (124)" 124 $rc
+check "blackholed remote: returned well before the stub's sleep ends" true (test $elapsed -lt 6; and echo true; or echo false)
+check "ssh was run in BatchMode" true (grep -q 'BatchMode=yes' $dump; and echo true; or echo false)
+check "ssh was given a connect timeout" true (grep -q 'ConnectTimeout=10' $dump; and echo true; or echo false)
+check "git credential prompt closed (GIT_TERMINAL_PROMPT=0)" true (grep -q '^TERMPROMPT:0$' $dump; and echo true; or echo false)
+check "GIT_ASKPASS neutralised" true (grep -q '^ASKPASS:true$' $dump; and echo true; or echo false)
+check "SSH_ASKPASS neutralised" true (grep -q '^SSHASKPASS:true$' $dump; and echo true; or echo false)
+
+# The user's own ssh command is extended, not replaced.
+rm -f $dump
+GIT_SSH_COMMAND="$stubdir/ssh-stub -i /nonexistent/key" _agents_repo_net_git $nr 1 fetch -q origin >/dev/null 2>&1
+check "GIT_SSH_COMMAND options preserved" true (grep -q -- '-i /nonexistent/key' $dump; and echo true; or echo false)
+check "...and BatchMode appended" true (grep -q 'BatchMode=yes' $dump; and echo true; or echo false)
+
+rm -f $dump
+git -C $nr config core.sshCommand "$stubdir/ssh-stub -i /nonexistent/cfg"
+env -u GIT_SSH_COMMAND fish -c 'source $argv[1]; _agents_repo_net_git $argv[2] 1 fetch -q origin' -- $repo_root/functions/_agents_repo_net_git.fish $nr >/dev/null 2>&1
+check "core.sshCommand honoured when the env is unset" true (grep -q -- '-i /nonexistent/cfg' $dump; and echo true; or echo false)
+git -C $nr config --unset core.sshCommand
+
+# A reachable (local) remote works and reports success.
+set -l bare (mkscratch)
+git init -q --bare $bare
+git -C $nr remote set-url origin $bare
+_agents_repo_net_git $nr 20 fetch -q origin
+check "local remote: success" 0 $status
+
+# No timeout(1): nothing is run, and the status says why.
+begin
+    set -lx PATH /nonexistent
+    _agents_repo_net_git $nr 20 fetch -q origin
+    set -l norc $status
+    check "no timeout(1): refused with 4" 4 $norc
+end
+_agents_repo_net_git $nr >/dev/null 2>&1
+check "missing arguments: 2" 2 $status
+
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 cleanup
