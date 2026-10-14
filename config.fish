@@ -222,12 +222,20 @@ if status is-interactive
     #   which is always version-matched to the installed binary. Older builds
     #   (e.g. Ubuntu 24.04, Debian 12) get no fzf key bindings, just a hint.
     #   Run `fzf-update` to install/upgrade fzf from git HEAD.
+    #
+    #   The generated init is cached (see __fish_init_cache), keyed on the
+    #   fzf binary's path and mtime, which saves two forks per start. When
+    #   the cache declines (opt-out, an fzf too old for --fish, a failing
+    #   binary) the original version check and live `fzf --fish | source`
+    #   below run unchanged.
     if type -q fzf
-        set -l _fzf_ver (fzf --version | string match -r '^(\d+)\.(\d+)')
-        if test -n "$_fzf_ver[1]"; and test "$_fzf_ver[2]" -eq 0 -a "$_fzf_ver[3]" -lt 48
-            echo (__fish_color yellow)"fzf $_fzf_ver[1] is older than 0.48: fzf key bindings are off. Run `fzf-update` to upgrade."(__fish_color normal) >&2
-        else
-            fzf --fish | source
+        if not __fish_init_cache fzf fzf --fish
+            set -l _fzf_ver (fzf --version | string match -r '^(\d+)\.(\d+)')
+            if test -n "$_fzf_ver[1]"; and test "$_fzf_ver[2]" -eq 0 -a "$_fzf_ver[3]" -lt 48
+                echo (__fish_color yellow)"fzf $_fzf_ver[1] is older than 0.48: fzf key bindings are off. Run `fzf-update` to upgrade."(__fish_color normal) >&2
+            else
+                fzf --fish | source
+            end
         end
     else
         #   conf.d/fzf.fish is managed by Fisher and may be restored on fisher
@@ -242,7 +250,13 @@ if status is-interactive
     #
     # The Auto-Venv script above will ignore directories with a
     # .envrc file (direnv configuration) to prevent conflicts.
-    type -q direnv; and direnv hook fish | source
+    #
+    # The hook script is cached like fzf's (see __fish_init_cache); a
+    # declined cache runs `direnv hook fish | source` exactly as before.
+    if type -q direnv
+        __fish_init_cache direnv direnv hook fish
+        or direnv hook fish | source
+    end
 
     #   ──────────────────────────── GPG variables ─────────────────────────────
     #   Helps ensure that GPG can prompt for passphrases correctly when invoked
