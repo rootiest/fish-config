@@ -332,13 +332,27 @@ function agents-vault --description 'track curated agent memory in a host-scoped
             echo "$c_head""Remote:$c_reset $c_warn""no remote configured — nothing is backed up off this machine$c_reset"
         else
             echo "$c_head""Remote:$c_reset $url"
+            # The push is a bare `push origin HEAD`, which never sets an
+            # upstream, so `@{u}` is empty on a vault this function alone
+            # has pushed and cannot be what decides "never pushed". The
+            # remote-tracking ref that push updates is origin/<branch>;
+            # an explicit upstream still wins when someone set one.
+            set -l tracked
             if git -C "$vault" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1
-                set -l ahead (git -C "$vault" rev-list --count '@{u}..HEAD' 2>/dev/null)
+                set tracked '@{u}'
+            else
+                set -l branch (git -C "$vault" symbolic-ref -q --short HEAD 2>/dev/null)
+                if test -n "$branch"; and git -C "$vault" rev-parse -q --verify "refs/remotes/origin/$branch" >/dev/null 2>&1
+                    set tracked "refs/remotes/origin/$branch"
+                end
+            end
+            if test -n "$tracked"
+                set -l ahead (git -C "$vault" rev-list --count "$tracked..HEAD" 2>/dev/null)
                 if test -n "$ahead"; and test "$ahead" != 0
                     echo "  $c_warn$ahead commit(s) not yet pushed$c_reset"
                 end
             else
-                echo "  $c_warn""no upstream branch — never pushed$c_reset"
+                echo "  $c_warn""never pushed — no remote branch yet$c_reset"
             end
         end
 
