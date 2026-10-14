@@ -78,6 +78,7 @@ The configuration uses a structured file tree:
     │   ├── cli-agent.md            System prompt for the terminal assistant
     │   ├── config-settings-tui.py  curses front-end for config-settings
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
+    │   ├── session-env-select.py  curses checkbox picker for session-env select
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
     ├── data/                       gi templates, session-env catalog, word lists
     ├── templates/                  fish-template building blocks
