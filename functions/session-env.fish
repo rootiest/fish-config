@@ -15,7 +15,7 @@
 #   session-env install [GROUP...] [--var NAME]... [--except NAME]... [--now]
 #   session-env add|remove ITEM... [--now]
 #   session-env sync [--now] | apply | preview [GROUP...] | uninstall
-#   session-env status | list | setup | dismiss | help
+#   session-env select [--now] | status | list | setup | dismiss | help
 #   session-env desktop install|uninstall|preview NAME | status
 #
 # DESCRIPTION
@@ -89,6 +89,7 @@
 #   --now               install, sync, add, remove: also apply immediately
 #   preview [GROUP...]  Print what install would write, without writing it
 #   uninstall           Remove the managed file
+#   select              Pick variables in a checkbox list (needs a terminal)
 #   status              Show the file, its selection and whether it is stale
 #   list                Show every group and variable, marking the selection
 #   setup               Ask once whether to install the default group
@@ -148,6 +149,7 @@ function session-env --description 'Export fish-config variables to the login se
         echo "  $c_flag""uninstall$c_reset           Remove the managed file"
         echo "  $c_flag""status$c_reset              Show the file, its selection, and whether it is stale"
         echo "  $c_flag""list$c_reset                Show every group and variable"
+        echo "  $c_flag""select$c_reset              Pick variables in a checkbox list (needs a terminal)"
         echo "  $c_flag""setup$c_reset               Guided first-run offer to install the default group"
         echo "  $c_flag""dismiss$c_reset             Stop offering setup"
         echo "  $c_flag""desktop$c_reset COMMAND     User-level .desktop overrides that unset variables:"
@@ -173,7 +175,7 @@ function session-env --description 'Export fish-config variables to the login se
     # runs here, at function scope: inside a switch or if it would set its
     # _flag_* variables in that block only.
     set -l sel_cmd 0
-    contains -- $cmd install preview sync add remove apply; and set sel_cmd 1
+    contains -- $cmd install preview sync add remove apply select; and set sel_cmd 1
     set -l parse_args --
     test $sel_cmd -eq 1; and set parse_args -- $rest
     argparse --name=session-env n/now 'v/var=+' 'x/except=+' $parse_args
@@ -184,7 +186,7 @@ function session-env --description 'Export fish-config variables to the login se
             echo "$c_err""session-env: --now does not apply to preview$c_reset" >&2
             return 2
         end
-        if contains -- $cmd sync apply
+        if contains -- $cmd sync apply select
             if set -q _flag_var[1]; or set -q _flag_except[1]; or set -q rest[1]
                 echo "$c_err""session-env: $cmd takes no selection; use install, add or remove$c_reset" >&2
                 return 2
@@ -324,6 +326,57 @@ function session-env --description 'Export fish-config variables to the login se
                 end
             end
             return 0
+
+        case select
+            if not type -q python3; or not python3 -c 'import curses' 2>/dev/null
+                echo "$c_err""session-env: select needs python3 with the curses module; use add and remove instead$c_reset" >&2
+                return 1
+            end
+            if not isatty stdin; or not isatty stdout
+                echo "$c_err""session-env: select needs a terminal; use add and remove instead$c_reset" >&2
+                return 1
+            end
+            set -l tui (dirname (status filename))/../scripts/session-env-select.py
+            if not test -f $tui
+                echo "$c_err""session-env: missing $tui$c_reset" >&2
+                return 1
+            end
+            # Start from what is installed, or from the default groups.
+            set -l pre
+            for i in (seq (count $names))
+                if test -f $file
+                    test "$cur_sel[$i]" = 1; and set -a pre --selected $names[$i]
+                else
+                    test "$defaults[$i]" = 1; and set -a pre --selected $names[$i]
+                end
+            end
+            set -l work (command mktemp -d)
+            if test -z "$work" -o ! -d "$work"
+                echo "$c_err""session-env: could not create a temporary directory$c_reset" >&2
+                return 1
+            end
+            python3 $tui --catalog $catalog --out $work/selected $pre
+            set -l rc $status
+            set -l picked
+            test $rc -eq 0; and set picked (string match -r '\S+' <$work/selected)
+            command rm -rf $work
+            if test $rc -ne 0
+                echo "$c_dim""→ No changes.$c_reset"
+                test $rc -eq 1; and return 0
+                return 1
+            end
+            if not set -q picked[1]
+                echo "$c_dim""→ Nothing selected, no changes. Use session-env uninstall to remove the file.$c_reset"
+                return 0
+            end
+            set -l vflags
+            for n in $picked
+                set -a vflags --var $n
+            end
+            set -l nowflag
+            set -q _flag_now; and set nowflag --now
+            session-env install $vflags $nowflag
+            return $status
 
         case setup
             if test -f $file

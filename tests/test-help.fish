@@ -282,7 +282,7 @@ set -g __help_subcommands \
     'fish-template list info new edit regen show ls' \
     'jobrunner run list attach kill logs' \
     'kitty-logging install uninstall status dismiss' \
-    'session-env install preview uninstall status list add remove sync apply setup dismiss desktop' \
+    'session-env install preview uninstall status list add remove sync apply select setup dismiss desktop' \
     'superpowers on off'
 
 # A sandbox for running those functions for real. Every external binary

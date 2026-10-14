@@ -394,6 +394,11 @@ set -l ni (env HOME=$home XDG_CONFIG_HOME=$cfg fish -c \
     "$fnpath; function __session_env_has_systemd; true; end; source $repo_root/conf.d/__fish_config_op_registry.fish; source $repo_root/conf.d/session-env-offer.fish" 2>&1 | string collect)
 check "non-interactive shell prints nothing" "" "$ni"
 
+section "session-env: select needs a terminal"
+set -l selout (env HOME=$home XDG_CONFIG_HOME=$cfg fish -c "$fnpath; session-env select" </dev/null 2>&1 | string collect)
+check "select without a terminal exits 1" 1 $pipestatus[1]
+check "select without a terminal points at add and remove" true (string match -q '*add and remove*' -- $selout; and echo true; or echo false)
+
 section "session-env: setup and dismiss"
 command rm -f $cfg/fish/fish_variables
 set -l run_sess "env HOME=$home XDG_CONFIG_HOME=$cfg XDG_DATA_HOME=$home/data TERM=xterm fish -c"
@@ -413,8 +418,9 @@ if type -q python3
     # ten seconds for it), types ANSWER at the prompt, prints the exit code.
     set -l pty_script '
 import os, pty, select, signal, sys, time
-answer = sys.argv[1]
-argv = sys.argv[2:]
+trigger = sys.argv[1].encode()
+keys = sys.argv[2].encode().decode("unicode_escape").encode()
+argv = sys.argv[3:]
 pid, fd = pty.fork()
 if pid == 0:
     os.execvp(argv[0], argv)
@@ -436,8 +442,9 @@ while time.time() < end:
     if out.count(b"\x1b[c") > da:
         da = out.count(b"\x1b[c")
         os.write(fd, b"\x1b[?62c")
-    if not sent and b"[y/N]" in out:
-        os.write(fd, answer.encode() + b"\n")
+    if not sent and trigger in out:
+        time.sleep(0.3)
+        os.write(fd, keys)
         sent = True
 try:
     os.kill(pid, signal.SIGKILL)
@@ -448,17 +455,37 @@ print(os.WEXITSTATUS(st) if os.WIFEXITED(st) else 99)
 '
     command rm -f $cfg/fish/fish_variables
     set -l res (env HOME=$home XDG_CONFIG_HOME=$cfg XDG_DATA_HOME=$home/data TERM=xterm \
-        python3 -I -c $pty_script n fish -c "$fnpath; session-env setup" 2>&1)
+        python3 -I -c $pty_script '[y/N]' 'n\\n' fish -c "$fnpath; session-env setup" 2>&1)
     check "answering no exits 0" 0 $res[1]
     check "answering no installs nothing" false (test -e $cfg/environment.d/fish-config.conf; and echo true; or echo false)
     check "answering no is remembered" "OFFERED=1" (env HOME=$home XDG_CONFIG_HOME=$cfg fish -c 'echo OFFERED=$__fish_config_session_env_offered')
 
     command rm -f $cfg/fish/fish_variables
     set res (env HOME=$home XDG_CONFIG_HOME=$cfg XDG_DATA_HOME=$home/data TERM=xterm \
-        python3 -I -c $pty_script y fish -c "$fnpath; session-env setup" 2>&1)
+        python3 -I -c $pty_script '[y/N]' 'y\\n' fish -c "$fnpath; session-env setup" 2>&1)
     check "answering yes exits 0" 0 $res[1]
     check "answering yes installs the default group" "# groups: xdg" (string match '# groups:*' <$cfg/environment.d/fish-config.conf)
     check "answering yes is remembered" "OFFERED=1" (env HOME=$home XDG_CONFIG_HOME=$cfg fish -c 'echo OFFERED=$__fish_config_session_env_offered')
+    # select: a checkbox picker. Move off the xdg header, untick the first
+    # variable, save.
+    command rm -f $cfg/fish/fish_variables
+    command rm -rf $cfg/environment.d
+    set res (env HOME=$home XDG_CONFIG_HOME=$cfg XDG_DATA_HOME=$home/data TERM=xterm \
+        python3 -I -c $pty_script export 'j \\r' fish -c "$fnpath; session-env select" 2>&1)
+    check "select: saving exits 0" 0 $res[1]
+    check "select: the file holds the groups" "# groups: xdg" (string match '# groups:*' <$cfg/environment.d/fish-config.conf)
+    check "select: the unticked variable is out" "# vars: XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME" \
+        (string match '# vars:*' <$cfg/environment.d/fish-config.conf)
+    set -l sel_before (string collect <$cfg/environment.d/fish-config.conf)
+    set res (env HOME=$home XDG_CONFIG_HOME=$cfg XDG_DATA_HOME=$home/data TERM=xterm \
+        python3 -I -c $pty_script export 'jj \\r' fish -c "$fnpath; session-env select" 2>&1)
+    check "select: the installed selection is the starting point" "# vars: XDG_STATE_HOME XDG_CACHE_HOME" \
+        (string match '# vars:*' <$cfg/environment.d/fish-config.conf)
+    set res (env HOME=$home XDG_CONFIG_HOME=$cfg XDG_DATA_HOME=$home/data TERM=xterm \
+        python3 -I -c $pty_script export 'jq' fish -c "$fnpath; session-env select" 2>&1)
+    check "select: cancelling exits 0" 0 $res[1]
+    check "select: cancelling changes nothing" "# vars: XDG_STATE_HOME XDG_CACHE_HOME" \
+        (string match '# vars:*' <$cfg/environment.d/fish-config.conf)
 end
 
 command rm -rf $tmp

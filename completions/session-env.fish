@@ -24,7 +24,7 @@ function __session_env_vars
     end
 end
 
-set -l subcmds install preview add remove sync apply uninstall status list setup dismiss desktop help
+set -l subcmds install preview add remove sync apply select uninstall status list setup dismiss desktop help
 set -l desktop_subcmds install uninstall preview status
 
 complete -c session-env -f
@@ -37,6 +37,7 @@ complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a add 
 complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a remove -d 'Remove variables or groups'
 complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a sync -d 'Rewrite the file from its selection'
 complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a apply -d 'Push the selection into the running session'
+complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a select -d 'Pick variables in a checkbox list'
 complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a uninstall -d 'Remove the managed file'
 complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a status -d 'Show the file and whether it is stale'
 complete -c session-env -f -n "not __fish_seen_subcommand_from $subcmds" -a list -d 'Show groups and variables'
@@ -52,7 +53,7 @@ complete -c session-env -f -n "__fish_seen_subcommand_from add remove" -a '(__se
 # Selection flags.
 complete -c session-env -f -n "__fish_seen_subcommand_from install preview" -l var -s v -x -a '(__session_env_vars)' -d 'Include one more variable'
 complete -c session-env -f -n "__fish_seen_subcommand_from install preview" -l except -s x -x -a '(__session_env_vars)' -d 'Leave a variable out'
-complete -c session-env -f -n "__fish_seen_subcommand_from install sync add remove" -l now -s n -d 'Also apply to the running session'
+complete -c session-env -f -n "__fish_seen_subcommand_from install sync add remove select" -l now -s n -d 'Also apply to the running session'
 
 # desktop COMMAND NAME [--var VAR] [--group GROUP]
 complete -c session-env -f -n "__fish_seen_subcommand_from desktop; and not __fish_seen_subcommand_from $desktop_subcmds" -a "$desktop_subcmds"
