@@ -8324,7 +8324,7 @@ The sandbox is always a copy, never this checkout, because this checkout
 doubles as a real \f[V]\[ti]/.config/fish\f[R].
 One suite only warns: \f[V]tests/test-startup-budget.fish\f[R] prints a
 \f[V]WARN\f[R] line, never a failure, when interactive startup is slower
-than \f[V]FISH_CONFIG_STARTUP_BUDGET_MS\f[R] (default 500 ms).
+than \f[V]FISH_CONFIG_STARTUP_BUDGET_MS\f[R] (default 200 ms).
 .PP
 To get exactly the result CI would, run the same checks in the CI
 container instead (needs Docker or Podman):
