@@ -2332,6 +2332,14 @@ bg_wait_state $bgvault
 check "bg: outcome recorded as ok" ok (string split ' ' -- (head -n 1 $bgvault/.git/agent-vault-bgpush.state))[2]
 check "bg: lock released" false (test -d $bgvault/.git/agent-vault-bgpush.lock; and echo true; or echo false)
 check "bg: status reports the last push" true (string match -q '*Push:*last push succeeded*' -- (agents-vault --status | string collect); and echo true; or echo false)
+# A bare `push origin HEAD` sets no upstream; --status must still see the
+# push through origin/<branch> and not claim the vault was never pushed.
+set -l bgst (agents-vault --status | string collect)
+check "bg: status does not say never pushed after a push" false (string match -q '*never pushed*' -- "$bgst"; and echo true; or echo false)
+check "bg: status has no unpushed-commit warning when in sync" false (string match -q '*not yet pushed*' -- "$bgst"; and echo true; or echo false)
+git -C $bgvault -c user.name=t -c user.email=t@t commit -q --allow-empty -m local-only
+check "bg: status counts a commit not yet pushed" true (string match -q '*1 commit(s) not yet pushed*' -- (agents-vault --status | string collect); and echo true; or echo false)
+git -C $bgvault reset -q --hard HEAD~1
 
 # -- nothing new: no process, state untouched
 set -l before (cat $bgvault/.git/agent-vault-bgpush.state)
