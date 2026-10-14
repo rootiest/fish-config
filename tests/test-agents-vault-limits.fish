@@ -398,6 +398,147 @@ end
 _agents_repo_net_git $nr >/dev/null 2>&1
 check "missing arguments: 2" 2 $status
 
+#   ───────────────────── agents-init --pull (option a) ─────────────────────
+section "agents-init --pull"
+
+# A project whose AGENTS/ sub-repo has a local bare repository as its
+# upstream. Nothing here can reach the network.
+function pull_fixture
+    set -l p (new_repo)
+    git -C $p commit -q --allow-empty -m init
+    pushd $p >/dev/null
+    agents-init --silent >/dev/null 2>&1
+    popd >/dev/null
+    set -l bare (mkscratch)
+    git init -q --bare $bare
+    git -C $p/AGENTS remote add origin $bare
+    git -C $p/AGENTS push -q -u origin HEAD 2>/dev/null
+    set -l clone (mkscratch)
+    git clone -q $bare $clone/c
+    git -C $clone/c config user.email t@t
+    git -C $clone/c config user.name t
+    git -C $clone/c config core.hooksPath /dev/null
+    printf '%s\n' $p $bare $clone/c
+end
+
+# The helper on its own: the exit codes agents-init maps to messages.
+_agents_init_pull (mkscratch) >/dev/null 2>&1
+check "_agents_init_pull: not a repository: 1" 1 $status
+set -l hp_np (new_repo)
+set -l hp_out (_agents_init_pull $hp_np)
+check "_agents_init_pull: no upstream: exit 0" 0 $status
+check "_agents_init_pull: no upstream: names it" no-upstream "$hp_out"
+set -l hp_rb (new_repo)
+mkdir -p $hp_rb/.git/rebase-merge
+_agents_init_pull $hp_rb >/dev/null 2>&1
+check "_agents_init_pull: rebase in progress: 3" 3 $status
+check "_agents_init_pull: rebase left alone" true (test -d $hp_rb/.git/rebase-merge; and echo true; or echo false)
+
+set -l fx (pull_fixture)
+set -l pp $fx[1]
+set -l pclone $fx[3]
+echo upstream >$pclone/from-upstream.md
+git -C $pclone add -A
+git -C $pclone commit -qm 'upstream change'
+git -C $pclone push -q origin HEAD 2>/dev/null
+
+# Without the flag, a run never touches the remote: the upstream change is
+# not there, however long the user waits.
+pushd $pp >/dev/null
+agents-init --silent
+set -l plain_rc $status
+popd >/dev/null
+check "plain run succeeds" 0 $plain_rc
+check "plain run does not pull" false (test -e $pp/AGENTS/from-upstream.md; and echo true; or echo false)
+
+# A local edit makes the histories diverge, which is the normal case:
+# agents-init commits on every launch.
+echo local >$pp/AGENTS/local-note.md
+pushd $pp >/dev/null
+set -l out (agents-init --pull)
+set -l rc $status
+popd >/dev/null
+check "--pull exits 0" 0 $rc
+check "--pull reports the pull" true (string match -q '*Pulled AGENTS*' -- "$out"; and echo true; or echo false)
+check "upstream file arrived" upstream (cat $pp/AGENTS/from-upstream.md)
+check "local file kept" local (cat $pp/AGENTS/local-note.md)
+check "no rebase left behind" false (test -d $pp/AGENTS/.git/rebase-merge; and echo true; or echo false)
+check "worktree committed and clean" "" (git -C $pp/AGENTS status --porcelain)
+check "local commits sit on top of upstream's" true (git -C $pp/AGENTS merge-base --is-ancestor origin/main HEAD; and echo true; or echo false)
+
+# Already current.
+pushd $pp >/dev/null
+set out (agents-init --pull)
+set rc $status
+popd >/dev/null
+check "--pull when current: exit 0" 0 $rc
+check "--pull when current says so" true (string match -q '*up to date*' -- "$out"; and echo true; or echo false)
+
+# --quiet prints one line when it pulled and none otherwise.
+echo more >$pclone/more.md
+git -C $pclone add -A
+git -C $pclone commit -qm more
+git -C $pclone push -q origin HEAD 2>/dev/null
+pushd $pp >/dev/null
+set out (agents-init --pull --quiet)
+popd >/dev/null
+check "--pull --quiet reports a change" true (test -n "$out"; and echo true; or echo false)
+pushd $pp >/dev/null
+set out (agents-init --pull --quiet)
+popd >/dev/null
+check "--pull --quiet is silent when current" "" "$out"
+
+# A conflicting rebase is aborted and nothing is lost.
+echo theirs >$pclone/clash.md
+git -C $pclone add -A
+git -C $pclone commit -qm 'clash upstream'
+git -C $pclone push -q origin HEAD 2>/dev/null
+echo ours >$pp/AGENTS/clash.md
+pushd $pp >/dev/null
+set -l head_before_conflict (git -C $pp/AGENTS rev-parse HEAD)
+agents-init --pull --silent 2>/dev/null
+set rc $status
+popd >/dev/null
+check "conflict: exit 1" 1 $rc
+check "conflict: no rebase left in progress" false (test -d $pp/AGENTS/.git/rebase-merge -o -d $pp/AGENTS/.git/rebase-apply; and echo true; or echo false)
+check "conflict: local commit intact" true (git -C $pp/AGENTS cat-file -e HEAD:clash.md 2>/dev/null; and echo true; or echo false)
+check "conflict: local content intact" ours (git -C $pp/AGENTS show HEAD:clash.md)
+
+# An unreachable remote fails fast, loudly, and keeps the local commit.
+set -l fx2 (pull_fixture)
+git -C $fx2[1]/AGENTS remote set-url origin /nonexistent/remote.git
+echo keep >$fx2[1]/AGENTS/keep.md
+pushd $fx2[1] >/dev/null
+set -l t0 (date +%s)
+agents-init --pull --silent 2>/dev/null
+set rc $status
+popd >/dev/null
+check "unreachable remote: exit 1" 1 $rc
+check "unreachable remote: fast" true (test (math (date +%s) - $t0) -lt 20; and echo true; or echo false)
+check "unreachable remote: local edit still committed" true (git -C $fx2[1]/AGENTS cat-file -e HEAD:keep.md 2>/dev/null; and echo true; or echo false)
+
+# No upstream at all is not an error.
+set -l np (new_repo)
+git -C $np commit -q --allow-empty -m init
+pushd $np >/dev/null
+set out (agents-init --pull)
+set rc $status
+popd >/dev/null
+check "no upstream: exit 0" 0 $rc
+check "no upstream: says so" true (string match -q '*no upstream*' -- "$out"; and echo true; or echo false)
+
+# The cap and the no-prompt environment are covered on _agents_repo_net_git
+# above. Here only that an ssh remote that fails outright surfaces as exit 1
+# through the whole command.
+printf '%s\n' '#!/bin/sh' 'exit 255' >$stubdir/ssh-fail
+chmod +x $stubdir/ssh-fail
+git -C $fx2[1]/AGENTS remote set-url origin ssh://blackhole.invalid/repo.git
+pushd $fx2[1] >/dev/null
+GIT_SSH_COMMAND=$stubdir/ssh-fail agents-init --pull --silent 2>/dev/null
+set rc $status
+popd >/dev/null
+check "failing ssh remote: exit 1" 1 $rc
+
 set -e __fish_agent_vault_dir
 set -e __fish_agent_vault_claude_root
 cleanup

@@ -495,7 +495,11 @@ strictly local: `agents-init` never fetches or pushes, because a network
 round trip running synchronously ahead of every agent launch would block
 the launch itself for as long as an unreachable remote takes to time out.
 A project's `AGENTS/` repository that has its own upstream is pulled and
-pushed by hand, on its owner's own schedule.
+pushed by hand, on its owner's own schedule. `agents-init --pull` does the
+pull on request: after the local commit it rebases onto the upstream,
+cannot prompt for credentials, and gives up after 20 seconds. A rebase
+that conflicts is aborted and leaves `AGENTS/` at its local commits. The
+wrappers never pass the flag, so a launch still never touches the network.
 
 `agents-vault` is a related but distinct tool: where `AGENTS/` holds
 *one project's* agent state, `agents-vault` backs up curated agent memory
