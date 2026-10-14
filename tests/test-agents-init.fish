@@ -778,7 +778,10 @@ echo note >$sf/AGENTS/note.md
 pushd $sf >/dev/null
 set -l sferr (agents-init 2>&1 >/dev/null | string replace -ra '\e\[[0-9;]*m' ''; echo "rc=$pipestatus[1]")
 popd >/dev/null
-check "staging failure: exits non-zero" true (test "$sferr[-1]" != rc=0; and echo true; or echo false)
+# Find the rc= line wherever it landed: its order against the stderr lines
+# is not guaranteed (see test-agents-vault.fish, staging failure).
+set -l sfrc (string match 'rc=*' -- $sferr)
+check "staging failure: exits non-zero" true (test -n "$sfrc" -a "$sfrc" != rc=0; and echo true; or echo false)
 check "staging failure: says it could not stage" true (string match -q '*could not stage the AGENTS/ changes*' -- $sferr; and echo true; or echo false)
 check "staging failure: does not blame the commit" false (string match -q '*commit failed*' -- $sferr; and echo true; or echo false)
 
