@@ -814,7 +814,7 @@ One more suite is informational: `tests/test-startup-budget.fish` times
 interactive starts of a copy of the config and prints a `WARN` line, never a
 failure, when the median is over a budget (wall time on a shared runner is too
 noisy to gate on). `FISH_CONFIG_STARTUP_BUDGET_MS` sets the budget (default
-500), `FISH_CONFIG_STARTUP_BUDGET_RUNS` the number of timed starts (default
+200), `FISH_CONFIG_STARTUP_BUDGET_RUNS` the number of timed starts (default
 5) and a non-empty `FISH_CONFIG_STARTUP_BUDGET_SKIP` turns it off. To see where
 the time goes, run `fish --profile-startup=/tmp/p.txt -i -c exit`.
 
