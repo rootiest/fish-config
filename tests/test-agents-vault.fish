@@ -326,8 +326,13 @@ mkdir $g/sub
 git -C $g/sub init -q
 echo second >$g/b.md
 set -l before_add_count (git -C $g rev-list --count HEAD)
-set -l gerr (_agents_repo_sync $g "chore: blocked" 2>&1 >/dev/null; echo "rc=$status")
-check "staging failure returns 3" rc=3 "$gerr[-1]"
+# The status is read from `set` (which keeps the substitution's status), not
+# from an "rc=" line appended to the output: the order of the function's
+# stderr against that line is not guaranteed, and CI once saw git's reason
+# land last.
+set -l gerr (_agents_repo_sync $g "chore: blocked" 2>&1 >/dev/null)
+set -l grc $status
+check "staging failure returns 3" 3 $grc
 check "staging failure commits nothing" $before_add_count (git -C $g rev-list --count HEAD)
 check "staging failure names staging, not a hook" true (string match -q '*staging failed*' -- $gerr; and echo true; or echo false)
 check "staging failure passes git's reason on" true (string match -q '*sub/*' -- $gerr; and echo true; or echo false)
