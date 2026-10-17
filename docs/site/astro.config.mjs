@@ -49,6 +49,16 @@ export default defineConfig({
           SocialIcons: './src/components/starlight/SocialIcons.astro',
         },
         head: [
+          // Link-preview image: Starlight writes og:title/description/url and twitter:card
+          // (summary_large_image) itself, but no image. The card is rootiest-icons'
+          // icons/social/fish-config.png.
+          ...[
+            ['og:image', 'https://pages.rootiest.fyi/icons/social/fish-config.png'],
+            ['og:image:type', 'image/png'],
+            ['og:image:width', '1200'],
+            ['og:image:height', '630'],
+            ['og:image:alt', 'Rootiest Fish Config: reference manual for the fish configuration'],
+          ].map(([property, content]) => ({ tag: 'meta', attrs: { property, content } })),
           {
             tag: 'script',
             content: 'document.addEventListener("DOMContentLoaded", () => { document.querySelectorAll("starlight-file-tree").forEach(tree => { tree.querySelectorAll("details").forEach((d, i) => { if (i !== 0) d.removeAttribute("open"); }); }); });',
