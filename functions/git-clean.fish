@@ -5,96 +5,46 @@
 #   04-git-and-version-control
 #
 # DEPENDENCIES
-#   git
+#   git-sweep
 #
 # CLASSIFICATION
-#   network
+#   network, destructive
 #
 # SYNOPSIS
 #   git-clean [-h] [-f]
 #
 # DESCRIPTION
-#   Fetches and prunes the remote, fast-forwards the current branch, and
-#   deletes local branches whose tracking remote has been deleted. Switches to
-#   main/master automatically if the current branch is orphaned.
+#   Deprecated: use git-sweep. Prints a notice on stderr, then runs
+#   git-sweep --local-only, which keeps git-clean's old scope (it never
+#   touched remote branches) with git-sweep's merge detection. Branches are
+#   now also deleted when fully merged, not only when their remote branch
+#   is gone, and rebase and squash merges count as merged.
+#
+#   Not the built-in git clean, which deletes untracked files.
 #
 # ARGUMENTS
 #   -h, --help   Show help message
-#   -f, --force  Force-delete unmerged orphaned branches (git branch -D)
+#   -f, --force  Passed on as git-sweep --force
 #
 # EXIT STATUS
 #   0  Cleanup complete
-#   1  An orphaned branch could not be deleted
-#   2  Unknown option
+#   1  A branch could not be deleted
+#   2  Unknown option or unexpected argument
 #
 # EXAMPLE
 #   git-clean --force
 #   git-clean
-function git-clean --description 'Sync main, prune remotes, and delete orphaned branches'
-    set -l options h/help f/force
-    argparse $options -- $argv
+function git-clean --description 'Deprecated: use git-sweep'
+    __fish_help_header (status current-function) $argv; and return 0
+
+    argparse f/force -- $argv
     or return
+    __fish_no_args (status current-function) $argv; or return
 
-    if set -q _flag_help
-        __fish_palette
-        echo "$c_head""Usage:$c_reset $c_cmd""git-clean$c_reset $c_arg""[OPTIONS]$c_reset"
-        echo
-        echo "$c_head""Options:$c_reset"
-        echo "  $c_flag""-f, --force$c_reset  Force-delete unmerged orphaned branches (git branch -D)"
-        echo "  $c_flag""-h, --help$c_reset   Show this help message"
-        echo
-        echo "$c_head""Steps taken:$c_reset"
-        echo "  1. Fetches and prunes to find deleted remote branches."
-        echo "  2. Switches to main if you are on an orphaned branch."
-        echo "  3. Pulls the latest changes from the remote."
-        echo "  4. Deletes local orphaned branches."
-        return 0
-    end
+    __fish_palette
+    echo "$c_warn""git-clean is deprecated; use$c_reset $c_cmd""git-sweep$c_reset$c_warn. Running git-sweep --local-only.$c_reset" >&2
 
-    # 1. Fetch and prune (Quietly)
-    echo (__fish_color blue)"Fetching and pruning remote tracking..."(__fish_color normal)
-    git fetch --prune --quiet
-
-    # 2. Identify orphaned branches and current branch
-    # git branch -vv marks column 1 with '*' for the current worktree's
-    # branch or '+' for a branch checked out in another linked worktree.
-    # Only '*' was stripped here, so a gone branch checked out elsewhere
-    # left its '+' glued onto $1, producing a bogus "+" entry that later
-    # failed to delete ("branch '+' not found").
-    set -l gone_branches (git branch -vv | awk '/: gone\]/ {sub(/^[*+]/, ""); print $1}')
-    set -l current_branch (git branch --show-current)
-
-    if test -n "$gone_branches"
-        # 3. Move to safety if needed (Quietly)
-        if contains "$current_branch" $gone_branches
-            echo (__fish_color yellow)"Current branch '$current_branch' was deleted on remote. Moving to main..."(__fish_color normal)
-            # Redirecting output to /dev/null to hide the 'Switched to branch' message
-            git checkout main >/dev/null 2>&1; or git checkout master >/dev/null 2>&1
-        end
-    end
-
-    # 4. Update the current branch (Quietly)
-    echo (__fish_color blue)"Updating current branch..."(__fish_color normal)
-    git pull --quiet
-
-    # 5. Final cleanup
-    if test -n "$gone_branches"
-        # No -l here: inside the if block, `set -l` would declare a new
-        # block-scoped variable and leave the outer -d in place.
-        set -l delete_flag -d
-        if set -q _flag_force
-            set delete_flag -D
-        end
-
-        set -l failed 0
-        echo (__fish_color red)"Deleting orphaned local branches ($delete_flag):"(__fish_color normal)
-        for branch in $gone_branches
-            # We keep this output so you can see confirmation of which hashes were deleted
-            git branch $delete_flag $branch
-            or set failed 1
-        end
-        return $failed
-    end
-
-    echo (__fish_color green)"Everything is tidy. No orphaned branches found."(__fish_color normal)
+    set -l args --local-only
+    set -q _flag_force; and set -a args --force
+    git-sweep $args
 end
