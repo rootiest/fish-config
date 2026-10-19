@@ -35,6 +35,24 @@ reads history depends on its stock builtin semantics. `pretty-history`
 (same `aliases-tricks` toggle) is a separate command that prints history
 with a timestamp prepended to every entry.
 
+## Machine-readable list
+
+`docs/command-shadows.json` lists every shadow with its replacement, the
+toggle that controls it, whether that toggle is on right now, any condition
+it needs beyond the toggle (a Kitty terminal, an installed tool), and
+whether it can break a pasted or piped command. Agents read it to decide
+which commands to call through their bypass instead of the bare name:
+
+    jq -r '.shadows[] | select(.enabled and .breaks_scripts) | .bypass' \
+        ~/.config/fish/docs/command-shadows.json
+
+The file is written from `data/command-shadows.tsv` and is not committed.
+Interactive shells check it before each prompt and rewrite it in the
+background when a universal toggle or the catalog has changed, so it
+follows `config-settings` and `set -U` alike. Session (`set -g`) overrides
+are left out: they only affect the shell that set them. Run
+`__fish_config_shadows_write` to write it by hand.
+
 ## Sub-categories
 
 `__fish_config_op_aliases` sub-divides into six sub-categories, each with
