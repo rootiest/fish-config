@@ -1424,26 +1424,96 @@ functions). They are active in all interactive sessions.
 
     Synopsis:  git-clean [-h] [-f]
 
-    Fetches and prunes the remote, fast-forwards the current branch, and
-    deletes local branches whose tracking remote has been deleted. Switches to
-    main/master automatically if the current branch is orphaned.
+    Deprecated: use git-sweep. Prints a notice on stderr, then runs
+    git-sweep --local-only, which keeps git-clean's old scope (it never
+    touched remote branches) with git-sweep's merge detection. Branches are
+    now also deleted when fully merged, not only when their remote branch
+    is gone, and rebase and squash merges count as merged.
+
+    Not the built-in git clean, which deletes untracked files.
 
     Arguments:
       -h, --help   Show help message
-      -f, --force  Force-delete unmerged orphaned branches (git branch -D)
+      -f, --force  Passed on as git-sweep --force
 
     Exit Status:
       0  Cleanup complete
-      1  An orphaned branch could not be deleted
-      2  Unknown option
+      1  A branch could not be deleted
+      2  Unknown option or unexpected argument
 
     Example:
     git-clean --force
     git-clean
 
-**Dependencies:** `git`
+**Dependencies:** `git-sweep`
 
-**Classification:** `network`
+**Classification:** `network`, `destructive`
+
+### git-sweep
+
+    Synopsis:  git-sweep [-n] [-f] [-l] [-r <remote>] [-k <branch>]...
+
+    Sweeps up after merged work. Fetches and prunes the remote,
+    fast-forwards the local default branch, and deletes every branch whose
+    content is already in the default branch:
+
+      - Local branches merged into <remote>/<default>, by any strategy:
+        merge commit, fast-forward, rebase, or squash.
+      - Local branches whose remote branch is gone. Gone branches with
+        unmerged commits are kept unless -f is given.
+      - Remote branches merged into <remote>/<default>, unless they are the
+        head of an open pull request (a local branch tracking one is kept
+        too).
+
+    Open pull requests are listed with whatever is available: gh, tea or
+    glab, else curl with a token from the environment that belongs to the
+    remote's host, else anonymous curl for a public repository. If none of
+    them works, remote branches are listed but not deleted. Local cleanup
+    never needs any of them.
+
+    Never deleted: the default branch, main, master, develop, dev, trunk,
+    staging, production, gh-pages, release/*, any -k branch, branches
+    checked out in another worktree, local branches created but never
+    committed to, and any branch with unmerged commits whose remote branch
+    still exists. Unmerged remote branches are never deleted, even with -f.
+
+    If the current branch is deleted, git-sweep switches to the default
+    branch first; if tracked files have uncommitted changes, it keeps the
+    branch instead. If the fetch fails, it carries on offline against the
+    last fetched state and skips remote deletion: anything merged into a
+    stale <remote>/<default> is merged into the current one too.
+
+    Every local deletion prints the branch's last commit, so it can be
+    restored with git branch <name> <sha>.
+
+    Arguments:
+      -n, --dry-run        Print the plan; fetch, but change nothing else
+      -f, --force          Also delete gone local branches with unmerged commits
+      -l, --local-only     Never delete remote branches
+      -r, --remote NAME    Remote to sync and prune (default: origin)
+      -k, --keep BRANCH    Never delete BRANCH, local or remote; repeatable
+      -h, --help           Show this help message
+
+    Exit Status:
+      0  Cleanup complete, or a dry run (-n) finished
+      1  A deletion failed (e.g. branch protection on the remote)
+      2  Unknown option, unexpected argument, not a git work tree, or no
+         default branch could be found
+
+    Notes:
+      The same checks drive the prune-it skill in rootiest-ai, so an agent
+      and this function make the same decisions.
+
+    Example:
+    git-sweep --dry-run
+    git-sweep
+    git-sweep --force --keep wip/experiment
+
+**Dependencies:** `git`, `_git_sweep_merged`, `_git_sweep_open_prs`
+
+**Classification:** `network`, `destructive`
+
+**Used by:** `git-clean`
 
 ### gitignore-scrub
 
