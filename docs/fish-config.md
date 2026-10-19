@@ -50,6 +50,7 @@ The configuration uses a structured file tree:
     │   ├── auto-pull.fish          Background git pulls for opted-in repos
     │   ├── autopair.fish           Auto-pair brackets and quotes
     │   ├── bash_expands.fish       Bash-style history expansion
+    │   ├── command-shadows.fish    Keeps docs/command-shadows.json current
     │   ├── done.fish               Desktop notifications for long commands
     │   ├── first_run.fish          One-time init: Fisher bootstrap, theme
     │   ├── fzf.fish                fzf key bindings and pickers
@@ -80,7 +81,7 @@ The configuration uses a structured file tree:
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
     │   ├── session-env-select.py  curses checkbox picker for session-env select
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
-    ├── data/                       gi templates, session-env catalog, word lists
+    ├── data/                       gi templates, word lists, data catalogs
     ├── templates/                  fish-template building blocks
     │   ├── modifiers/              How it runs: args, env, retry, log, ...
     │   ├── presets/                Ready-made recipes: allow-telemetry, ...
