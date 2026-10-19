@@ -1,0 +1,41 @@
+# Copyright (C) 2026 Rootiest
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Catalog of the commands this config shadows. __fish_config_shadows_write
+# turns it into docs/command-shadows.json, adding each shadow's toggle and
+# its current enabled state. Tab-separated columns:
+#
+#   name  identity  site  bypass  when  breaks  replacement  why
+#
+# identity and site are the __fish_config_op_enabled arguments that guard
+# the shadow ("-" for the default site); identity "-" means no toggle
+# removes it. when is the condition the shadow needs beyond its toggle, "-"
+# for always. breaks is 1 when the shadow can break a pasted or piped
+# command, so callers should use the bypass instead of the bare name.
+# Every name in tests/run-tests.fish's shadow_names must appear here.
+ls	ls	-	command ls	-	1	eza -l -a --icons (or lsd)	long listing with icons and hidden files; output is not ls's, so parsing it breaks
+cat	cat	-	command cat	-	1	bat --plain --no-pager	bat's flags differ from cat's (-n, -A, -v); a directory argument is listed instead of failing
+cd	zoxide	-	builtin cd	interactive, zoxide installed	1	z (zoxide)	a path that does not exist jumps to a frecency match instead of failing
+rm	rm	-	command rm	trash installed	1	trash put	plain paths and -r go to the trash instead of being deleted; any other flag (-f, -rf) runs real rm; no arguments lists the trash
+cp	tricks	aliases-tricks	command cp	-	1	cp -i	prompts before overwriting, which blocks a piped or unattended command
+mv	tricks	aliases-tricks	command mv	-	1	mv -i	prompts before overwriting, which blocks a piped or unattended command
+mv	mv	-	command mv	-	0	mv with nested-directory auto-collapse	only intercepts moving a directory into a same-named parent; the mv -i alias replaces it while aliases-tricks is on
+du	du	-	command du	-	1	duf (no path) or dust (path)	different tools with different flags and output
+top	top	-	command top	btop installed	1	btop	btop ignores top's batch flags (-b, -n)
+ping	ping	-	command ping	prettyping installed	1	prettyping --nolegend	animated output that cannot be parsed like ping's
+ssh	ssh	-	command ssh	kitty, kitten installed	1	kitten ssh	refuses piped stdin; adds its own shell integration on the far side
+split	-	-	command split	-	1	terminal pane split (Kitty/WezTerm)	never runs coreutils split; outside Kitty or WezTerm, or with integrations off, it errors
+mkdir	mkdir	-	command mkdir	interactive	0	mkdir -p with a path-tree display	creates parents and prints a tree; any flag runs mkdir -p
+less	less	-	command less	-	0	$PAGER, then ov, less, more, cat	-
+rg	rg	-	command rg	kitty	0	rg --hyperlink-format=kitty	hyperlinks only appear on a terminal
+grep	tricks	aliases-tricks	command grep	-	0	grep --color=auto	-
+fgrep	tricks	aliases-tricks	command fgrep	-	0	fgrep --color=auto	-
+egrep	tricks	aliases-tricks	command egrep	-	0	egrep --color=auto	-
+dir	tricks	aliases-tricks	command dir	-	0	dir --color=auto	-
+vdir	tricks	aliases-tricks	command vdir	-	0	vdir --color=auto	-
+wget	tricks	aliases-tricks	command wget	-	0	wget -c	resumes partial downloads; an already complete file is kept rather than fetched again
+bash	bash	-	command bash	-	0	bash --rcfile $XDG_CONFIG_HOME/bash/bashrc	sets $SHELL while bash runs
+help	help	-	__original_help	-	0	help config opens config-help	only the argument config is intercepted
+claude	claude	-	command claude	-	0	claude after agents-init and agents-vault	scaffolds AGENTS/ in the current repo before launch
+agy	agy	-	command agy	-	0	agy after agents-init and agents-vault	scaffolds AGENTS/ and maps -r/--resume to agy's own flags
+yt-dlp	yt-dlp	-	command yt-dlp	-	0	yt-dlp with embed and SponsorBlock defaults	adds embedding flags unless already given

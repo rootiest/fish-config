@@ -347,11 +347,13 @@ def warn_public_functions_without_category():
 # signature, SYNOPSIS/EXAMPLE prose) legitimately contain the literal text
 # "__fish_config_op_enabled" without being a *caller* of the guard, so they
 # are permanently exempt from warn_functions_without_component's substring
-# check below.
+# check below. __fish_config_shadows_write calls the guard on other
+# components' behalf, to report their state, never to guard itself.
 _GUARD_INFRA_FILES = {
     "__fish_config_op_enabled.fish",
     "__fish_config_op_cascade.fish",
     "__fish_config_op_registry_lookup.fish",
+    "__fish_config_shadows_write.fish",
 }
 
 
