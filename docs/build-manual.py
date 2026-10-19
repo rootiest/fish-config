@@ -969,21 +969,38 @@ def _kv_rows(lines: list[str]) -> list[list[str]] | None:
     return rows
 
 
+LIST_ITEM_RE = re.compile(r"(?:[-*]|\d+[.)])\s")
+# A whitespace-delimited token carrying a `<placeholder>`, minus any
+# sentence punctuation around it.
+PLACEHOLDER_TOKEN_RE = re.compile(r"(?<!\S)([(\"']?)([^\s`]*<[\w-]+>[^\s`]*?)([.,;:)\"']*)(?!\S)")
+
+
+def _protect_placeholders(text: str) -> str:
+    """Code-span `<placeholder>` tokens, which markdown would eat as HTML tags."""
+    return PLACEHOLDER_TOKEN_RE.sub(r"\1`\2`\3", text)
+
+
 def _unwrap_prose(lines: list[str]) -> str:
     """Rejoin hard-wrapped comment lines into flowing paragraphs.
 
     Function-header prose is authored wrapped to a fixed column; a blank
-    `#` line (rare, but legal) separates paragraphs.
+    `#` line (rare, but legal) separates paragraphs. A line opening with a
+    list marker (`-`, `*`, `1.`) starts a new list item, and the wrapped
+    lines after it fold into that item rather than the paragraph.
     """
     paragraphs: list[str] = []
-    para: list[str] = []
+    para: list[list[str]] = []
     for line in lines + [""]:
-        if line.strip():
-            para.append(line.strip())
-        elif para:
-            paragraphs.append(" ".join(para))
-            para = []
-    return "\n\n".join(paragraphs)
+        text = line.strip()
+        if not text:
+            if para:
+                paragraphs.append("\n".join(" ".join(item) for item in para))
+                para = []
+        elif not para or LIST_ITEM_RE.match(text):
+            para.append([text])
+        else:
+            para[-1].append(text)
+    return _protect_placeholders("\n\n".join(paragraphs))
 
 
 def _section_body(lines: list[str]) -> str:

@@ -1206,6 +1206,48 @@ def test_render_entry_site_wrapped_description_stays_prose():
     ), f"description was not unwrapped into one flowing paragraph:\n{out}"
 
 
+def test_render_entry_site_keeps_list_items_on_their_own_lines():
+    """Wrapped `- ` items in a DESCRIPTION stay separate list items (`git-sweep`'s bug)."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["demo"],
+        "DESCRIPTION": [
+            "Deletes every branch:",
+            "",
+            "  - Local branches merged by any strategy:",
+            "    merge commit or squash.",
+            "  - Local branches whose remote branch is gone.",
+            "",
+            "Trailing paragraph.",
+        ],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert (
+        "Deletes every branch:\n\n"
+        "- Local branches merged by any strategy: merge commit or squash.\n"
+        "- Local branches whose remote branch is gone.\n\n"
+        "Trailing paragraph."
+    ) in out, out
+
+
+def test_render_entry_site_code_spans_angle_bracket_placeholders():
+    """`<placeholder>` prose tokens are code-spanned so markdown doesn't drop them as tags."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["demo"],
+        "DESCRIPTION": [
+            "Merged into <remote>/<default>, so restore it",
+            "with git branch <name> <sha>.",
+        ],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert (
+        "Merged into `<remote>/<default>`, so restore it with git branch `<name>` `<sha>`."
+    ) in out, out
+
+
 def test_render_entry_site_single_sentence_exit_status_stays_prose():
     """A one-sentence EXIT STATUS (e.g. `ltr`'s) renders as prose, not a table or code block."""
     import build_manual
