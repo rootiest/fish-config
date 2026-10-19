@@ -10,7 +10,7 @@
 #   - bd-pull (Gitea issues sync, missing tokens, API failures, malformed JSON, linking)
 #   - _auto_pull_sync (background safe fast-forward, dirty trees, network drop on fetch)
 #   - gitup (remote fetch & status, network drop handling)
-#   - git-clean (remote fetch/prune, orphaned branch detection & deletion)
+#   - git-sweep / git-clean (fetch/prune, merged & orphaned branch cleanup, open-PR lookup fallbacks)
 #   - config-update (upstream fetch, up-to-date check, dry-run, force stash & restore)
 #   - repo-open (origin URL parsing, offline local tracking, ls-remote fallback & drop)
 #   - fzf-update (git pull/clone network failure handling)
@@ -674,113 +674,301 @@ begin
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 7. git-clean (fetch --prune and delete orphaned branches)
+# 7. git-sweep and git-clean (merged and orphaned branch cleanup)
 # ─────────────────────────────────────────────────────────────────────────────
-section "network isolation: git-clean"
+section "network isolation: git-sweep"
 
 reset_mocks
+git-sweep --help >/dev/null 2>&1
+check "git-sweep: --help exits 0" 0 $status
+git-sweep --bogus >/dev/null 2>&1
+check "git-sweep: unknown option exits 2" 2 $status
+git-sweep stray >/dev/null 2>&1
+check "git-sweep: unexpected argument exits 2" 2 $status
 git-clean --help >/dev/null 2>&1
 check "git-clean: --help exits 0" 0 $status
 
 begin
     set -l prev_pwd $PWD
-    set -l r (new_repo)
-    builtin cd $r
-    echo a >a && git add a && git commit -q -m a
-
-    # Network drop during git fetch --prune
-    set -gx MOCK_GIT_FAIL_FETCH 1
-    # git-clean continues to local cleanup even if fetch fails
-    set -l clean_out (git-clean 2>&1)
-    check "git-clean: network drop handled, reports tidy" true (string match -q '*No orphaned branches found*' -- $clean_out; and echo true; or echo false)
-
-    # Orphaned branch detection and cleanup
-    reset_mocks
-    # Simulate an orphaned branch with [gone] tracking
-    git branch orphaned-feat
-    # Create git-clean handler that simulates git branch -vv showing ': gone]'
-    set -l clean_git_handler $MOCK_DIR/git_clean_shim.sh
-    printf '%s\n' \
-        '#!/bin/sh' \
-        'for a in "$@"; do' \
-        '  if [ "$a" = "-vv" ]; then' \
-        '    echo "  main           1234567 [origin/main] initial"' \
-        '    echo "  orphaned-feat  abcdef0 [origin/orphaned-feat: gone] feature"' \
-        '    exit 0' \
-        '  fi' \
-        done \
-        "exec $real_git \"\$@\"" >$clean_git_handler
-    chmod +x $clean_git_handler
-
-    set -gx MOCK_GIT_HANDLER $clean_git_handler
-    set -l clean_del_out (git-clean 2>&1)
-    check "git-clean: detects and deletes orphaned branch" true (string match -q '*Deleting orphaned local branches*' -- $clean_del_out; and echo true; or echo false)
-    check "git-clean: orphaned branch was deleted" false (git rev-parse --verify --quiet orphaned-feat >/dev/null 2>&1; and echo true; or echo false)
-
-    # Regression: git branch -vv marks a branch checked out in ANOTHER
-    # linked worktree with '+', not '*'. Only '*' used to be stripped, so
-    # a gone branch shown with '+' left a bogus "+" entry that then failed
-    # to delete ("branch '+' not found").
-    reset_mocks
-    git branch orphaned-worktree-feat
-    set -l clean_git_handler2 $MOCK_DIR/git_clean_shim2.sh
-    printf '%s\n' \
-        '#!/bin/sh' \
-        'for a in "$@"; do' \
-        '  if [ "$a" = "-vv" ]; then' \
-        '    echo "  main                     1234567 [origin/main] initial"' \
-        '    echo "+ orphaned-worktree-feat   abcdef0 [origin/orphaned-worktree-feat: gone] feature"' \
-        '    exit 0' \
-        '  fi' \
-        done \
-        "exec $real_git \"\$@\"" >$clean_git_handler2
-    chmod +x $clean_git_handler2
-
-    set -gx MOCK_GIT_HANDLER $clean_git_handler2
-    set -l plus_out (git-clean 2>&1)
-    check "git-clean: '+' worktree marker does not leak into a branch name" false (string match -q "*branch '+' not found*" -- $plus_out; and echo true; or echo false)
-    check "git-clean: '+'-marked gone branch is still deleted" false (git rev-parse --verify --quiet orphaned-worktree-feat >/dev/null 2>&1; and echo true; or echo false)
-
-    reset_mocks
+    builtin cd (mktemp -d)
+    git-sweep >/dev/null 2>&1
+    check "git-sweep: outside a work tree exits 2" 2 $status
     builtin cd $prev_pwd
 end
 
-# Regression: `set -l delete_flag -D` inside the `if` declared a block-scoped
-# variable that died at `end`, so -f/--force always ran `git branch -d`.
-# Uses a real local bare remote so `: gone]` and the merge check are genuine.
-# `was-merged` sorts after `unmerged`, so the refused deletion is not the last
-# `git branch` call and the exit-status check cannot pass by status leakage.
-begin
-    reset_mocks
-    set -l prev_pwd $PWD
+# Clone of a real local bare remote, one branch per case, cwd left inside it.
+# The remote has no host, so tests stub the PR lister (below) to decide.
+function sweep_fixture
     set -l bare (mktemp -d)
     set -ga TMPDIRS $bare
     git init -q --bare $bare
-    set -l r (new_repo)
-    builtin cd $r
-    echo a >a && git add a && git commit -q -m a
+    builtin cd (new_repo)
+    echo base >base && git add base && git commit -q -m base
     git remote add origin $bare
     git push -q -u origin main 2>/dev/null
-    git branch was-merged
-    git switch -q -c unmerged
-    echo b >b && git add b && git commit -q -m b
+    git remote set-head origin main >/dev/null 2>&1
+    for b in r-merged r-squash r-rebase r-ff gone-merged gone-unmerged open-pr wip wt-branch release/1.0
+        set -l file (string replace -a / _ -- $b)
+        git switch -q -c $b main
+        echo 1 >$file && git add $file && git commit -q -m "$b 1"
+        echo 2 >>$file && git add $file && git commit -q -m "$b 2"
+        git push -q -u origin $b 2>/dev/null
+        git switch -q main
+    end
+    git merge -q --ff-only r-ff
+    for b in r-merged gone-merged open-pr wt-branch release/1.0
+        git merge -q --no-ff -m "merge $b" $b
+    end
+    git merge -q --squash r-squash >/dev/null 2>&1
+    git commit -q -m "squash r-squash"
+    git cherry-pick r-rebase~1 r-rebase >/dev/null
+    git push -q origin main 2>/dev/null
+    git push -q origin --delete gone-merged gone-unmerged 2>/dev/null
+    set -l wt (mktemp -d)
+    set -ga TMPDIRS $wt
+    git worktree add -q $wt/wt wt-branch 2>/dev/null
+    git switch -q -c fresh main
     git switch -q main
-    git push -q -u origin was-merged unmerged 2>/dev/null
-    git push -q origin --delete was-merged unmerged 2>/dev/null
+    # Leave local main behind origin/main to exercise the fast-forward.
+    git reset -q --hard HEAD~2
+end
 
-    set -l soft_out (git-clean 2>&1)
-    set -l soft_status $status
-    check "git-clean: without -f prints (-d)" true (string match -q '*Deleting orphaned local branches (-d)*' -- $soft_out; and echo true; or echo false)
-    check "git-clean: without -f deletes a merged gone branch" false (git rev-parse --verify --quiet was-merged >/dev/null 2>&1; and echo true; or echo false)
-    check "git-clean: without -f keeps an unmerged gone branch" true (git rev-parse --verify --quiet unmerged >/dev/null 2>&1; and echo true; or echo false)
-    check "git-clean: refused deletion exits 1" 1 $soft_status
+function has_local --argument-names b
+    git show-ref --verify --quiet refs/heads/$b; and echo true; or echo false
+end
 
-    set -l force_out (git-clean --force 2>&1)
-    set -l force_status $status
-    check "git-clean: -f prints (-D)" true (string match -q '*Deleting orphaned local branches (-D)*' -- $force_out; and echo true; or echo false)
-    check "git-clean: -f deletes an unmerged gone branch" false (git rev-parse --verify --quiet unmerged >/dev/null 2>&1; and echo true; or echo false)
-    check "git-clean: -f with all deletions succeeding exits 0" 0 $force_status
+function has_remote --argument-names b
+    git ls-remote --exit-code --heads origin refs/heads/$b >/dev/null 2>&1; and echo true; or echo false
+end
 
+# git-sweep's decisions are tested against a stub PR list; the real lister
+# is tested on its own further down.
+function _git_sweep_open_prs
+    set -q SWEEP_PR_FAIL; and return 1
+    set -q SWEEP_OPEN_PRS[1]; and printf '%s\n' $SWEEP_OPEN_PRS
+    return 0
+end
+
+begin
+    reset_mocks
+    set -l prev_pwd $PWD
+    sweep_fixture
+    set -gx SWEEP_OPEN_PRS open-pr
+
+    set -l dry_out (git-sweep --dry-run 2>&1)
+    check "git-sweep: --dry-run exits 0" 0 $status
+    check "git-sweep: --dry-run plans the squash-merged branch" true (string match -q '*delete*r-squash*squash-merged*' -- $dry_out; and echo true; or echo false)
+    check "git-sweep: --dry-run keeps local branches" true (has_local r-merged)
+    check "git-sweep: --dry-run keeps remote branches" true (has_remote r-merged)
+
+    set -l base refs/remotes/origin/main
+    check "_git_sweep_merged: merge commit" merged (_git_sweep_merged refs/heads/r-merged $base)
+    check "_git_sweep_merged: fast-forward" merged (_git_sweep_merged refs/heads/r-ff $base)
+    check "_git_sweep_merged: rebase merge" rebase-merged (_git_sweep_merged refs/heads/r-rebase $base)
+    check "_git_sweep_merged: squash merge" squash-merged (_git_sweep_merged refs/heads/r-squash $base)
+    _git_sweep_merged refs/heads/wip $base >/dev/null
+    check "_git_sweep_merged: unmerged work fails" 1 $status
+
+    git switch -q r-squash
+    set -l out (git-sweep 2>&1)
+    check "git-sweep: cleanup exits 0" 0 $status
+    for b in r-merged r-squash r-rebase r-ff gone-merged
+        check "git-sweep: deletes merged local $b" false (has_local $b)
+    end
+    for b in r-merged r-squash r-rebase r-ff
+        check "git-sweep: deletes merged remote $b" false (has_remote $b)
+    end
+    check "git-sweep: keeps a gone branch with unmerged commits" true (has_local gone-unmerged)
+    check "git-sweep: keeps the remote head of an open PR" true (has_remote open-pr)
+    check "git-sweep: keeps a local branch tracking an open PR" true (has_local open-pr)
+    check "git-sweep: keeps unmerged local work" true (has_local wip)
+    check "git-sweep: keeps unmerged remote work" true (has_remote wip)
+    check "git-sweep: keeps protected local release/1.0" true (has_local release/1.0)
+    check "git-sweep: keeps protected remote release/1.0" true (has_remote release/1.0)
+    check "git-sweep: keeps a never-committed branch" true (has_local fresh)
+    check "git-sweep: keeps a branch checked out in another worktree" true (has_local wt-branch)
+    check "git-sweep: switches off the deleted current branch" main (git branch --show-current)
+    check "git-sweep: fast-forwards main" (git rev-parse origin/main) (git rev-parse main)
+    check "git-sweep: prints a restore hint" true (string match -q '*git branch <name> <sha>*' -- $out; and echo true; or echo false)
+
+    set -e SWEEP_OPEN_PRS
+    builtin cd $prev_pwd
+end
+
+# Open PRs cannot be listed: remote branches stay, local cleanup still runs.
+begin
+    reset_mocks
+    set -l prev_pwd $PWD
+    sweep_fixture
+    set -gx SWEEP_PR_FAIL 1
+    set -l out (git-sweep 2>&1)
+    check "git-sweep: unlisted PRs exits 0" 0 $status
+    check "git-sweep: unlisted PRs reported" true (string match -q '*Could not list open PRs*' -- $out; and echo true; or echo false)
+    check "git-sweep: unlisted PRs keeps merged remote branches" true (has_remote r-merged)
+    check "git-sweep: unlisted PRs still deletes merged local branches" false (has_local r-merged)
+    set -e SWEEP_PR_FAIL
+    builtin cd $prev_pwd
+end
+
+# Network drop: carries on offline against the last fetched state.
+begin
+    reset_mocks
+    set -l prev_pwd $PWD
+    sweep_fixture
+    set -gx MOCK_GIT_FAIL_FETCH 1
+    set -l out (git-sweep 2>&1)
+    check "git-sweep: network drop exits 0" 0 $status
+    check "git-sweep: network drop warns" true (string match -q '*fetch from*failed*' -- $out; and echo true; or echo false)
+    reset_mocks
+    check "git-sweep: network drop keeps remote branches" true (has_remote r-merged)
+    check "git-sweep: network drop still deletes merged local branches" false (has_local r-merged)
+    builtin cd $prev_pwd
+end
+
+# --force, --keep, and a dirty current branch.
+begin
+    reset_mocks
+    set -l prev_pwd $PWD
+    sweep_fixture
+    git switch -q r-merged
+    echo dirt >>base
+    git-sweep --force --keep r-ff >/dev/null 2>&1
+    check "git-sweep: -f exits 0" 0 $status
+    check "git-sweep: -f deletes a gone branch with unmerged commits" false (has_local gone-unmerged)
+    check "git-sweep: -f still keeps unmerged work whose remote exists" true (has_local wip)
+    check "git-sweep: -f never deletes unmerged remote branches" true (has_remote wip)
+    check "git-sweep: --keep protects the local branch" true (has_local r-ff)
+    check "git-sweep: --keep protects the remote branch" true (has_remote r-ff)
+    check "git-sweep: keeps a dirty current branch" true (has_local r-merged)
+    check "git-sweep: stays on a dirty current branch" r-merged (git branch --show-current)
+    git checkout -q -- base
+    builtin cd $prev_pwd
+end
+
+# git-clean: deprecated, runs git-sweep --local-only.
+begin
+    reset_mocks
+    set -l prev_pwd $PWD
+    sweep_fixture
+    set -l err (git-clean 2>&1 >/dev/null)
+    check "git-clean: exits 0" 0 $status
+    check "git-clean: prints a deprecation notice on stderr" true (string match -q '*deprecated*git-sweep*' -- $err; and echo true; or echo false)
+    check "git-clean: deletes merged local branches" false (has_local r-squash)
+    check "git-clean: never deletes remote branches" true (has_remote r-squash)
+    check "git-clean: keeps a gone branch with unmerged commits" true (has_local gone-unmerged)
+    git-clean -f >/dev/null 2>&1
+    check "git-clean: -f deletes a gone branch with unmerged commits" false (has_local gone-unmerged)
+    builtin cd $prev_pwd
+end
+
+functions -e _git_sweep_open_prs
+source $repo_root/functions/_git_sweep_open_prs.fish
+
+section "network isolation: git-sweep open-PR lookup"
+
+check "_git_sweep_host: https" forge.test (_git_sweep_host https://forge.test/o/r.git)
+check "_git_sweep_host: ssh with user and port" forge.test (_git_sweep_host ssh://git@Forge.Test:2222/o/r)
+check "_git_sweep_host: scp-style" forge.test (_git_sweep_host git@forge.test:o/r.git)
+_git_sweep_host /srv/git/r.git >/dev/null
+check "_git_sweep_host: local path has no host" 1 $status
+
+begin
+    # Tokens are only handed out for the host they belong to.
+    set -e GH_TOKEN GITHUB_TOKEN GITHUB_PERSONAL_ACCESS_TOKEN GH_ENTERPRISE_TOKEN GITHUB_ENTERPRISE_TOKEN GH_HOST
+    set -e GITEA_TOKEN GITEA_ACCESS_TOKEN FORGEJO_TOKEN GITEA_HOST GITEA_URL GITEA_SERVER_URL FORGEJO_HOST
+    set -e GITLAB_TOKEN GITLAB_PRIVATE_TOKEN GITLAB_ACCESS_TOKEN GITLAB_HOST GITLAB_URI GITLAB_URL
+    set -gx GITEA_ACCESS_TOKEN gt
+    _git_sweep_token gitea forge.test >/dev/null
+    check "_git_sweep_token: gitea token without a host var is unused" 1 $status
+    set -gx GITEA_HOST https://forge.test/
+    check "_git_sweep_token: gitea token for its own host" gt (_git_sweep_token gitea forge.test)
+    _git_sweep_token gitea other.test >/dev/null
+    check "_git_sweep_token: gitea token withheld from another host" 1 $status
+    set -gx GITHUB_TOKEN ht
+    check "_git_sweep_token: github token for github.com" ht (_git_sweep_token github github.com)
+    _git_sweep_token github ghe.test >/dev/null
+    check "_git_sweep_token: github.com token withheld from GHE" 1 $status
+    set -gx GITLAB_TOKEN lt
+    check "_git_sweep_token: gitlab token defaults to gitlab.com" lt (_git_sweep_token gitlab gitlab.com)
+    _git_sweep_token gitlab gitlab.forge.test >/dev/null
+    check "_git_sweep_token: gitlab token withheld from self-hosted" 1 $status
+end
+
+begin
+    reset_mocks
+    set -gx MOCK_CURL_BODY '[{"head":{"ref":"refs/pull/3/head","label":"someone:feat/x"}}]'
+    set -l names (_git_sweep_pr_page anon gitea forge.test o/r 1)
+    check "_git_sweep_pr_page: list exits 0" 0 $status
+    check "_git_sweep_pr_page: reads the branch from head.label" true (contains -- feat/x $names; and echo true; or echo false)
+    set -gx MOCK_CURL_BODY '[{"source_branch":"mr-branch"}]'
+    check "_git_sweep_pr_page: gitlab source_branch" mr-branch (_git_sweep_pr_page anon gitlab forge.test g/sub/r 1)
+    set -gx MOCK_CURL_BODY '[]'
+    set -l empty (_git_sweep_pr_page anon gitea forge.test o/r 1)
+    check "_git_sweep_pr_page: empty page exits 0" 0 $status
+    check "_git_sweep_pr_page: empty page prints nothing" 0 (count $empty)
+    for body in '{"message":"Not Found"}' '<html>login</html>' ''
+        set -gx MOCK_CURL_BODY $body
+        _git_sweep_pr_page anon gitea forge.test o/r 1 >/dev/null
+        check "_git_sweep_pr_page: rejects body '$body'" 1 $status
+    end
+    set -gx MOCK_CURL_BODY '[]'
+    set -gx MOCK_CURL_STATUS 22
+    _git_sweep_pr_page anon gitea forge.test o/r 1 >/dev/null
+    check "_git_sweep_pr_page: HTTP error fails" 1 $status
+
+    # The token travels on curl's stdin, never on its command line.
+    reset_mocks
+    set -gx MOCK_CURL_BODY '[]'
+    set -gx MOCK_CURL_LOG (mktemp)
+    set -ga TMPDIRS $MOCK_CURL_LOG
+    set -gx GITEA_HOST forge.test
+    set -gx GITEA_ACCESS_TOKEN secret-token-123
+    _git_sweep_pr_page token gitea forge.test o/r 1 >/dev/null
+    check "_git_sweep_pr_page: token request exits 0" 0 $status
+    check "_git_sweep_pr_page: token kept off curl's argv" false (command grep -q secret-token-123 $MOCK_CURL_LOG; and echo true; or echo false)
+    set -e GITEA_HOST GITEA_ACCESS_TOKEN GITHUB_TOKEN GITLAB_TOKEN
+    reset_mocks
+end
+
+begin
+    reset_mocks
+    set -l prev_pwd $PWD
+    builtin cd (new_repo)
+    git remote add origin https://forge.test/o/r.git
+    # Real CLIs must not reach the network from the test suite.
+    function tea
+        return 1
+    end
+    function gh
+        return 1
+    end
+    function glab
+        return 1
+    end
+
+    set -l pages $MOCK_DIR/sweep_pages.sh
+    printf '%s\n' '#!/bin/sh' \
+        'case "$*" in *page=1*) echo '"'"'[{"head":{"ref":"open-1","label":"open-1"}}]'"'"' ;; *) echo "[]" ;; esac' >$pages
+    chmod +x $pages
+    set -gx MOCK_CURL_HANDLER $pages
+    set -l heads (_git_sweep_open_prs origin)
+    check "_git_sweep_open_prs: falls back to curl and pages" 0 $status
+    check "_git_sweep_open_prs: lists the open PR head" true (contains -- open-1 $heads; and echo true; or echo false)
+
+    set -l endless $MOCK_DIR/sweep_endless.sh
+    printf '%s\n' '#!/bin/sh' 'echo '"'"'[{"head":{"ref":"x","label":"x"}}]'"'"'' >$endless
+    chmod +x $endless
+    set -gx MOCK_CURL_HANDLER $endless
+    _git_sweep_open_prs origin >/dev/null
+    check "_git_sweep_open_prs: a listing that never ends fails" 1 $status
+
+    reset_mocks
+    set -gx MOCK_CURL_STATUS 7
+    _git_sweep_open_prs origin >/dev/null
+    check "_git_sweep_open_prs: every method failing fails" 1 $status
+
+    functions -e tea gh glab
+    reset_mocks
     builtin cd $prev_pwd
 end
 

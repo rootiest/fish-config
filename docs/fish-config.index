@@ -99,6 +99,7 @@ branch=### branch
 gi=### gi
 gitignore=### gi
 git-clean=### git-clean
+git-sweep=### git-sweep
 gitup=### gitup
 gitui=### gitui
 hist=### hist
