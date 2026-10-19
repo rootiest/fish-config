@@ -4906,6 +4906,17 @@ follows `config-settings` and `set -U` alike. Session (`set -g`) overrides
 are left out: they only affect the shell that set them. Run
 `__fish_config_shadows_write` to write it by hand.
 
+Agents working outside this repository don't read its `AGENTS.md`. To
+point them at the file too, add a rule like this to their global
+instructions (for Claude Code, `~/.claude/CLAUDE.md`):
+
+    ## Shadowed commands
+    The user's fish shell shadows common commands: ssh is kitten ssh in
+    Kitty, rm trashes, cp and mv prompt. Before giving a command meant to
+    be pasted or piped, read ~/.config/fish/docs/command-shadows.json and
+    run any shadow with enabled and breaks_scripts both true through its
+    bypass (command ssh). Leave the others bare.
+
 ### Sub-categories
 
 `__fish_config_op_aliases` sub-divides into six sub-categories, each with
