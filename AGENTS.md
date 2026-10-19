@@ -88,6 +88,16 @@ map is in `docs/manual/08-components-reference/`.
   `functions/` shadows inside the function body, falling back to bare
   `command <name> $argv`.
 
+## Shadowed commands in commands you hand the user
+
+The user's interactive shell shadows common commands (`ssh` becomes
+`kitten ssh` in Kitty, `rm` trashes, `cp`/`mv` prompt). Before giving a
+command meant to be pasted or piped, check
+`~/.config/fish/docs/command-shadows.json` and call any shadow with
+`enabled` and `breaks_scripts` both true through its `bypass`
+(`command ssh`); leave the rest bare. When you add or remove a shadow,
+update `data/command-shadows.tsv`.
+
 ## Gotcha: the fish false-zero
 
 An `if` with no branch taken and no `else` resolves `$status` to **0**, so a

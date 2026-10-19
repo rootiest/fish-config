@@ -50,6 +50,7 @@ The configuration uses a structured file tree:
     │   ├── auto-pull.fish          Background git pulls for opted-in repos
     │   ├── autopair.fish           Auto-pair brackets and quotes
     │   ├── bash_expands.fish       Bash-style history expansion
+    │   ├── command-shadows.fish    Keeps docs/command-shadows.json current
     │   ├── done.fish               Desktop notifications for long commands
     │   ├── first_run.fish          One-time init: Fisher bootstrap, theme
     │   ├── fzf.fish                fzf key bindings and pickers
@@ -80,7 +81,7 @@ The configuration uses a structured file tree:
     │   ├── kitty-fish-config-watcher.py  Kitty logging watcher
     │   ├── session-env-select.py  curses checkbox picker for session-env select
     │   └── sync-labels.py          Syncs Gitea labels to the GitHub mirror
-    ├── data/                       gi templates, session-env catalog, word lists
+    ├── data/                       gi templates, word lists, data catalogs
     ├── templates/                  fish-template building blocks
     │   ├── modifiers/              How it runs: args, env, retry, log, ...
     │   ├── presets/                Ready-made recipes: allow-telemetry, ...
@@ -4887,6 +4888,35 @@ are permanently deleted, not trashed. There is no intermediate safety net.
 reads history depends on its stock builtin semantics. `pretty-history`
 (same `aliases-tricks` toggle) is a separate command that prints history
 with a timestamp prepended to every entry.
+
+### Machine-readable list
+
+`docs/command-shadows.json` lists every shadow with its replacement, the
+toggle that controls it, whether that toggle is on right now, any condition
+it needs beyond the toggle (a Kitty terminal, an installed tool), and
+whether it can break a pasted or piped command. Agents read it to decide
+which commands to call through their bypass instead of the bare name:
+
+    jq -r '.shadows[] | select(.enabled and .breaks_scripts) | .bypass' \
+        ~/.config/fish/docs/command-shadows.json
+
+The file is written from `data/command-shadows.tsv` and is not committed.
+Interactive shells check it before each prompt and rewrite it in the
+background when a universal toggle or the catalog has changed, so it
+follows `config-settings` and `set -U` alike. Session (`set -g`) overrides
+are left out: they only affect the shell that set them. Run
+`__fish_config_shadows_write` to write it by hand.
+
+Agents working outside this repository don't read its `AGENTS.md`. To
+point them at the file too, add a rule like this to their global
+instructions (for Claude Code, `~/.claude/CLAUDE.md`):
+
+    ## Shadowed commands
+    The user's fish shell shadows common commands: ssh is kitten ssh in
+    Kitty, rm trashes, cp and mv prompt. Before giving a command meant to
+    be pasted or piped, read ~/.config/fish/docs/command-shadows.json and
+    run any shadow with enabled and breaks_scripts both true through its
+    bypass (command ssh). Leave the others bare.
 
 ### Sub-categories
 

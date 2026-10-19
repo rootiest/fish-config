@@ -436,6 +436,8 @@ set -Ue __fish_config_op_greeting
 
 Command shadows react immediately; bindings, prompt, and abbreviations take effect in new shells. With aliases disabled, `rm` deletes permanently again instead of trashing. See `help config opinionated` for the full component list.
 
+AI agents and scripts can read `docs/command-shadows.json`, which lists every shadow with its live enabled state and whether it can break a pasted or piped command (call those through their bypass, e.g. `command ssh`). Interactive shells rewrite it in the background whenever a toggle changes; it is not committed.
+
 Each category further sub-divides into two to six sub-categories with
 their own `__fish_config_op_<category>_<subcategory>` toggles (e.g.
 `__fish_config_op_aliases_filesystem`), following the exact same

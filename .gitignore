@@ -70,6 +70,10 @@ docs/plans
 # across the fish config and the Kitty Python watcher. Never committed.
 .logging_disabled
 
+# Agent-readable list of shadowed commands, regenerated from the live toggles
+# by __fish_config_shadows_write, so it differs per machine. Never committed.
+docs/command-shadows.json*
+
 #   ──────────────── Fisher-Managed Plugin Files ───────────────
 # Fisher writes these into the repo directory on install/update.
 # They are owned by Fisher — do not commit them.
