@@ -91,6 +91,10 @@ check "logs --category <Tab> offers paru" true (contains -- paru $got; and echo 
 set -l got (_offered 'git-clean -')
 check "git-clean offers --force" true (contains -- --force $got; and echo true; or echo false)
 
+set -l got (_offered 'git-sweep --')
+check "git-sweep offers --dry-run" true (contains -- --dry-run $got; and echo true; or echo false)
+check "git-sweep offers --local-only" true (contains -- --local-only $got; and echo true; or echo false)
+
 set -l got (_offered 'gi --')
 check "gi offers --custom" true (contains -- --custom $got; and echo true; or echo false)
 

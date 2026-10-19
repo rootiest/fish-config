@@ -138,6 +138,7 @@ end
 # used a bare set_color before this change are both represented.
 set -l cases \
     "git-clean --help (palette)|git-clean --help" \
+    "git-sweep --help (palette)|git-sweep --help" \
     "config-help --help (palette)|config-help --help" \
     "fish-deps --help (palette)|fish-deps --help" \
     "gitignore-scrub --help (palette)|gitignore-scrub --help" \
