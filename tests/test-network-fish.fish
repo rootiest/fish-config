@@ -761,6 +761,14 @@ begin
     check "git-sweep: --dry-run keeps local branches" true (has_local r-merged)
     check "git-sweep: --dry-run keeps remote branches" true (has_remote r-merged)
 
+    set -l base refs/remotes/origin/main
+    check "_git_sweep_merged: merge commit" merged (_git_sweep_merged refs/heads/r-merged $base)
+    check "_git_sweep_merged: fast-forward" merged (_git_sweep_merged refs/heads/r-ff $base)
+    check "_git_sweep_merged: rebase merge" rebase-merged (_git_sweep_merged refs/heads/r-rebase $base)
+    check "_git_sweep_merged: squash merge" squash-merged (_git_sweep_merged refs/heads/r-squash $base)
+    _git_sweep_merged refs/heads/wip $base >/dev/null
+    check "_git_sweep_merged: unmerged work fails" 1 $status
+
     git switch -q r-squash
     set -l out (git-sweep 2>&1)
     check "git-sweep: cleanup exits 0" 0 $status
