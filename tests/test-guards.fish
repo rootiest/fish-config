@@ -31,7 +31,7 @@ source $repo_root/conf.d/__fish_config_op_registry.fish
 
 section "guards: preconditions"
 
-check "the fork's registry is loaded" 68 (count $__fish_config_op_registry_keys)
+check "the fork's registry is loaded" 69 (count $__fish_config_op_registry_keys)
 
 section "__fish_variable_check: truthy"
 

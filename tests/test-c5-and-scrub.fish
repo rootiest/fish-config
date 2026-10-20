@@ -59,7 +59,7 @@ section "c5-and-scrub: preconditions"
 
 # Without the registry __fish_config_op_enabled fail-opens, so every C5 check
 # below would pass or fail for the wrong reason.
-check "registry is loaded" 68 (count $__fish_config_op_registry_keys)
+check "registry is loaded" 69 (count $__fish_config_op_registry_keys)
 check "HOME is the sandbox" $sandbox/home "$HOME"
 
 #   ───────────────────────────── gitignore-scrub ─────────────────────────────

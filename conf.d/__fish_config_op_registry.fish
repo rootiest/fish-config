@@ -38,6 +38,7 @@ set -g __fish_config_op_registry_keys \
     "config:path-setup" \
     "config:privacy" \
     "config:vi-mode" \
+    "cp:" \
     "done:" \
     "du:" \
     "edit:" \
@@ -108,6 +109,7 @@ set -g __fish_config_op_registry_values \
     overrides/environment \
     overrides/privacy \
     overrides/key-bindings \
+    aliases/filesystem \
     integrations/notifications \
     aliases/filesystem \
     aliases/dev-tools \

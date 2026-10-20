@@ -357,9 +357,9 @@ if command -q python3; and command python3 -c 'import yaml' 2>/dev/null
     set -l copy $cfg
     rm -rf $copy/conf.d $copy/docs
     mkdir -p $copy/docs
-    cp -r $repo_root/functions $repo_root/conf.d $copy/
-    cp $repo_root/config.fish $copy/
-    cp $repo_root/docs/generate_component_registry.py $repo_root/docs/manualtools.py $copy/docs/
+    command cp -r $repo_root/functions $repo_root/conf.d $copy/
+    command cp $repo_root/config.fish $copy/
+    command cp $repo_root/docs/generate_component_registry.py $repo_root/docs/manualtools.py $copy/docs/
     rm -f $copy/conf.d/__fish_config_op_registry.fish
     set -e __fish_config_op_registry_keys
     __fish_config_op_registry_rebuild >/dev/null 2>&1

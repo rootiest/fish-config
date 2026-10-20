@@ -292,8 +292,8 @@ if test (count $session_suites) -gt 0
     mkdir -p $sandbox/home/.local/bin
 
     # Every utility below goes through `command`. This driver runs under the
-    # very config it tests, which shadows these: `cp` is an alias for `cp -i`,
-    # `rm` is a trash wrapper, `cat` resolves to bat. Only `cp` is an actual
+    # very config it tests, which shadows these: `cp` is a wrapper that passes
+    # `-i`, `rm` is a trash wrapper, `cat` resolves to bat. Only `cp` is an actual
     # hazard today -- `-i` on a non-empty destination reads EOF in a
     # non-interactive runner and SILENTLY SKIPS the copy while exiting 0,
     # which would leave the sandbox missing config files and report success.
