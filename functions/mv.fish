@@ -19,8 +19,13 @@
 #   themes/themes/), calling mv themes/themes themes will gracefully
 #   move the inner contents up one level and remove the empty outer shell.
 #
-#   Opinionated component (C1): when disabled via __fish_config_op_aliases,
-#   behaves exactly like bare command mv.
+#   Also owns the confirmation prompt: it passes -i, so mv asks before
+#   overwriting. A flag you pass after it, such as -f or -n, still wins, as
+#   it did with the old mv -i alias in conf.d/tricks.fish.
+#
+#   Opinionated component (C1): when disabled via __fish_config_op_aliases
+#   or its aliases-tricks sub-category (__fish_config_op_aliases_filesystem),
+#   behaves exactly like bare command mv, with no -i.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to standard mv
@@ -38,9 +43,10 @@ function mv --wraps='mv' --description 'Move files with auto-collapse for nested
         return $status
     end
 
-    # 1. Parse arguments to separate flags from paths
+    # 1. Parse arguments to separate flags from paths. -i goes first so a
+    # -f or -n from the caller overrides it.
     set -l paths
-    set -l flags
+    set -l flags -i
     for arg in $argv
         if string match -q -- "-*" "$arg"
             set -a flags "$arg"
@@ -97,6 +103,6 @@ function mv --wraps='mv' --description 'Move files with auto-collapse for nested
         end
     end
 
-    # 4. Fallback: Standard mv behavior for everything else
-    command mv $argv
+    # 4. Fallback: standard mv for everything else, still prompting
+    command mv -i $argv
 end
