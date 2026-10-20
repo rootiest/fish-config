@@ -149,9 +149,8 @@ if __fish_config_op_enabled (status basename) aliases-tricks
     # @category Shell Aliases
     # @desc cp -i
     alias cp="cp -i"
-    # @category Shell Aliases
-    # @desc mv -i
-    alias mv="mv -i"
+    # mv's -i lives in functions/mv.fish, which also collapses nested
+    # directories; an alias here would replace that function.
 
     # Force wget to resume partial downloads
     alias wget='wget -c '

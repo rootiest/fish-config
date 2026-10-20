@@ -681,7 +681,6 @@ functions). They are active in all interactive sessions.
     fgrep           fgrep --color=auto
     egrep           egrep --color=auto
     cp              cp -i
-    mv              mv -i
     tarnow          tar -acf
     untar           tar -zxvf
     tb              nc termbin.com 9999
@@ -980,8 +979,13 @@ functions). They are active in all interactive sessions.
     themes/themes/), calling mv themes/themes themes will gracefully
     move the inner contents up one level and remove the empty outer shell.
 
-    Opinionated component (C1): when disabled via __fish_config_op_aliases,
-    behaves exactly like bare command mv.
+    Also owns the confirmation prompt: it passes -i, so mv asks before
+    overwriting. A flag you pass after it, such as -f or -n, still wins, as
+    it did with the old mv -i alias in conf.d/tricks.fish.
+
+    Opinionated component (C1): when disabled via __fish_config_op_aliases
+    or its aliases-tricks sub-category (__fish_config_op_aliases_filesystem),
+    behaves exactly like bare command mv, with no -i.
 
     Arguments:
       args...  Arguments forwarded to standard mv
