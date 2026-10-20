@@ -917,7 +917,7 @@ def _kv_cell(text: str, code: bool) -> str:
     return _cell(text, code or needs_protection)
 
 
-def _kv_rows(lines: list[str]) -> list[list[str]] | None:
+def _kv_rows(lines: list[str], strict: bool = False) -> list[list[str]] | None:
     """Parse a structurally two-column section (ARGUMENTS, EXIT STATUS) into rows.
 
     Source rows are authored `term<padding>description`, padded to a shared
@@ -932,6 +932,12 @@ def _kv_rows(lines: list[str]) -> list[list[str]] | None:
     inside the section, or a name-only line with no continuation to supply
     its description -- which means it's prose, not a table (e.g. "Exit
     status of eza, lsd, or ls, whichever ran").
+
+    `strict` is for blocks lifted out of running prose, where a misread
+    column is worse than a plain code block: every row's description must
+    start at the same column, and a deeper-indented line that is itself
+    column-aligned is a row of its own (not a wrapped description), so
+    neither shape is guessed at; both return None.
     """
     if not lines or any(not line.strip() for line in lines):
         return None
@@ -939,6 +945,8 @@ def _kv_rows(lines: list[str]) -> list[list[str]] | None:
     parsed: list[tuple] = []
     for line in lines:
         if len(line) - len(line.lstrip()) > 0:
+            if strict and COLUMN_GAP_RE.search(line.strip()):
+                return None
             parsed.append(("cont", line.strip()))
             continue
         m = CELL_SPLIT.search(line)
@@ -947,7 +955,7 @@ def _kv_rows(lines: list[str]) -> list[list[str]] | None:
             parsed.append(("row", line[: m.start()].strip(), line[m.end() :].strip()))
         else:
             parsed.append(("maybe", line))
-    if not cols:
+    if not cols or (strict and len(set(cols)) > 1):
         return None
     col = max(cols)
     rows: list[list[str]] = []
@@ -970,6 +978,9 @@ def _kv_rows(lines: list[str]) -> list[list[str]] | None:
 
 
 LIST_ITEM_RE = re.compile(r"(?:[-*]|\d+[.)])\s")
+# Three or more spaces between words: the signature of hand-aligned columns
+# (a lone double space after a full stop is ordinary prose spacing).
+COLUMN_GAP_RE = re.compile(r"\S {3,}\S")
 # A whitespace-delimited token carrying a `<placeholder>`, minus any
 # sentence punctuation around it.
 PLACEHOLDER_TOKEN_RE = re.compile(r"(?<!\S)([(\"']?)([^\s`]*<[\w-]+>[^\s`]*?)([.,;:)\"']*)(?!\S)")
@@ -980,6 +991,90 @@ def _protect_placeholders(text: str) -> str:
     return PLACEHOLDER_TOKEN_RE.sub(r"\1`\2`\3", text)
 
 
+def _kv_table(rows: list[list[str]]) -> str:
+    """Render parsed term/description rows as a headerless two-column table."""
+    out = ["| | |", "|---|---|"]
+    out += [f"| {_kv_cell(k, True)} | {_kv_cell(v, False)} |" for k, v in rows]
+    return "\n".join(out)
+
+
+COLUMN_START_RE = re.compile(r"\S {3,}(?=\S)")
+
+
+def _column_flags(lines: list[str]) -> list[bool]:
+    """Flag the lines of a block that belong to a column-aligned run (one direction).
+
+    A seed is a line with a 3+ space gap, which fixes the column where its
+    description starts. Indented lines next to a seed join its run, and so
+    does an unindented line whose description starts at that same column,
+    which is how the widest term of a table (one or two spaces of gap, not
+    three) stays with its neighbours.
+    """
+    flags = [False] * len(lines)
+    col = None
+    in_run = False
+    for i, line in enumerate(lines):
+        m = COLUMN_START_RE.search(line)
+        if m:
+            col = col or m.end()
+            in_run = True
+        elif in_run and (
+            line.startswith((" ", "\t"))
+            or (col and len(line) > col and line[col - 1] == " " and line[col] != " ")
+        ):
+            pass
+        elif line.startswith((" ", "\t")):
+            in_run = True  # an indented lead-in; kept only if a seed joins it
+        else:
+            in_run = False
+            col = None
+        flags[i] = in_run
+    return flags
+
+
+def _split_column_runs(lines: list[str]) -> list[tuple[bool, list[str]]]:
+    """Split one prose block into (is_columns, lines) segments.
+
+    A column run is a stretch of consecutive lines that are indented or
+    column-aligned and that holds at least one seed line (a 3+ space gap,
+    which a lone double space after a full stop is not). Everything else is
+    ordinary prose. The block is scanned in both directions so a run whose
+    first row is its widest (and so has the narrowest gap) is still found.
+    """
+    fwd = _column_flags(lines)
+    bwd = _column_flags(lines[::-1])[::-1]
+    member = [a or b for a, b in zip(fwd, bwd)]
+    segments: list[tuple[bool, list[str]]] = []
+    i = 0
+    while i < len(lines):
+        j = i
+        while j < len(lines) and member[j] == member[i]:
+            j += 1
+        chunk = lines[i:j]
+        is_cols = member[i] and any(COLUMN_GAP_RE.search(ln.strip()) for ln in chunk)
+        if segments and segments[-1][0] == is_cols:
+            segments[-1][1].extend(chunk)
+        else:
+            segments.append((is_cols, chunk))
+        i = j
+    return segments
+
+
+def _render_columns(lines: list[str]) -> str:
+    """Render a column-aligned run: a table when it is two clean columns, else a text fence.
+
+    The fence keeps the source alignment verbatim (common indent removed),
+    which is the only faithful rendering of file layouts, fallback chains
+    and anything else that is not a tidy term/description pair.
+    """
+    indent = min(len(ln) - len(ln.lstrip()) for ln in lines if ln.strip())
+    dedented = [ln[indent:].rstrip() for ln in lines]
+    rows = _kv_rows(dedented, strict=True)
+    if rows is not None and len(rows) >= 2:
+        return _kv_table(rows)
+    return "```text\n" + "\n".join(dedented) + "\n```"
+
+
 def _unwrap_prose(lines: list[str]) -> str:
     """Rejoin hard-wrapped comment lines into flowing paragraphs.
 
@@ -987,20 +1082,41 @@ def _unwrap_prose(lines: list[str]) -> str:
     `#` line (rare, but legal) separates paragraphs. A line opening with a
     list marker (`-`, `*`, `1.`) starts a new list item, and the wrapped
     lines after it fold into that item rather than the paragraph.
+
+    A column-aligned run inside a paragraph (a key list, a file layout, a
+    fallback chain) must not be joined like prose, or the alignment
+    collapses into one run-on line: it becomes a table or a text fence
+    instead (see `_render_columns`).
     """
-    paragraphs: list[str] = []
-    para: list[list[str]] = []
+    pieces: list[str] = []
+    block: list[str] = []
+
+    def flush_prose(prose: list[str]) -> None:
+        para: list[list[str]] = []
+        for line in prose:
+            text = line.strip()
+            if not para or LIST_ITEM_RE.match(text):
+                para.append([text])
+            else:
+                para[-1].append(text)
+        if para:
+            pieces.append(_protect_placeholders("\n".join(" ".join(item) for item in para)))
+
+    def flush_block() -> None:
+        nonlocal block
+        for is_cols, chunk in _split_column_runs(block):
+            if is_cols:
+                pieces.append(_render_columns(chunk))
+            else:
+                flush_prose(chunk)
+        block = []
+
     for line in lines + [""]:
-        text = line.strip()
-        if not text:
-            if para:
-                paragraphs.append("\n".join(" ".join(item) for item in para))
-                para = []
-        elif not para or LIST_ITEM_RE.match(text):
-            para.append([text])
-        else:
-            para[-1].append(text)
-    return _protect_placeholders("\n\n".join(paragraphs))
+        if line.strip():
+            block.append(line)
+        elif block:
+            flush_block()
+    return "\n\n".join(pieces)
 
 
 def _section_body(lines: list[str]) -> str:
@@ -1013,9 +1129,7 @@ def _section_body(lines: list[str]) -> str:
     rows = _kv_rows(lines)
     if rows is None:
         return _unwrap_prose(lines)
-    out = ["| | |", "|---|---|"]
-    out += [f"| {_kv_cell(k, True)} | {_kv_cell(v, False)} |" for k, v in rows]
-    return "\n".join(out)
+    return _kv_table(rows)
 
 
 SITE_SECTIONS = (

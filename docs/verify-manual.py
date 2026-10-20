@@ -1231,6 +1231,109 @@ def test_render_entry_site_keeps_list_items_on_their_own_lines():
     ) in out, out
 
 
+def test_render_entry_site_indented_key_list_becomes_a_table():
+    """An indented key/description run in prose is a table, not one run-on line (`logs`)."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["demo"],
+        "DESCRIPTION": [
+            "Keybindings inside the fzf browser:",
+            "  Enter    Open in $PAGER",
+            "  Ctrl+E   Open in $EDITOR",
+            "  Ctrl+D   Delete (with confirmation)",
+            "",
+            "Trailing paragraph.",
+        ],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert (
+        "Keybindings inside the fzf browser:\n\n"
+        "| | |\n|---|---|\n"
+        "| `Enter` | Open in $PAGER |\n"
+        "| `Ctrl+E` | Open in $EDITOR |\n"
+        "| `Ctrl+D` | Delete (with confirmation) |\n\n"
+        "Trailing paragraph."
+    ) in out, out
+
+
+def test_render_entry_site_widest_column_row_stays_in_the_table():
+    """The widest term has the narrowest gap (2 spaces, even 1) and must not split the table.
+
+    `fish-template`'s `regen NAME...|--all  Rebuild` and `edit`'s
+    `Terminal fallback chain: nvim` are both rows a plain "3+ spaces" test
+    would drop out of their neighbours' table.
+    """
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["demo"],
+        "DESCRIPTION": [
+            "Run it:",
+            "",
+            "GUI chain:      zed -> code -> kate",
+            "                gedit",
+            "Terminal chain: nvim -> vim",
+        ],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert (
+        "| `GUI chain:` | zed -> code -> kate gedit |\n"
+        "| `Terminal chain:` | nvim -> vim |"
+    ) in out, out
+    assert out.count("|---|---|") == 1, out
+
+
+def test_render_entry_site_misaligned_columns_fall_back_to_a_text_fence():
+    """A run that isn't two clean columns keeps its alignment in a `text` fence (`config-settings`)."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["demo"],
+        "DESCRIPTION": [
+            "Navigation:",
+            "  Up / k        Move cursor",
+            "  Left  / h     Value rows: reset to default",
+            "  Enter         Edit <name>",
+            "",
+            "File layout:",
+            "  public (default)",
+            "    <root>/AGENTS.md      real file",
+            "    AGENTS/AGENTS.md      -> ../AGENTS.md",
+        ],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert (
+        "Navigation:\n\n```text\n"
+        "Up / k        Move cursor\n"
+        "Left  / h     Value rows: reset to default\n"
+        "Enter         Edit <name>\n```"
+    ) in out, out
+    assert (
+        "File layout:\n\n```text\n"
+        "public (default)\n"
+        "  <root>/AGENTS.md      real file\n"
+        "  AGENTS/AGENTS.md      -> ../AGENTS.md\n```"
+    ) in out, out
+    assert "`<name>`" not in out and "`<root>/AGENTS.md`" not in out, out
+
+
+def test_render_entry_site_double_space_prose_is_not_a_column_block():
+    """Two spaces after a full stop is ordinary prose spacing, not aligned columns."""
+    import build_manual
+
+    fn = {
+        "SYNOPSIS": ["demo"],
+        "DESCRIPTION": [
+            "First sentence.  Second sentence",
+            "wraps onto this line.",
+        ],
+    }
+    out = build_manual.render_entry_site(fn, [])
+    assert "```text" not in out and "| |" not in out, out
+    assert "First sentence.  Second sentence wraps onto this line." in out, out
+
+
 def test_render_entry_site_code_spans_angle_bracket_placeholders():
     """`<placeholder>` prose tokens are code-spanned so markdown doesn't drop them as tags."""
     import build_manual
