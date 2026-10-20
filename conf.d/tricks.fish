@@ -145,12 +145,8 @@ if __fish_config_op_enabled (status basename) aliases-tricks
     # @desc egrep --color=auto
     alias egrep='egrep --color=auto'
 
-    # Safety aliases (Confirmation before overwriting/deleting)
-    # @category Shell Aliases
-    # @desc cp -i
-    alias cp="cp -i"
-    # mv's -i lives in functions/mv.fish, which also collapses nested
-    # directories; an alias here would replace that function.
+    # cp's and mv's -i live in functions/cp.fish and functions/mv.fish; an
+    # alias here would be a function of the same name and replace them.
 
     # Force wget to resume partial downloads
     alias wget='wget -c '

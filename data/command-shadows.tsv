@@ -17,7 +17,7 @@ ls	ls	-	command ls	-	1	eza -l -a --icons (or lsd)	long listing with icons and hi
 cat	cat	-	command cat	-	1	bat --plain --no-pager	bat's flags differ from cat's (-n, -A, -v); a directory argument is listed instead of failing
 cd	zoxide	-	builtin cd	interactive, zoxide installed	1	z (zoxide)	a path that does not exist jumps to a frecency match instead of failing
 rm	rm	-	command rm	trash installed	1	trash put	plain paths and -r go to the trash instead of being deleted; any other flag (-f, -rf) runs real rm; no arguments lists the trash
-cp	tricks	aliases-tricks	command cp	-	1	cp -i	prompts before overwriting, which blocks a piped or unattended command
+cp	cp	-	command cp	-	1	cp -i	prompts before overwriting, which blocks a piped or unattended command
 mv	mv	-	command mv	-	1	mv -i, with nested-directory auto-collapse	prompts before overwriting, which blocks a piped or unattended command; moving a directory into a same-named parent merges it instead
 du	du	-	command du	-	1	duf (no path) or dust (path)	different tools with different flags and output
 top	top	-	command top	btop installed	1	btop	btop ignores top's batch flags (-b, -n)

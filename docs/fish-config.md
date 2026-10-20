@@ -680,7 +680,6 @@ functions). They are active in all interactive sessions.
     grep            grep --color=auto
     fgrep           fgrep --color=auto
     egrep           egrep --color=auto
-    cp              cp -i
     tarnow          tar -acf
     untar           tar -zxvf
     tb              nc termbin.com 9999
@@ -724,6 +723,32 @@ functions). They are active in all interactive sessions.
     Example:
     copy ./mydir/ ~/backup
     copy ./mydir/ ~/backup    # copies mydir INTO backup, not backup/mydir/
+
+**Classification:** `bypasses-shadow(cp)`
+
+### cp
+
+    Synopsis:  cp [args...]
+
+    Wraps cp so it asks before overwriting: it passes -i, as the old
+    cp -i alias in conf.d/tricks.fish did. A flag you pass after it, such
+    as -f or -n, still wins.
+
+    It is a function rather than an alias because an alias is itself a
+    function named cp and would shadow this one.
+
+    Opinionated component (C1): when disabled via __fish_config_op_aliases
+    or its aliases/filesystem sub-category (__fish_config_op_aliases_filesystem),
+    behaves exactly like bare command cp, with no -i.
+
+    Arguments:
+      args...  Arguments forwarded to standard cp
+
+    Exit Status:
+      Standard cp exit status.
+
+    Example:
+    cp notes.txt notes.bak
 
 **Classification:** `bypasses-shadow(cp)`
 
