@@ -42,7 +42,7 @@
 #
 #   Dependencies are grouped into five tiers:
 #
-#     Required           fish, fzf
+#     Required            fish, fzf
 #     Recommended         cargo, starship, uv, zoxide, direnv, paru, yay,
 #                         eza, lsd, bat, ov, ripgrep, trash, python3
 #     Optional            btop, dust, duf, prettyping, go, lazygit,
