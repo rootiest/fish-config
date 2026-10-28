@@ -59,9 +59,25 @@ are active in Insert, Normal, and Visual modes unless noted.
                     own token: "cat @@" triggers it, but "cat@@" does
                     not.
 
-    Ctrl+Right      Accept autosuggestion one word/directory segment
-                    at a time. (Restores Fish 3.x behavior by binding
-                    to nextd-or-forward-word).
+    Ctrl+Left       Move the cursor one whole token (argument) at a
+    Ctrl+Right      time, so a path like ~/.claude/AGENTS.md is a single
+                    stop. Ctrl+Right at the end of the line accepts the
+                    autosuggestion one token at a time.
+                    For finer stops at each / and . (and accepting an
+                    autosuggestion one directory segment at a time),
+                    switch both directions to word motion:
+                        set -U __fish_ctrl_arrow_motion word
+                    Erase it to return to token motion:
+                        set -Ue __fish_ctrl_arrow_motion
+                    Takes effect in new shells, or run
+                    fish_user_key_bindings in the current one.
+
+    Alt+Left        Move by word, stopping at each / and . so a path
+    Alt+Right       is walked one segment at a time (stock fish).
+                    Alt+Right at the end of the line accepts the
+                    autosuggestion one segment at a time. On an empty
+                    command line they step back/forward through the
+                    directory history (prevd/nextd) instead.
 
 ## FZF Bindings (bundled from PatrickF1/fzf.fish)
 

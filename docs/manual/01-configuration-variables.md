@@ -105,6 +105,7 @@ plugins, and the output of external tools that colour themselves. Export it from
 | `GPG_TTY` | `$(tty)` | ensures GPG passphrase prompts work; interactive shells with a tty only |
 | `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code (C3 overrides) |
 | `CDPATH` | `. ~/projects ~` | |
+| `__fish_ctrl_arrow_motion` | (unset → token) | set `-U` to `word` for Ctrl+Left/Right stops at each `/` and `.` (see Section 3, Key Bindings) |
 
 Opinionated defaults (`CDPATH`, `PAGER`/`MANPAGER`, Vi mode, command shadows,
 terminal integrations) can be switched off per category with universal

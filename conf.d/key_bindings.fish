@@ -72,6 +72,17 @@ function fish_user_key_bindings
     # bare basename, key_bindings.
     __fish_config_op_enabled (status basename); or return
 
+    # Ctrl+Left/Right move by whole token (a path is one stop), the stock
+    # fish behavior. Set __fish_ctrl_arrow_motion to "word" for finer stops
+    # at each / and . instead, which also accepts an autosuggestion one path
+    # segment at a time. Both directions are bound so they always match.
+    set -l ctrl_left backward-token
+    set -l ctrl_right forward-token
+    if test (string lower -- "$__fish_ctrl_arrow_motion") = word
+        set ctrl_left prevd-or-backward-word
+        set ctrl_right nextd-or-forward-word
+    end
+
     #   ───────────────────────────── Set Bindings ─────────────────────────────
     #
     # Set bindings for Emacs mode and all Vi modes:
@@ -84,8 +95,10 @@ function fish_user_key_bindings
         bind --mode $mode ctrl-alt-w _pop_last_token
         type -q qalc && bind --mode $mode ctrl-alt-= _qalc_eval
         bind --mode $mode ctrl-enter _smart_execute
-        bind --mode $mode ctrl-right nextd-or-forward-word
-        bind --mode $mode \e\[1\;5C nextd-or-forward-word
+        bind --mode $mode ctrl-left $ctrl_left
+        bind --mode $mode \e\[1\;5D $ctrl_left
+        bind --mode $mode ctrl-right $ctrl_right
+        bind --mode $mode \e\[1\;5C $ctrl_right
     end
 
     # @ is Emacs/Vi-insert only. Emacs bindings and Vi's "default" (normal)
