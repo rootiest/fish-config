@@ -36,8 +36,8 @@ path=# 2. PATH SETUP
 keybindings=# 3. KEY BINDINGS
 bindings=# 3. KEY BINDINGS
 keys=# 3. KEY BINDINGS
-fzf-bindings=## FZF Bindings (bundled from PatrickF1/fzf.fish)
-fzf=## FZF Bindings (bundled from PatrickF1/fzf.fish)
+fzf-bindings=## FZF Bindings
+fzf=## FZF Bindings
 
 # ── Section 4: Abbreviations ──────────────────────────────────
 abbreviations=# 4. ABBREVIATIONS

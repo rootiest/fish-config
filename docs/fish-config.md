@@ -477,7 +477,9 @@ are active in Insert, Normal, and Visual modes unless noted.
                     command line they step back/forward through the
                     directory history (prevd/nextd) instead.
 
-## FZF Bindings (bundled from PatrickF1/fzf.fish)
+## FZF Bindings
+
+Bundled from `PatrickF1/fzf.fish`.
 
     Ctrl+R          Search command history
     Ctrl+Alt+F      Search git-tracked files
