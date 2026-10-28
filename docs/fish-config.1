@@ -760,6 +760,14 @@ Ctrl+Alt+U      Strip the first token of the current command line,
                 Example: \[dq]mkdir new_folder\[dq] -> \[dq] new_folder\[dq]
                 Example: empty line after \[dq]cd /home/me\[dq] -> \[dq] /home/me\[dq]
 
+Ctrl+Alt+W      Remove the last argument of the current command line
+                and leave the cursor where it was, ready to retype.
+                Repeat to pop consecutive arguments. Quoted arguments
+                pop as one token. The command word is never removed
+                (use Ctrl+Alt+U for that). On an empty command line,
+                first recalls the most recent history entry.
+                Example: \[dq]cp a b c\[dq] -> \[dq]cp a b \[dq] -> \[dq]cp a \[dq] -> \[dq]cp \[dq]
+
 Ctrl+Alt+=      Evaluate the current command line buffer with
                 Qalculate! (qalc) and print the result inline.
                 Requires qalc to be installed.
