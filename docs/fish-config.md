@@ -432,6 +432,14 @@ are active in Insert, Normal, and Visual modes unless noted.
                     Example: "mkdir new_folder" -> " new_folder"
                     Example: empty line after "cd /home/me" -> " /home/me"
 
+    Ctrl+Alt+W      Remove the last argument of the current command line
+                    and leave the cursor where it was, ready to retype.
+                    Repeat to pop consecutive arguments. Quoted arguments
+                    pop as one token. The command word is never removed
+                    (use Ctrl+Alt+U for that). On an empty command line,
+                    first recalls the most recent history entry.
+                    Example: "cp a b c" -> "cp a b " -> "cp a " -> "cp "
+
     Ctrl+Alt+=      Evaluate the current command line buffer with
                     Qalculate! (qalc) and print the result inline.
                     Requires qalc to be installed.

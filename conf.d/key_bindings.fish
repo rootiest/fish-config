@@ -39,6 +39,17 @@
 # If the current command text is empty, the previous command's first token will be used instead.
 # ──────────────────────────────────────────────────────────────────────
 
+# ─────────────── Bind Pop Last Argument to Ctrl+Alt+W ─────────────────
+# Removes the last argument and leaves the cursor where it was
+#
+# Example: If the current command text is `cp a b c`
+# pressing Ctrl+Alt+W will change the command line to `cp a b `
+# with the cursor at the end; pressing it again gives `cp a `, and so on.
+# Quoted arguments pop as one token. The command word is never removed
+# (that is Ctrl+Alt+U's job), so popping stops there.
+# If the current command text is empty, the previous command is used instead.
+# ──────────────────────────────────────────────────────────────────────
+
 # ────────────── Bind Quick Qalc Evaluation to Ctrl+Alt+= ──────────────
 # Passes the current command line buffer to the Qalculate! CLI (qalc)
 #
@@ -70,6 +81,7 @@ function fish_user_key_bindings
         bind --mode $mode ctrl-g __insert_previous_path_head
         bind --mode $mode ctrl-f __interactive_history_sub
         bind --mode $mode ctrl-alt-u _replace_command_token
+        bind --mode $mode ctrl-alt-w _pop_last_token
         type -q qalc && bind --mode $mode ctrl-alt-= _qalc_eval
         bind --mode $mode ctrl-enter _smart_execute
         bind --mode $mode ctrl-right nextd-or-forward-word
