@@ -264,6 +264,61 @@ check "sudo reboot: buffer becomes sudo with two spaces" "sudo  " "$mock_cmd_buf
 check "sudo reboot: cursor placed at 5" 5 "$mock_cmd_cursor"
 
 # -----------------------------------------------------------------------------
+# _pop_last_token
+# -----------------------------------------------------------------------------
+section _pop_last_token
+
+set mock_cmd_buffer "cp a b c"
+set mock_cmd_cursor -1
+_pop_last_token
+check "cp a b c: last arg popped, one trailing space" "cp a b " "$mock_cmd_buffer"
+check "cp a b c: cursor at end" 7 "$mock_cmd_cursor"
+_pop_last_token
+check "repeat pops the next arg" "cp a " "$mock_cmd_buffer"
+check "repeat: cursor at end" 5 "$mock_cmd_cursor"
+_pop_last_token
+check "repeat pops the final arg" "cp " "$mock_cmd_buffer"
+_pop_last_token
+check "command word is never popped" "cp " "$mock_cmd_buffer"
+
+set mock_cmd_buffer ls
+_pop_last_token
+check "lone command is untouched" ls "$mock_cmd_buffer"
+
+set mock_cmd_buffer "echo \"a b\""
+_pop_last_token
+check "double-quoted arg pops as one token" "echo " "$mock_cmd_buffer"
+
+set mock_cmd_buffer "echo x 'a b'"
+_pop_last_token
+check "single-quoted arg pops as one token" "echo x " "$mock_cmd_buffer"
+
+set mock_cmd_buffer 'echo a\ b'
+_pop_last_token
+check "escaped space stays inside the token" "echo " "$mock_cmd_buffer"
+
+set mock_cmd_buffer 'echo x"a b"y'
+_pop_last_token
+check "mixed quoted/plain run is one token" "echo " "$mock_cmd_buffer"
+
+set mock_cmd_buffer "echo x \"unterminated arg"
+_pop_last_token
+check "unterminated quote falls back to last word" "echo x \"unterminated " "$mock_cmd_buffer"
+
+set mock_cmd_buffer "cp a b   "
+_pop_last_token
+check "trailing whitespace is ignored" "cp a " "$mock_cmd_buffer"
+
+set mock_cmd_buffer "sudo rm -rf /tmp"
+_pop_last_token
+check "sudo: last arg popped" "sudo rm -rf " "$mock_cmd_buffer"
+_pop_last_token
+_pop_last_token
+check "sudo: pops down to sudo + command" "sudo rm " "$mock_cmd_buffer"
+_pop_last_token
+check "sudo: sudo and its command are protected" "sudo rm " "$mock_cmd_buffer"
+
+# -----------------------------------------------------------------------------
 # _puffer_fish_expand_dot
 # -----------------------------------------------------------------------------
 section _puffer_fish_expand_dot
