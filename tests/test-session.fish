@@ -86,6 +86,24 @@ check "conf.d guards stay out of non-interactive scripts" 0 $status
 # Positive counterpart to the assertion above: the guard must not over-fire.
 check "fish_user_key_bindings still defined in-session" true (functions -q fish_user_key_bindings; and echo true; or echo false)
 
+section "session: ctrl-arrow motion"
+
+# Ctrl+Left and Ctrl+Right must move by the same unit: token by default,
+# word when __fish_ctrl_arrow_motion is "word".
+set -l saved_motion
+set -q __fish_ctrl_arrow_motion; and set saved_motion $__fish_ctrl_arrow_motion
+set -g __fish_ctrl_arrow_motion
+fish_user_key_bindings
+set -l token_pair (bind -M insert ctrl-left | string split ' ')[-1] (bind -M insert ctrl-right | string split ' ')[-1]
+set -g __fish_ctrl_arrow_motion word
+fish_user_key_bindings
+set -l word_pair (bind -M insert ctrl-left | string split ' ')[-1] (bind -M insert ctrl-right | string split ' ')[-1]
+set -e __fish_ctrl_arrow_motion
+test (count $saved_motion) -gt 0; and set -g __fish_ctrl_arrow_motion $saved_motion
+fish_user_key_bindings
+check "ctrl-arrows move by token by default" "backward-token forward-token" "$token_pair"
+check "ctrl-arrows move by word when toggled" "prevd-or-backward-word nextd-or-forward-word" "$word_pair"
+
 section "session: shared output palette"
 
 function test_palette_roles_defined
