@@ -150,6 +150,7 @@ function git-sweep --description 'Sync the default branch and delete merged or o
         end
 
         if set -q candidates[1]
+            echo "$c_head""Remote branches on '$remote':$c_reset"
             set -l heads (_git_sweep_open_prs $remote)
             if test $status -eq 0
                 for i in (seq (count $candidates))
@@ -171,6 +172,9 @@ function git-sweep --description 'Sync the default branch and delete merged or o
     #   ──────── Plan: local branches ────────
     set -l local_del
     set -l kept_unmerged
+    # Plan lines are collected so the section header prints only when
+    # there is something under it.
+    set -l local_plan
     # \x1f separates fields: a tab would collapse an empty upstream column.
     for row in (git for-each-ref --format='%(refname)%1f%(upstream)%1f%(upstream:track)%1f%(worktreepath)' refs/heads/)
         set -l f (string split \x1f -- $row)
@@ -181,11 +185,11 @@ function git-sweep --description 'Sync the default branch and delete merged or o
         contains -- $name $protect; and continue
         string match -q 'release/*' -- $name; and continue
         if test -n "$upstream"; and contains -- $upstream $open_heads
-            echo "  $c_ok""keep$c_reset    $name  $c_dim(tracks the head of an open PR)$c_reset"
+            set -a local_plan "  $c_ok""keep$c_reset    $name  $c_dim(tracks the head of an open PR)$c_reset"
             continue
         end
         if test -n "$wtpath"; and test "$wtpath" != "$toplevel"
-            echo "  $c_ok""keep$c_reset    $name  $c_dim(checked out in worktree $wtpath)$c_reset"
+            set -a local_plan "  $c_ok""keep$c_reset    $name  $c_dim(checked out in worktree $wtpath)$c_reset"
             continue
         end
         # Created and never moved: new work, not merged work. Only for
@@ -204,16 +208,21 @@ function git-sweep --description 'Sync the default branch and delete merged or o
         if test $status -eq 0
             test $gone -eq 1; and set reason "$reason, upstream gone"
             set -a local_del $name
-            echo "  $c_err""delete$c_reset  $name  $c_dim($reason)$c_reset"
+            set -a local_plan "  $c_err""delete$c_reset  $name  $c_dim($reason)$c_reset"
         else if test $gone -eq 1
             if set -q _flag_force
                 set -a local_del $name
-                echo "  $c_err""delete$c_reset  $name  $c_dim(upstream gone, UNMERGED commits, --force)$c_reset"
+                set -a local_plan "  $c_err""delete$c_reset  $name  $c_dim(upstream gone, UNMERGED commits, --force)$c_reset"
             else
                 set -a kept_unmerged $name
-                echo "  $c_warn""keep$c_reset    $name  $c_dim(upstream gone but has unmerged commits; use --force)$c_reset"
+                set -a local_plan "  $c_warn""keep$c_reset    $name  $c_dim(upstream gone but has unmerged commits; use --force)$c_reset"
             end
         end
+    end
+
+    if set -q local_plan[1]
+        echo "$c_head""Local branches:$c_reset"
+        printf '%s\n' $local_plan
     end
 
     if not set -q remote_del[1]; and not set -q local_del[1]
