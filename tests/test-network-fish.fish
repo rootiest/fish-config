@@ -758,6 +758,11 @@ begin
     set -l dry_out (git-sweep --dry-run 2>&1)
     check "git-sweep: --dry-run exits 0" 0 $status
     check "git-sweep: --dry-run plans the squash-merged branch" true (string match -q '*delete*r-squash*squash-merged*' -- $dry_out; and echo true; or echo false)
+    check "git-sweep: --dry-run heads the remote section" true (string match -q "*Remote branches on 'origin':*" -- $dry_out; and echo true; or echo false)
+    check "git-sweep: --dry-run heads the local section" true (string match -q '*Local branches:*' -- $dry_out; and echo true; or echo false)
+    set -l dry_local (git-sweep --dry-run --local-only 2>&1)
+    check "git-sweep: --local-only omits the remote section" false (string match -q 'Remote branches on*' -- $dry_local; and echo true; or echo false)
+    check "git-sweep: --local-only still plans local branches" true (string match -q '*delete*r-squash*' -- $dry_local; and echo true; or echo false)
     check "git-sweep: --dry-run keeps local branches" true (has_local r-merged)
     check "git-sweep: --dry-run keeps remote branches" true (has_remote r-merged)
 
