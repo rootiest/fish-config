@@ -58,6 +58,15 @@
 # This allows for rapid-fire math without leaving the current shell.
 # ──────────────────────────────────────────────────────────────────────
 
+# ─────────────── Bind Bash Fallback to Enter ──────────────────────────
+# Runs a command line Fish cannot parse but Bash can through bashrun
+#
+# Example: pasting `for f in *.log; do gzip "$f"; done` and pressing Enter
+# rewrites the line to `bashrun 'for f in *.log; do gzip "$f"; done'` and
+# runs it. Exported variables and the final directory carry back into Fish.
+# Anything Fish can parse, or a Fish block still being typed, runs as usual.
+# ──────────────────────────────────────────────────────────────────────
+
 # Defines only fish_user_key_bindings, which fish calls from the interactive
 # reader and nowhere else.
 status is-interactive; or return
@@ -99,6 +108,15 @@ function fish_user_key_bindings
         bind --mode $mode \e\[1\;5D $ctrl_left
         bind --mode $mode ctrl-right $ctrl_right
         bind --mode $mode \e\[1\;5C $ctrl_right
+    end
+
+    # Enter keeps its stock meaning in Vi-Visual. In Vi-Command it returns
+    # to insert mode afterwards, as the stock binding does.
+    bind --mode insert enter __bashrun_execute
+    if test "$fish_key_bindings" = fish_vi_key_bindings
+        bind --mode default --sets-mode insert enter __bashrun_execute
+    else
+        bind --mode default enter __bashrun_execute
     end
 
     # @ is Emacs/Vi-insert only. Emacs bindings and Vi's "default" (normal)
