@@ -58,6 +58,16 @@
 # This allows for rapid-fire math without leaving the current shell.
 # ──────────────────────────────────────────────────────────────────────
 
+# ───────── Bind Token/Word Delete to Ctrl+Backspace / Alt+Backspace ───
+# Deletes backwards to the same stop the matching arrow key moves to
+#
+# Example: If the current command text is `cat ~/Documents/test.txt`
+# pressing Ctrl+Backspace deletes the whole path, leaving `cat `, while
+# Alt+Backspace deletes one word, leaving `cat ~/Documents/test.`
+# With __fish_ctrl_arrow_motion set to "word", Ctrl+Backspace deletes
+# one word too, matching Ctrl+Left.
+# ──────────────────────────────────────────────────────────────────────
+
 # ─────────────── Bind Bash Fallback to Enter ──────────────────────────
 # Runs a command line Fish cannot parse but Bash can through bashrun
 #
@@ -85,11 +95,15 @@ function fish_user_key_bindings
     # fish behavior. Set __fish_ctrl_arrow_motion to "word" for finer stops
     # at each / and . instead, which also accepts an autosuggestion one path
     # segment at a time. Both directions are bound so they always match.
+    # Ctrl+Backspace deletes back to the same stop Ctrl+Left moves to, and
+    # Alt+Backspace to the same stop as Alt+Left (one word).
     set -l ctrl_left backward-token
     set -l ctrl_right forward-token
+    set -l ctrl_backspace backward-kill-token
     if test (string lower -- "$__fish_ctrl_arrow_motion") = word
         set ctrl_left prevd-or-backward-word
         set ctrl_right nextd-or-forward-word
+        set ctrl_backspace backward-kill-word
     end
 
     #   ───────────────────────────── Set Bindings ─────────────────────────────
@@ -108,6 +122,8 @@ function fish_user_key_bindings
         bind --mode $mode \e\[1\;5D $ctrl_left
         bind --mode $mode ctrl-right $ctrl_right
         bind --mode $mode \e\[1\;5C $ctrl_right
+        bind --mode $mode ctrl-backspace $ctrl_backspace
+        bind --mode $mode alt-backspace backward-kill-word
     end
 
     # Enter keeps its stock meaning in Vi-Visual. In Vi-Command it returns

@@ -79,6 +79,16 @@ are active in Insert, Normal, and Visual modes unless noted.
                     command line they step back/forward through the
                     directory history (prevd/nextd) instead.
 
+    Ctrl+Backspace  Delete backwards to the stop Ctrl+Left would move
+                    to: one whole token, or one word when
+                    __fish_ctrl_arrow_motion is set to word.
+                    Example: "cat ~/Documents/test.txt" -> "cat "
+
+    Alt+Backspace   Delete backwards one word, the stop Alt+Left would
+                    move to.
+                    Example: "cat ~/Documents/test.txt"
+                             -> "cat ~/Documents/test."
+
 ## FZF Bindings
 
 Bundled from PatrickF1/fzf.fish.
