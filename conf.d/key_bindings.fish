@@ -66,6 +66,9 @@
 # Alt+Backspace deletes one word, leaving `cat ~/Documents/test.`
 # With __fish_ctrl_arrow_motion set to "word", Ctrl+Backspace deletes
 # one word too, matching Ctrl+Left.
+# Add Shift (Ctrl+Shift+Backspace or Alt+Shift+Backspace) to undelete:
+# each press restores the most recent of these deletions. It only works
+# while the line is untouched since; typing anything else drops them.
 # ──────────────────────────────────────────────────────────────────────
 
 # ─────────────── Bind Bash Fallback to Enter ──────────────────────────
@@ -96,7 +99,8 @@ function fish_user_key_bindings
     # at each / and . instead, which also accepts an autosuggestion one path
     # segment at a time. Both directions are bound so they always match.
     # Ctrl+Backspace deletes back to the same stop Ctrl+Left moves to, and
-    # Alt+Backspace to the same stop as Alt+Left (one word).
+    # Alt+Backspace to the same stop as Alt+Left (one word). Adding Shift to
+    # either restores the deletions in reverse order.
     set -l ctrl_left backward-token
     set -l ctrl_right forward-token
     set -l ctrl_backspace backward-kill-token
@@ -122,8 +126,10 @@ function fish_user_key_bindings
         bind --mode $mode \e\[1\;5D $ctrl_left
         bind --mode $mode ctrl-right $ctrl_right
         bind --mode $mode \e\[1\;5C $ctrl_right
-        bind --mode $mode ctrl-backspace $ctrl_backspace
-        bind --mode $mode alt-backspace backward-kill-word
+        bind --mode $mode ctrl-backspace "_backward_kill_remember $ctrl_backspace"
+        bind --mode $mode alt-backspace '_backward_kill_remember backward-kill-word'
+        bind --mode $mode ctrl-shift-backspace _undo_backward_kill
+        bind --mode $mode alt-shift-backspace _undo_backward_kill
     end
 
     # Enter keeps its stock meaning in Vi-Visual. In Vi-Command it returns
