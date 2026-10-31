@@ -21,6 +21,7 @@ all of them.
                               ^old^new abbreviations; six expand_bang_* helpers
     Autopair                  ( [ { " ' auto-close to (), [], {}, "", ''
     Puffer key intercepts     . ! $ * keys intercepted for smart expansion
+    Bash fallback on Enter    a line Fish cannot parse but Bash can runs via bashrun
     Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
     Catppuccin theme          bundled catppuccin-mocha saved once (universal)
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
@@ -44,7 +45,7 @@ with its own `__fish_config_op_overrides_<slug>` toggle:
 ## key-bindings
 
 Vi mode, autopair, puffer key intercepts, bang-bang history expansion,
-and `smart_exit`'s plain-exit path.
+the Bash fallback on Enter, and `smart_exit`'s plain-exit path.
 
 ## environment
 

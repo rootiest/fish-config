@@ -219,6 +219,7 @@ random=### rand_string
 password=### rand_string
 randomword=### rand_string
 replay=### replay
+bashrun=### bashrun
 tmux=### tmux-clean
 wake-lock=### wake-lock
 
