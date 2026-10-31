@@ -3850,6 +3850,36 @@ functions). They are active in all interactive sessions.
 
 **Classification:** `bypasses-shadow(bash)`
 
+### bashrun
+
+    Synopsis:  bashrun [--] <code>
+
+    Runs a snippet of Bash code in a child bash attached to the terminal, so
+    output streams live and interactive programs work, then carries its
+    exported-variable changes and its final directory back into the current
+    Fish session. Unlike replay, nothing is buffered, but Bash aliases and
+    functions are not carried back.
+
+    Enter calls this automatically for a command line that Fish cannot
+    parse but Bash can (see __bashrun_execute), rewriting the line to
+    bashrun '<code>' first so the history entry shows what actually ran.
+
+    Bash's $? starts as the status of the Fish command run just before.
+
+    Arguments:
+      code  Bash code to run; several arguments are joined with spaces
+      -h, --help  Show usage help (only as the sole argument)
+
+    Exit Status:
+      The exit status of the Bash code
+      2  No code given, an unknown option, or bash is not installed
+
+    Example:
+    bashrun 'for f in *.log; do gzip "$f"; done'
+    bashrun 'export FOO=bar; cd /tmp'
+
+**Classification:** `bypasses-shadow(bash)`
+
 ### bd-pull
 
     Synopsis:  bd-pull [--push] [-h | --help] <owner/repo>
@@ -5217,6 +5247,7 @@ all of them.
                               ^old^new abbreviations; six expand_bang_* helpers
     Autopair                  ( [ { " ' auto-close to (), [], {}, "", ''
     Puffer key intercepts     . ! $ * keys intercepted for smart expansion
+    Bash fallback on Enter    a line Fish cannot parse but Bash can runs via bashrun
     Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
     Catppuccin theme          bundled catppuccin-mocha saved once (universal)
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
@@ -5240,7 +5271,7 @@ with its own `__fish_config_op_overrides_<slug>` toggle:
 ### key-bindings
 
 Vi mode, autopair, puffer key intercepts, bang-bang history expansion,
-and `smart_exit`'s plain-exit path.
+the Bash fallback on Enter, and `smart_exit`'s plain-exit path.
 
 ### environment
 
