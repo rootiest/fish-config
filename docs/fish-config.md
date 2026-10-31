@@ -487,6 +487,15 @@ are active in Insert, Normal, and Visual modes unless noted.
                     Example: "cat ~/Documents/test.txt"
                              -> "cat ~/Documents/test."
 
+    Ctrl+Shift+Backspace
+    Alt+Shift+Backspace
+                    Undelete: restore the most recent Ctrl+Backspace or
+                    Alt+Backspace deletion, cursor included. Repeat to
+                    restore earlier ones in reverse order. Does nothing
+                    once the line has changed in any other way, or on a
+                    new command line.
+                    Example: "cat " -> "cat ~/Documents/test.txt"
+
 ## FZF Bindings
 
 Bundled from `PatrickF1/fzf.fish`.
