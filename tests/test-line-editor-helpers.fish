@@ -7,7 +7,9 @@
 # Coverage for the key-binding helpers that edit the command line (issue
 # #238): the vendored autopair inserts and backspace, puffer-fish's `!$` and
 # `!*` expansions, __insert_previous_path_head, __interactive_history_sub,
-# and the Enter dispatcher _smart_execute with its qalc evaluator _qalc_eval.
+# the Enter dispatcher _smart_execute with its qalc evaluator _qalc_eval,
+# and the Ctrl/Alt+Backspace undelete pair _backward_kill_remember and
+# _undo_backward_kill.
 #
 # Runs isolated. None of these work outside an interactive prompt, so
 # `commandline` is replaced by a small model of the line editor: a buffer, a
@@ -85,6 +87,15 @@ function commandline
                         set -g __cl_buf (string sub --length=(math $__cl_cur - 1) -- "$__cl_buf")(string sub --start=(math $__cl_cur + 1) -- "$__cl_buf")
                         set -g __cl_cur (math $__cl_cur - 1)
                     end
+                case backward-kill-token backward-kill-word
+                    # Token: the run of non-blanks before the cursor. Word:
+                    # the run of alphanumerics. Leading separators go too.
+                    set -l re '\S+\s*$'
+                    test $fn = backward-kill-word; and set re '[[:alnum:]]+[^[:alnum:]]*$'
+                    set -l before (string sub --length=$__cl_cur -- "$__cl_buf")
+                    set -l kept "$(string replace -r -- $re '' "$before")"
+                    set -g __cl_buf "$kept"(string sub --start=(math $__cl_cur + 1) -- "$__cl_buf")
+                    set -g __cl_cur (string length -- "$kept")
             end
         end
         return 0
@@ -138,6 +149,13 @@ function commandline
 
     if set -q _flag_cut_at_cursor
         string sub --length=$__cl_cur -- "$__cl_buf"
+        return 0
+    end
+
+    # Bare `commandline TEXT` replaces the buffer, like --replace.
+    if set -q argv[1]
+        set -g __cl_buf (string join '' -- $argv)
+        set -g __cl_cur (string length -- "$__cl_buf")
         return 0
     end
 
@@ -394,5 +412,62 @@ check "fallback leaves the buffer for execution" '10/4=' "$__cl_buf"
 
 set -gx PATH $saved_path
 set -e QALC_LOG
+
+#   ──────── _backward_kill_remember / _undo_backward_kill ────────
+
+section "_backward_kill_remember / _undo_backward_kill"
+
+set -e __backward_kill_gen
+cl_set 'cat ~/Documents/test.txt'
+_backward_kill_remember backward-kill-token
+check "Ctrl+Backspace kills the token" 'cat ' "$__cl_buf"
+check "the kill goes through the readline function" backward-kill-token "$__cl_funcs"
+_undo_backward_kill
+check "undelete restores the token" 'cat ~/Documents/test.txt' "$__cl_buf"
+check "undelete restores the cursor" 24 "$__cl_cur"
+
+cl_set 'echo a b/c d/e'
+_backward_kill_remember backward-kill-token
+_backward_kill_remember backward-kill-word
+_backward_kill_remember backward-kill-token
+check "three kills" 'echo a ' "$__cl_buf"
+_undo_backward_kill
+check "first undelete reverses the last kill" 'echo a b/' "$__cl_buf"
+_undo_backward_kill
+_undo_backward_kill
+check "repeated undeletes reverse every kill" 'echo a b/c d/e' "$__cl_buf"
+_undo_backward_kill
+check "undelete with nothing left is a no-op" 'echo a b/c d/e' "$__cl_buf"
+
+cl_set 'echo aa bb cc' 10
+_backward_kill_remember backward-kill-token
+check "mid-line kill" 'echo aa  cc' "$__cl_buf"
+_undo_backward_kill
+check "mid-line undelete restores the text" 'echo aa bb cc' "$__cl_buf"
+check "mid-line undelete restores the cursor" 10 "$__cl_cur"
+
+cl_set 'echo a b/c'
+_backward_kill_remember backward-kill-token
+commandline -i x
+_undo_backward_kill
+check "typing after the kill makes undelete a no-op" 'echo a x' "$__cl_buf"
+commandline -f backward-delete-char
+_undo_backward_kill
+check "the stale deletion stays dropped" 'echo a ' "$__cl_buf"
+
+cl_set ''
+_backward_kill_remember backward-kill-token
+cl_set 'echo a b'
+_backward_kill_remember backward-kill-token
+_undo_backward_kill
+_undo_backward_kill
+check "a kill that deleted nothing is skipped" 'echo a b' "$__cl_buf"
+
+cl_set 'echo a b'
+_backward_kill_remember backward-kill-token
+set -g __backward_kill_gen stale
+_undo_backward_kill
+check "a new command line drops earlier deletions" 'echo a ' "$__cl_buf"
+
 functions -e commandline
 report
