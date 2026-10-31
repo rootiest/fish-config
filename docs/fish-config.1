@@ -811,6 +811,25 @@ Alt+Right       is walked one segment at a time (stock fish).
                 autosuggestion one segment at a time. On an empty
                 command line they step back/forward through the
                 directory history (prevd/nextd) instead.
+
+Ctrl+Backspace  Delete backwards to the stop Ctrl+Left would move
+                to: one whole token, or one word when
+                __fish_ctrl_arrow_motion is set to word.
+                Example: \[dq]cat \[ti]/Documents/test.txt\[dq] -> \[dq]cat \[dq]
+
+Alt+Backspace   Delete backwards one word, the stop Alt+Left would
+                move to.
+                Example: \[dq]cat \[ti]/Documents/test.txt\[dq]
+                         -> \[dq]cat \[ti]/Documents/test.\[dq]
+
+Ctrl+Shift+Backspace
+Alt+Shift+Backspace
+                Undelete: restore the most recent Ctrl+Backspace or
+                Alt+Backspace deletion, cursor included. Repeat to
+                restore earlier ones in reverse order. Does nothing
+                once the line has changed in any other way, or on a
+                new command line.
+                Example: \[dq]cat \[dq] -> \[dq]cat \[ti]/Documents/test.txt\[dq]
 \f[R]
 .fi
 .SS FZF Bindings
