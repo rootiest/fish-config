@@ -4,8 +4,8 @@
 # CATEGORY
 #   14-miscellaneous
 #
-# DEPENDENCIES
-#   bash
+# CLASSIFICATION
+#   bypasses-shadow(bash)
 #
 # SYNOPSIS
 #   bashrun [--] <code>
