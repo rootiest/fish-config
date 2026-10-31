@@ -435,10 +435,14 @@ else
         check "wrong key with --remove: encrypted input kept" true (b test -f note.txt.gpg)
 
         # Corrupted: flip one byte near the end (inside the MDC-protected body),
-        # and separately truncate the tail.
+        # and separately truncate the tail. Invert the byte rather than
+        # overwrite it: a fixed value already there 1 time in 256 would leave
+        # the file intact.
         set -l size (stat -c %s note.txt.gpg)
         command cp -f note.txt.gpg corrupt.gpg
-        printf '\377' | dd of=corrupt.gpg bs=1 seek=(math $size - 5) conv=notrunc 2>/dev/null
+        set -l off (math $size - 5)
+        set -l byte (od -An -tu1 -j$off -N1 corrupt.gpg | string trim)
+        printf "\\"(printf '%03o' (math "bitxor($byte, 255)")) | dd of=corrupt.gpg bs=1 seek=$off conv=notrunc 2>/dev/null
         command cp -f note.txt.gpg trunc.gpg
         truncate -s (math $size - 12) trunc.gpg
         set -l before (command ls -A $work | string join " ")
