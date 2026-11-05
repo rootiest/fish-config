@@ -1251,8 +1251,10 @@ lD \[ti]/projects
 \f[C]
 Synopsis:  ls [args...]
 
-Lists all files in long format with icons and hyperlinks. Uses eza,
-falls back to lsd, then to system ls.
+Lists all files in long format with icons and hyperlinks. With eza, also
+shows a header row, octal permissions, Git status, extended attributes,
+and line counts (eza 0.23.5+), with gradient size coloring. Falls back to
+lsd, then to system ls.
 
 Arguments:
   args...  Arguments forwarded to the listing command
@@ -1366,8 +1368,8 @@ lt \[ti]/projects
 Synopsis:  ltr [args...]
 
 Lists all files sorted by modification time in reverse (oldest first) in
-long format with age-based gradient color scaling. Uses eza, falls back
-to lsd, then to system ls.
+long format with age-based gradient color scaling. With eza, timestamps
+are relative (e.g. \[dq]2 hours\[dq]). Falls back to lsd, then to system ls.
 
 Arguments:
   args...  Arguments forwarded to the listing command
@@ -6206,7 +6208,7 @@ behavior for all of these commands.
 \f[C]
 Command / Alias    Active behavior                       Disabled fallback
 ───────────────────────────────────────────────────────────────────────────
-ls                 eza -l -a --icons --hyperlink          system ls
+ls                 eza -la --icons --git --header         system ls
 cat                bat syntax-highlighted; dirs → ls      /usr/bin/cat
 cd                 zoxide frecency-based navigation        fish builtin cd
 rm                 moves files to trash (recoverable)     command rm (permanent)
