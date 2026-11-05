@@ -17,8 +17,10 @@
 #   ls [args...]
 #
 # DESCRIPTION
-#   Lists all files in long format with icons and hyperlinks. Uses eza,
-#   falls back to lsd, then to system ls.
+#   Lists all files in long format with icons and hyperlinks. With eza, also
+#   shows a header row, octal permissions, Git status, extended attributes,
+#   and line counts (eza 0.23.5+), with gradient size coloring. Falls back to
+#   lsd, then to system ls.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to the listing command
@@ -35,7 +37,20 @@ function ls --description 'List all files'
     end
 
     if which eza >/dev/null 2>&1
-        eza -l -a --icons --color=auto --hyperlink=auto $argv
+        # Probe once per session: eza before 0.23.5 has no --loc and rejects
+        # a value on --hyperlink, and an unknown flag aborts the whole listing.
+        if not set -q __ls_eza_flags
+            set -g __ls_eza_flags
+            if eza --hyperlink=auto -d / >/dev/null 2>&1
+                set -a __ls_eza_flags --hyperlink=auto
+            else
+                set -a __ls_eza_flags --hyperlink
+            end
+            if eza --loc=lines -d / >/dev/null 2>&1
+                set -a __ls_eza_flags --loc=lines
+            end
+        end
+        eza --long --all --icons --color=auto --color-scale=all --color-scale-mode=gradient --git --extended --octal-permissions --header $__ls_eza_flags $argv
 
     else if which lsd >/dev/null 2>&1
         lsd -l -a --hyperlink=auto $argv

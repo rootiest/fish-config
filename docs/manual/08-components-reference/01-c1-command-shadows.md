@@ -7,7 +7,7 @@ all of these commands.
 
     Command / Alias    Active behavior                       Disabled fallback
     ───────────────────────────────────────────────────────────────────────────
-    ls                 eza -l -a --icons --hyperlink          system ls
+    ls                 eza -la --icons --git --header         system ls
     cat                bat syntax-highlighted; dirs → ls      /usr/bin/cat
     cd                 zoxide frecency-based navigation        fish builtin cd
     rm                 moves files to trash (recoverable)     command rm (permanent)

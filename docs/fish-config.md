@@ -860,8 +860,10 @@ functions). They are active in all interactive sessions.
 
     Synopsis:  ls [args...]
 
-    Lists all files in long format with icons and hyperlinks. Uses eza,
-    falls back to lsd, then to system ls.
+    Lists all files in long format with icons and hyperlinks. With eza, also
+    shows a header row, octal permissions, Git status, extended attributes,
+    and line counts (eza 0.23.5+), with gradient size coloring. Falls back to
+    lsd, then to system ls.
 
     Arguments:
       args...  Arguments forwarded to the listing command
@@ -960,8 +962,8 @@ functions). They are active in all interactive sessions.
     Synopsis:  ltr [args...]
 
     Lists all files sorted by modification time in reverse (oldest first) in
-    long format with age-based gradient color scaling. Uses eza, falls back
-    to lsd, then to system ls.
+    long format with age-based gradient color scaling. With eza, timestamps
+    are relative (e.g. "2 hours"). Falls back to lsd, then to system ls.
 
     Arguments:
       args...  Arguments forwarded to the listing command
@@ -5036,7 +5038,7 @@ all of these commands.
 
     Command / Alias    Active behavior                       Disabled fallback
     ───────────────────────────────────────────────────────────────────────────
-    ls                 eza -l -a --icons --hyperlink          system ls
+    ls                 eza -la --icons --git --header         system ls
     cat                bat syntax-highlighted; dirs → ls      /usr/bin/cat
     cd                 zoxide frecency-based navigation        fish builtin cd
     rm                 moves files to trash (recoverable)     command rm (permanent)

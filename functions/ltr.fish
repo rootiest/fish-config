@@ -15,8 +15,8 @@
 #
 # DESCRIPTION
 #   Lists all files sorted by modification time in reverse (oldest first) in
-#   long format with age-based gradient color scaling. Uses eza, falls back
-#   to lsd, then to system ls.
+#   long format with age-based gradient color scaling. With eza, timestamps
+#   are relative (e.g. "2 hours"). Falls back to lsd, then to system ls.
 #
 # ARGUMENTS
 #   args...  Arguments forwarded to the listing command
@@ -30,7 +30,7 @@ function ltr --description 'Reversed time-sorted listing'
     __fish_help_header (status current-function) $argv; and return 0
 
     if which eza >/dev/null 2>&1
-        eza --long --all --sort=modified --icons --hyperlink --color=auto --color-scale=age --color-scale-mode=gradient $argv
+        eza --long --all --sort=modified --time-style=relative --icons --hyperlink --color=auto --color-scale=age --color-scale-mode=gradient $argv
     else if which lsd >/dev/null 2>&1
         lsd --long --all --sort=time --reverse --color=auto --hyperlink=always $argv
     else
