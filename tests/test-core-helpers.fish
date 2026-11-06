@@ -301,6 +301,24 @@ begin
 end
 check "unset path: falls back under XDG_CONFIG_HOME" $sandbox/xdg/.user-dots/fish (readlink $link)
 
+# ...and to ~/.config/.user-dots/fish when XDG_CONFIG_HOME is unset too.
+mkdir -p $sandbox/home/.config/.user-dots/fish
+begin
+    set -lx HOME $sandbox/home
+    set -lx XDG_CONFIG_HOME
+    __fish_user_dots_link
+end
+check "unset path, no XDG_CONFIG_HOME: falls back under HOME" $sandbox/home/.config/.user-dots/fish (readlink $link)
+
+# An empty path value counts as unset rather than naming "/".
+set -g __fish_user_dots_path ''
+begin
+    set -lx XDG_CONFIG_HOME $sandbox/xdg
+    __fish_user_dots_link
+end
+check "empty path: falls back under XDG_CONFIG_HOME" $sandbox/xdg/.user-dots/fish (readlink $link)
+set -e __fish_user_dots_path
+
 check "real ~/.config/fish/user-dots untouched" "$real_link_before" (readlink $HOME/.config/fish/user-dots 2>/dev/null)
 
 #   ───────────────── __fish_config_op_registry_rebuild ────────────────

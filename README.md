@@ -335,11 +335,12 @@ abbr -a dcw 'docker context use work-server'
 
 ```fish
 # config.fish resolves the path, then sources local.fish
-set -q __fish_user_dots_path
-    or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
+set -l __fish_user_dots_path (__fish_user_dots_dir)
 test -f "$__fish_user_dots_path/local.fish"
     and source "$__fish_user_dots_path/local.fish"
 ```
+
+`__fish_user_dots_dir` is the one place the path is resolved: `$__fish_user_dots_path` if set, else `$XDG_CONFIG_HOME/.user-dots/fish`, else `~/.config/.user-dots/fish`. Everything that reads the overlay goes through it, so the default works without setting any variable.
 
 For convenience, a git-ignored `user-dots` symlink in the fish config directory is pointed at `$__fish_user_dots_path` on startup, so the overlay can be browsed from `~/.config/fish/`. It is recreated if missing and repointed if the path variable changes. Creation is a C2 startup side-effect (`__fish_config_op_autoexec`); it only ever manages a symlink and never clobbers a real file or directory at that path.
 

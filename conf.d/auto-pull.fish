@@ -37,7 +37,7 @@ __fish_config_op_enabled (status basename); or exit
 #   repository entry rather than on every sub-directory change.
 function __auto_pull_on_pwd --on-variable PWD
     set -q __fish_config_dir; or set -g __fish_config_dir $XDG_CONFIG_HOME/fish
-    set -q __fish_user_dots_path; or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
+    set -l __fish_user_dots_path (__fish_user_dots_dir)
     set -l list "$__fish_user_dots_path/auto-pull.list"
 
     # Candidate roots: the fish-config repo plus the user's registry.

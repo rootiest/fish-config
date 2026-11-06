@@ -138,10 +138,11 @@ Machine-specific config goes in `$__fish_user_dots_path/local.fish` (defaults
 to `~/.config/.user-dots/fish/local.fish`). Secrets go in `secrets.fish` in
 the same directory.
 
-If local.fish is not loading, verify the path:
+If local.fish is not loading, verify the path. `__fish_user_dots_dir` prints
+the resolved directory, including the default when the variable is unset:
 
-    echo $__fish_user_dots_path
-    test -f "$__fish_user_dots_path/local.fish"; and echo exists; or echo missing
+    __fish_user_dots_dir
+    test -f (__fish_user_dots_dir)/local.fish; and echo exists; or echo missing
 
 Change the path via variable or TUI:
 
