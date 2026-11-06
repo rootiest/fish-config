@@ -45,7 +45,35 @@ check "default path follows XDG_CONFIG_HOME" $tmp/xdg/.user-dots/fish "$out"
 set -l out (env -u XDG_CONFIG_HOME HOME=$tmp/h fish --no-config -c \
     "set -g fish_function_path $repo_root/functions \$fish_function_path; __fish_user_dots_dir")
 check "falls back to ~/.config without XDG_CONFIG_HOME" $tmp/h/.config/.user-dots/fish "$out"
+# Empty values count as unset, as the XDG spec requires for XDG_CONFIG_HOME.
+set -l out (env XDG_CONFIG_HOME=$tmp/xdg HOME=$tmp fish --no-config -c \
+    "set -g fish_function_path $repo_root/functions \$fish_function_path
+    set -g __fish_user_dots_path ''; __fish_user_dots_dir")
+check "an empty path value falls back to the default" $tmp/xdg/.user-dots/fish "$out"
+set -l out (env XDG_CONFIG_HOME= HOME=$tmp/h fish --no-config -c \
+    "set -g fish_function_path $repo_root/functions \$fish_function_path; __fish_user_dots_dir")
+check "an empty XDG_CONFIG_HOME falls back to ~/.config" $tmp/h/.config/.user-dots/fish "$out"
+
+# Callers resolved through the helper honor the same fallbacks.
+set -l out (env -u XDG_CONFIG_HOME HOME=$tmp/h TERM=dumb fish --no-config -c \
+    "set -g fish_function_path $repo_root/functions \$fish_function_path; auto-pull status")
+check "auto-pull: registry under the default path" true \
+    (string match -q -- "*$tmp/h/.config/.user-dots/fish/auto-pull.list*" "$out"; and echo true; or echo false)
+set -l out (env XDG_CONFIG_HOME=$tmp/xdg HOME=$tmp TERM=dumb fish --no-config -c \
+    "set -g fish_function_path $repo_root/functions \$fish_function_path
+    set -g __fish_user_dots_path $tmp/custom; auto-pull status")
+check "auto-pull: registry under a custom path" true \
+    (string match -q -- "*$tmp/custom/auto-pull.list*" "$out"; and echo true; or echo false)
 rm -rf $tmp
+
+section "user-dots: every caller uses __fish_user_dots_dir"
+# Inline copies of the default path drift from the helper's fallbacks (the
+# $HOME one was missing from several). Comment lines are fine.
+set -l inline (grep -rnE --include='*.fish' '\.user-dots/fish' \
+        $repo_root/config.fish $repo_root/conf.d $repo_root/functions $repo_root/completions \
+    | string match -rv '^[^:]+:[0-9]+:\s*#' \
+    | string match -v -- '*/functions/__fish_user_dots_dir.fish:*')
+check "no inline default user-dots path outside the helper" "" "$inline"
 
 section "startup: user-dots completions/"
 set -l tmp (mktemp -d)

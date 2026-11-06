@@ -49,7 +49,7 @@ function auto-pull --description 'Manage the auto-pull repository registry'
     __fish_palette
 
     set -q __fish_config_dir; or set -l __fish_config_dir $XDG_CONFIG_HOME/fish
-    set -q __fish_user_dots_path; or set -l __fish_user_dots_path "$XDG_CONFIG_HOME/.user-dots/fish"
+    set -l __fish_user_dots_path (__fish_user_dots_dir)
     set -l list "$__fish_user_dots_path/auto-pull.list"
 
     if test "$argv[1]" = help; or __fish_help_requested $argv

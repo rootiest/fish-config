@@ -4,7 +4,7 @@
 # Completions for the `auto-pull` registry command.
 
 function __auto_pull_registered
-    set -l list "$XDG_CONFIG_HOME/.user-dots/fish/auto-pull.list"
+    set -l list (__fish_user_dots_dir)/auto-pull.list
     test -r "$list"; or return
     for l in (command cat "$list" 2>/dev/null)
         test -n "$l"; or continue

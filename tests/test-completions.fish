@@ -124,4 +124,18 @@ check "session-env install offers --now" true (contains -- --now $got; and echo 
 set -l got (_offered 'session-env desktop install foo --')
 check "session-env desktop install offers --group" true (contains -- --group $got; and echo true; or echo false)
 
+# auto-pull remove reads the registry from the user-dots directory, so it
+# needs the repo functions (for __fish_user_dots_dir) and must honor a
+# custom __fish_user_dots_path.
+set -l tmp (mktemp -d)
+printf '%s\n' /src/ud-probe-repo >$tmp/auto-pull.list
+set -l got (env TERM=dumb fish --no-config -c \
+    "set -g fish_function_path $repo_root/functions \$fish_function_path
+    set fish_complete_path $repo_root/completions \$fish_complete_path
+    set -g __fish_user_dots_path $tmp
+    function auto-pull; end
+    complete -C 'auto-pull remove '" | string split -f1 \t)
+check "auto-pull remove <Tab> reads a custom user-dots path" true (contains -- ud-probe-repo $got; and echo true; or echo false)
+rm -rf $tmp
+
 report
