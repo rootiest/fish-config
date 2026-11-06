@@ -4380,6 +4380,72 @@ dng2avif -q 85 -s 5 -i shot.dng -o out.avif
 \f[V]avifenc\f[R], \f[V]exiftool\f[R]
 .PP
 \f[B]Classification:\f[R] \f[V]self-limiting(rm)\f[R]
+.SS gpg-compact
+.IP
+.nf
+\f[C]
+Synopsis:  gpg-compact [-K | -k] [-l] [-f] [-a] [pattern...]
+
+Lists GPG keys in a compact layout: one line per key and subkey with
+the algorithm, the short (8-character) key ID, the creation date and
+the capabilities, followed by the key\[aq]s user IDs. Lists secret keys by
+default.
+
+Keys held on a smartcard (YubiKey, Nitrokey, ...) are marked with \[dq]>\[dq]
+after the key type and tagged with the card\[aq]s serial number, the same
+number gpg --card-status shows. When a listed key lives on a card, the
+agent is asked which cards are connected, and keys on a connected card
+are tagged \[dq]inserted\[dq]; keys on a card that is not plugged in are
+dimmed. Secret-key stubs whose private part is offline are marked with
+\[dq]#\[dq], as gpg itself does.
+
+Revoked and expired keys, subkeys and user IDs are hidden unless -a is
+given; on a terminal, a note on stderr says how many keys were hidden.
+Expiry dates and disabled keys are flagged.
+
+Colour is used only when stdout is a terminal, and honours NO_COLOR.
+
+Arguments:
+  -K, --secret        List secret keys (the default)
+  -k, --public        List public keys
+  -l, --long          Show 16-character key IDs instead of 8
+  -f, --fingerprint   Show each primary key\[aq]s full fingerprint
+  -a, --all           Also show revoked and expired keys and user IDs
+  pattern...          Only list keys matching these gpg key specifiers
+                      (key ID, fingerprint, email or name). Put -- before
+                      a pattern that starts with a dash.
+  -h, --help          Show this help message
+
+Exit Status:
+  0  Keys listed (an empty keyring lists nothing and still succeeds)
+  1  gpg is missing, or gpg failed, e.g. no key matched a pattern
+  2  Bad usage (unknown option, or both -K and -k)
+
+Returns:
+  The key listing, printed to stdout
+
+Notes:
+  Short key IDs are for reading, not for trusting: 8 hex digits collide
+  easily. Use the full fingerprint (-f) when importing, signing or
+  encrypting.
+
+  Card serials are read from the secret-key listing, so they only appear
+  with -K, and only for keys whose stubs point at a card gpg has seen.
+  The connected-card check is read-only: it asks the agent for card
+  serial numbers and never writes key stubs, unlike gpg --card-status.
+  It is skipped when no listed key is on a card, and is cut off after 5
+  seconds when timeout is available. Without gpg-connect-agent, card
+  keys are tagged with their serial but not checked.
+
+Example:
+gpg-compact                  # secret keys, with card serials
+gpg-compact -k               # public keyring
+gpg-compact -lf alice\[at]example.org
+gpg-compact -ka              # include revoked and expired keys
+\f[R]
+.fi
+.PP
+\f[B]Dependencies:\f[R] \f[V]gpg\f[R], \f[V]gpg-connect-agent\f[R]
 .SS key-crypt
 .IP
 .nf
