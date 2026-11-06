@@ -55,6 +55,7 @@ The configuration uses a structured file tree:
     │   ├── theme.fish              Saves the Catppuccin theme; FZF colors
     │   ├── tmux-logging.fish       C5 starts tmux pipe-pane capture
     │   ├── tricks.fish             PATH, bang-bang helpers, bat man pages
+    │   ├── user-dots-completions.fish  Puts your user-dots completions/ first
     │   ├── user-dots-functions.fish  Puts your user-dots functions/ first
     │   ├── wakatime.fish           WakaTime shell hook
     │   ├── zellij-logging.fish     C5 fish_exit handler for zellij
