@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Coverage for fish-template and its helpers, and for the user-dots
-# functions/ startup snippet (conf.d/user-dots-functions.fish,
+# functions/ and completions/ startup snippets
+# (conf.d/user-dots-functions.fish, conf.d/user-dots-completions.fish,
 # __fish_user_dots_dir). Template behavior itself is covered by
 # tests/test-templates.fish.
 
@@ -44,6 +45,38 @@ check "default path follows XDG_CONFIG_HOME" $tmp/xdg/.user-dots/fish "$out"
 set -l out (env -u XDG_CONFIG_HOME HOME=$tmp/h fish --no-config -c \
     "set -g fish_function_path $repo_root/functions \$fish_function_path; __fish_user_dots_dir")
 check "falls back to ~/.config without XDG_CONFIG_HOME" $tmp/h/.config/.user-dots/fish "$out"
+rm -rf $tmp
+
+section "startup: user-dots completions/"
+set -l tmp (mktemp -d)
+set -l out (_ft $tmp "set -g __fish_user_dots_path $tmp/dots
+    source $repo_root/conf.d/user-dots-completions.fish
+    contains -- $tmp/dots/completions \$fish_complete_path; and echo added; or echo absent")
+check "a missing directory is not added" absent "$out"
+
+mkdir -p $tmp/dots/completions
+set -l out (_ft $tmp "set -g __fish_user_dots_path $tmp/dots
+    source $repo_root/conf.d/user-dots-completions.fish
+    source $repo_root/conf.d/user-dots-completions.fish
+    echo \$fish_complete_path[1] (count (string match -- $tmp/dots/completions \$fish_complete_path))")
+check "an existing directory is prepended, once" "$tmp/dots/completions 1" "$out"
+
+# fish only autoloads completions for a command that exists, hence the stub.
+printf '%s\n' "complete -c ud_probe -f -a from-user-dots" >$tmp/dots/completions/ud_probe.fish
+set -l out (_ft $tmp "set -g __fish_user_dots_path $tmp/dots
+    source $repo_root/conf.d/user-dots-completions.fish
+    function ud_probe; end
+    complete -C 'ud_probe '")
+check "completions in it autoload" from-user-dots "$out"
+
+# No __fish_user_dots_path and no XDG_CONFIG_HOME: the default directory
+# under HOME is used. The fresh HOME also keeps universals out.
+mkdir -p $tmp/h/.config/.user-dots/fish/completions
+set -l out (env -u XDG_CONFIG_HOME HOME=$tmp/h TERM=dumb fish --no-config -c \
+    "set -g fish_function_path $repo_root/functions \$fish_function_path
+    source $repo_root/conf.d/user-dots-completions.fish
+    echo \$fish_complete_path[1]")
+check "unset path: uses the default under HOME" $tmp/h/.config/.user-dots/fish/completions "$out"
 rm -rf $tmp
 
 section "helpers: value store"

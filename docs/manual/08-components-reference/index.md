@@ -53,6 +53,7 @@ directly and run `__fish_config_op_registry_rebuild` to apply the change.
 
 Not every startup action is a component. Adding the user-dots `functions/`
 directory to the front of `$fish_function_path`
-(`conf.d/user-dots-functions.fish`) is deliberately unguarded: the
-directory exists only if you created it, and gating it would silently
-unload your own functions.
+(`conf.d/user-dots-functions.fish`) and its `completions/` directory to the
+front of `$fish_complete_path` (`conf.d/user-dots-completions.fish`) are
+deliberately unguarded: each directory exists only if you created it, and
+gating them would silently unload your own functions and completions.
