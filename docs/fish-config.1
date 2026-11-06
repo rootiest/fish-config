@@ -8252,12 +8252,14 @@ Machine-specific config goes in
 \f[V]\[ti]/.config/.user-dots/fish/local.fish\f[R]).
 Secrets go in \f[V]secrets.fish\f[R] in the same directory.
 .PP
-If \f[V]local.fish\f[R] is not loading, verify the path:
+If \f[V]local.fish\f[R] is not loading, verify the path.
+\f[V]__fish_user_dots_dir\f[R] prints the resolved directory, including
+the default when the variable is unset:
 .IP
 .nf
 \f[C]
-echo $__fish_user_dots_path
-test -f \[dq]$__fish_user_dots_path/local.fish\[dq]; and echo exists; or echo missing
+__fish_user_dots_dir
+test -f (__fish_user_dots_dir)/local.fish; and echo exists; or echo missing
 \f[R]
 .fi
 .PP
