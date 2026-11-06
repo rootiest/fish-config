@@ -347,6 +347,17 @@ To opt out, set `__fish_user_dots_symlink` to a falsy value (or toggle **Dots li
 
 `fish_variables` (which fish auto-manages and may contain universal variable state) is excluded from this repo via `.gitignore`.
 
+### Local completions
+
+Completions that only make sense on one machine go in `$__fish_user_dots_path/completions/`. When the directory exists it is put first on `$fish_complete_path` at startup, so its files autoload on first Tab just like `~/.config/fish/completions/`, and a file there replaces any other completion for the same command:
+
+```fish
+mkdir -p (__fish_user_dots_dir)/completions
+register-python-argcomplete --shell fish pipx >(__fish_user_dots_dir)/completions/pipx.fish
+```
+
+See `config-help user-completions` for details.
+
 ### Function templates
 
 `fish-template` builds your own functions from templates without any code. Pick a **target** (what runs), stack any **modifiers** (how it runs), and answer a few questions. The result is a documented function with its own `--help`, saved in `$__fish_user_dots_path/functions/`, which is first on `$fish_function_path`, so it autoloads everywhere and overrides a function of the same name from this config.

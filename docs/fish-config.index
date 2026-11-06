@@ -384,6 +384,8 @@ personalization=# 11. PERSONALIZATION
 personalize=# 11. PERSONALIZATION
 secrets-file=## secrets.fish
 local-config=## local.fish
+local-completions=## completions/
+user-completions=## completions/
 
 # ── Section 12: Function Templates ───────────────────────────
 templates=# 12. FUNCTION TEMPLATES
