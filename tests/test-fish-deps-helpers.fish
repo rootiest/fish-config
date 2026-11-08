@@ -78,6 +78,19 @@ check "rg installs from the ripgrep package" ripgrep $_fdc_pm[$i]
 set i (contains -i -- win32yank.exe $_fdc_bins)
 check "win32yank uses its pinned-release installer" win32yank-release $_fdc_special[$i]
 
+# The Gitea and GitHub clients: integrations, packaged under their Arch
+# names, with a release installer as the alternative.
+check "tea is an integration" int (tier_of tea)
+check "gh is an integration" int (tier_of gh)
+set i (contains -i -- tea $_fdc_bins)
+check "tea installs from the tea package" tea $_fdc_pm[$i]
+check "tea has no crate" "" "$_fdc_cargo[$i]"
+check "tea falls back to its release installer" tea-release $_fdc_special[$i]
+set i (contains -i -- gh $_fdc_bins)
+check "gh is spelled github-cli, the Arch way" github-cli $_fdc_pm[$i]
+check "gh has no crate" "" "$_fdc_cargo[$i]"
+check "gh falls back to its release installer" gh-release $_fdc_special[$i]
+
 # =============================================================================
 # 2. _fish_deps_pm_install
 # =============================================================================

@@ -1981,7 +1981,7 @@ functions). They are active in all interactive sessions.
 
 ### fish-deps
 
-    Synopsis:  fish-deps [status|install|update|sync|help] [--optional] [--terminals] [--all]
+    Synopsis:  fish-deps [status|install|update|sync|help] [--optional] [--terminals] [--all] [--yes] [TOOL...]
 
     Unified command for managing all tools this configuration depends on,
     dispatching to subcommand handlers. Defaults to status when no subcommand
@@ -1996,6 +1996,12 @@ functions). They are active in all interactive sessions.
 
     When multiple methods are available you are prompted to choose.
 
+    tea and gh come from the system package manager where it has them; the
+    latest upstream release, verified against the SHA-256 digest published
+    with it, is offered as the alternative and installed to ~/.local/bin.
+    update refreshes a copy installed that way from the latest release, and
+    leaves a packaged copy to the package manager.
+
     What install does: it walks the catalog and, for each tool that is
     missing, asks Install <tool>? [Y/n/q]. Enter or y installs it, n skips
     that tool, and q (or Ctrl+C or Ctrl+D) stops the whole run, so nothing
@@ -2003,6 +2009,19 @@ functions). They are active in all interactive sessions.
     asks for its own password where the system package manager needs it.
     Tools it installs are put on this shell's PATH straight away; only fish
     itself needs a restart to take effect.
+
+    Naming tools after install, update or sync restricts the run to those
+    catalog entries, whatever their tier: fish-deps install kitty offers
+    kitty without --terminals. A name that is not in the catalog is a usage
+    error (exit 2), reported before anything is done.
+
+    For scripts, --yes answers every fish-deps prompt with its default
+    without reading input: each tool is installed through its first
+    (preferred) method, falling back to the next method in the list when
+    one fails, and prerequisites are installed when a method needs them.
+    Prompts that belong to other programs, such as sudo's password,
+    still appear. A bootstrap script can run
+    fish -c 'fish-deps install --yes tea' unattended.
 
     Prerequisites are offered only once a chosen method needs them: a C
     compiler for cargo builds (build-essential, base-devel or gcc), a default
@@ -2025,7 +2044,7 @@ functions). They are active in all interactive sessions.
       Terminal Emulators  kitty, wezterm — only matter if one of them is
                           your actual terminal; skipped by install/sync
                           unless --terminals (or --all) is passed
-      Integrations        wakatime, tailscale
+      Integrations        wakatime, tailscale, tea, gh
 
     Arguments:
       status       Report installed/missing deps (default)
@@ -2035,13 +2054,15 @@ functions). They are active in all interactive sessions.
       --optional   With install/sync: also offer Optional-tier deps
       --terminals  With install/sync: also offer Terminal-Emulator-tier deps
       --all        With install/sync: shorthand for --optional --terminals
+      -y, --yes    With install/sync: take every default without asking
+      TOOL         With install/update/sync: only these catalog entries
       help, -h, --help  Show this help
 
     Exit Status:
       0    Subcommand completed, or help was shown
       1    install had one or more failed installs, or update (or the update
            half of sync) had one or more failed updates
-      2    Unknown subcommand
+      2    Unknown subcommand or option, or a TOOL that is not in the catalog
       130  install (or the install half of sync) was cancelled with q, Ctrl+C
            or Ctrl+D; sync does not go on to update
 
@@ -2052,7 +2073,10 @@ functions). They are active in all interactive sessions.
     fish-deps install --optional
     fish-deps install --terminals
     fish-deps install --all
+    fish-deps install gh
+    fish-deps install --yes tea
     fish-deps update
+    fish-deps update tea gh
 
 **Dependencies:** `_fish_deps_status`, `_fish_deps_install`, `_fish_deps_update`
 
@@ -4622,7 +4646,9 @@ functions). They are active in all interactive sessions.
 `fish-deps` manages these tools. Run `fish-deps` to check status,
 `fish-deps install` to install missing Required/Recommended ones, or add
 `--optional`, `--terminals`, or `--all` to also include the Optional and/or
-Terminal Emulators tiers.
+Terminal Emulators tiers. Name tools to install only those, from any tier:
+`fish-deps install gh tea`. Add `--yes` to take every default without being
+asked, for scripts.
 
 ## Required
 
@@ -4692,6 +4718,12 @@ Opt-in third-party services that require their own account/setup.
 |---|---|
 | `wakatime` | Developer time tracking |
 | `tailscale` | Mesh VPN client |
+| `tea` | Gitea command-line client. Installed from the system package where there is one (`tea` on CachyOS and Homebrew, `tea-cli` on Debian/Ubuntu, `gitea-tea` on openSUSE); otherwise, and as the alternative, `fish-deps` downloads the latest release from `dl.gitea.com` to `~/.local/bin/tea`, verified against the `.sha256` file published next to it. |
+| `gh` | GitHub command-line client. Installed from the system package (`github-cli` on Arch, `gh` elsewhere) where there is one; otherwise, and as the alternative, `fish-deps` downloads the latest `cli/cli` release tarball, verifies it against the release's `checksums.txt`, and installs its `bin/gh` to `~/.local/bin/gh`. |
+
+The release downloads are for `x86_64` and `aarch64` only. `fish-deps update`
+refreshes a copy in `~/.local/bin` from the latest release, and upgrades a
+packaged copy through the package manager.
 
 ## Install Methods
 
@@ -4702,6 +4734,7 @@ The install priority for each tool:
 | `cargo` | Rust tools (`eza`, `lsd`, `bat`, `dust`, `ripgrep`, `trashy`, `zoxide`, `starship`) — always gets the latest crate version, built with `--locked` |
 | `go install` | `ov` — preferred over the system PM when `go` is available; always gets the latest release |
 | system PM | `paru` / `apt` / `brew` / `dnf` / etc. — for tools without a crate or `go install` path |
+| release download | `tea`, `gh` — the latest upstream release, checksum-verified, to `~/.local/bin`; offered after the system package, and the only method where the package manager has none |
 | `git clone` | `fzf` — installed from GitHub to `~/.fzf/` |
 | `curl` | `starship` installer, `fisher` bootstrap, `uv` installer |
 
@@ -4727,12 +4760,31 @@ noise. `_fish_deps_wakatime_binary` says plainly when it is missing.
 
 Installer scripts (`rustup`, `uv`, `starship`, `lazydocker`) are downloaded
 to a temporary file and run only after the download succeeds; they are never
-streamed into `sh`. Downloaded binaries (`wakatime-cli`, `win32yank.exe`, the
-MarkText AppImage) are checked against a SHA-256 digest before they are made
-executable: the release's published checksum file for `wakatime-cli`, the
-digest GitHub records for the MarkText asset, and a pinned digest for
-`win32yank.exe`, whose upstream publishes none. A failed download or checksum
-mismatch aborts that install and reports failure.
+streamed into `sh`. Downloaded binaries (`wakatime-cli`, `tea`, `gh`,
+`win32yank.exe`, the MarkText AppImage) are checked against a SHA-256 digest
+before they are made executable: the release's published checksum file for
+`wakatime-cli`, `tea` and `gh`, the digest GitHub records for the MarkText
+asset, and a pinned digest for `win32yank.exe`, whose upstream publishes none.
+A failed download or checksum mismatch aborts that install and reports
+failure, and leaves any copy already installed in place.
+
+## Unattended installs
+
+`fish-deps install --yes` answers every `fish-deps` prompt with its default
+without reading input: each missing tool is installed, through the first
+method in its list, and any prerequisite that method needs is installed too.
+If that method fails, the next one in the list is tried, and so on; the tool
+is reported as failed only when every method has failed. A cancellation (`q`,
+`Ctrl+C`) still stops the run at once.
+Prompts that belong to other programs still appear, such as the `sudo`
+password, or an installer script's own questions. Combined with tool names it
+installs exactly what a script needs; from a `bash` bootstrap script:
+
+    fish -c 'fish-deps install --yes tea gh'
+
+A name that is not in the catalog, or an unknown option, is a usage error:
+`fish-deps` exits 2 before doing anything. Tool names work the same way with
+`fish-deps update` and `fish-deps sync`.
 
 ---
 
@@ -5817,6 +5869,16 @@ Newly installed tools are put on the current shell's `PATH` right away, so
 there is no restart between steps; fish itself is the exception, and needs a
 new shell once it has been upgraded. The Optional and Terminal Emulator tiers
 are skipped unless you add `--optional`, `--terminals` or `--all`.
+
+To install particular tools, name them: `fish-deps install gh` offers only
+`gh`, whatever its tier. In a script, add `--yes` to take every default
+without a prompt; only `sudo` and other programs still ask their own
+questions:
+
+    fish -c 'fish-deps install --yes tea'
+
+The details are under
+Unattended installs.
 
 TIP: `fish-deps sync` installs what is missing and then updates everything
 installed. The full subcommand reference, including exit codes, is on the

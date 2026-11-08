@@ -5,32 +5,73 @@
 #   destructive, network
 #
 # SYNOPSIS
-#   _fish_deps_update
+#   _fish_deps_update [-y|--yes] [TOOL...]
 #
 # DESCRIPTION
 #   Updates all currently installed fish shell dependencies using their
 #   preferred method. Priority order: cargo, then system PM, then special
 #   installers (fzf-update, fisher, pipx). Always updates fisher plugins first.
 #
+#   Tools with a release installer (tea, gh) are updated the way they were
+#   installed: a binary that resolves to ~/.local/bin/<tool> is replaced by
+#   the latest verified release, anything else is upgraded through the
+#   system package manager under that manager's package name.
+#
+#   Naming tools restricts the run to those catalog entries (fisher plugins
+#   are then left alone); a name that is not in the catalog is a usage
+#   error. --yes is accepted for symmetry with install and changes nothing,
+#   since update asks no questions of its own.
+#
 #   Each update command's exit status is checked. A failing update does not
 #   stop the run; the failed tools are collected and reported on stderr at
 #   the end ("N of M updates failed: ...").
 #
+# ARGUMENTS
+#   -y, --yes  Accepted and ignored
+#   TOOL       Only update these catalog entries
+#
 # EXIT STATUS
 #   0  Every attempted update succeeded, or there was nothing to update
 #   1  One or more updates failed
+#   2  Unknown option, or a TOOL that is not in the catalog
 #
 # EXAMPLE
 #   _fish_deps_update
+#   _fish_deps_update tea gh
 function _fish_deps_update
     _fish_deps_catalog
+    __fish_palette
+
+    set -l selected
+    set -l unknown
+    for arg in $argv
+        switch $arg
+            case -y --yes
+            case '-*'
+                echo "$c_err""fish-deps: unknown option '$arg'$c_reset" >&2
+                echo "Run $c_cmd""fish-deps help$c_reset for usage." >&2
+                return 2
+            case '*'
+                if contains -- $arg $_fdc_bins
+                    contains -- $arg $selected; or set -a selected $arg
+                else
+                    set -a unknown $arg
+                end
+        end
+    end
+    if set -q unknown[1]
+        echo "$c_err""fish-deps: not in the catalog: "(string join ', ' -- $unknown)"$c_reset" >&2
+        echo "Run $c_cmd""fish-deps status$c_reset to list the catalog, or $c_cmd""fish-deps help$c_reset for usage." >&2
+        return 2
+    end
 
     set -l pm (_fish_deps_detect_pm)
     set -l attempted 0
     set -l failed
 
-    # Fisher plugins — always update if fisher is present
-    if type -q fisher
+    # Fisher plugins — always update if fisher is present, unless the run
+    # was restricted to named tools.
+    if type -q fisher; and not set -q selected[1]
         echo "Updating fisher plugins..."
         set attempted (math $attempted + 1)
         fisher update
@@ -39,9 +80,20 @@ function _fish_deps_update
 
     set -l i 1
     for bin in $_fdc_bins
+        # Skip tools that were not named, when some were.
+        if set -q selected[1]; and not contains -- $bin $selected
+            set i (math $i + 1)
+            continue
+        end
+
         # Skip fisher itself (handled above) and tools that aren't installed.
         # command -q (not type -q): ignore wrapper functions shadowing the name.
         if test "$bin" = fisher; or not command -q $bin
+            if set -q selected[1]; and test "$bin" != fisher
+                echo -n (__fish_color brblack)
+                echo "  $bin is not installed — run fish-deps install $bin"
+                echo -n (__fish_color normal)
+            end
             set i (math $i + 1)
             continue
         end
@@ -162,6 +214,32 @@ function _fish_deps_update
             continue
         end
 
+        # tea, gh: a copy fish-deps installed from a release lives in
+        # ~/.local/bin and is refreshed from the latest release; a packaged
+        # copy belongs to its package manager, under that manager's name.
+        if contains -- "$special" tea-release gh-release
+            if test (command -s $bin) = "$HOME/.local/bin/$bin"
+                echo "Updating $bin..."
+                set attempted (math $attempted + 1)
+                if test $special = tea-release
+                    _fish_deps_tea_binary
+                else
+                    _fish_deps_gh_binary
+                end
+                or set -a failed $bin
+            else if test -n "$pm"; and test -n "$pm_pkg"
+                set -l pkg (_fish_deps_pm_pkg $pm $pm_pkg)
+                if test -n "$pkg"
+                    echo "Updating $bin..."
+                    set attempted (math $attempted + 1)
+                    _fish_deps_pm_upgrade $pkg
+                    or set -a failed $bin
+                end
+            end
+            set i (math $i + 1)
+            continue
+        end
+
         # pipx tools
         if test "$special" = pipx
             if type -q pipx
@@ -256,7 +334,6 @@ function _fish_deps_update
     # Explicit terminal status: a trailing `if` with no branch taken would
     # resolve $status to 0 whatever happened above.
     if test (count $failed) -gt 0
-        __fish_palette
         echo "$c_err"(count $failed)" of $attempted updates failed: $c_cmd$failed$c_reset" >&2
         return 1
     end

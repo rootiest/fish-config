@@ -20,11 +20,15 @@
 #
 #   Anything that is not y, n or q is asked again.
 #
+#   When $_fdc_assume_yes is 1 (fish-deps install --yes), the question is
+#   printed with its default answer and accepted without reading input, so
+#   a scripted run never waits on stdin.
+#
 # ARGUMENTS
 #   QUESTION  The question to show, without the trailing [Y/n/q]
 #
 # EXIT STATUS
-#   0  Accepted
+#   0  Accepted (or taken as the default under --yes)
 #   1  Declined this step
 #   2  Quit requested (q, Ctrl+C, Ctrl+D, or an earlier interrupt)
 #
@@ -33,6 +37,11 @@
 function _fish_deps_ask --argument-names question
     test "$_fdc_cancelled" = 1; and return 2
     __fish_palette
+
+    if test "$_fdc_assume_yes" = 1
+        echo "$c_arg$question$c_reset [Y/n/q] y (--yes)"
+        return 0
+    end
 
     while true
         read -l -P "$c_arg$question$c_reset [Y/n/q] " reply

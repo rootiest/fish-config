@@ -395,6 +395,8 @@ function test_help_words_after_subcommand_are_data
     _help_expect $tmp 2 "unknown group '--help'" "session-env install -- --help"; or set failed 1
     _help_expect $tmp 1 "not a git repository: help" "auto-pull add help"; or set failed 1
     _help_expect $tmp 1 "not a git repository: --help" "auto-pull add -- --help"; or set failed 1
+    _help_expect $tmp 2 "not in the catalog: help" "fish-deps install help"; or set failed 1
+    _help_expect $tmp 2 "unknown option '--help'" "fish-deps install -- --help"; or set failed 1
     _help_expect $tmp 0 "Started job" "jobrunner run -n job -- make --help"; or set failed 1
     if not string match -q '*tmux new-session -d -s job make --help*' -- (command cat $tmp/invoked.log)
         echo "    jobrunner run -n job -- make --help: make did not receive --help"

@@ -11,7 +11,9 @@ helpKeywords:
 fish-deps manages these tools. Run `fish-deps` to check status,
 `fish-deps install` to install missing Required/Recommended ones, or add
 `--optional`, `--terminals`, or `--all` to also include the Optional and/or
-Terminal Emulators tiers.
+Terminal Emulators tiers. Name tools to install only those, from any tier:
+`fish-deps install gh tea`. Add `--yes` to take every default without being
+asked, for scripts.
 
 ## Required
 
@@ -81,6 +83,12 @@ Opt-in third-party services that require their own account/setup.
 |---|---|
 | `wakatime` | Developer time tracking |
 | `tailscale` | Mesh VPN client |
+| `tea` | Gitea command-line client. Installed from the system package where there is one (`tea` on CachyOS and Homebrew, `tea-cli` on Debian/Ubuntu, `gitea-tea` on openSUSE); otherwise, and as the alternative, `fish-deps` downloads the latest release from `dl.gitea.com` to `~/.local/bin/tea`, verified against the `.sha256` file published next to it. |
+| `gh` | GitHub command-line client. Installed from the system package (`github-cli` on Arch, `gh` elsewhere) where there is one; otherwise, and as the alternative, `fish-deps` downloads the latest `cli/cli` release tarball, verifies it against the release's `checksums.txt`, and installs its `bin/gh` to `~/.local/bin/gh`. |
+
+The release downloads are for `x86_64` and `aarch64` only. `fish-deps update`
+refreshes a copy in `~/.local/bin` from the latest release, and upgrades a
+packaged copy through the package manager.
 
 ## Install Methods
 
@@ -91,6 +99,7 @@ The install priority for each tool:
 | `cargo` | Rust tools (`eza`, `lsd`, `bat`, `dust`, `ripgrep`, `trashy`, `zoxide`, `starship`) — always gets the latest crate version, built with `--locked` |
 | `go install` | `ov` — preferred over the system PM when `go` is available; always gets the latest release |
 | system PM | `paru` / `apt` / `brew` / `dnf` / etc. — for tools without a crate or `go install` path |
+| release download | `tea`, `gh` — the latest upstream release, checksum-verified, to `~/.local/bin`; offered after the system package, and the only method where the package manager has none |
 | `git clone` | `fzf` — installed from GitHub to `~/.fzf/` |
 | `curl` | `starship` installer, `fisher` bootstrap, `uv` installer |
 
@@ -116,11 +125,30 @@ noise. `_fish_deps_wakatime_binary` says plainly when it is missing.
 
 Installer scripts (`rustup`, `uv`, `starship`, `lazydocker`) are downloaded
 to a temporary file and run only after the download succeeds; they are never
-streamed into `sh`. Downloaded binaries (`wakatime-cli`, `win32yank.exe`, the
-MarkText AppImage) are checked against a SHA-256 digest before they are made
-executable: the release's published checksum file for `wakatime-cli`, the
-digest GitHub records for the MarkText asset, and a pinned digest for
-`win32yank.exe`, whose upstream publishes none. A failed download or checksum
-mismatch aborts that install and reports failure.
+streamed into `sh`. Downloaded binaries (`wakatime-cli`, `tea`, `gh`,
+`win32yank.exe`, the MarkText AppImage) are checked against a SHA-256 digest
+before they are made executable: the release's published checksum file for
+`wakatime-cli`, `tea` and `gh`, the digest GitHub records for the MarkText
+asset, and a pinned digest for `win32yank.exe`, whose upstream publishes none.
+A failed download or checksum mismatch aborts that install and reports
+failure, and leaves any copy already installed in place.
+
+## Unattended installs
+
+`fish-deps install --yes` answers every `fish-deps` prompt with its default
+without reading input: each missing tool is installed, through the first
+method in its list, and any prerequisite that method needs is installed too.
+If that method fails, the next one in the list is tried, and so on; the tool
+is reported as failed only when every method has failed. A cancellation (`q`,
+Ctrl+C) still stops the run at once.
+Prompts that belong to other programs still appear, such as the `sudo`
+password, or an installer script's own questions. Combined with tool names it
+installs exactly what a script needs; from a bash bootstrap script:
+
+    fish -c 'fish-deps install --yes tea gh'
+
+A name that is not in the catalog, or an unknown option, is a usage error:
+`fish-deps` exits 2 before doing anything. Tool names work the same way with
+`fish-deps update` and `fish-deps sync`.
 
 ---

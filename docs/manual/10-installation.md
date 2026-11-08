@@ -61,6 +61,16 @@ there is no restart between steps; fish itself is the exception, and needs a
 new shell once it has been upgraded. The Optional and Terminal Emulator tiers
 are skipped unless you add `--optional`, `--terminals` or `--all`.
 
+To install particular tools, name them: `fish-deps install gh` offers only
+`gh`, whatever its tier. In a script, add `--yes` to take every default
+without a prompt; only `sudo` and other programs still ask their own
+questions:
+
+    fish -c 'fish-deps install --yes tea'
+
+The details are under
+[Unattended installs](/06-dependency-catalog/#unattended-installs).
+
 TIP: `fish-deps sync` installs what is missing and then updates everything
 installed. The full subcommand reference, including exit codes, is on the
 [fish-deps function page](/reference/dependency-management/fish-deps/), and
