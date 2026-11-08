@@ -77,7 +77,7 @@ function _fish_deps_gh_binary
     and mkdir -p "$bindir"
     and set stage (mktemp "$bindir/.gh.XXXXXX")
     and command cp "$tmp/$stem/bin/gh" "$stage"
-    and chmod +x "$stage"
+    and chmod 755 "$stage"
     and command mv -f "$stage" "$bindir/gh"
     and set ok 1
     rm -rf "$tmp"

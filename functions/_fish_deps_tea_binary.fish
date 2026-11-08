@@ -69,7 +69,7 @@ function _fish_deps_tea_binary
     set -l stage (mktemp "$bindir/.tea.XXXXXX"); or return 1
     set -l ok 0
     _fish_deps_fetch_verified "$url" "$stage" $sum
-    and chmod +x "$stage"
+    and chmod 755 "$stage"
     and command mv -f "$stage" "$bindir/tea"
     and set ok 1
     rm -f "$stage"
