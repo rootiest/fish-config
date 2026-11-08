@@ -28,9 +28,11 @@
 #
 #   --yes answers every fish-deps prompt with its default without reading
 #   input: each tool is installed, through the first (preferred) method, and
-#   any prerequisite a method needs is installed too. Prompts that belong to
-#   other programs (sudo's password, an installer script's own questions)
-#   still appear.
+#   any prerequisite a method needs is installed too. When that method fails
+#   the remaining ones are tried in order, and the tool only counts as failed
+#   once every method has; a cancellation still stops the run at once.
+#   Prompts that belong to other programs (sudo's password, an installer
+#   script's own questions) still appear.
 #
 #   The paru and yay AUR helpers are only offered on Arch-based systems.
 #
@@ -427,132 +429,164 @@ function _fish_deps_install
                 echo -n (__fish_color normal)
             end
 
-            # Execute chosen method
-            switch $chosen_method
-                case cargo
-                    # --locked: build against the dependency versions the
-                    # crate was published with. Unlocked, eza 0.23.5 breaks on
-                    # a newer palette release.
-                    _fish_deps_ensure cargo
-                    set -l _pre $status
-                    test $_pre -eq 130; and set cancelled 1
-                    test $_pre -eq 0; and cargo install --locked $cargo_crate
-                case pm
-                    _fish_deps_pm_install $pm_pkg
-                case special-rustup
-                    _fish_deps_run_script https://sh.rustup.rs sh
-                    set -l _rustup_status $status
-                    # Put cargo on PATH for the rest of this session, so no
-                    # restart is needed. Both candidates are added: rustup
-                    # installs under CARGO_HOME when it is exported and under
-                    # ~/.cargo otherwise, and `cargo install` writes to
-                    # CARGO_HOME either way.
-                    _fish_deps_refresh_path
-                    set -e _fdc_ensure_toolchain _fdc_ensure_cc
-                    if test $_rustup_status -eq 0; and not type -q cargo
-                        echo -n (__fish_color yellow)
-                        echo "  cargo not yet in PATH — restart your shell if subsequent installs fail."
-                        echo -n (__fish_color normal)
+            # Methods to try, in order. Interactively that is the one chosen.
+            # Under --yes nobody is there to pick another when the default
+            # fails (an AUR helper is assumed to have every package, and
+            # paru -S tea fails on plain Arch), so the remaining methods
+            # follow in list order.
+            set -l attempts $chosen_method
+            set -l attempt_labels $method_labels[(contains -i -- $chosen_method $methods)]
+            if test $assume_yes -eq 1
+                set -l j 1
+                for m in $methods
+                    if test $m != $chosen_method
+                        set -a attempts $m
+                        set -a attempt_labels $method_labels[$j]
                     end
-                    test $_rustup_status -eq 0
-                case special-go-ov
-                    _fish_deps_ensure go
-                    set -l _pre $status
-                    test $_pre -eq 130; and set cancelled 1
-                    if test $_pre -eq 0
-                        go install github.com/noborus/ov@latest
-                        set -l _go_status $status
-                        # go install places binaries in $GOBIN, falling back
-                        # to $GOPATH/bin (default ~/go/bin); the helper asks
-                        # go itself, since GOPATH may be customized.
+                    set j (math $j + 1)
+                end
+            end
+
+            set -l _rc 1
+            set -l _try 1
+            for chosen_method in $attempts
+                if test $_try -gt 1
+                    set -l _prev (math $_try - 1)
+                    echo -n (__fish_color yellow)
+                    echo "  $attempt_labels[$_prev] failed; trying $attempt_labels[$_try]"
+                    echo -n (__fish_color normal)
+                end
+
+                # Execute chosen method
+                switch $chosen_method
+                    case cargo
+                        # --locked: build against the dependency versions the
+                        # crate was published with. Unlocked, eza 0.23.5 breaks on
+                        # a newer palette release.
+                        _fish_deps_ensure cargo
+                        set -l _pre $status
+                        test $_pre -eq 130; and set cancelled 1
+                        test $_pre -eq 0; and cargo install --locked $cargo_crate
+                    case pm
+                        _fish_deps_pm_install $pm_pkg
+                    case special-rustup
+                        _fish_deps_run_script https://sh.rustup.rs sh
+                        set -l _rustup_status $status
+                        # Put cargo on PATH for the rest of this session, so no
+                        # restart is needed. Both candidates are added: rustup
+                        # installs under CARGO_HOME when it is exported and under
+                        # ~/.cargo otherwise, and `cargo install` writes to
+                        # CARGO_HOME either way.
                         _fish_deps_refresh_path
-                        if test $_go_status -eq 0; and not type -q ov
+                        set -e _fdc_ensure_toolchain _fdc_ensure_cc
+                        if test $_rustup_status -eq 0; and not type -q cargo
                             echo -n (__fish_color yellow)
-                            echo "  ov not yet in PATH — restart your shell if subsequent installs fail."
+                            echo "  cargo not yet in PATH — restart your shell if subsequent installs fail."
                             echo -n (__fish_color normal)
                         end
-                        test $_go_status -eq 0
-                    else
-                        false
-                    end
-                case special-lazydocker
-                    _fish_deps_run_script https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh bash
-                case special-marktext-paru
-                    paru -S --noconfirm marktext-bin
-                case special-marktext-yay
-                    yay -S --noconfirm marktext-bin
-                case special-marktext-appimage
-                    _fish_deps_marktext_appimage
-                case special-wakatime
-                    # The release is a zip; a minimal server has no unzip.
-                    _fish_deps_ensure unzip
-                    set -l _pre $status
-                    test $_pre -eq 130; and set cancelled 1
-                    test $_pre -eq 0; and _fish_deps_wakatime_binary
-                case special-win32yank
-                    _fish_deps_win32yank_binary
-                case special-tea-release special-gh-release
-                    if test $chosen_method = special-tea-release
-                        _fish_deps_tea_binary
-                    else
-                        _fish_deps_gh_binary
-                    end
-                    set -l _rel_status $status
-                    # ~/.local/bin may not have existed when this shell
-                    # started, so it may not be on PATH yet.
-                    _fish_deps_refresh_path
-                    test $_rel_status -eq 0
-                case special-fzf
-                    fzf-update
-                case special-curl
-                    if test "$bin" = starship
-                        _fish_deps_run_script https://starship.rs/install.sh sh
-                    else
-                        false
-                    end
-                case special-yay-paru
-                    yay -S --noconfirm paru
-                case special-paru-yay
-                    paru -S --noconfirm yay
-                case special-yay
-                    set -l _build_dir (mktemp -d)
-                    git clone https://aur.archlinux.org/yay.git $_build_dir
-                    and pushd $_build_dir
-                    and makepkg -si --noconfirm
-                    and popd
-                    rm -rf $_build_dir
-                case special-paru
-                    set -l _build_dir (mktemp -d)
-                    git clone https://aur.archlinux.org/paru.git $_build_dir
-                    and pushd $_build_dir
-                    and makepkg -si --noconfirm
-                    and popd
-                    rm -rf $_build_dir
-                case special-uv
-                    _fish_deps_run_script https://astral.sh/uv/install.sh sh
-                    set -l _uv_status $status
-                    # Add uv to PATH for the rest of this session
-                    _fish_deps_refresh_path
-                    if test $_uv_status -eq 0; and not type -q uv
-                        echo -n (__fish_color yellow)
-                        echo "  uv not yet in PATH — restart your shell if subsequent installs fail."
-                        echo -n (__fish_color normal)
-                    end
-                    test $_uv_status -eq 0
-                case special-git-cargo-fish
-                    _fish_deps_ensure cargo
-                    set -l _pre $status
-                    test $_pre -eq 130; and set cancelled 1
-                    test $_pre -eq 0; and _fish_deps_build_fish
-            end
-            set -l _rc $status
+                        test $_rustup_status -eq 0
+                    case special-go-ov
+                        _fish_deps_ensure go
+                        set -l _pre $status
+                        test $_pre -eq 130; and set cancelled 1
+                        if test $_pre -eq 0
+                            go install github.com/noborus/ov@latest
+                            set -l _go_status $status
+                            # go install places binaries in $GOBIN, falling back
+                            # to $GOPATH/bin (default ~/go/bin); the helper asks
+                            # go itself, since GOPATH may be customized.
+                            _fish_deps_refresh_path
+                            if test $_go_status -eq 0; and not type -q ov
+                                echo -n (__fish_color yellow)
+                                echo "  ov not yet in PATH — restart your shell if subsequent installs fail."
+                                echo -n (__fish_color normal)
+                            end
+                            test $_go_status -eq 0
+                        else
+                            false
+                        end
+                    case special-lazydocker
+                        _fish_deps_run_script https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh bash
+                    case special-marktext-paru
+                        paru -S --noconfirm marktext-bin
+                    case special-marktext-yay
+                        yay -S --noconfirm marktext-bin
+                    case special-marktext-appimage
+                        _fish_deps_marktext_appimage
+                    case special-wakatime
+                        # The release is a zip; a minimal server has no unzip.
+                        _fish_deps_ensure unzip
+                        set -l _pre $status
+                        test $_pre -eq 130; and set cancelled 1
+                        test $_pre -eq 0; and _fish_deps_wakatime_binary
+                    case special-win32yank
+                        _fish_deps_win32yank_binary
+                    case special-tea-release special-gh-release
+                        if test $chosen_method = special-tea-release
+                            _fish_deps_tea_binary
+                        else
+                            _fish_deps_gh_binary
+                        end
+                        set -l _rel_status $status
+                        # ~/.local/bin may not have existed when this shell
+                        # started, so it may not be on PATH yet.
+                        _fish_deps_refresh_path
+                        test $_rel_status -eq 0
+                    case special-fzf
+                        fzf-update
+                    case special-curl
+                        if test "$bin" = starship
+                            _fish_deps_run_script https://starship.rs/install.sh sh
+                        else
+                            false
+                        end
+                    case special-yay-paru
+                        yay -S --noconfirm paru
+                    case special-paru-yay
+                        paru -S --noconfirm yay
+                    case special-yay
+                        set -l _build_dir (mktemp -d)
+                        git clone https://aur.archlinux.org/yay.git $_build_dir
+                        and pushd $_build_dir
+                        and makepkg -si --noconfirm
+                        and popd
+                        rm -rf $_build_dir
+                    case special-paru
+                        set -l _build_dir (mktemp -d)
+                        git clone https://aur.archlinux.org/paru.git $_build_dir
+                        and pushd $_build_dir
+                        and makepkg -si --noconfirm
+                        and popd
+                        rm -rf $_build_dir
+                    case special-uv
+                        _fish_deps_run_script https://astral.sh/uv/install.sh sh
+                        set -l _uv_status $status
+                        # Add uv to PATH for the rest of this session
+                        _fish_deps_refresh_path
+                        if test $_uv_status -eq 0; and not type -q uv
+                            echo -n (__fish_color yellow)
+                            echo "  uv not yet in PATH — restart your shell if subsequent installs fail."
+                            echo -n (__fish_color normal)
+                        end
+                        test $_uv_status -eq 0
+                    case special-git-cargo-fish
+                        _fish_deps_ensure cargo
+                        set -l _pre $status
+                        test $_pre -eq 130; and set cancelled 1
+                        test $_pre -eq 0; and _fish_deps_build_fish
+                end
+                set _rc $status
 
-            # An installer that traps SIGINT exits with 128+2 instead of dying
-            # of the signal, so fish carries on as if it had merely failed.
-            # Treat that, and a SIGINT fish took itself, as a cancellation:
-            # nothing further is offered.
-            test $_rc -eq 130; and set cancelled 1
-            test "$_fdc_cancelled" = 1; and set cancelled 1
+                # An installer that traps SIGINT exits with 128+2 instead of dying
+                # of the signal, so fish carries on as if it had merely failed.
+                # Treat that, and a SIGINT fish took itself, as a cancellation:
+                # nothing further is offered, not even the next method.
+                test $_rc -eq 130; and set cancelled 1
+                test "$_fdc_cancelled" = 1; and set cancelled 1
+                test $cancelled -eq 1; and break
+                test $_rc -eq 0; and break
+                set _try (math $_try + 1)
+            end
             if test $cancelled -eq 1
                 break
             end

@@ -45,8 +45,9 @@
 #
 #   For scripts, --yes answers every fish-deps prompt with its default
 #   without reading input: each tool is installed through its first
-#   (preferred) method, and prerequisites are installed when a method needs
-#   them. Prompts that belong to other programs, such as sudo's password,
+#   (preferred) method, falling back to the next method in the list when
+#   one fails, and prerequisites are installed when a method needs them.
+#   Prompts that belong to other programs, such as sudo's password,
 #   still appear. A bootstrap script can run
 #   fish -c 'fish-deps install --yes tea' unattended.
 #
@@ -175,7 +176,8 @@ function __fish_deps_help
     echo "    $c_flag--terminals$c_reset  Also offer Terminal-Emulator-tier deps (skipped by default)"
     echo "    $c_flag--all$c_reset        Shorthand for --optional --terminals"
     echo "    $c_flag-y$c_reset, $c_flag--yes$c_reset    Take every default without asking (for scripts);"
-    echo "                 prompts from sudo or an installer's own script still appear"
+    echo "                 a failed method falls back to the next one; prompts from"
+    echo "                 sudo or an installer's own script still appear"
     echo ""
     echo "  $c_dim""TOOL$c_reset names restrict a run to those catalog entries, any tier; an"
     echo "  unknown name is a usage error. Example: $c_cmd""fish-deps install --yes tea$c_reset"
