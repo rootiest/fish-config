@@ -377,6 +377,21 @@ check "an unmapped name passes through" ripgrep (_fish_deps_pm_pkg apt ripgrep)
 _fish_deps_pm_pkg brew cc >/dev/null
 check "a manager with no compiler package returns 1" 1 $status
 
+for pm in apt dnf yum zypper brew
+    check "$pm spells github-cli gh" gh (_fish_deps_pm_pkg $pm github-cli)
+end
+for pm in pacman paru yay
+    check "$pm keeps github-cli" github-cli (_fish_deps_pm_pkg $pm github-cli)
+end
+check "apt's Gitea client is tea-cli (its tea is a text editor)" tea-cli (_fish_deps_pm_pkg apt tea)
+check "zypper's Gitea client is gitea-tea" gitea-tea (_fish_deps_pm_pkg zypper tea)
+check "pacman's Gitea client is tea" tea (_fish_deps_pm_pkg pacman tea)
+check "brew's Gitea client is tea" tea (_fish_deps_pm_pkg brew tea)
+set -l got (_fish_deps_pm_pkg dnf tea)
+set -l rc $status
+check "dnf has no Gitea client: nothing printed" "" "$got"
+check "dnf has no Gitea client: returns 1" 1 $rc
+
 section _fish_deps_pm_has_pkg
 
 # apt-cache and pacman stubs: only the package called "known" exists.
@@ -628,7 +643,7 @@ section _fish_deps_install
 # only record how they were called. `fish-deps install` is driven by the
 # scripted _fish_deps_ask above plus a stdin file for the method menu.
 set -g _inst_bin $work/inst-bin
-set -g _inst_all uv cargo fish starship fzf zoxide direnv eza lsd bat ov rg trash python3 wakatime tailscale cc cat head
+set -g _inst_all uv cargo fish starship fzf zoxide direnv eza lsd bat ov rg trash python3 wakatime tailscale tea gh cc cat head
 
 function inst_reset --argument-names missing
     set -gx PATH $_real_path
@@ -648,6 +663,9 @@ function inst_reset --argument-names missing
     end
     # apt exists and packages only what the scenario lists in aptknown.
     printf '#!/bin/sh\nexit 0\n' >$_inst_bin/apt
+    # The release installers' architecture check reads uname -m.
+    printf '#!/bin/sh\necho x86_64\n' >$_inst_bin/uname
+    chmod +x $_inst_bin/uname
     printf '#!/bin/sh\nwhile read l; do [ "$l" = "$2" ] && exit 0; done <%s\nexit 100\n' $work/aptknown >$_inst_bin/apt-cache
     chmod +x $_inst_bin/apt $_inst_bin/apt-cache
     printf '%s\n' starship zoxide fish wakatime direnv >$work/aptknown
@@ -659,11 +677,12 @@ function inst_reset --argument-names missing
 end
 
 # Runs the installer with scripted answers (comma separated) and stdin text.
+# Anything after the two is passed to _fish_deps_install as arguments.
 function inst_run --argument-names answers input
     set -g _ask_answers (string split , -- $answers)
     set -g _ask_log
     printf '%b' "$input" >$work/stdin
-    _fish_deps_install <$work/stdin >$work/out 2>&1
+    _fish_deps_install $argv[3..] <$work/stdin >$work/out 2>&1
     set -g _inst_rc $status
     set -g _inst_out (string collect <$work/out)
 end
@@ -785,6 +804,137 @@ inst_run y,n '1\n'
 check "declining the compiler fails the install" 1 $_inst_rc
 check "declining the compiler never calls cargo install" false (inst_saw install (inst_log cargo))
 
+# ---- tea and gh: system package first, release download second ---------------
+function _fish_deps_tea_binary
+    echo called >>$work/inst-logs/tea-binary.log
+    return 0
+end
+function _fish_deps_gh_binary
+    echo called >>$work/inst-logs/gh-binary.log
+    return 0
+end
+
+# apt has neither package here, so the release is the only method: no menu.
+inst_reset "tea gh"
+inst_run y,y ''
+check "tea and gh without a package install from their releases" 0 $_inst_rc
+check "the tea release installer ran" true (test -e $work/inst-logs/tea-binary.log; and echo true; or echo false)
+check "the gh release installer ran" true (test -e $work/inst-logs/gh-binary.log; and echo true; or echo false)
+check "no package was installed for them" "" "$_sudo_log"
+
+# apt has both: the package is the default, the release the alternative.
+inst_reset "tea gh"
+printf '%s\n' tea-cli gh >>$work/aptknown
+inst_run y,y '\n2\n'
+check "tea's package is the first method" "apt install -y tea-cli" "$_sudo_log"
+check "the release is offered as the second method" true (inst_saw "binary download (github releases, ~/.local/bin/gh)" "$_inst_out")
+check "choosing it runs the gh release installer" true (test -e $work/inst-logs/gh-binary.log; and echo true; or echo false)
+check "the tea release installer did not run" false (test -e $work/inst-logs/tea-binary.log; and echo true; or echo false)
+
+# An architecture with no release build: only the package is left.
+inst_reset tea
+printf '#!/bin/sh\necho riscv64\n' >$_inst_bin/uname
+inst_run y ''
+check "an unsupported arch with no package skips tea" 0 $_inst_rc
+check "the unsupported arch is explained" true (inst_saw "x86_64 and aarch64 only (this is riscv64)" "$_inst_out")
+check "an unsupported arch never runs the release installer" false (test -e $work/inst-logs/tea-binary.log; and echo true; or echo false)
+check "an unsupported arch with no method asks nothing" 0 (count $_ask_log)
+
+# ---- naming tools restricts the run ---------------------------------------------
+inst_reset "starship zoxide tea"
+inst_run y '' tea
+check "install TOOL exits 0" 0 $_inst_rc
+check "install TOOL asks only about that tool" "Install tea?" "$_ask_log"
+check "install TOOL installs nothing else" false (inst_saw install (inst_log cargo))
+
+# kitty is a terminal emulator, skipped unless named or --terminals is given.
+inst_reset ""
+echo kitty >>$work/aptknown
+inst_run n '' kitty
+check "a named terminal emulator is offered without --terminals" "Install kitty?" "$_ask_log"
+check "a named tool prints no skipped-tier hint" false (inst_saw "Skipped" "$_inst_out")
+
+inst_reset ""
+inst_run '' '' tea
+check "a named tool that is installed is reported" true (inst_saw "tea is already installed ($_inst_bin/tea)" "$_inst_out")
+check "a named tool that is installed asks nothing" 0 (count $_ask_log)
+
+inst_reset ""
+inst_run n '' paru
+check "a named AUR helper off Arch says why it is skipped" true (inst_saw "only applies on Arch-based systems" "$_inst_out")
+check "a named AUR helper off Arch asks nothing" 0 (count $_ask_log)
+
+inst_reset starship
+inst_run y '1\n' nosuch starship alsonot
+check "an unknown tool is a usage error" 2 $_inst_rc
+check "the unknown tools are listed" true (inst_saw "not in the catalog: nosuch, alsonot" "$_inst_out")
+check "an unknown tool stops the run before any prompt" 0 (count $_ask_log)
+check "an unknown tool installs nothing" false (inst_saw install (inst_log cargo))
+check "a usage error leaves no run state behind" false (set -q _fdc_active; and echo true; or echo false)
+
+inst_run y '1\n' --bogus
+check "an unknown option is a usage error" 2 $_inst_rc
+check "the unknown option is named" true (inst_saw "unknown option '--bogus'" "$_inst_out")
+
+fish-deps install nosuch >/dev/null 2>&1
+check "fish-deps install with an unknown tool exits 2" 2 $status
+
+# ---- --yes takes every default without reading -------------------------------
+# The real _fish_deps_ask, with stdin holding a q: a single read would cancel
+# the run (130), so a clean exit proves nothing was read.
+functions -e _fish_deps_ask
+source $repo_root/functions/_fish_deps_ask.fish
+
+inst_reset "starship cc"
+inst_run '' 'q\n' --yes
+check "--yes runs to completion without reading stdin" 0 $_inst_rc
+check "--yes installs through the first method (cargo)" true (inst_saw "install --locked starship" (inst_log cargo))
+check "--yes accepts the prerequisite prompt too" "apt install -y build-essential" "$_sudo_log"
+check "--yes says which default it took" true (inst_saw "(default, --yes)" "$_inst_out")
+check "--yes still prints the question it answered" true (string match -qr 'Install starship\?\S* \[Y/n/q\] y \(--yes\)' -- "$_inst_out"; and echo true; or echo false)
+check "--yes leaves no state behind" false (set -q _fdc_assume_yes; and echo true; or echo false)
+
+inst_reset tea
+inst_run '' 'q\n' -y tea
+check "-y with a named tool installs it" 0 $_inst_rc
+check "-y ran the tea release installer" true (test -e $work/inst-logs/tea-binary.log; and echo true; or echo false)
+
+# Without --yes the same stdin is read, and its q cancels the run.
+inst_reset starship
+inst_run '' 'q\n'
+check "without --yes the prompt reads stdin" 130 $_inst_rc
+
+# The bootstrap form: a non-interactive fish -c, stdin at end of file. Any
+# read would see EOF and cancel (130) instead of installing.
+# PATH (the stubs) and HOME are already exported by inst_reset.
+inst_reset tea
+set -l fish_bin (status fish-path)
+set -l boot_out (begin
+        set -lx __fish_deps_os_release $work/os-release
+        $fish_bin --no-config -c "set -p fish_function_path $repo_root/functions
+            function _fish_deps_tea_binary; echo called >>$work/inst-logs/tea-binary.log; end
+            fish-deps install --yes tea" </dev/null 2>&1
+    end | string collect)
+set -l boot_rc $pipestatus[1]
+check "fish -c 'fish-deps install --yes tea' exits 0" 0 $boot_rc
+check "fish -c 'fish-deps install --yes tea' installs tea" true (test -e $work/inst-logs/tea-binary.log; and echo true; or echo false)
+check "fish -c 'fish-deps install --yes tea' asks nothing else" false (inst_saw "Install starship" "$boot_out")
+
+# Back to the scripted answers for the rest of the section.
+function _fish_deps_ask
+    set -ga _ask_log "$argv[1]"
+    set -l ans $_ask_answers[1]
+    set -e _ask_answers[1]
+    switch "$ans"
+        case y
+            return 0
+        case n
+            return 1
+    end
+    return 2
+end
+functions -e _fish_deps_tea_binary _fish_deps_gh_binary
+
 # ---- fish-deps sync does not update after a cancel ---------------------------
 function _fish_deps_update
     echo called >>$work/inst-logs/update.log
@@ -809,6 +959,286 @@ functions -e _fish_deps_update
 set -gx PATH $oldpath
 set -e __fish_deps_os_release
 functions -e sudo _fish_deps_ask ens_reset inst_reset inst_run inst_log inst_saw write_osrel
+
+# =============================================================================
+# 13. _fish_deps_tea_binary / _fish_deps_gh_binary
+# =============================================================================
+section _fish_deps_tea_binary
+
+# Section 12 stubbed and erased these, and fish does not autoload an erased
+# function again: load the real ones.
+source $repo_root/functions/_fish_deps_tea_binary.fish
+source $repo_root/functions/_fish_deps_gh_binary.fish
+
+# The network is three answers: the releases API ($_rel_api), the published
+# checksums ($_rel_sums, one line each) and the download itself (a copy of
+# the file $_rel_payload). Every URL requested is logged to $_curl_urls.
+set -g _rel_api
+set -g _rel_sums
+set -g _rel_payload
+function curl
+    set -l out
+    set -l url
+    set -l i 1
+    while test $i -le (count $argv)
+        switch $argv[$i]
+            case -o
+                set i (math $i + 1)
+                set out $argv[$i]
+            case --proto
+                set i (math $i + 1)
+            case '-*'
+            case '*'
+                set url $argv[$i]
+        end
+        set i (math $i + 1)
+    end
+    set -ga _curl_urls $url
+    switch $url
+        case '*/releases/latest'
+            test -n "$_rel_api"; or return 22
+            printf '%s' $_rel_api
+        case '*.sha256' '*_checksums.txt'
+            printf '%s\n' $_rel_sums
+        case '*'
+            command cp $_rel_payload $out
+    end
+end
+
+set -g _fake_arch x86_64
+function uname
+    echo $_fake_arch
+end
+
+function sha_file --argument-names file
+    sha256sum $file | string split -f1 ' '
+end
+
+function has_url --argument-names url
+    contains -- $url $_curl_urls; and echo true; or echo false
+end
+
+set -l tea $HOME/.local/bin/tea
+command rm -rf $HOME/.local
+printf 'tea-0.16.0' >$work/tea-payload
+set -g _rel_payload $work/tea-payload
+set -g _rel_api '{"id":1,"tag_name":"v0.16.0","name":"v0.16.0","assets":[]}'
+set -g _rel_sums (sha_file $work/tea-payload)"  tea-0.16.0-linux-amd64"
+set -g _curl_urls
+_fish_deps_tea_binary 2>/dev/null
+check "a verified tea installs" 0 $status
+check "the version comes from the gitea.com releases API" true (has_url https://gitea.com/api/v1/repos/gitea/tea/releases/latest)
+check "x86_64 downloads the linux-amd64 build" true (has_url https://dl.gitea.com/tea/0.16.0/tea-0.16.0-linux-amd64)
+check "the digest comes from the published .sha256" true (has_url https://dl.gitea.com/tea/0.16.0/tea-0.16.0-linux-amd64.sha256)
+check "tea lands in ~/.local/bin" tea-0.16.0 (command cat $tea 2>/dev/null)
+check "tea is executable" true (test -x $tea; and echo true; or echo false)
+check "no staging file is left behind" 0 (count $HOME/.local/bin/.tea.*)
+
+# A newer release replaces the installed copy in place.
+printf 'tea-0.17.0' >$work/tea-payload
+set -g _rel_api '{"tag_name":"v0.17.0"}'
+set -g _rel_sums (sha_file $work/tea-payload)"  tea-0.17.0-linux-amd64"
+_fish_deps_tea_binary 2>/dev/null
+check "an upgrade returns 0" 0 $status
+check "an upgrade replaces the binary" tea-0.17.0 (command cat $tea)
+
+set -g _fake_arch aarch64
+set -g _rel_sums (sha_file $work/tea-payload)"  tea-0.17.0-linux-arm64"
+set -g _curl_urls
+_fish_deps_tea_binary 2>/dev/null
+check "aarch64 installs" 0 $status
+check "aarch64 downloads the linux-arm64 build" true (has_url https://dl.gitea.com/tea/0.17.0/tea-0.17.0-linux-arm64)
+set -g _fake_arch x86_64
+
+# A digest that does not match: refused, and the installed copy survives.
+printf tampered >$work/tea-payload
+set -g _rel_sums "4444444444444444444444444444444444444444444444444444444444444444  tea-0.17.0-linux-amd64"
+set -l err (_fish_deps_tea_binary 2>&1)
+check "a digest mismatch returns 1" 1 $status
+check "a digest mismatch is reported" true (string match -q '*Checksum mismatch*' -- "$err"; and echo true; or echo false)
+check "a digest mismatch keeps the installed copy" tea-0.17.0 (command cat $tea)
+check "a digest mismatch leaves no staging file" 0 (count $HOME/.local/bin/.tea.*)
+command rm -f $tea
+_fish_deps_tea_binary 2>/dev/null
+check "a digest mismatch on a fresh install leaves no file" false (test -e $tea; and echo true; or echo false)
+
+# A checksum file without our build: the binary is never requested.
+set -g _rel_sums "0000000000000000000000000000000000000000000000000000000000000000  tea-0.17.0-linux-386"
+set -g _curl_urls
+_fish_deps_tea_binary 2>/dev/null
+check "no published digest returns 1" 1 $status
+check "no published digest never downloads the binary" false (has_url https://dl.gitea.com/tea/0.17.0/tea-0.17.0-linux-amd64)
+
+set -g _rel_api ''
+_fish_deps_tea_binary 2>/dev/null
+check "no release information returns 1" 1 $status
+
+set -g _fake_arch riscv64
+set -g _curl_urls
+set err (_fish_deps_tea_binary 2>&1)
+check "an unsupported arch returns 1" 1 $status
+check "an unsupported arch is named" true (string match -q '*x86_64 and aarch64 only (this is riscv64)*' -- "$err"; and echo true; or echo false)
+check "an unsupported arch touches no network" 0 (count $_curl_urls)
+check "an unsupported arch installs nothing" false (test -e $tea; and echo true; or echo false)
+set -g _fake_arch x86_64
+
+section _fish_deps_gh_binary
+
+# A release tarball laid out like upstream's: gh_VER_linux_ARCH/bin/gh.
+function mk_gh_tgz --argument-names ver arch content
+    set -l stem "gh_$ver"_linux_$arch
+    set -l src $work/ghsrc/$arch
+    command rm -rf $src
+    mkdir -p $src/$stem/bin
+    test -n "$content"; and printf '%s' $content >$src/$stem/bin/gh
+    tar -czf $work/gh-$arch.tgz -C $src $stem
+    echo $work/gh-$arch.tgz
+end
+
+set -l gh $HOME/.local/bin/gh
+set -g _rel_payload (mk_gh_tgz 2.103.3 amd64 gh-2.103.3)
+set -g _rel_api '{"url":"x","tag_name":"v2.103.3","assets":[{"name":"gh_2.103.3_checksums.txt"}]}'
+set -g _rel_sums "1111111111111111111111111111111111111111111111111111111111111111  gh_2.103.3_linux_386.tar.gz" \
+    (sha_file $_rel_payload)"  gh_2.103.3_linux_amd64.tar.gz" \
+    "2222222222222222222222222222222222222222222222222222222222222222  gh_2.103.3_linux_arm64.tar.gz"
+set -g _curl_urls
+_fish_deps_gh_binary 2>/dev/null
+check "a verified gh installs" 0 $status
+check "the version comes from the GitHub releases API" true (has_url https://api.github.com/repos/cli/cli/releases/latest)
+check "the digest comes from the release's checksums file" true (has_url https://github.com/cli/cli/releases/download/v2.103.3/gh_2.103.3_checksums.txt)
+check "x86_64 downloads the linux_amd64 tarball" true (has_url https://github.com/cli/cli/releases/download/v2.103.3/gh_2.103.3_linux_amd64.tar.gz)
+check "bin/gh lands in ~/.local/bin" gh-2.103.3 (command cat $gh 2>/dev/null)
+check "gh is executable" true (test -x $gh; and echo true; or echo false)
+check "no staging file is left behind" 0 (count $HOME/.local/bin/.gh.*)
+
+set -g _fake_arch aarch64
+set -g _rel_payload (mk_gh_tgz 2.103.3 arm64 gh-arm)
+set -g _rel_sums (sha_file $_rel_payload)"  gh_2.103.3_linux_arm64.tar.gz"
+set -g _curl_urls
+_fish_deps_gh_binary 2>/dev/null
+check "aarch64 installs" 0 $status
+check "aarch64 downloads the linux_arm64 tarball" true (has_url https://github.com/cli/cli/releases/download/v2.103.3/gh_2.103.3_linux_arm64.tar.gz)
+check "the arm64 build is the one installed" gh-arm (command cat $gh)
+set -g _fake_arch x86_64
+
+# The digest listed belongs to another asset: refused, nothing changes.
+set -g _rel_payload (mk_gh_tgz 2.103.3 amd64 gh-tampered)
+set -g _rel_sums "3333333333333333333333333333333333333333333333333333333333333333  gh_2.103.3_linux_amd64.tar.gz"
+_fish_deps_gh_binary 2>/dev/null
+check "a digest mismatch returns 1" 1 $status
+check "a digest mismatch keeps the installed copy" gh-arm (command cat $gh)
+command rm -f $gh
+_fish_deps_gh_binary 2>/dev/null
+check "a digest mismatch on a fresh install leaves no file" false (test -e $gh; and echo true; or echo false)
+check "a digest mismatch leaves no staging file" 0 (count $HOME/.local/bin/.gh.*)
+
+# A verified archive that has no bin/gh installs nothing.
+set -g _rel_payload (mk_gh_tgz 2.103.3 amd64 '')
+set -g _rel_sums (sha_file $_rel_payload)"  gh_2.103.3_linux_amd64.tar.gz"
+_fish_deps_gh_binary 2>/dev/null
+check "an archive without bin/gh returns 1" 1 $status
+check "an archive without bin/gh installs nothing" false (test -e $gh; and echo true; or echo false)
+
+set -g _fake_arch armv7l
+set -g _curl_urls
+_fish_deps_gh_binary 2>/dev/null
+check "an unsupported arch returns 1" 1 $status
+check "an unsupported arch touches no network" 0 (count $_curl_urls)
+set -g _fake_arch x86_64
+
+functions -e uname sha_file has_url mk_gh_tgz
+
+# =============================================================================
+# 14. update: release copies vs packaged copies, and named tools
+# =============================================================================
+section "_fish_deps_update: tea and gh"
+
+# apt is the package manager. A tool in ~/.local/bin came from its release;
+# one elsewhere on PATH came from the package manager.
+set -l upd $work/upd-bin
+mkdir -p $upd $HOME/.local/bin
+for t in apt eza
+    printf '#!/bin/sh\nexit 0\n' >$upd/$t
+    chmod +x $upd/$t
+end
+source $repo_root/functions/_fish_deps_update.fish
+function upd_place --argument-names tool dir
+    set -lx PATH $_real_path
+    command rm -f $upd/$tool $HOME/.local/bin/$tool
+    printf '#!/bin/sh\nexit 0\n' >$dir/$tool
+    chmod +x $dir/$tool
+end
+function upd_log
+    test -s $work/upd.log; and string join ' | ' <$work/upd.log
+    echo -n >$work/upd.log
+end
+function _fish_deps_tea_binary
+    echo tea-release >>$work/upd.log
+end
+function _fish_deps_gh_binary
+    echo gh-release >>$work/upd.log
+end
+function _fish_deps_pm_upgrade
+    echo "pm $argv" >>$work/upd.log
+end
+function fisher
+    echo fisher >>$work/upd.log
+end
+
+set oldpath $PATH
+set -gx PATH $HOME/.local/bin $upd
+upd_log >/dev/null
+
+upd_place tea $HOME/.local/bin
+upd_place gh $upd
+_fish_deps_update tea gh >/dev/null 2>&1
+check "named updates succeed" 0 $status
+check "release tea updates from its release, packaged gh through apt as gh" "tea-release | pm gh" (upd_log)
+
+upd_place tea $upd
+upd_place gh $HOME/.local/bin
+_fish_deps_update tea gh >/dev/null 2>&1
+check "packaged tea updates as tea-cli, release gh from its release" "pm tea-cli | gh-release" (upd_log)
+
+_fish_deps_update gh >/dev/null 2>&1
+check "naming one tool updates only that tool" gh-release (upd_log)
+
+_fish_deps_update >/dev/null 2>&1
+check "an unrestricted update still covers fisher and the rest" "fisher | pm tea-cli | gh-release | pm eza" (upd_log)
+
+PATH=$_real_path command rm -f $upd/tea
+set err (_fish_deps_update tea 2>&1)
+check "a named tool that is not installed is not updated" "" (upd_log)
+check "a named tool that is not installed says so" true (string match -q '*tea is not installed*' -- "$err"; and echo true; or echo false)
+
+set err (_fish_deps_update tea nosuch 2>&1)
+check "update with an unknown tool is a usage error" 2 $status
+check "the unknown tool is listed" true (string match -q '*not in the catalog: nosuch*' -- "$err"; and echo true; or echo false)
+check "an unknown tool updates nothing" "" (upd_log)
+
+fish-deps update --bogus >/dev/null 2>&1
+check "fish-deps update with an unknown option exits 2" 2 $status
+check "an unknown option updates nothing" "" (upd_log)
+
+# sync hands the named tools to both halves, the flags to install only, and
+# stops on a usage error.
+set -g _sync_rc 0
+function _fish_deps_install
+    echo "install $argv" >>$work/upd.log
+    return $_sync_rc
+end
+function _fish_deps_update
+    echo "update $argv" >>$work/upd.log
+end
+fish-deps sync --yes tea --optional gh >/dev/null 2>&1
+check "sync passes flags and tools to install, tools to update" "install --yes tea --optional gh | update tea gh" (upd_log)
+set -g _sync_rc 2
+fish-deps sync nosuch >/dev/null 2>&1
+check "sync exits 2 when install rejects its arguments" 2 $status
+check "sync does not update after a usage error" "install nosuch" (upd_log)
+
+set -gx PATH $oldpath
+functions -e upd_place upd_log _fish_deps_tea_binary _fish_deps_gh_binary _fish_deps_pm_upgrade fisher _fish_deps_install _fish_deps_update
 
 # =============================================================================
 # Cleanup
