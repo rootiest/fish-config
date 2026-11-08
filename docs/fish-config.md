@@ -2017,8 +2017,9 @@ functions). They are active in all interactive sessions.
 
     For scripts, --yes answers every fish-deps prompt with its default
     without reading input: each tool is installed through its first
-    (preferred) method, and prerequisites are installed when a method needs
-    them. Prompts that belong to other programs, such as sudo's password,
+    (preferred) method, falling back to the next method in the list when
+    one fails, and prerequisites are installed when a method needs them.
+    Prompts that belong to other programs, such as sudo's password,
     still appear. A bootstrap script can run
     fish -c 'fish-deps install --yes tea' unattended.
 
@@ -4772,6 +4773,9 @@ failure, and leaves any copy already installed in place.
 `fish-deps install --yes` answers every `fish-deps` prompt with its default
 without reading input: each missing tool is installed, through the first
 method in its list, and any prerequisite that method needs is installed too.
+If that method fails, the next one in the list is tried, and so on; the tool
+is reported as failed only when every method has failed. A cancellation (`q`,
+`Ctrl+C`) still stops the run at once.
 Prompts that belong to other programs still appear, such as the `sudo`
 password, or an installer script's own questions. Combined with tool names it
 installs exactly what a script needs; from a `bash` bootstrap script:
