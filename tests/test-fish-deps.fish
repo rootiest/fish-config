@@ -899,6 +899,74 @@ inst_run '' 'q\n' -y tea
 check "-y with a named tool installs it" 0 $_inst_rc
 check "-y ran the tea release installer" true (test -e $work/inst-logs/tea-binary.log; and echo true; or echo false)
 
+# ---- --yes falls back to the next method when one fails ----------------------
+# apt carries tea-cli here, so the package is the default and the release the
+# second method. sudo fails with $_sudo_rc, the release with $_tea_rc.
+functions -c sudo __fdt_orig_sudo
+set -g _sudo_rc 0
+set -g _tea_rc 0
+function sudo
+    set -ga _sudo_log "$argv"
+    return $_sudo_rc
+end
+function _fish_deps_tea_binary
+    echo called >>$work/inst-logs/tea-binary.log
+    return $_tea_rc
+end
+function tea_ran
+    test -e $work/inst-logs/tea-binary.log; and echo true; or echo false
+end
+
+inst_reset tea
+echo tea-cli >>$work/aptknown
+set -g _sudo_rc 100
+inst_run '' '' --yes tea
+check "--yes: a failed default method falls back, exit 0" 0 $_inst_rc
+check "--yes: the package was tried first" "apt install -y tea-cli" "$_sudo_log"
+check "--yes: the release installer ran next" true (tea_ran)
+check "--yes: the fallback is announced" true (inst_saw "apt (tea-cli) failed; trying binary download (gitea.com releases" "$_inst_out")
+check "--yes: the tool is reported installed" true (inst_saw "tea installed." "$_inst_out")
+check "--yes: a recovered tool is not reported failed" false (inst_saw "failed:" "$_inst_out")
+
+inst_reset tea
+echo tea-cli >>$work/aptknown
+set -g _sudo_rc 100
+set -g _tea_rc 1
+inst_run '' '' --yes tea
+check "--yes: every method failing exits 1" 1 $_inst_rc
+check "--yes: every method was tried" true (tea_ran)
+check "--yes: the tool is reported failed" true (inst_saw "tea install failed." "$_inst_out")
+set -g _tea_rc 0
+
+# A cancellation inside the first method (an installer that exits 130 after
+# catching Ctrl+C) stops the run; the next method is never tried.
+inst_reset tea
+echo tea-cli >>$work/aptknown
+set -g _sudo_rc 130
+inst_run '' '' --yes tea
+check "--yes: a cancelled method exits 130" 130 $_inst_rc
+check "--yes: a cancelled method never falls back" false (tea_ran)
+check "--yes: a cancelled method announces no fallback" false (inst_saw trying "$_inst_out")
+
+# Interactively the chosen method is the only one: y, then Enter for the
+# default (the package), which fails.
+inst_reset tea
+echo tea-cli >>$work/aptknown
+set -g _sudo_rc 100
+inst_run '' 'y\n\n' tea
+check "without --yes a failed method exits 1" 1 $_inst_rc
+check "without --yes there is no fallback" false (tea_ran)
+check "without --yes no fallback is announced" false (inst_saw trying "$_inst_out")
+set -g _sudo_rc 0
+
+functions -e sudo tea_ran
+functions -c __fdt_orig_sudo sudo
+functions -e __fdt_orig_sudo
+function _fish_deps_tea_binary
+    echo called >>$work/inst-logs/tea-binary.log
+    return 0
+end
+
 # Without --yes the same stdin is read, and its q cancels the run.
 inst_reset starship
 inst_run '' 'q\n'
