@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # CLASSIFICATION
-#   self-limiting(rm,cat), destructive, network, blocking-prompt
+#   self-limiting(rm,cat), destructive, network
 #
 # SYNOPSIS
-#   _fish_deps_install
+#   _fish_deps_install [--optional] [--terminals] [--all] [-y|--yes] [TOOL...]
 #
 # DESCRIPTION
 #   Interactively installs each missing fish shell dependency from the catalog.
@@ -20,6 +20,17 @@
 #   Optional-tier and Terminal-Emulator-tier dependencies are skipped by
 #   default; pass --optional / --terminals to include them individually, or
 #   --all to include both.
+#
+#   Naming tools restricts the run to those catalog entries, whatever their
+#   tier, so fish-deps install kitty offers kitty without --terminals. A
+#   name that is not in the catalog is a usage error, reported before
+#   anything is done.
+#
+#   --yes answers every fish-deps prompt with its default without reading
+#   input: each tool is installed, through the first (preferred) method, and
+#   any prerequisite a method needs is installed too. Prompts that belong to
+#   other programs (sudo's password, an installer script's own questions)
+#   still appear.
 #
 #   The paru and yay AUR helpers are only offered on Arch-based systems.
 #
@@ -40,10 +51,13 @@
 #   --optional   Also offer to install Optional-tier dependencies
 #   --terminals  Also offer to install Terminal-Emulator-tier dependencies
 #   --all        Shorthand for --optional --terminals
+#   -y, --yes    Take every default without asking
+#   TOOL         Only consider these catalog entries (any tier)
 #
 # EXIT STATUS
 #   0    Nothing failed (including a run where everything was declined)
 #   1    One or more installs failed
+#   2    Unknown option, or a TOOL that is not in the catalog
 #   130  The run was cancelled (q, Ctrl+C or Ctrl+D)
 #
 # EXAMPLE
@@ -51,23 +65,44 @@
 #   _fish_deps_install --optional
 #   _fish_deps_install --terminals
 #   _fish_deps_install --all
+#   _fish_deps_install --yes tea gh
 function _fish_deps_install
     _fish_deps_catalog
+    __fish_palette
 
     set -l include_optional 0
     set -l include_terminals 0
-    if contains -- --all $argv
-        set include_optional 1
-        set include_terminals 1
+    set -l assume_yes 0
+    set -l selected
+    set -l unknown
+    for arg in $argv
+        switch $arg
+            case --all
+                set include_optional 1
+                set include_terminals 1
+            case --optional
+                set include_optional 1
+            case --terminals
+                set include_terminals 1
+            case -y --yes
+                set assume_yes 1
+            case '-*'
+                echo "$c_err""fish-deps: unknown option '$arg'$c_reset" >&2
+                echo "Run $c_cmd""fish-deps help$c_reset for usage." >&2
+                return 2
+            case '*'
+                if contains -- $arg $_fdc_bins
+                    contains -- $arg $selected; or set -a selected $arg
+                else
+                    set -a unknown $arg
+                end
+        end
     end
-    if contains -- --optional $argv
-        set include_optional 1
+    if set -q unknown[1]
+        echo "$c_err""fish-deps: not in the catalog: "(string join ', ' -- $unknown)"$c_reset" >&2
+        echo "Run $c_cmd""fish-deps status$c_reset to list the catalog, or $c_cmd""fish-deps help$c_reset for usage." >&2
+        return 2
     end
-    if contains -- --terminals $argv
-        set include_terminals 1
-    end
-
-    __fish_palette
 
     set -l pm (_fish_deps_detect_pm)
     set -l installed_any 0
@@ -82,6 +117,10 @@ function _fish_deps_install
     # removes itself if it is ever left behind by an aborted one.
     set -g _fdc_cancelled 0
     set -g _fdc_active 1
+    # --yes: _fish_deps_ask (and so _fish_deps_ensure) takes the default
+    # without reading. Torn down with the cancellation state below.
+    set -e _fdc_assume_yes
+    test $assume_yes -eq 1; and set -g _fdc_assume_yes 1
     for _need in cc toolchain unzip go
         set -e _fdc_ensure_$_need
     end
@@ -95,10 +134,21 @@ function _fish_deps_install
 
     set -l i 1
     for bin in $_fdc_bins
+        # Named tools restrict the run to themselves.
+        if set -q selected[1]; and not contains -- $bin $selected
+            set i (math $i + 1)
+            continue
+        end
+
         # win32yank only matters under WSL2 — skip the entry entirely
         # elsewhere so a plain Linux box never sees it, not even as a
-        # "no install method available" note.
+        # "no install method available" note (unless it was asked for).
         if test "$bin" = win32yank.exe; and not string match -qi '*microsoft*' (cat /proc/sys/kernel/osrelease 2>/dev/null)
+            if set -q selected[1]
+                echo -n (__fish_color brblack)
+                echo "  $bin only applies under WSL2 — skipping"
+                echo -n (__fish_color normal)
+            end
             set i (math $i + 1)
             continue
         end
@@ -106,12 +156,18 @@ function _fish_deps_install
         # The AUR helpers exist only on Arch-based systems. Elsewhere there
         # is nothing to install, so skip them as silently as win32yank.
         if contains -- $bin paru yay; and not _fish_deps_is_arch
+            if set -q selected[1]
+                echo -n (__fish_color brblack)
+                echo "  $bin is an AUR helper and only applies on Arch-based systems — skipping"
+                echo -n (__fish_color normal)
+            end
             set i (math $i + 1)
             continue
         end
 
-        # Optional-tier deps are opt-in: skip unless --optional/--all was passed.
-        if test "$_fdc_tiers[$i]" = opt; and test $include_optional -eq 0
+        # Optional-tier deps are opt-in: skip unless --optional/--all was
+        # passed, or the tool was named.
+        if test "$_fdc_tiers[$i]" = opt; and test $include_optional -eq 0; and not set -q selected[1]
             if not command -q $bin
                 set skipped_optional (math $skipped_optional + 1)
             end
@@ -119,8 +175,9 @@ function _fish_deps_install
             continue
         end
 
-        # Terminal-emulator-tier deps are opt-in: skip unless --terminals/--all was passed.
-        if test "$_fdc_tiers[$i]" = term; and test $include_terminals -eq 0
+        # Terminal-emulator-tier deps are opt-in: skip unless
+        # --terminals/--all was passed, or the tool was named.
+        if test "$_fdc_tiers[$i]" = term; and test $include_terminals -eq 0; and not set -q selected[1]
             if not command -q $bin
                 set skipped_terminals (math $skipped_terminals + 1)
             end
@@ -145,6 +202,14 @@ function _fish_deps_install
                 set upgrade_label Upgrade
                 set done_word upgraded
             end
+        end
+
+        # A tool asked for by name gets an answer even when there is
+        # nothing to do, so a scripted install says why it did nothing.
+        if test $needs_install -eq 0; and set -q selected[1]
+            echo -n (__fish_color brblack)
+            echo "  $bin is already installed ("(command -s $bin)")"
+            echo -n (__fish_color normal)
         end
 
         if test $needs_install -eq 1
@@ -328,7 +393,12 @@ function _fish_deps_install
 
             # Choose install method
             set -l chosen_method $methods[1]
-            if test (count $methods) -gt 1
+            if test (count $methods) -gt 1; and test $assume_yes -eq 1
+                # --yes: the default (first, preferred) method, unread.
+                echo -n (__fish_color brblack)
+                echo "  "(string lower $upgrade_label)"ing via $method_labels[1] (default, --yes)"
+                echo -n (__fish_color normal)
+            else if test (count $methods) -gt 1
                 echo "  Available methods:"
                 set -l m 1
                 for lbl in $method_labels
@@ -513,6 +583,7 @@ function _fish_deps_install
     functions -e __fdi_on_sigint
     set -e _fdc_active
     set -e _fdc_cancelled
+    set -e _fdc_assume_yes
 
     if test $interrupted -eq 1
         echo "$c_warn""Installation cancelled — nothing further was installed.$c_reset" >&2
