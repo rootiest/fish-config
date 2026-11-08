@@ -27,7 +27,10 @@
 #                                  --terminals (or --all) is passed.
 #     int   Integrations         — opt-in third-party services requiring
 #                                  their own account/setup (wakatime,
-#                                  tailscale).
+#                                  tailscale, tea, gh).
+#
+#   Package names in _fdc_pm are spelled the Arch way (github-cli);
+#   _fish_deps_pm_pkg translates them for other package managers.
 #
 # EXAMPLE
 #   _fish_deps_catalog
@@ -35,27 +38,27 @@
 function _fish_deps_catalog
     set -g _fdc_bins \
         uv cargo fish starship fzf zoxide direnv paru yay \
-        wakatime tailscale \
+        wakatime tailscale tea gh \
         eza lsd bat btop dust duf prettyping go ov rg lazygit lazydocker docker trash kitty wezterm python3 yt-dlp screen mpv vlc marktext firejail win32yank.exe
 
     set -g _fdc_tiers \
         rec rec req rec req rec rec rec rec \
-        int int \
+        int int int int \
         rec rec rec opt opt opt opt opt rec rec opt opt opt rec term term rec opt opt opt opt opt opt opt
 
     set -g _fdc_cargo \
         "" "" "" starship "" zoxide "" "" "" \
-        "" "" \
+        "" "" "" "" \
         eza lsd bat "" du-dust "" "" "" "" ripgrep "" "" "" trashy "" "" "" "" "" "" "" "" "" ""
 
     set -g _fdc_pm \
         uv cargo fish starship fzf zoxide direnv "" yay \
-        wakatime tailscale \
+        wakatime tailscale tea github-cli \
         eza lsd bat btop dust duf prettyping go ov ripgrep lazygit lazydocker docker trash kitty wezterm python yt-dlp screen mpv vlc "" firejail ""
 
     set -g _fdc_special \
         curl-uv rustup-installer git-cargo-fish curl-installer fzf-update "" "" paru-build yay-build \
-        wakatime-binary "" \
+        wakatime-binary "" tea-release gh-release \
         "" "" "" "" "" "" "" "" go-ov "" "" curl-lazydocker "" "" "" "" "" "" "" "" "" marktext-release "" win32yank-release
 end
 

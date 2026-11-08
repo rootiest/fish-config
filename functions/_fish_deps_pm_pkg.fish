@@ -11,6 +11,14 @@
 #   golang under dnf), and a few requirements are not single packages at
 #   all (cc is build-essential under apt, base-devel under pacman).
 #
+#   The two Integrations clients are spelled differently almost everywhere:
+#
+#     github-cli  is gh outside the Arch family (apt, dnf, yum, zypper,
+#                 brew, pkg).
+#     tea         is tea-cli under apt, whose own tea package is an unrelated
+#                 text editor, and gitea-tea under zypper. Fedora and FreeBSD
+#                 carry no Gitea client, so dnf, yum and pkg have none.
+#
 #   A NAME with no special mapping is printed unchanged.
 #
 # ARGUMENTS
@@ -19,13 +27,14 @@
 #
 # EXIT STATUS
 #   0  A package name was printed
-#   1  PM has no package for that requirement (nothing is printed)
+#   1  PM has no package for that requirement or tool (nothing is printed)
 #
 # RETURNS
 #   The package name on stdout
 #
 # EXAMPLE
 #   _fish_deps_pm_pkg apt go     # golang-go
+#   _fish_deps_pm_pkg apt github-cli     # gh
 function _fish_deps_pm_pkg --argument-names pm name
     switch "$name"
         case cc
@@ -47,6 +56,24 @@ function _fish_deps_pm_pkg --argument-names pm name
                     echo golang
                 case '*'
                     echo go
+            end
+        case github-cli
+            switch "$pm"
+                case pacman paru yay
+                    echo github-cli
+                case '*'
+                    echo gh
+            end
+        case tea
+            switch "$pm"
+                case apt
+                    echo tea-cli
+                case zypper
+                    echo gitea-tea
+                case dnf yum pkg
+                    return 1
+                case '*'
+                    echo tea
             end
         case '*'
             echo $name

@@ -12,6 +12,11 @@
 #   preferred method. Priority order: cargo, then system PM, then special
 #   installers (fzf-update, fisher, pipx). Always updates fisher plugins first.
 #
+#   Tools with a release installer (tea, gh) are updated the way they were
+#   installed: a binary that resolves to ~/.local/bin/<tool> is replaced by
+#   the latest verified release, anything else is upgraded through the
+#   system package manager under that manager's package name.
+#
 #   Each update command's exit status is checked. A failing update does not
 #   stop the run; the failed tools are collected and reported on stderr at
 #   the end ("N of M updates failed: ...").
@@ -158,6 +163,32 @@ function _fish_deps_update
             set attempted (math $attempted + 1)
             _fish_deps_win32yank_binary
             or set -a failed $bin
+            set i (math $i + 1)
+            continue
+        end
+
+        # tea, gh: a copy fish-deps installed from a release lives in
+        # ~/.local/bin and is refreshed from the latest release; a packaged
+        # copy belongs to its package manager, under that manager's name.
+        if contains -- "$special" tea-release gh-release
+            if test (command -s $bin) = "$HOME/.local/bin/$bin"
+                echo "Updating $bin..."
+                set attempted (math $attempted + 1)
+                if test $special = tea-release
+                    _fish_deps_tea_binary
+                else
+                    _fish_deps_gh_binary
+                end
+                or set -a failed $bin
+            else if test -n "$pm"; and test -n "$pm_pkg"
+                set -l pkg (_fish_deps_pm_pkg $pm $pm_pkg)
+                if test -n "$pkg"
+                    echo "Updating $bin..."
+                    set attempted (math $attempted + 1)
+                    _fish_deps_pm_upgrade $pkg
+                    or set -a failed $bin
+                end
+            end
             set i (math $i + 1)
             continue
         end

@@ -53,7 +53,7 @@
 #     Terminal Emulators  kitty, wezterm — only matter if one of them is
 #                         your actual terminal; skipped by install/sync
 #                         unless --terminals (or --all) is passed
-#     Integrations        wakatime, tailscale
+#     Integrations        wakatime, tailscale, tea, gh
 #
 # ARGUMENTS
 #   status       Report installed/missing deps (default)

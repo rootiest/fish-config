@@ -285,6 +285,26 @@ function _fish_deps_install
                         set -a methods special-yay
                         set -a method_labels "build from AUR (makepkg)"
                     end
+                case tea-release gh-release
+                    # A supplemental method, after the system package: a
+                    # packaged tea or gh is kept current by the system's own
+                    # upgrades, while the release copy in ~/.local/bin is
+                    # only refreshed by fish-deps update. Where the package
+                    # manager has no package (tea on plain Arch or Fedora,
+                    # gh on older Debian) this is the only method offered.
+                    switch (uname -m)
+                        case x86_64 aarch64 arm64
+                            set -a methods special-$special
+                            if test $special = tea-release
+                                set -a method_labels "binary download (gitea.com releases, ~/.local/bin/tea)"
+                            else
+                                set -a method_labels "binary download (github releases, ~/.local/bin/gh)"
+                            end
+                        case '*'
+                            echo -n (__fish_color brblack)
+                            echo "  note: $bin release builds are installed for x86_64 and aarch64 only (this is "(uname -m)")"
+                            echo -n (__fish_color normal)
+                    end
             end
 
             if test (count $methods) -eq 0
@@ -401,6 +421,17 @@ function _fish_deps_install
                     test $_pre -eq 0; and _fish_deps_wakatime_binary
                 case special-win32yank
                     _fish_deps_win32yank_binary
+                case special-tea-release special-gh-release
+                    if test $chosen_method = special-tea-release
+                        _fish_deps_tea_binary
+                    else
+                        _fish_deps_gh_binary
+                    end
+                    set -l _rel_status $status
+                    # ~/.local/bin may not have existed when this shell
+                    # started, so it may not be on PATH yet.
+                    _fish_deps_refresh_path
+                    test $_rel_status -eq 0
                 case special-fzf
                     fzf-update
                 case special-curl
