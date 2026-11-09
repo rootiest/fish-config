@@ -1115,7 +1115,8 @@ functions). They are active in all interactive sessions.
     Synopsis:  rm [-e [options] | -S | args...]
 
     Enhanced rm that routes deletions through trash when safe. With no
-    arguments, lists current trash contents. -e/--empty empties the trash
+    arguments, lists current trash contents and their total size, with
+    the files/info breakdown. -e/--empty empties the trash
     (with optional trash-empty sub-arguments). -S/--secure permanently
     deletes via rm -rf and triggers fstrim. Plain paths and -r/-R are sent
     to trash put; any other flags fall back to system rm.
@@ -1125,7 +1126,7 @@ functions). They are active in all interactive sessions.
     command rm — no wrapper, no trash, no trapping.
 
     Arguments:
-      (none)              List current trash contents
+      (none)              List current trash contents and total size
       -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
       -S, --secure        Permanently delete targets and run fstrim (irreversible)
       -r, -R, --recursive Forwarded to trash put alongside path arguments
@@ -1143,7 +1144,7 @@ functions). They are active in all interactive sessions.
     rm -e
     rm -S sensitive_key.pem
 
-**Dependencies:** `trash`
+**Dependencies:** `trash`, `__rm_trash_size`
 
 **Classification:** `bypasses-shadow(rm)`, `destructive`
 
