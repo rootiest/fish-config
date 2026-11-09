@@ -8,7 +8,7 @@
 #   aliases/filesystem
 #
 # DEPENDENCIES
-#   trash
+#   trash, __rm_trash_size
 #
 # CLASSIFICATION
 #   bypasses-shadow(rm), destructive
@@ -18,7 +18,8 @@
 #
 # DESCRIPTION
 #   Enhanced rm that routes deletions through trash when safe. With no
-#   arguments, lists current trash contents. -e/--empty empties the trash
+#   arguments, lists current trash contents and their total size, with
+#   the files/info breakdown. -e/--empty empties the trash
 #   (with optional trash-empty sub-arguments). -S/--secure permanently
 #   deletes via rm -rf and triggers fstrim. Plain paths and -r/-R are sent
 #   to trash put; any other flags fall back to system rm.
@@ -28,7 +29,7 @@
 #   command rm — no wrapper, no trash, no trapping.
 #
 # ARGUMENTS
-#   (none)              List current trash contents
+#   (none)              List current trash contents and total size
 #   -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
 #   -S, --secure        Permanently delete targets and run fstrim (irreversible)
 #   -r, -R, --recursive Forwarded to trash put alongside path arguments
@@ -57,6 +58,9 @@ function rm --description 'Ultimate rm: trash, list, empty, and secure-erase'
         if type -q trash
             echo "🗑️ Current Trash Contents:"
             trash list
+            set -l list_status $status
+            __rm_trash_size
+            return $list_status
         else
             command rm
         end
