@@ -1542,7 +1542,8 @@ rg -l \[dq]TODO\[dq] \[ti]/projects/myapp
 Synopsis:  rm [-e [options] | -S | args...]
 
 Enhanced rm that routes deletions through trash when safe. With no
-arguments, lists current trash contents. -e/--empty empties the trash
+arguments, lists current trash contents and their total size, with
+the files/info breakdown. -e/--empty empties the trash
 (with optional trash-empty sub-arguments). -S/--secure permanently
 deletes via rm -rf and triggers fstrim. Plain paths and -r/-R are sent
 to trash put; any other flags fall back to system rm.
@@ -1552,7 +1553,7 @@ Opinionated component (C1): when disabled via __fish_config_op_aliases
 command rm \[em] no wrapper, no trash, no trapping.
 
 Arguments:
-  (none)              List current trash contents
+  (none)              List current trash contents and total size
   -e, --empty [opts]  Empty the trash; opts forwarded to trash empty
   -S, --secure        Permanently delete targets and run fstrim (irreversible)
   -r, -R, --recursive Forwarded to trash put alongside path arguments
@@ -1572,7 +1573,7 @@ rm -S sensitive_key.pem
 \f[R]
 .fi
 .PP
-\f[B]Dependencies:\f[R] \f[V]trash\f[R]
+\f[B]Dependencies:\f[R] \f[V]trash\f[R], \f[V]__rm_trash_size\f[R]
 .PP
 \f[B]Classification:\f[R] \f[V]bypasses-shadow(rm)\f[R],
 \f[V]destructive\f[R]
