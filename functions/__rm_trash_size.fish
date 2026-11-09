@@ -55,6 +55,6 @@ function __rm_trash_size --description 'Print the total size of the user trash'
 
     __fish_palette
     echo
-    echo "$c_head""Total Trash Size:$c_reset $c_hi$total$c_reset $c_dim(files: $files, info: $info)$c_reset"
+    echo "$c_head""Trash Size:$c_reset $c_hi$total$c_reset $c_dim(files: $files, info: $info)$c_reset"
     return 0
 end

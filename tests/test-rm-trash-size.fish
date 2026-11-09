@@ -49,7 +49,7 @@ section "__rm_trash_size: home trash"
 
 set -l home_trash $XDG_DATA_HOME/Trash
 fill $home_trash
-set -l want "Total Trash Size: "(hsize $home_trash)" (files: "(hsize $home_trash/files)", info: "(hsize $home_trash/info)")"
+set -l want "Trash Size: "(hsize $home_trash)" (files: "(hsize $home_trash/files)", info: "(hsize $home_trash/info)")"
 set -l got (__rm_trash_size $no_mount)
 check "reports the total, files, and info sizes" "$want" "$got[2]"
 check "separates the summary from the listing" "" "$got[1]"
@@ -62,30 +62,30 @@ set -l want_size (hsize $fake_home/.local/share/Trash)
 set -l got (env -u XDG_DATA_HOME HOME=$fake_home NO_COLOR=1 fish --no-config -c "
     set -p fish_function_path $repo_root/functions
     __rm_trash_size $no_mount")
-check "falls back to ~/.local/share" "Total Trash Size: $want_size" (string replace -r ' \(.*' '' -- "$got[2]")
+check "falls back to ~/.local/share" "Trash Size: $want_size" (string replace -r ' \(.*' '' -- "$got[2]")
 
 section "__rm_trash_size: per-volume trash"
 
 set -l vol $tmp/vol
 fill $vol/.Trash-$uid
 set -l got (__rm_trash_size $vol)
-check "counts \$top/.Trash-\$uid" "Total Trash Size: "(hsize $home_trash $vol/.Trash-$uid) (string replace -r ' \(.*' '' -- "$got[2]")
+check "counts \$top/.Trash-\$uid" "Trash Size: "(hsize $home_trash $vol/.Trash-$uid) (string replace -r ' \(.*' '' -- "$got[2]")
 
 set -l shared $tmp/shared
 fill $shared/.Trash/$uid
 command chmod +t $shared/.Trash
 set -l got (__rm_trash_size $shared)
-check "counts a sticky \$top/.Trash/\$uid" "Total Trash Size: "(hsize $home_trash $shared/.Trash/$uid) (string replace -r ' \(.*' '' -- "$got[2]")
+check "counts a sticky \$top/.Trash/\$uid" "Trash Size: "(hsize $home_trash $shared/.Trash/$uid) (string replace -r ' \(.*' '' -- "$got[2]")
 
 command chmod -t $shared/.Trash
 set -l got (__rm_trash_size $shared)
-check "ignores \$top/.Trash without the sticky bit" "Total Trash Size: "(hsize $home_trash) (string replace -r ' \(.*' '' -- "$got[2]")
+check "ignores \$top/.Trash without the sticky bit" "Trash Size: "(hsize $home_trash) (string replace -r ' \(.*' '' -- "$got[2]")
 
 section "rm: no arguments"
 
 set -l got (rm)
 check "lists the trash first" "stub listing" "$got[2]"
-check "ends with the size summary" 1 (string match -q 'Total Trash Size: *' -- "$got[-1]"; and echo 1; or echo 0)
+check "ends with the size summary" 1 (string match -q 'Trash Size: *' -- "$got[-1]"; and echo 1; or echo 0)
 
 set -gx STUB_STATUS 3
 rm >/dev/null
