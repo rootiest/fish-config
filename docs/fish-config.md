@@ -258,6 +258,7 @@ plugins, and the output of external tools that colour themselves. Export it from
 | `CLAUDE_CODE_NO_FLICKER` | `1` | suppress terminal flicker in Claude Code (C3 overrides) |
 | `CDPATH` | `. ~/projects ~` | |
 | `__fish_ctrl_arrow_motion` | (unset → token) | set `-U` to `word` for Ctrl+Left/Right stops at each `/` and `.` (see Section 3, Key Bindings) |
+| `__fish_empty_enter_git` | (unset → on) | set `-U` to `off` to drop `git status -sb` from the empty-Enter listing in git repos (see Section 3, Key Bindings) |
 
 Opinionated defaults (`CDPATH`, `PAGER`/`MANPAGER`, Vi mode, command shadows,
 terminal integrations) can be switched off per category with universal
@@ -447,6 +448,18 @@ are active in Insert, Normal, and Visual modes unless noted.
                     Requires qalc to be installed.
                     Example: type "150 * 1.08", press Ctrl+Alt+=
                              prints 162
+
+    Enter           On an empty command line, list the directory: runs
+                    ls, or ls; git status -sb inside a git work tree.
+                    The command is written into the line first, so it
+                    shows on screen and lands in history. Press Space
+                    then Enter for a bare fresh prompt instead. In the
+                    completion pager or history search, Enter keeps its
+                    usual meaning.
+                    To run plain ls in git repos too:
+                        set -U __fish_empty_enter_git off
+                    Erase it to bring the git status back:
+                        set -Ue __fish_empty_enter_git
 
     Ctrl+Enter      Smart execute: runs commands instantly without
                     pressing Enter a second time for certain fast-path
@@ -5387,6 +5400,7 @@ all of them.
     Autopair                  ( [ { " ' auto-close to (), [], {}, "", ''
     Puffer key intercepts     . ! $ * keys intercepted for smart expansion
     Bash fallback on Enter    a line Fish cannot parse but Bash can runs via bashrun
+    Listing on empty Enter    an empty line runs ls (+ git status -sb in a repo)
     Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
     Catppuccin theme          bundled catppuccin-mocha saved once (universal)
     FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
@@ -5410,7 +5424,8 @@ with its own `__fish_config_op_overrides_<slug>` toggle:
 ### key-bindings
 
 Vi mode, autopair, puffer key intercepts, bang-bang history expansion,
-the Bash fallback on Enter, and `smart_exit`'s plain-exit path.
+the Bash fallback on Enter, the listing on an empty Enter, and
+`smart_exit`'s plain-exit path.
 
 ### environment
 

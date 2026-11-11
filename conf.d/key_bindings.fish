@@ -80,6 +80,14 @@
 # Anything Fish can parse, or a Fish block still being typed, runs as usual.
 # ──────────────────────────────────────────────────────────────────────
 
+# ─────────────── Bind Directory Listing to Empty Enter ────────────────
+# Enter on an empty command line runs `ls`, or `ls; git status -sb` inside
+# a git work tree, written into the line first so it lands in history
+#
+# Space then Enter still gives a bare fresh prompt. Set
+# __fish_empty_enter_git to off to run plain `ls` in git repos too.
+# ──────────────────────────────────────────────────────────────────────
+
 # Defines only fish_user_key_bindings, which fish calls from the interactive
 # reader and nowhere else.
 status is-interactive; or return
@@ -134,11 +142,11 @@ function fish_user_key_bindings
 
     # Enter keeps its stock meaning in Vi-Visual. In Vi-Command it returns
     # to insert mode afterwards, as the stock binding does.
-    bind --mode insert enter __bashrun_execute
+    bind --mode insert enter __empty_enter_list __bashrun_execute
     if test "$fish_key_bindings" = fish_vi_key_bindings
-        bind --mode default --sets-mode insert enter __bashrun_execute
+        bind --mode default --sets-mode insert enter __empty_enter_list __bashrun_execute
     else
-        bind --mode default enter __bashrun_execute
+        bind --mode default enter __empty_enter_list __bashrun_execute
     end
 
     # @ is Emacs/Vi-insert only. Emacs bindings and Vi's "default" (normal)
