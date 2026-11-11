@@ -49,6 +49,18 @@ are active in Insert, Normal, and Visual modes unless noted.
                     Example: type "150 * 1.08", press Ctrl+Alt+=
                              prints 162
 
+    Enter           On an empty command line, list the directory: runs
+                    ls, or ls; git status -sb inside a git work tree.
+                    The command is written into the line first, so it
+                    shows on screen and lands in history. Press Space
+                    then Enter for a bare fresh prompt instead. In the
+                    completion pager or history search, Enter keeps its
+                    usual meaning.
+                    To run plain ls in git repos too:
+                        set -U __fish_empty_enter_git off
+                    Erase it to bring the git status back:
+                        set -Ue __fish_empty_enter_git
+
     Ctrl+Enter      Smart execute: runs commands instantly without
                     pressing Enter a second time for certain fast-path
                     commands (speedtest-fast, etc.).
