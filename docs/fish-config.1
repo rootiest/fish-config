@@ -466,6 +466,14 @@ T}@T{
 set \f[V]-U\f[R] to \f[V]word\f[R] for Ctrl+Left/Right stops at each
 \f[V]/\f[R] and \f[V].\f[R] (see Section 3, Key Bindings)
 T}
+T{
+\f[V]__fish_empty_enter_git\f[R]
+T}@T{
+(unset → on)
+T}@T{
+set \f[V]-U\f[R] to \f[V]off\f[R] to drop \f[V]git status -sb\f[R] from
+the empty-Enter listing in git repos (see Section 3, Key Bindings)
+T}
 .TE
 .PP
 Opinionated defaults (\f[V]CDPATH\f[R],
@@ -782,6 +790,18 @@ Ctrl+Alt+=      Evaluate the current command line buffer with
                 Requires qalc to be installed.
                 Example: type \[dq]150 * 1.08\[dq], press Ctrl+Alt+=
                          prints 162
+
+Enter           On an empty command line, list the directory: runs
+                ls, or ls; git status -sb inside a git work tree.
+                The command is written into the line first, so it
+                shows on screen and lands in history. Press Space
+                then Enter for a bare fresh prompt instead. In the
+                completion pager or history search, Enter keeps its
+                usual meaning.
+                To run plain ls in git repos too:
+                    set -U __fish_empty_enter_git off
+                Erase it to bring the git status back:
+                    set -Ue __fish_empty_enter_git
 
 Ctrl+Enter      Smart execute: runs commands instantly without
                 pressing Enter a second time for certain fast-path
@@ -6630,6 +6650,7 @@ Bang-bang system          ! and $ keys expand history; !\[ha], !*, !-N, !?str?,
 Autopair                  ( [ { \[dq] \[aq] auto-close to (), [], {}, \[dq]\[dq], \[aq]\[aq]
 Puffer key intercepts     . ! $ * keys intercepted for smart expansion
 Bash fallback on Enter    a line Fish cannot parse but Bash can runs via bashrun
+Listing on empty Enter    an empty line runs ls (+ git status -sb in a repo)
 Starship prompt           fish_prompt replaced by Starship + OSC 133 markers
 Catppuccin theme          bundled catppuccin-mocha saved once (universal)
 FZF_DEFAULT_OPTS          FZF themed to Catppuccin Mocha colors
@@ -6657,8 +6678,8 @@ sub-categories, each with its own
 .SS key-bindings
 .PP
 Vi mode, autopair, puffer key intercepts, bang-bang history expansion,
-the Bash fallback on Enter, and \f[V]smart_exit\f[R]\[cq]s plain-exit
-path.
+the Bash fallback on Enter, the listing on an empty Enter, and
+\f[V]smart_exit\f[R]\[cq]s plain-exit path.
 .SS environment
 .PP
 \f[V]$PATH\f[R], \f[V]$PAGER\f[R]/\f[V]$EDITOR\f[R]/\f[V]$GPG_TTY\f[R],
