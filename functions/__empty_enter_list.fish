@@ -11,15 +11,15 @@
 #   Bound to Enter, ahead of __bashrun_execute. On an empty command line it
 #   writes a listing command into the line, which the next binding then
 #   executes, so the listing shows on screen and lands in history. Inside a
-#   git work tree the line is `ls; git status -sb`; everywhere else, or when
-#   git is not installed, it is `ls`. Any other line is left alone, as is
-#   Enter in the completion pager or history search.
+#   git work tree the line runs ls and then git status -sb. Everywhere else,
+#   or when git is not installed, it runs ls alone. Any other line is left
+#   alone, as is Enter in the completion pager or history search.
 #
 #   A line holding only a space is not empty: Space then Enter still gives
 #   a fresh prompt without a listing, and fish keeps it out of history.
 #
 #   Set __fish_empty_enter_git to a falsy value (0, false, no, off, n) to
-#   drop the git status part and run plain `ls` everywhere.
+#   drop the git status part and run plain ls everywhere.
 #
 # EXAMPLE
 #   bind enter __empty_enter_list __bashrun_execute
