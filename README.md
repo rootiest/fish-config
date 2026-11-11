@@ -33,6 +33,7 @@ This config layers on top of the CachyOS base Fish configuration and adds:
 - **Fisher** plugin manager bootstrapped automatically; manages `sponge` (failed-command history filter); FZF bindings, Catppuccin theme, done, autopair, and puffer-fish are bundled directly with the config as customized versions
 - **Smart CLI wrappers** that prefer modern tools (`eza`, `bat`, `btop`, `dust`, `prettyping`) with graceful fallbacks
 - **Bash fallback on Enter** — a pasted Bash snippet Fish cannot parse (`for … do … done`, `if … then … fi`, heredocs) runs through `bashrun`, which carries its exported variables and final directory back into Fish
+- **Listing on empty Enter** — Enter on an empty line runs `ls`, plus `git status -sb` inside a git repo, written into the line so it lands in history; Space then Enter still gives a bare prompt, and `set -U __fish_empty_enter_git off` keeps it to `ls`
 - **Token and word deletion** — Ctrl+Backspace deletes back to where Ctrl+Left stops (a whole token), Alt+Backspace one word; add Shift to undelete, one deletion per press
 - **Auto Python venv** activation on directory change (direnv-aware)
 - **Kitty terminal** deep integration for splits, tabs, and SSH
@@ -421,7 +422,7 @@ If you'd rather set them by hand, each category is controlled by a universal var
 |---|---|
 | `__fish_config_op_aliases` | Command shadows: `ls`→eza, `cat`→bat, `cd`→zoxide, `rm`→trash, `top`→btop, `edit`→multi-editor launcher, and friends; `grep`/`cp`/`mv`/`wget` flag injection |
 | `__fish_config_op_autoexec` | Startup side-effects: Fisher bootstrap, theme apply, `paru`/`yay` wrapper generation, auto venv activation, WakaTime hook, auto-pull background fast-forward |
-| `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`/`XDG`/`PATH`, `$DO_NOT_TRACK`/`$DISABLE_TELEMETRY`, bang-bang history expansion, autopair, puffer, the Bash fallback on Enter, Starship prompt, theme colors |
+| `__fish_config_op_overrides` | Vi mode, `exit`→`smart_exit`, `$PAGER`/`$MANPAGER`/`$CDPATH`/`XDG`/`PATH`, `$DO_NOT_TRACK`/`$DISABLE_TELEMETRY`, bang-bang history expansion, autopair, puffer, the Bash fallback on Enter, the listing on an empty Enter, Starship prompt, theme colors |
 | `__fish_config_op_integrations` | Kitty/WezTerm window abbreviations, `done` notifications, `spwin`/`tab`/`split`, `hist`, `logs`, `upgrade`, WakaTime |
 | `__fish_config_op_logging` | **Opt-in — off unless explicitly enabled.** Scrollback capture on exit, tmux `pipe-pane` pane logging, zellij `dump-screen` capture on exit, `paru`/`yay` AUR log wrappers, Kitty watcher capture (sentinel-file coordinated) |
 | `__fish_config_op_greeting` | Per-session `fish_greeting` (suppresses distro greetings such as CachyOS fastfetch by overriding with an empty function); first-run welcome banner |
