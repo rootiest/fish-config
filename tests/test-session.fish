@@ -104,6 +104,13 @@ fish_user_key_bindings
 check "ctrl-arrows move by token by default" "backward-token forward-token" "$token_pair"
 check "ctrl-arrows move by word when toggled" "prevd-or-backward-word nextd-or-forward-word" "$word_pair"
 
+section "session: empty Enter"
+
+# Enter runs the empty-line listing first, then the Bash fallback, in the
+# Vi insert and command modes; Vi-Visual keeps stock Enter.
+check "insert-mode Enter chains the listing" "__empty_enter_list __bashrun_execute" (bind --user -M insert enter | string replace -r '.* enter ' '')
+check "command-mode Enter chains the listing" "__empty_enter_list __bashrun_execute" (bind --user -M default enter | string replace -r '.* enter ' '')
+
 section "session: shared output palette"
 
 function test_palette_roles_defined
