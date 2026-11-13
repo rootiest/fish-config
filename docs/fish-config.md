@@ -1557,7 +1557,7 @@ functions). They are active in all interactive sessions.
         head of an open pull request (a local branch tracking one is kept
         too).
 
-    Open pull requests are listed with whatever is available: gh, tea or
+    Open pull requests are listed with whatever is available: gh, gt or
     glab, else curl with a token from the environment that belongs to the
     remote's host, else anonymous curl for a public repository. If none of
     them works, remote branches are listed but not deleted. Local cleanup
@@ -1863,11 +1863,12 @@ functions). They are active in all interactive sessions.
     guaranteed error regardless of the remote, so the push is skipped
     rather than attempted). These are also mkrep's built-in defaults for
     --server/$GIT_SERVER when $MKREP_REMOTE_CMD is unset. gh supports a
-    one-shot --source/--remote/--push; glab and tea's create commands do
-    not, so they are chained with the git commands that do the linking:
+    one-shot --source/--remote/--push; glab's and gt's create commands are
+    chained with the git commands that do the linking instead, so the remote
+    URL and the guarded push work the same for both:
       GitHub (gh):   gh repo create {name} --private --source=. --remote=origin --push
       GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
-      Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
+      Gitea (gt):    gt repo create {name} --private --host {server} && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 
 **Dependencies:** `_fish_mkdir_p`, `__fish_palette`, `__fish_mark`, `_mkrep_say`, `_mkrep_add_origin`, `_mkrep_default_remote_cmd`, `_mkrep_expand_template`, `_mkrep_remote_url`, `_mkrep_repo_exists`, `git`
 
@@ -2010,7 +2011,7 @@ functions). They are active in all interactive sessions.
 
     When multiple methods are available you are prompted to choose.
 
-    tea and gh come from the system package manager where it has them; the
+    gt and gh come from the system package manager where it has them; the
     latest upstream release, verified against the SHA-256 digest published
     with it, is offered as the alternative and installed to ~/.local/bin.
     update refreshes a copy installed that way from the latest release, and
@@ -2035,7 +2036,7 @@ functions). They are active in all interactive sessions.
     one fails, and prerequisites are installed when a method needs them.
     Prompts that belong to other programs, such as sudo's password,
     still appear. A bootstrap script can run
-    fish -c 'fish-deps install --yes tea' unattended.
+    fish -c 'fish-deps install --yes gt' unattended.
 
     Prerequisites are offered only once a chosen method needs them: a C
     compiler for cargo builds (build-essential, base-devel or gcc), a default
@@ -2058,7 +2059,7 @@ functions). They are active in all interactive sessions.
       Terminal Emulators  kitty, wezterm — only matter if one of them is
                           your actual terminal; skipped by install/sync
                           unless --terminals (or --all) is passed
-      Integrations        wakatime, tailscale, tea, gh
+      Integrations        wakatime, tailscale, gt, gh
 
     Arguments:
       status       Report installed/missing deps (default)
@@ -2088,9 +2089,9 @@ functions). They are active in all interactive sessions.
     fish-deps install --terminals
     fish-deps install --all
     fish-deps install gh
-    fish-deps install --yes tea
+    fish-deps install --yes gt
     fish-deps update
-    fish-deps update tea gh
+    fish-deps update gt gh
 
 **Dependencies:** `_fish_deps_status`, `_fish_deps_install`, `_fish_deps_update`
 
@@ -4661,7 +4662,7 @@ functions). They are active in all interactive sessions.
 `fish-deps install` to install missing Required/Recommended ones, or add
 `--optional`, `--terminals`, or `--all` to also include the Optional and/or
 Terminal Emulators tiers. Name tools to install only those, from any tier:
-`fish-deps install gh tea`. Add `--yes` to take every default without being
+`fish-deps install gh gt`. Add `--yes` to take every default without being
 asked, for scripts.
 
 ## Required
@@ -4732,7 +4733,7 @@ Opt-in third-party services that require their own account/setup.
 |---|---|
 | `wakatime` | Developer time tracking |
 | `tailscale` | Mesh VPN client |
-| `tea` | Gitea command-line client. Installed from the system package where there is one (`tea` on CachyOS and Homebrew, `tea-cli` on Debian/Ubuntu, `gitea-tea` on openSUSE); otherwise, and as the alternative, `fish-deps` downloads the latest release from `dl.gitea.com` to `~/.local/bin/tea`, verified against the `.sha256` file published next to it. |
+| `gt` | The official Gitea command-line client (`gitea-cli`, which replaced the deprecated `gt`). Installed from the system package where there is one (`gitea-cli` on Arch/CachyOS and Homebrew); otherwise, and as the alternative, `fish-deps` downloads the latest release from `dl.gitea.com` to `~/.local/bin/gt`, verified against the `.sha256` file published next to it. |
 | `gh` | GitHub command-line client. Installed from the system package (`github-cli` on Arch, `gh` elsewhere) where there is one; otherwise, and as the alternative, `fish-deps` downloads the latest `cli/cli` release tarball, verifies it against the release's `checksums.txt`, and installs its `bin/gh` to `~/.local/bin/gh`. |
 
 The release downloads are for `x86_64` and `aarch64` only. `fish-deps update`
@@ -4748,7 +4749,7 @@ The install priority for each tool:
 | `cargo` | Rust tools (`eza`, `lsd`, `bat`, `dust`, `ripgrep`, `trashy`, `zoxide`, `starship`) — always gets the latest crate version, built with `--locked` |
 | `go install` | `ov` — preferred over the system PM when `go` is available; always gets the latest release |
 | system PM | `paru` / `apt` / `brew` / `dnf` / etc. — for tools without a crate or `go install` path |
-| release download | `tea`, `gh` — the latest upstream release, checksum-verified, to `~/.local/bin`; offered after the system package, and the only method where the package manager has none |
+| release download | `gt`, `gh` — the latest upstream release, checksum-verified, to `~/.local/bin`; offered after the system package, and the only method where the package manager has none |
 | `git clone` | `fzf` — installed from GitHub to `~/.fzf/` |
 | `curl` | `starship` installer, `fisher` bootstrap, `uv` installer |
 
@@ -4774,10 +4775,10 @@ noise. `_fish_deps_wakatime_binary` says plainly when it is missing.
 
 Installer scripts (`rustup`, `uv`, `starship`, `lazydocker`) are downloaded
 to a temporary file and run only after the download succeeds; they are never
-streamed into `sh`. Downloaded binaries (`wakatime-cli`, `tea`, `gh`,
+streamed into `sh`. Downloaded binaries (`wakatime-cli`, `gt`, `gh`,
 `win32yank.exe`, the MarkText AppImage) are checked against a SHA-256 digest
 before they are made executable: the release's published checksum file for
-`wakatime-cli`, `tea` and `gh`, the digest GitHub records for the MarkText
+`wakatime-cli`, `gt` and `gh`, the digest GitHub records for the MarkText
 asset, and a pinned digest for `win32yank.exe`, whose upstream publishes none.
 A failed download or checksum mismatch aborts that install and reports
 failure, and leaves any copy already installed in place.
@@ -4794,7 +4795,7 @@ Prompts that belong to other programs still appear, such as the `sudo`
 password, or an installer script's own questions. Combined with tool names it
 installs exactly what a script needs; from a `bash` bootstrap script:
 
-    fish -c 'fish-deps install --yes tea gh'
+    fish -c 'fish-deps install --yes gt gh'
 
 A name that is not in the catalog, or an unknown option, is a usage error:
 `fish-deps` exits 2 before doing anything. Tool names work the same way with
@@ -5891,7 +5892,7 @@ To install particular tools, name them: `fish-deps install gh` offers only
 without a prompt; only `sudo` and other programs still ask their own
 questions:
 
-    fish -c 'fish-deps install --yes tea'
+    fish -c 'fish-deps install --yes gt'
 
 The details are under
 Unattended installs.

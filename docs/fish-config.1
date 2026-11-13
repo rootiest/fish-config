@@ -2039,7 +2039,7 @@ content is already in the default branch:
     head of an open pull request (a local branch tracking one is kept
     too).
 
-Open pull requests are listed with whatever is available: gh, tea or
+Open pull requests are listed with whatever is available: gh, gt or
 glab, else curl with a token from the environment that belongs to the
 remote\[aq]s host, else anonymous curl for a public repository. If none of
 them works, remote branches are listed but not deleted. Local cleanup
@@ -2361,11 +2361,12 @@ freshly created repo has none yet -- pushing an unborn HEAD is a
 guaranteed error regardless of the remote, so the push is skipped
 rather than attempted). These are also mkrep\[aq]s built-in defaults for
 --server/$GIT_SERVER when $MKREP_REMOTE_CMD is unset. gh supports a
-one-shot --source/--remote/--push; glab and tea\[aq]s create commands do
-not, so they are chained with the git commands that do the linking:
+one-shot --source/--remote/--push; glab\[aq]s and gt\[aq]s create commands are
+chained with the git commands that do the linking instead, so the remote
+URL and the guarded push work the same for both:
   GitHub (gh):   gh repo create {name} --private --source=. --remote=origin --push
   GitLab (glab): glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
-  Gitea (tea):   tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
+  Gitea (gt):    gt repo create {name} --private --host {server} && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end
 \f[R]
 .fi
 .PP
@@ -2531,7 +2532,7 @@ Install method priority (highest to lowest):
 
 When multiple methods are available you are prompted to choose.
 
-tea and gh come from the system package manager where it has them; the
+gt and gh come from the system package manager where it has them; the
 latest upstream release, verified against the SHA-256 digest published
 with it, is offered as the alternative and installed to \[ti]/.local/bin.
 update refreshes a copy installed that way from the latest release, and
@@ -2556,7 +2557,7 @@ without reading input: each tool is installed through its first
 one fails, and prerequisites are installed when a method needs them.
 Prompts that belong to other programs, such as sudo\[aq]s password,
 still appear. A bootstrap script can run
-fish -c \[aq]fish-deps install --yes tea\[aq] unattended.
+fish -c \[aq]fish-deps install --yes gt\[aq] unattended.
 
 Prerequisites are offered only once a chosen method needs them: a C
 compiler for cargo builds (build-essential, base-devel or gcc), a default
@@ -2579,7 +2580,7 @@ Dependencies are grouped into five tiers:
   Terminal Emulators  kitty, wezterm \[em] only matter if one of them is
                       your actual terminal; skipped by install/sync
                       unless --terminals (or --all) is passed
-  Integrations        wakatime, tailscale, tea, gh
+  Integrations        wakatime, tailscale, gt, gh
 
 Arguments:
   status       Report installed/missing deps (default)
@@ -2609,9 +2610,9 @@ fish-deps install --optional
 fish-deps install --terminals
 fish-deps install --all
 fish-deps install gh
-fish-deps install --yes tea
+fish-deps install --yes gt
 fish-deps update
-fish-deps update tea gh
+fish-deps update gt gh
 \f[R]
 .fi
 .PP
@@ -5441,7 +5442,7 @@ install missing Required/Recommended ones, or add \f[V]--optional\f[R],
 \f[V]--terminals\f[R], or \f[V]--all\f[R] to also include the Optional
 and/or Terminal Emulators tiers.
 Name tools to install only those, from any tier:
-\f[V]fish-deps install gh tea\f[R].
+\f[V]fish-deps install gh gt\f[R].
 Add \f[V]--yes\f[R] to take every default without being asked, for
 scripts.
 .SS Required
@@ -5752,14 +5753,14 @@ T}@T{
 Mesh VPN client
 T}
 T{
-\f[V]tea\f[R]
+\f[V]gt\f[R]
 T}@T{
-Gitea command-line client.
-Installed from the system package where there is one (\f[V]tea\f[R] on
-CachyOS and Homebrew, \f[V]tea-cli\f[R] on Debian/Ubuntu,
-\f[V]gitea-tea\f[R] on openSUSE); otherwise, and as the alternative,
-\f[V]fish-deps\f[R] downloads the latest release from
-\f[V]dl.gitea.com\f[R] to \f[V]\[ti]/.local/bin/tea\f[R], verified
+The official Gitea command-line client (\f[V]gitea-cli\f[R], which
+replaced the deprecated \f[V]gt\f[R]).
+Installed from the system package where there is one
+(\f[V]gitea-cli\f[R] on Arch/CachyOS and Homebrew); otherwise, and as
+the alternative, \f[V]fish-deps\f[R] downloads the latest release from
+\f[V]dl.gitea.com\f[R] to \f[V]\[ti]/.local/bin/gt\f[R], verified
 against the \f[V].sha256\f[R] file published next to it.
 T}
 T{
@@ -5816,7 +5817,7 @@ T}
 T{
 release download
 T}@T{
-\f[V]tea\f[R], \f[V]gh\f[R] \[em] the latest upstream release,
+\f[V]gt\f[R], \f[V]gh\f[R] \[em] the latest upstream release,
 checksum-verified, to \f[V]\[ti]/.local/bin\f[R]; offered after the
 system package, and the only method where the package manager has none
 T}
@@ -5895,13 +5896,13 @@ every \f[V]fish-deps\f[R] report for that is noise.
 Installer scripts (\f[V]rustup\f[R], \f[V]uv\f[R], \f[V]starship\f[R],
 \f[V]lazydocker\f[R]) are downloaded to a temporary file and run only
 after the download succeeds; they are never streamed into \f[V]sh\f[R].
-Downloaded binaries (\f[V]wakatime-cli\f[R], \f[V]tea\f[R],
-\f[V]gh\f[R], \f[V]win32yank.exe\f[R], the MarkText AppImage) are
-checked against a SHA-256 digest before they are made executable: the
-release\[cq]s published checksum file for \f[V]wakatime-cli\f[R],
-\f[V]tea\f[R] and \f[V]gh\f[R], the digest GitHub records for the
-MarkText asset, and a pinned digest for \f[V]win32yank.exe\f[R], whose
-upstream publishes none.
+Downloaded binaries (\f[V]wakatime-cli\f[R], \f[V]gt\f[R], \f[V]gh\f[R],
+\f[V]win32yank.exe\f[R], the MarkText AppImage) are checked against a
+SHA-256 digest before they are made executable: the release\[cq]s
+published checksum file for \f[V]wakatime-cli\f[R], \f[V]gt\f[R] and
+\f[V]gh\f[R], the digest GitHub records for the MarkText asset, and a
+pinned digest for \f[V]win32yank.exe\f[R], whose upstream publishes
+none.
 A failed download or checksum mismatch aborts that install and reports
 failure, and leaves any copy already installed in place.
 .SS Unattended installs
@@ -5921,7 +5922,7 @@ Combined with tool names it installs exactly what a script needs; from a
 .IP
 .nf
 \f[C]
-fish -c \[aq]fish-deps install --yes tea gh\[aq]
+fish -c \[aq]fish-deps install --yes gt gh\[aq]
 \f[R]
 .fi
 .PP
@@ -7286,7 +7287,7 @@ only \f[V]sudo\f[R] and other programs still ask their own questions:
 .IP
 .nf
 \f[C]
-fish -c \[aq]fish-deps install --yes tea\[aq]
+fish -c \[aq]fish-deps install --yes gt\[aq]
 \f[R]
 .fi
 .PP
