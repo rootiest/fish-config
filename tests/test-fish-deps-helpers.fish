@@ -80,12 +80,12 @@ check "win32yank uses its pinned-release installer" win32yank-release $_fdc_spec
 
 # The Gitea and GitHub clients: integrations, packaged under their Arch
 # names, with a release installer as the alternative.
-check "tea is an integration" int (tier_of tea)
+check "gt is an integration" int (tier_of gt)
 check "gh is an integration" int (tier_of gh)
-set i (contains -i -- tea $_fdc_bins)
-check "tea installs from the tea package" tea $_fdc_pm[$i]
-check "tea has no crate" "" "$_fdc_cargo[$i]"
-check "tea falls back to its release installer" tea-release $_fdc_special[$i]
+set i (contains -i -- gt $_fdc_bins)
+check "gt installs from the gitea-cli package" gitea-cli $_fdc_pm[$i]
+check "gt has no crate" "" "$_fdc_cargo[$i]"
+check "gt falls back to its release installer" gt-release $_fdc_special[$i]
 set i (contains -i -- gh $_fdc_bins)
 check "gh is spelled github-cli, the Arch way" github-cli $_fdc_pm[$i]
 check "gh has no crate" "" "$_fdc_cargo[$i]"

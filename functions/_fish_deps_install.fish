@@ -67,7 +67,7 @@
 #   _fish_deps_install --optional
 #   _fish_deps_install --terminals
 #   _fish_deps_install --all
-#   _fish_deps_install --yes tea gh
+#   _fish_deps_install --yes gt gh
 function _fish_deps_install
     _fish_deps_catalog
     __fish_palette
@@ -352,18 +352,18 @@ function _fish_deps_install
                         set -a methods special-yay
                         set -a method_labels "build from AUR (makepkg)"
                     end
-                case tea-release gh-release
+                case gt-release gh-release
                     # A supplemental method, after the system package: a
-                    # packaged tea or gh is kept current by the system's own
+                    # packaged gt or gh is kept current by the system's own
                     # upgrades, while the release copy in ~/.local/bin is
                     # only refreshed by fish-deps update. Where the package
-                    # manager has no package (tea on plain Arch or Fedora,
+                    # manager has no package (gt on Fedora or openSUSE,
                     # gh on older Debian) this is the only method offered.
                     switch (uname -m)
                         case x86_64 aarch64 arm64
                             set -a methods special-$special
-                            if test $special = tea-release
-                                set -a method_labels "binary download (gitea.com releases, ~/.local/bin/tea)"
+                            if test $special = gt-release
+                                set -a method_labels "binary download (gitea.com releases, ~/.local/bin/gt)"
                             else
                                 set -a method_labels "binary download (github releases, ~/.local/bin/gh)"
                             end
@@ -432,7 +432,7 @@ function _fish_deps_install
             # Methods to try, in order. Interactively that is the one chosen.
             # Under --yes nobody is there to pick another when the default
             # fails (an AUR helper is assumed to have every package, and
-            # paru -S tea fails on plain Arch), so the remaining methods
+            # paru -S fails for a package no repository has), so the remaining methods
             # follow in list order.
             set -l attempts $chosen_method
             set -l attempt_labels $method_labels[(contains -i -- $chosen_method $methods)]
@@ -521,9 +521,9 @@ function _fish_deps_install
                         test $_pre -eq 0; and _fish_deps_wakatime_binary
                     case special-win32yank
                         _fish_deps_win32yank_binary
-                    case special-tea-release special-gh-release
-                        if test $chosen_method = special-tea-release
-                            _fish_deps_tea_binary
+                    case special-gt-release special-gh-release
+                        if test $chosen_method = special-gt-release
+                            _fish_deps_gt_binary
                         else
                             _fish_deps_gh_binary
                         end

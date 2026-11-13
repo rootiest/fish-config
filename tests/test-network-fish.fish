@@ -941,7 +941,7 @@ begin
     builtin cd (new_repo)
     git remote add origin https://forge.test/o/r.git
     # Real CLIs must not reach the network from the test suite.
-    function tea
+    function gt
         return 1
     end
     function gh
@@ -972,7 +972,7 @@ begin
     _git_sweep_open_prs origin >/dev/null
     check "_git_sweep_open_prs: every method failing fails" 1 $status
 
-    functions -e tea gh glab
+    functions -e gt gh glab
     reset_mocks
     builtin cd $prev_pwd
 end

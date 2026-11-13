@@ -24,7 +24,7 @@
 #
 #   When multiple methods are available you are prompted to choose.
 #
-#   tea and gh come from the system package manager where it has them; the
+#   gt and gh come from the system package manager where it has them; the
 #   latest upstream release, verified against the SHA-256 digest published
 #   with it, is offered as the alternative and installed to ~/.local/bin.
 #   update refreshes a copy installed that way from the latest release, and
@@ -49,7 +49,7 @@
 #   one fails, and prerequisites are installed when a method needs them.
 #   Prompts that belong to other programs, such as sudo's password,
 #   still appear. A bootstrap script can run
-#   fish -c 'fish-deps install --yes tea' unattended.
+#   fish -c 'fish-deps install --yes gt' unattended.
 #
 #   Prerequisites are offered only once a chosen method needs them: a C
 #   compiler for cargo builds (build-essential, base-devel or gcc), a default
@@ -72,7 +72,7 @@
 #     Terminal Emulators  kitty, wezterm — only matter if one of them is
 #                         your actual terminal; skipped by install/sync
 #                         unless --terminals (or --all) is passed
-#     Integrations        wakatime, tailscale, tea, gh
+#     Integrations        wakatime, tailscale, gt, gh
 #
 # ARGUMENTS
 #   status       Report installed/missing deps (default)
@@ -102,9 +102,9 @@
 #   fish-deps install --terminals
 #   fish-deps install --all
 #   fish-deps install gh
-#   fish-deps install --yes tea
+#   fish-deps install --yes gt
 #   fish-deps update
-#   fish-deps update tea gh
+#   fish-deps update gt gh
 function fish-deps --description 'Manage fish shell dependencies'
     # Checked before dispatch so `fish-deps install --help` never installs.
     # The menu is richer than the header renderer's, so it stays.
@@ -180,7 +180,7 @@ function __fish_deps_help
     echo "                 sudo or an installer's own script still appear"
     echo ""
     echo "  $c_dim""TOOL$c_reset names restrict a run to those catalog entries, any tier; an"
-    echo "  unknown name is a usage error. Example: $c_cmd""fish-deps install --yes tea$c_reset"
+    echo "  unknown name is a usage error. Example: $c_cmd""fish-deps install --yes gt$c_reset"
     echo ""
     echo "Install method priority: cargo > system PM > git/curl/pipx/release download"
     echo "When multiple methods are available, you will be prompted to choose."

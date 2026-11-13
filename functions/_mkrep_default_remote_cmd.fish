@@ -33,7 +33,7 @@ function _mkrep_default_remote_cmd --argument-names type
         case gitlab
             echo 'glab repo create {name} --private --skipGitInit && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end'
         case gitea
-            echo 'tea repos create --name {name} --private && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end'
+            echo 'gt repo create {name} --private --host {server} && git remote add origin {server}/{user}/{name}.git && if git rev-parse --verify -q HEAD >/dev/null 2>&1; git push -u origin HEAD; end'
         case '*'
             return 1
     end

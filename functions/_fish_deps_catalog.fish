@@ -27,7 +27,7 @@
 #                                  --terminals (or --all) is passed.
 #     int   Integrations         — opt-in third-party services requiring
 #                                  their own account/setup (wakatime,
-#                                  tailscale, tea, gh).
+#                                  tailscale, gt, gh).
 #
 #   Package names in _fdc_pm are spelled the Arch way (github-cli);
 #   _fish_deps_pm_pkg translates them for other package managers.
@@ -38,7 +38,7 @@
 function _fish_deps_catalog
     set -g _fdc_bins \
         uv cargo fish starship fzf zoxide direnv paru yay \
-        wakatime tailscale tea gh \
+        wakatime tailscale gt gh \
         eza lsd bat btop dust duf prettyping go ov rg lazygit lazydocker docker trash kitty wezterm python3 yt-dlp screen mpv vlc marktext firejail win32yank.exe
 
     set -g _fdc_tiers \
@@ -53,12 +53,12 @@ function _fish_deps_catalog
 
     set -g _fdc_pm \
         uv cargo fish starship fzf zoxide direnv "" yay \
-        wakatime tailscale tea github-cli \
+        wakatime tailscale gitea-cli github-cli \
         eza lsd bat btop dust duf prettyping go ov ripgrep lazygit lazydocker docker trash kitty wezterm python yt-dlp screen mpv vlc "" firejail ""
 
     set -g _fdc_special \
         curl-uv rustup-installer git-cargo-fish curl-installer fzf-update "" "" paru-build yay-build \
-        wakatime-binary "" tea-release gh-release \
+        wakatime-binary "" gt-release gh-release \
         "" "" "" "" "" "" "" "" go-ov "" "" curl-lazydocker "" "" "" "" "" "" "" "" "" marktext-release "" win32yank-release
 end
 

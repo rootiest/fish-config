@@ -22,7 +22,7 @@ set -p fish_function_path $repo_root/functions
 # branch and contacts the live forge: that is how an empty `rootiest/repo` came
 # to exist on git.rootiest.dev on 2026-09-14, and why these cases then passed
 # standalone (the repo exists, so mkrep links instead of creating) while
-# failing under run-tests.fish (throwaway XDG_CONFIG_HOME, so `tea` has no
+# failing under run-tests.fish (throwaway XDG_CONFIG_HOME, so `gt` has no
 # login). Neutralize all five for the whole suite.
 #
 # Empty reads the same as unset to mkrep, so this is a clean slate without
@@ -360,8 +360,8 @@ set -l base (_mkrep_sandbox)
 set -l target "$base/x"
 begin
     set -l stub (mktemp -d)
-    printf '#!/bin/sh\nexit 1\n' >$stub/tea
-    chmod +x $stub/tea
+    printf '#!/bin/sh\nexit 1\n' >$stub/gt
+    chmod +x $stub/gt
     set -lx PATH $stub $PATH
     set -lx GITEA_URL 'https://g.example.invalid/$(touch PWNED_srv)'
     set -lx MKREP_REMOTE_CMD 'echo {server}/{name} >created.txt'
@@ -434,7 +434,7 @@ check "unknown --server type exits 2" 2 $status
 rm -f /tmp/mkrep-test-err
 rm -rf $base
 
-# The rest of this section stub gh/glab/tea so no real network/CLI auth is
+# The rest of this section stub gh/glab/gt so no real network/CLI auth is
 # needed: a fake binary on $PATH decides whether the "repo" is reported as
 # already existing, and $MKREP_REMOTE_CMD (which --server honors exactly
 # like --new-remote) stands in for the real create command.
@@ -450,10 +450,10 @@ section "mkrep: --server's default gitea template survives an empty (commit-less
 begin
     # Regression: mkrep only ever runs `git init`, so a freshly created
     # repo has no commits yet. The default template's final push must not
-    # error on that unborn HEAD once `tea repos create` and `git remote
+    # error on that unborn HEAD once `gt repo create` and `git remote
     # add` (both real, local-only) have already succeeded.
-    printf '#!/bin/sh\ncase "$2" in\n  create) exit 0 ;;\n  *) exit 1 ;;\nesac\n' >$stub_bin/tea
-    chmod +x $stub_bin/tea
+    printf '#!/bin/sh\ncase "$2" in\n  create) exit 0 ;;\n  *) exit 1 ;;\nesac\n' >$stub_bin/gt
+    chmod +x $stub_bin/gt
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -470,7 +470,7 @@ end
 section "mkrep: --server auto-creates when the repo does not exist"
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -486,7 +486,7 @@ end
 section "mkrep: --server links instead of creating when the repo exists"
 
 begin
-    _mkrep_stub_tool tea 0
+    _mkrep_stub_tool gt 0
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -504,7 +504,7 @@ end
 section "mkrep: \$GITEA_HOST gets https:// prepended, \$GITEA_URL wins over it"
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -519,7 +519,7 @@ begin
 end
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -549,7 +549,7 @@ end
 section "mkrep: \$GIT_SERVER + \$GITEA_URL together trigger the auto-create flow"
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -572,7 +572,7 @@ end
 section "mkrep: an implicit \$GIT_SERVER remote-create is not silently performed"
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -593,7 +593,7 @@ end
 section "mkrep: an explicit --server never prompts"
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -625,7 +625,7 @@ end
 section "mkrep: --check-existing reports without creating anything"
 
 begin
-    _mkrep_stub_tool tea 0
+    _mkrep_stub_tool gt 0
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -666,7 +666,7 @@ end
 section "mkrep: -l overrides --server"
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
@@ -723,7 +723,7 @@ end
 section "mkrep: -l overrides ambient \$GIT_SERVER and \$GITEA_URL"
 
 begin
-    _mkrep_stub_tool tea 1
+    _mkrep_stub_tool gt 1
     set -l base (_mkrep_sandbox)
     set -l target $base/repo
     set -lx PATH $stub_bin $PATH
