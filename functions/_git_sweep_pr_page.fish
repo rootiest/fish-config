@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # DEPENDENCIES
-#   _git_sweep_token, curl, gh, glab, jq, python3, tea
+#   _git_sweep_token, curl, gh, glab, gt, jq, python3
 #
 # CLASSIFICATION
 #   network
@@ -15,7 +15,7 @@
 #   <host>, and prints the head branch name of each. <forge> is github,
 #   gitea or gitlab. <method> picks the transport:
 #
-#     cli    the forge's own CLI (gh, tea or glab), scoped to <host>
+#     cli    the forge's own CLI (gh, gt or glab), scoped to <host>
 #     token  curl with a token from _git_sweep_token for <host>
 #     anon   curl with no credentials (works for public repositories)
 #
@@ -72,19 +72,16 @@ function _git_sweep_pr_page --argument-names method forge host path page
                     or return 1
                     return 0
                 case gitea
-                    type -q tea; or return 1
-                    # Use the login for this host, not tea's default login.
-                    set -l login
-                    for row in (tea login list -o tsv </dev/null 2>/dev/null)
-                        set -l f (string split \t -- $row)
-                        if test "$(_git_sweep_host $f[2])" = "$host"
-                            set login $f[1]
-                            break
-                        end
-                    end
-                    test -n "$login"; or return 1
-                    set body (tea api --login $login "/$q" </dev/null 2>/dev/null)
+                    # gt filters with its built-in jq, like gh. Only gt's own
+                    # login for this host is used: GITEA_TOKEN may belong to
+                    # another instance (the token method binds it to its host),
+                    # and gt treats an empty one as unset.
+                    type -q gt; or return 1
+                    set -lx GITEA_TOKEN ''
+                    gt api --host https://$host $q \
+                        -q 'if type == "array" then .[].head | .ref, (.label // "" | sub("^[^:]*:"; "")) else error("not a list") end' </dev/null 2>/dev/null
                     or return 1
+                    return 0
                 case gitlab
                     type -q glab; or return 1
                     set body (glab api --hostname $host $q </dev/null 2>/dev/null)

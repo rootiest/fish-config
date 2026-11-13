@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # DEPENDENCIES
-#   gh, glab, tea
+#   gh, glab, gt
 #
 # CLASSIFICATION
 #   network
@@ -13,7 +13,7 @@
 # DESCRIPTION
 #   Checks whether <user>/<name> already exists on the given server, for
 #   mkrep's --server and --check-existing flows. Each host CLI is already
-#   authenticated (gh/glab/tea login), so this shells out to its own
+#   authenticated (gh/glab/gt login), so this shells out to its own
 #   repo-lookup command rather than querying an API directly.
 #
 # ARGUMENTS
@@ -34,8 +34,8 @@ function _mkrep_repo_exists --argument-names type user name
             type -q glab; or return 1
             glab repo view "$user/$name" >/dev/null 2>&1
         case gitea
-            type -q tea; or return 1
-            tea repos "$user/$name" >/dev/null 2>&1
+            type -q gt; or return 1
+            gt repo view "$user/$name" >/dev/null 2>&1
         case '*'
             return 1
     end

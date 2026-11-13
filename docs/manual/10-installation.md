@@ -66,7 +66,7 @@ To install particular tools, name them: `fish-deps install gh` offers only
 without a prompt; only `sudo` and other programs still ask their own
 questions:
 
-    fish -c 'fish-deps install --yes tea'
+    fish -c 'fish-deps install --yes gt'
 
 The details are under
 [Unattended installs](/06-dependency-catalog/#unattended-installs).

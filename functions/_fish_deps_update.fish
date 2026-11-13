@@ -12,7 +12,7 @@
 #   preferred method. Priority order: cargo, then system PM, then special
 #   installers (fzf-update, fisher, pipx). Always updates fisher plugins first.
 #
-#   Tools with a release installer (tea, gh) are updated the way they were
+#   Tools with a release installer (gt, gh) are updated the way they were
 #   installed: a binary that resolves to ~/.local/bin/<tool> is replaced by
 #   the latest verified release, anything else is upgraded through the
 #   system package manager under that manager's package name.
@@ -37,7 +37,7 @@
 #
 # EXAMPLE
 #   _fish_deps_update
-#   _fish_deps_update tea gh
+#   _fish_deps_update gt gh
 function _fish_deps_update
     _fish_deps_catalog
     __fish_palette
@@ -214,15 +214,15 @@ function _fish_deps_update
             continue
         end
 
-        # tea, gh: a copy fish-deps installed from a release lives in
+        # gt, gh: a copy fish-deps installed from a release lives in
         # ~/.local/bin and is refreshed from the latest release; a packaged
         # copy belongs to its package manager, under that manager's name.
-        if contains -- "$special" tea-release gh-release
+        if contains -- "$special" gt-release gh-release
             if test (command -s $bin) = "$HOME/.local/bin/$bin"
                 echo "Updating $bin..."
                 set attempted (math $attempted + 1)
-                if test $special = tea-release
-                    _fish_deps_tea_binary
+                if test $special = gt-release
+                    _fish_deps_gt_binary
                 else
                     _fish_deps_gh_binary
                 end

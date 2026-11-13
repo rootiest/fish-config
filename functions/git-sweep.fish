@@ -26,7 +26,7 @@
 #       head of an open pull request (a local branch tracking one is kept
 #       too).
 #
-#   Open pull requests are listed with whatever is available: gh, tea or
+#   Open pull requests are listed with whatever is available: gh, gt or
 #   glab, else curl with a token from the environment that belongs to the
 #   remote's host, else anonymous curl for a public repository. If none of
 #   them works, remote branches are listed but not deleted. Local cleanup

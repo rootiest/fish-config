@@ -15,9 +15,10 @@
 #
 #     github-cli  is gh outside the Arch family (apt, dnf, yum, zypper,
 #                 brew, pkg).
-#     tea         is tea-cli under apt, whose own tea package is an unrelated
-#                 text editor, and gitea-tea under zypper. Fedora and FreeBSD
-#                 carry no Gitea client, so dnf, yum and pkg have none.
+#     gitea-cli   (gt, the official Gitea CLI) keeps its name where it is
+#                 packaged (Arch, Homebrew; apt only if its index has it).
+#                 dnf, yum, zypper and pkg carry no package, so they have
+#                 none and the release download is used.
 #
 #   A NAME with no special mapping is printed unchanged.
 #
@@ -64,16 +65,12 @@ function _fish_deps_pm_pkg --argument-names pm name
                 case '*'
                     echo gh
             end
-        case tea
+        case gitea-cli
             switch "$pm"
-                case apt
-                    echo tea-cli
-                case zypper
-                    echo gitea-tea
-                case dnf yum pkg
+                case dnf yum zypper pkg
                     return 1
                 case '*'
-                    echo tea
+                    echo gitea-cli
             end
         case '*'
             echo $name

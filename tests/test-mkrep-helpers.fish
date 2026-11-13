@@ -11,7 +11,7 @@
 #
 # Runs isolated (no `# MODE:` marker): it cds into throwaway repos and puts
 # stub forge CLIs first on $PATH. Nothing here may reach a real forge, so
-# every case that runs a gh/glab/tea command does it with $PATH narrowed to
+# every case that runs a gh/glab/gt command does it with $PATH narrowed to
 # a mktemp -d directory of stubs that only log their argv -- the real
 # binaries (and curl) are not reachable at all while those cases run.
 
@@ -48,7 +48,7 @@ set -g sandbox (path resolve (mktemp -d))
 # so a $PATH holding nothing but this directory still runs them.
 set -g stubs $sandbox/stubs
 mkdir -p $stubs
-for tool in gh glab tea curl
+for tool in gh glab gt curl
     printf '%s\n' '#!/bin/sh' \
         "for a in \"\$@\"; do printf '%s %s\\n' $tool \"\$a\" >>\"\$STUB_LOG\"; done" \
         'exit ${STUB_RC:-0}' >$stubs/$tool
@@ -105,7 +105,7 @@ for t in github gitlab gitea
 end
 check "github template drives gh" true (string match -q 'gh repo create {name} *' -- (_mkrep_default_remote_cmd github); and echo true; or echo false)
 check "gitlab template drives glab" true (string match -q 'glab repo create {name} *' -- (_mkrep_default_remote_cmd gitlab); and echo true; or echo false)
-check "gitea template drives tea" true (string match -q 'tea repos create --name {name} *' -- (_mkrep_default_remote_cmd gitea); and echo true; or echo false)
+check "gitea template drives gt" true (string match -q 'gt repo create {name} --private --host {server} *' -- (_mkrep_default_remote_cmd gitea); and echo true; or echo false)
 for t in gitlab gitea
     check "$t: push is guarded on HEAD resolving" true (string match -q '*if git rev-parse --verify -q HEAD*git push -u origin HEAD; end' -- (_mkrep_default_remote_cmd $t); and echo true; or echo false)
     check "$t: origin uses {server}/{user}/{name}.git" true (string match -q '*git remote add origin {server}/{user}/{name}.git*' -- (_mkrep_default_remote_cmd $t); and echo true; or echo false)
@@ -183,7 +183,7 @@ for t in gitea gitlab
     cd $start
     check "$t, unborn HEAD: exits 0 (push skipped, not failed)" 0 $rc
     check "$t, unborn HEAD: origin linked" $server/me/proj.git (git -C $work remote get-url origin)
-    set -l want "tea repos|tea create|tea --name|tea proj|tea --private"
+    set -l want "gt repo|gt create|gt proj|gt --private|gt --host|gt $server"
     test $t = gitlab; and set want "glab repo|glab create|glab proj|glab --private|glab --skipGitInit"
     check "$t, unborn HEAD: create stub argv" $want (string join '|' <$STUB_LOG)
     check "$t, unborn HEAD: bare repo got nothing" "" (git -C $server/me/proj.git for-each-ref | string collect)
@@ -258,7 +258,7 @@ check "github: gh argv" "gh repo|gh create|gh my proj|gh --private|gh --source=.
 
 section _mkrep_repo_exists
 
-for pair in github:gh gitlab:glab gitea:tea
+for pair in github:gh gitlab:glab gitea:gt
     set -l t (string split -f1 : $pair)
     set -l tool (string split -f2 : $pair)
     reset_log
@@ -269,7 +269,6 @@ for pair in github:gh gitlab:glab gitea:tea
     end
     check "$t: tool says yes -> 0" 0 $status
     set -l want "$tool repo|$tool view|$tool me/my repo"
-    test $t = gitea; and set want "tea repos|tea me/my repo"
     check "$t: lookup argv (user/name is one arg)" $want (string join '|' <$STUB_LOG)
 
     begin

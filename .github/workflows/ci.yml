@@ -243,7 +243,7 @@ jobs:
           # The shared CI identity (user-level secrets and variables on the
           # rootiest account): commits are "Rootiest CI <ci@rootiest.dev>",
           # signed with a key on that account so Gitea shows them verified.
-          # ci-auth (from the fish-ci image) logs tea in, makes git push use
+          # ci-auth (from the fish-ci image) logs gt in, makes git push use
           # the token, and sets up the identity and signing. Only this step
           # gets the secrets.
           GITEA_SERVER_URL: ${{ vars.CI_GITEA_URL }}
