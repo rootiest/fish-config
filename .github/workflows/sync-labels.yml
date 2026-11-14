@@ -35,7 +35,7 @@ jobs:
     # problem the github-mirror stand-in in ci.yml exists to solve. A
     # skipped job costs nothing and produces no stuck status.
     if: github.server_url != 'https://github.com'
-    runs-on: racknerd-mini
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
