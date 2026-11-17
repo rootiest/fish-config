@@ -272,6 +272,8 @@ end
 # subcommand slot, -h/--help anywhere before --, never a side effect. Add
 # new subcommand-style functions here AND to __help_subcommands below;
 # test_help_subcommand_list_is_complete fails if either is forgotten.
+# test-completions.fish reads __help_subcommands too, to check that each
+# subcommand is offered on Tab, so keep it one quoted row per line.
 set -g __help_subcommand_fns \
     auto-pull fish-deps fish-template jobrunner kitty-logging session-env superpowers
 
