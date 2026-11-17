@@ -143,7 +143,8 @@ When `bat` is installed, man pages are rendered with syntax highlighting:
 
 `cd`, `z`, and `cdi`/`zi` are all mapped to `zoxide`-backed navigation. Tab completions
 for `cd` and `z` blend standard directory entries (CWD and `CDPATH`) with frecency
-results so both familiar and frequently-visited paths appear in one list.
+results so both familiar and frequently-visited paths appear in one list. Tab after
+`zi` or `cdi` offers the matching directories from the zoxide database.
 
 ### DirEnv
 
