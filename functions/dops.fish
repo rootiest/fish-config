@@ -24,7 +24,7 @@
 # EXAMPLE
 #   dops
 #   dops -a
-function dops --description 'Enhanced, formatted docker ps listing'
+function dops --wraps 'docker ps' --description 'Enhanced, formatted docker ps listing'
     __fish_help_header (status current-function) $argv; and return 0
 
     command docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' $argv

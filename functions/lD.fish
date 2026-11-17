@@ -25,7 +25,7 @@
 #
 # EXAMPLE
 #   lD ~/projects
-function lD --description 'List directories only'
+function lD --wraps eza --description 'List directories only'
     __fish_help_header (status current-function) $argv; and return 0
 
     if which eza >/dev/null 2>&1

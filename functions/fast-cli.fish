@@ -22,7 +22,7 @@
 #
 # EXAMPLE
 #   fast-cli
-function fast-cli --description "Run a speed test using fast.com"
+function fast-cli --wraps fast --description "Run a speed test using fast.com"
     if not type -q -f fast
         echo (__fish_color red)"Error: fast is not installed."(__fish_color normal) >&2
         return 1
