@@ -5915,6 +5915,10 @@ every \f[V]fish-deps\f[R] report for that is noise.
 Installer scripts (\f[V]rustup\f[R], \f[V]uv\f[R], \f[V]starship\f[R],
 \f[V]lazydocker\f[R]) are downloaded to a temporary file and run only
 after the download succeeds; they are never streamed into \f[V]sh\f[R].
+The rustup installer runs with \f[V]--no-modify-path\f[R]:
+\f[V]config.fish\f[R] already puts \f[V]$CARGO_HOME/bin\f[R] on
+\f[V]PATH\f[R], so rustup\[cq]s own \f[V]conf.d/rustup.fish\f[R] would
+only duplicate it.
 Downloaded binaries (\f[V]wakatime-cli\f[R], \f[V]gt\f[R], \f[V]gh\f[R],
 \f[V]win32yank.exe\f[R], the MarkText AppImage) are checked against a
 SHA-256 digest before they are made executable: the release\[cq]s
