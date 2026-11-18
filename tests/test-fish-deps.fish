@@ -682,7 +682,7 @@ function inst_reset --argument-names missing
     mkdir -p $HOME/.config
     echo mine >$HOME/.config/starship.toml
     # The config stage writes with the real mkdir and cp.
-    for t in mkdir cp rm mv date
+    for t in mkdir cp rm mv date ln
         ln -s (command -s $t) $_inst_bin/$t
     end
     set -gx PATH $_inst_bin
@@ -839,6 +839,41 @@ set -g __fish_deps_starship_default $repo_root/data/starship.toml
 # ---- starship-config: replace an existing config, keeping a backup ---------
 set -l cfg_dir $HOME/.config
 
+# Removes the starship.toml backups in a directory (set: a glob that matches
+# nothing is not an error there).
+function bak_clear --argument-names dir
+    set -l baks $dir/starship.toml.bak-*
+    set -q baks[1]; and command rm -- $baks
+    return 0
+end
+
+# _fish_deps_starship_config called directly: what the run around it hides.
+inst_reset ""
+_fish_deps_starship_config --quiet >$work/out 2>&1
+check "the helper reports an existing config as nothing to do (2)" 2 $status
+check "the helper's --quiet prints nothing" "" (string collect <$work/out)
+
+command rm $cfg_dir/starship.toml
+echo linked >$work/linked.toml
+ln -s $work/linked.toml $cfg_dir/starship.toml
+set -g _ask_answers y
+_fish_deps_starship_config --force >/dev/null 2>&1
+check "the helper --force writes the default over a symlink" 0 $status
+check "the replaced symlink is the backup" true (set -l b $cfg_dir/starship.toml.bak-*; test -L "$b[1]"; and echo true; or echo false)
+check "the symlinked file itself is untouched" linked (string collect <$work/linked.toml)
+check "the config is now a plain file" false (test -L $cfg_dir/starship.toml; and echo true; or echo false)
+bak_clear $cfg_dir
+
+command rm $cfg_dir/starship.toml
+mkdir $cfg_dir/starship.toml
+set -g _ask_answers y
+set -g _ask_log
+_fish_deps_starship_config --force >/dev/null 2>&1
+check "the helper --force refuses a directory (1)" 1 $status
+check "the helper asks nothing about a directory" 0 (count $_ask_log)
+check "the directory is left in place" true (test -d $cfg_dir/starship.toml; and echo true; or echo false)
+command rm -r $cfg_dir/starship.toml
+
 inst_reset ""
 inst_run y '' starship-config
 check "starship-config exits 0" 0 $_inst_rc
@@ -850,16 +885,16 @@ check "starship-config says where the old config went" true (inst_saw "previous 
 check "starship-config offers no catalog tool" 1 (count $_ask_log)
 
 inst_reset ""
-command rm $cfg_dir/starship.toml.bak-* 2>/dev/null
+bak_clear $cfg_dir
 inst_run y '' starship-config
-command rm $cfg_dir/starship.toml.bak-* 2>/dev/null
+bak_clear $cfg_dir
 inst_run '' '' starship-config
 check "a config that is already the default is not asked about" 0 (count $_ask_log)
 check "a config that is already the default gets no backup" 0 (count $cfg_dir/starship.toml.bak-*)
 check "a config that is already the default is reported" true (inst_saw "already the default" "$_inst_out")
 
 inst_reset ""
-command rm $cfg_dir/starship.toml.bak-* 2>/dev/null
+bak_clear $cfg_dir
 inst_run n '' starship-config
 check "declining starship-config exits 0" 0 $_inst_rc
 check "declining starship-config keeps the config" mine (cfg_is $cfg_dir/starship.toml)
@@ -888,12 +923,12 @@ check "starship-config with STARSHIP_CONFIG leaves ~/.config alone" mine (cfg_is
 set -e STARSHIP_CONFIG
 
 inst_reset ""
-command rm $cfg_dir/starship.toml.bak-* 2>/dev/null
+bak_clear $cfg_dir
 inst_run y '' starship starship-config
 check "naming starship and starship-config asks once" 1 (count $_ask_log)
 check "naming both replaces the config" default (cfg_is $cfg_dir/starship.toml)
 check "naming both does not also report it unchanged" false (inst_saw "left unchanged" "$_inst_out")
-command rm $cfg_dir/starship.toml.bak-* 2>/dev/null
+bak_clear $cfg_dir
 
 inst_reset ""
 inst_run '' ''
@@ -1200,12 +1235,12 @@ fish-deps sync starship-config <$work/stdin >$work/out 2>&1
 check "sync starship-config exits 0" 0 $status
 check "sync starship-config replaces the config" true (test (string collect <$HOME/.config/starship.toml) = (string collect <$__fish_deps_starship_default); and echo true; or echo false)
 check "sync starship-config updates nothing" false (test -e $work/inst-logs/update.log; and echo true; or echo false)
-command rm $HOME/.config/starship.toml.bak-* 2>/dev/null
+bak_clear $HOME/.config
 functions -e _fish_deps_update
 
 set -gx PATH $oldpath
 set -e __fish_deps_os_release __fish_deps_starship_default STARSHIP_CONFIG
-functions -e sudo _fish_deps_ask ens_reset inst_reset inst_run inst_log inst_saw write_osrel
+functions -e sudo bak_clear _fish_deps_ask ens_reset inst_reset inst_run inst_log inst_saw write_osrel
 
 # =============================================================================
 # 13. _fish_deps_gt_binary / _fish_deps_gh_binary
