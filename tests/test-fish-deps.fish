@@ -644,6 +644,7 @@ section _fish_deps_install
 # only record how they were called. `fish-deps install` is driven by the
 # scripted _fish_deps_ask above plus a stdin file for the method menu.
 set -g _inst_bin $work/inst-bin
+set -g __fish_deps_starship_default $repo_root/data/starship.toml
 set -g _inst_all uv cargo fish starship fzf zoxide direnv eza lsd bat ov rg trash python3 wakatime tailscale gt gh cc cat head
 
 function inst_reset --argument-names missing
@@ -674,6 +675,16 @@ function inst_reset --argument-names missing
     printf '%s\n' 'ID=ubuntu' 'ID_LIKE=debian' >$work/os-release
     set -g __fish_deps_os_release $work/os-release
     set -g _sudo_log
+    # A starship config is already in place, so only the scenarios that
+    # remove it see the config stage's prompt.
+    set -e STARSHIP_CONFIG
+    command rm -rf $HOME/.config/starship.toml $work/alt-starship
+    mkdir -p $HOME/.config
+    echo mine >$HOME/.config/starship.toml
+    # The config stage writes with the real mkdir and cp.
+    for t in mkdir cp rm mv date ln
+        ln -s (command -s $t) $_inst_bin/$t
+    end
     set -gx PATH $_inst_bin
 end
 
@@ -737,6 +748,194 @@ inst_run y '1\n'
 check "a failed install exits 1" 1 $_inst_rc
 check "a failed install says so" true (inst_saw "starship install failed." "$_inst_out")
 check "a failed install is not reported as cancelled" false (inst_saw "cancelled" "$_inst_out")
+
+# ---- starship's second stage: the shipped config (#376) --------------------
+# Prints default (a copy of the shipped file), absent, or the file's text.
+function cfg_is --argument-names file
+    if not test -e $file
+        echo absent
+        return
+    end
+    set -l got (string collect <$file)
+    if test "$got" = (string collect <$__fish_deps_starship_default)
+        echo default
+    else
+        echo $got
+    end
+end
+set -l cfg_q "Install the default starship config ($HOME/.config/starship.toml)?"
+
+inst_reset starship
+command rm $HOME/.config/starship.toml
+inst_run y,y '1\n'
+check "starship then its config exits 0" 0 $_inst_rc
+check "a fresh starship gets the default config" default (cfg_is $HOME/.config/starship.toml)
+check "the config is asked about after starship" "Install starship?|$cfg_q" (string join '|' -- $_ask_log)
+check "the written config is reported" true (inst_saw "starship config installed" "$_inst_out")
+
+inst_reset starship
+inst_run y '1\n'
+check "an existing config is left alone after an install" mine (cfg_is $HOME/.config/starship.toml)
+check "an existing config is not asked about" 1 (count $_ask_log)
+check "an existing config is reported unchanged" true (inst_saw "left unchanged" "$_inst_out")
+check "the report says where the default lives" true (inst_saw "The default is $__fish_deps_starship_default" "$_inst_out")
+
+inst_reset ""
+command rm $HOME/.config/starship.toml
+inst_run y ''
+check "an installed starship with no config gets one" default (cfg_is $HOME/.config/starship.toml)
+check "an installed starship is not offered again" "$cfg_q" "$_ask_log"
+check "a written config is not 'Nothing to install.'" false (inst_saw "Nothing to install." "$_inst_out")
+
+inst_reset ""
+inst_run '' ''
+check "an installed, configured starship says nothing" false (inst_saw "starship config" "$_inst_out")
+inst_run '' '' starship
+check "a named starship reports its existing config" true (inst_saw "left unchanged" "$_inst_out")
+check "a named starship leaves the config alone" mine (cfg_is $HOME/.config/starship.toml)
+
+inst_reset ""
+command rm $HOME/.config/starship.toml
+set -gx STARSHIP_CONFIG $work/alt-starship/prompt.toml
+inst_run y ''
+check "STARSHIP_CONFIG is where the config goes" default (cfg_is $work/alt-starship/prompt.toml)
+check "STARSHIP_CONFIG leaves ~/.config alone" absent (cfg_is $HOME/.config/starship.toml)
+echo theirs >$work/alt-starship/prompt.toml
+echo mine >$HOME/.config/starship.toml
+command rm $HOME/.config/starship.toml
+inst_run '' ''
+check "an existing STARSHIP_CONFIG file is left alone" theirs (cfg_is $work/alt-starship/prompt.toml)
+check "an existing STARSHIP_CONFIG file is not asked about" 0 (count $_ask_log)
+set -e STARSHIP_CONFIG
+
+inst_reset ""
+command rm $HOME/.config/starship.toml
+inst_run n ''
+check "declining the config exits 0" 0 $_inst_rc
+check "declining the config writes nothing" absent (cfg_is $HOME/.config/starship.toml)
+
+inst_reset ""
+command rm $HOME/.config/starship.toml
+inst_run q ''
+check "q at the config prompt exits 130" 130 $_inst_rc
+check "q at the config prompt writes nothing" absent (cfg_is $HOME/.config/starship.toml)
+
+inst_reset starship
+command rm $HOME/.config/starship.toml
+: >$work/cargo_fail
+inst_run y '1\n'
+check "a failed starship install offers no config" 1 (count $_ask_log)
+check "a failed starship install writes no config" absent (cfg_is $HOME/.config/starship.toml)
+
+inst_reset ""
+command rm $HOME/.config/starship.toml
+set -g __fish_deps_starship_default $work/no-such-starship.toml
+inst_run y ''
+check "a missing shipped config fails the run" 1 $_inst_rc
+check "the missing shipped config is listed as failed" true (inst_saw "failed: " "$_inst_out")
+check "the failed config is named starship.toml" true (inst_saw starship.toml "$_inst_out")
+set -g __fish_deps_starship_default $repo_root/data/starship.toml
+
+# ---- starship-config: replace an existing config, keeping a backup ---------
+set -l cfg_dir $HOME/.config
+
+# Removes the starship.toml backups in a directory (set: a glob that matches
+# nothing is not an error there).
+function bak_clear --argument-names dir
+    set -l baks $dir/starship.toml.bak-*
+    set -q baks[1]; and command rm -- $baks
+    return 0
+end
+
+# _fish_deps_starship_config called directly: what the run around it hides.
+inst_reset ""
+_fish_deps_starship_config --quiet >$work/out 2>&1
+check "the helper reports an existing config as nothing to do (2)" 2 $status
+check "the helper's --quiet prints nothing" "" (string collect <$work/out)
+
+command rm $cfg_dir/starship.toml
+echo linked >$work/linked.toml
+ln -s $work/linked.toml $cfg_dir/starship.toml
+set -g _ask_answers y
+_fish_deps_starship_config --force >/dev/null 2>&1
+check "the helper --force writes the default over a symlink" 0 $status
+check "the replaced symlink is the backup" true (set -l b $cfg_dir/starship.toml.bak-*; test -L "$b[1]"; and echo true; or echo false)
+check "the symlinked file itself is untouched" linked (string collect <$work/linked.toml)
+check "the config is now a plain file" false (test -L $cfg_dir/starship.toml; and echo true; or echo false)
+bak_clear $cfg_dir
+
+command rm $cfg_dir/starship.toml
+mkdir $cfg_dir/starship.toml
+set -g _ask_answers y
+set -g _ask_log
+_fish_deps_starship_config --force >/dev/null 2>&1
+check "the helper --force refuses a directory (1)" 1 $status
+check "the helper asks nothing about a directory" 0 (count $_ask_log)
+check "the directory is left in place" true (test -d $cfg_dir/starship.toml; and echo true; or echo false)
+command rm -r $cfg_dir/starship.toml
+
+inst_reset ""
+inst_run y '' starship-config
+check "starship-config exits 0" 0 $_inst_rc
+check "starship-config replaces an existing config" default (cfg_is $cfg_dir/starship.toml)
+check "starship-config keeps exactly one backup" 1 (count $cfg_dir/starship.toml.bak-*)
+check "the backup holds the old config" mine (cfg_is $cfg_dir/starship.toml.bak-*)
+check "starship-config asks before replacing" true (string match -q 'Replace the starship config*kept as*.bak-*' -- "$_ask_log"; and echo true; or echo false)
+check "starship-config says where the old config went" true (inst_saw "previous starship config is now" "$_inst_out")
+check "starship-config offers no catalog tool" 1 (count $_ask_log)
+
+inst_reset ""
+bak_clear $cfg_dir
+inst_run y '' starship-config
+bak_clear $cfg_dir
+inst_run '' '' starship-config
+check "a config that is already the default is not asked about" 0 (count $_ask_log)
+check "a config that is already the default gets no backup" 0 (count $cfg_dir/starship.toml.bak-*)
+check "a config that is already the default is reported" true (inst_saw "already the default" "$_inst_out")
+
+inst_reset ""
+bak_clear $cfg_dir
+inst_run n '' starship-config
+check "declining starship-config exits 0" 0 $_inst_rc
+check "declining starship-config keeps the config" mine (cfg_is $cfg_dir/starship.toml)
+check "declining starship-config makes no backup" 0 (count $cfg_dir/starship.toml.bak-*)
+
+inst_reset ""
+inst_run q '' starship-config
+check "q at starship-config exits 130" 130 $_inst_rc
+check "q at starship-config keeps the config" mine (cfg_is $cfg_dir/starship.toml)
+
+inst_reset ""
+command rm $cfg_dir/starship.toml
+inst_run y '' starship-config
+check "starship-config with no config writes one" default (cfg_is $cfg_dir/starship.toml)
+check "starship-config with no config makes no backup" 0 (count $cfg_dir/starship.toml.bak-*)
+check "starship-config with no config asks to install" "$cfg_q" "$_ask_log"
+
+inst_reset ""
+mkdir -p $work/alt-starship
+echo theirs >$work/alt-starship/prompt.toml
+set -gx STARSHIP_CONFIG $work/alt-starship/prompt.toml
+inst_run y '' starship-config
+check "starship-config replaces STARSHIP_CONFIG" default (cfg_is $work/alt-starship/prompt.toml)
+check "starship-config backs up STARSHIP_CONFIG beside it" theirs (cfg_is $work/alt-starship/prompt.toml.bak-*)
+check "starship-config with STARSHIP_CONFIG leaves ~/.config alone" mine (cfg_is $cfg_dir/starship.toml)
+set -e STARSHIP_CONFIG
+
+inst_reset ""
+bak_clear $cfg_dir
+inst_run y '' starship starship-config
+check "naming starship and starship-config asks once" 1 (count $_ask_log)
+check "naming both replaces the config" default (cfg_is $cfg_dir/starship.toml)
+check "naming both does not also report it unchanged" false (inst_saw "left unchanged" "$_inst_out")
+bak_clear $cfg_dir
+
+inst_reset ""
+inst_run '' ''
+check "the unchanged note does not show for a configured starship" false (inst_saw starship-config "$_inst_out")
+inst_run '' '' starship
+check "the unchanged note points at starship-config" true (inst_saw "fish-deps install starship-config replaces it" "$_inst_out")
+functions -e cfg_is
 
 # ---- the fish upgrade message (#10) ---------------------------------------
 function _fish_deps_build_fish
@@ -895,6 +1094,12 @@ check "--yes says which default it took" true (inst_saw "(default, --yes)" "$_in
 check "--yes still prints the question it answered" true (string match -qr 'Install starship\?\S* \[Y/n/q\] y \(--yes\)' -- "$_inst_out"; and echo true; or echo false)
 check "--yes leaves no state behind" false (set -q _fdc_assume_yes; and echo true; or echo false)
 
+inst_reset ""
+command rm $HOME/.config/starship.toml
+inst_run '' 'q\n' --yes
+check "--yes installs the starship config without reading" 0 $_inst_rc
+check "--yes wrote the default config" true (test (string collect <$HOME/.config/starship.toml) = (string collect <$__fish_deps_starship_default); and echo true; or echo false)
+
 inst_reset gt
 inst_run '' 'q\n' -y gt
 check "-y with a named tool installs it" 0 $_inst_rc
@@ -1023,11 +1228,19 @@ set -g _ask_answers n
 fish-deps sync <$work/stdin >$work/out 2>&1
 check "sync exits 0 when everything was merely declined" 0 $status
 check "sync updates after a completed install" true (test -e $work/inst-logs/update.log; and echo true; or echo false)
+
+inst_reset ""
+set -g _ask_answers y
+fish-deps sync starship-config <$work/stdin >$work/out 2>&1
+check "sync starship-config exits 0" 0 $status
+check "sync starship-config replaces the config" true (test (string collect <$HOME/.config/starship.toml) = (string collect <$__fish_deps_starship_default); and echo true; or echo false)
+check "sync starship-config updates nothing" false (test -e $work/inst-logs/update.log; and echo true; or echo false)
+bak_clear $HOME/.config
 functions -e _fish_deps_update
 
 set -gx PATH $oldpath
-set -e __fish_deps_os_release
-functions -e sudo _fish_deps_ask ens_reset inst_reset inst_run inst_log inst_saw write_osrel
+set -e __fish_deps_os_release __fish_deps_starship_default STARSHIP_CONFIG
+functions -e sudo bak_clear _fish_deps_ask ens_reset inst_reset inst_run inst_log inst_saw write_osrel
 
 # =============================================================================
 # 13. _fish_deps_gt_binary / _fish_deps_gh_binary

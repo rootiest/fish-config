@@ -45,6 +45,8 @@ complete -c fish-deps -n "not __fish_seen_subcommand_from $subcmds" \
 # Tool names restrict install, update and sync to those catalog entries.
 complete -c fish-deps -n "__fish_seen_subcommand_from install update sync" \
     -a '(__fish_deps_complete_tools)'
+complete -c fish-deps -n "__fish_seen_subcommand_from install sync" \
+    -a starship-config -d 'Replace the Starship config (keeps a backup)'
 
 complete -c fish-deps -n "__fish_seen_subcommand_from install update sync" \
     -s y -l yes -d 'Take every default without asking'

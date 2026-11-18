@@ -2031,6 +2031,13 @@ functions). They are active in all interactive sessions.
     kitty without --terminals. A name that is not in the catalog is a usage
     error (exit 2), reported before anything is done.
 
+    install also puts this configuration's Starship prompt config
+    (data/starship.toml) at $STARSHIP_CONFIG, else ~/.config/starship.toml,
+    once starship is installed and no config is there yet. An existing
+    config is never touched by that. To replace one, name starship-config
+    (install or sync only): fish-deps install starship-config renames the
+    current file to <name>.bak-YYYYMMDD-HHMMSS, then writes the default.
+
     For scripts, --yes answers every fish-deps prompt with its default
     without reading input: each tool is installed through its first
     (preferred) method, falling back to the next method in the list when
@@ -2072,6 +2079,8 @@ functions). They are active in all interactive sessions.
       --all        With install/sync: shorthand for --optional --terminals
       -y, --yes    With install/sync: take every default without asking
       TOOL         With install/update/sync: only these catalog entries
+      starship-config  With install/sync: replace the Starship config with the
+                   default, keeping a backup of the current one
       help, -h, --help  Show this help
 
     Exit Status:
@@ -2091,6 +2100,7 @@ functions). They are active in all interactive sessions.
     fish-deps install --all
     fish-deps install gh
     fish-deps install --yes gt
+    fish-deps install starship-config
     fish-deps update
     fish-deps update gt gh
 
@@ -5007,7 +5017,13 @@ remote and what the last background push did.
 ### Starship
 
 The primary prompt is Starship, initialized by `conf.d/starship.fish`.
-Configure it via `~/.config/starship.toml`.
+Configure it via `~/.config/starship.toml` (or the file `$STARSHIP_CONFIG`
+names). The default this configuration is designed around ships as
+`data/starship.toml`: `fish-deps` install puts it in place when no config
+exists, and `fish-deps` install starship-config replaces an existing one,
+keeping a timestamped backup. The same file serves every distro, since
+Starship's os module picks the distro icon at runtime (CachyOS shows the
+Arch icon).
 
 `conf.d/starship.fish` defines a `fish_prompt` wrapper that only activates when
 `starship` is in PATH and C3 overrides are enabled (see Opinionated
@@ -5889,6 +5905,15 @@ tends to lack, but only when a method you chose needs them:
 - A default Rust toolchain, when `cargo` is only a rustup shim.
 - `unzip`, before the `wakatime-cli` download.
 - Go, before installing `ov` on a distro that does not package it.
+
+Starship also gets this configuration's prompt config. Once `starship` is
+installed, `fish-deps install` offers the bundled `data/starship.toml` for
+`$STARSHIP_CONFIG`, or `~/.config/starship.toml` when that is unset, if no
+config is there yet. It does the same on a machine where Starship came from
+the package manager. An existing config is never touched. To replace one
+with the default, run `fish-deps install starship-config`: it asks first,
+then renames the current file to `starship.toml.bak-YYYYMMDD-HHMMSS` beside
+it and writes the default.
 
 Newly installed tools are put on the current shell's `PATH` right away, so
 there is no restart between steps; fish itself is the exception, and needs a

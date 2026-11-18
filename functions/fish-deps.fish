@@ -43,6 +43,13 @@
 #   kitty without --terminals. A name that is not in the catalog is a usage
 #   error (exit 2), reported before anything is done.
 #
+#   install also puts this configuration's Starship prompt config
+#   (data/starship.toml) at $STARSHIP_CONFIG, else ~/.config/starship.toml,
+#   once starship is installed and no config is there yet. An existing
+#   config is never touched by that. To replace one, name starship-config
+#   (install or sync only): fish-deps install starship-config renames the
+#   current file to <name>.bak-YYYYMMDD-HHMMSS, then writes the default.
+#
 #   For scripts, --yes answers every fish-deps prompt with its default
 #   without reading input: each tool is installed through its first
 #   (preferred) method, falling back to the next method in the list when
@@ -84,6 +91,8 @@
 #   --all        With install/sync: shorthand for --optional --terminals
 #   -y, --yes    With install/sync: take every default without asking
 #   TOOL         With install/update/sync: only these catalog entries
+#   starship-config  With install/sync: replace the Starship config with the
+#                default, keeping a backup of the current one
 #   help, -h, --help  Show this help
 #
 # EXIT STATUS
@@ -103,6 +112,7 @@
 #   fish-deps install --all
 #   fish-deps install gh
 #   fish-deps install --yes gt
+#   fish-deps install starship-config
 #   fish-deps update
 #   fish-deps update gt gh
 function fish-deps --description 'Manage fish shell dependencies'
@@ -138,8 +148,16 @@ function fish-deps --description 'Manage fish shell dependencies'
             echo ""
             echo "=== Updating installed deps ==="
             # The update half gets the named tools only: the tier flags and
-            # --yes mean nothing to it.
-            _fish_deps_update (string match -v -- '-*' $flags)
+            # --yes mean nothing to it, and starship-config is install-only.
+            # Naming nothing but starship-config leaves nothing to update,
+            # rather than everything.
+            set -l tools (string match -v -- '-*' $flags)
+            set -l update_tools (string match -v -- starship-config $tools)
+            if set -q tools[1]; and not set -q update_tools[1]
+                echo "Nothing to update."
+                return $install_status
+            end
+            _fish_deps_update $update_tools
             set -l update_status $status
             test $update_status -ne 0; and return $update_status
             return $install_status
@@ -181,6 +199,10 @@ function __fish_deps_help
     echo ""
     echo "  $c_dim""TOOL$c_reset names restrict a run to those catalog entries, any tier; an"
     echo "  unknown name is a usage error. Example: $c_cmd""fish-deps install --yes gt$c_reset"
+    echo ""
+    echo "  install also writes the default Starship config when none exists."
+    echo "  $c_cmd""fish-deps install starship-config$c_reset replaces an existing one,"
+    echo "  keeping it as a timestamped .bak file."
     echo ""
     echo "Install method priority: cargo > system PM > git/curl/pipx/release download"
     echo "When multiple methods are available, you will be prompted to choose."
