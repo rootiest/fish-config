@@ -36,6 +36,20 @@
 #
 #   The paru and yay AUR helpers are only offered on Arch-based systems.
 #
+#   starship gets a second stage: the prompt config this repository ships
+#   (data/starship.toml) is offered for $STARSHIP_CONFIG, else
+#   ~/.config/starship.toml, when nothing is there yet. It is offered after
+#   starship installs, and also when starship is already installed but has
+#   no config. An existing config is never modified; when starship was just
+#   installed or was named, the run says so and where the default lives.
+#   A config that cannot be written counts as a failed install.
+#
+#   starship-config is accepted as a TOOL name although it is not in the
+#   catalog. It installs the shipped config even when one exists: the
+#   existing file is first renamed to <name>.bak-YYYYMMDD-HHMMSS beside it.
+#   It is asked about like any other step, and a config that already
+#   matches the default is left alone.
+#
 #   Prerequisites the installers assume are offered when a chosen method
 #   needs them, never before you have said yes to the tool itself:
 #
@@ -54,7 +68,8 @@
 #   --terminals  Also offer to install Terminal-Emulator-tier dependencies
 #   --all        Shorthand for --optional --terminals
 #   -y, --yes    Take every default without asking
-#   TOOL         Only consider these catalog entries (any tier)
+#   TOOL         Only consider these catalog entries (any tier), or
+#                starship-config to (re)install the shipped prompt config
 #
 # EXIT STATUS
 #   0    Nothing failed (including a run where everything was declined)
@@ -68,6 +83,7 @@
 #   _fish_deps_install --terminals
 #   _fish_deps_install --all
 #   _fish_deps_install --yes gt gh
+#   _fish_deps_install starship-config
 function _fish_deps_install
     _fish_deps_catalog
     __fish_palette
@@ -93,7 +109,9 @@ function _fish_deps_install
                 echo "Run $c_cmd""fish-deps help$c_reset for usage." >&2
                 return 2
             case '*'
-                if contains -- $arg $_fdc_bins
+                # starship-config is not a catalog tool: it names the
+                # forced config stage, run after the catalog.
+                if contains -- $arg $_fdc_bins starship-config
                     contains -- $arg $selected; or set -a selected $arg
                 else
                     set -a unknown $arg
@@ -212,6 +230,16 @@ function _fish_deps_install
             echo -n (__fish_color brblack)
             echo "  $bin is already installed ("(command -s $bin)")"
             echo -n (__fish_color normal)
+        end
+
+        # starship's second stage, the shipped prompt config: offered after
+        # a fresh install, and when starship is already there (a package
+        # manager's, or an earlier run's) but has no config. In that case an
+        # existing config is passed over silently unless starship was named.
+        set -l config_stage
+        if test "$bin" = starship; and test $needs_install -eq 0; and not contains -- starship-config $selected
+            set config_stage --quiet
+            set -q selected[1]; and set config_stage loud
         end
 
         if test $needs_install -eq 1
@@ -596,6 +624,8 @@ function _fish_deps_install
                 echo -n (__fish_color green)
                 echo "  $bin $done_word."
                 echo -n (__fish_color normal)
+                test "$bin" = starship; and not contains -- starship-config $selected
+                and set config_stage loud
                 if test "$bin" = fish
                     echo -n (__fish_color yellow)
                     echo "  Fish upgraded — restart your shell to use the new version."
@@ -608,7 +638,34 @@ function _fish_deps_install
                 echo -n (__fish_color normal)
             end
         end
+
+        if set -q config_stage[1]
+            _fish_deps_starship_config (string match -- --quiet $config_stage)
+            switch $status
+                case 0
+                    set installed_any 1
+                case 1
+                    set -a failed starship.toml
+                case 130
+                    set cancelled 1
+                    break
+            end
+        end
         set i (math $i + 1)
+    end
+
+    # starship-config: the shipped prompt config, replacing (after a backup)
+    # any config already there.
+    if test $cancelled -eq 0; and contains -- starship-config $selected
+        _fish_deps_starship_config --force
+        switch $status
+            case 0
+                set installed_any 1
+            case 1
+                set -a failed starship.toml
+            case 130
+                set cancelled 1
+        end
     end
 
     # Tear the cancellation machinery down on every path out, so a finished
