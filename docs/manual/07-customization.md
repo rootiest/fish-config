@@ -201,7 +201,13 @@ remote and what the last background push did.
 ### Starship
 
 The primary prompt is Starship, initialized by conf.d/starship.fish.
-Configure it via ~/.config/starship.toml.
+Configure it via ~/.config/starship.toml (or the file $STARSHIP_CONFIG
+names). The default this configuration is designed around ships as
+data/starship.toml: fish-deps install puts it in place when no config
+exists, and fish-deps install starship-config replaces an existing one,
+keeping a timestamped backup. The same file serves every distro, since
+Starship's os module picks the distro icon at runtime (CachyOS shows the
+Arch icon).
 
 conf.d/starship.fish defines a fish_prompt wrapper that only activates when
 starship is in PATH and C3 overrides are enabled (see Opinionated

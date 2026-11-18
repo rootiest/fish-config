@@ -56,6 +56,15 @@ tends to lack, but only when a method you chose needs them:
 - `unzip`, before the `wakatime-cli` download.
 - Go, before installing `ov` on a distro that does not package it.
 
+Starship also gets this configuration's prompt config. Once `starship` is
+installed, `fish-deps install` offers the bundled `data/starship.toml` for
+`$STARSHIP_CONFIG`, or `~/.config/starship.toml` when that is unset, if no
+config is there yet. It does the same on a machine where Starship came from
+the package manager. An existing config is never touched. To replace one
+with the default, run `fish-deps install starship-config`: it asks first,
+then renames the current file to `starship.toml.bak-YYYYMMDD-HHMMSS` beside
+it and writes the default.
+
 Newly installed tools are put on the current shell's `PATH` right away, so
 there is no restart between steps; fish itself is the exception, and needs a
 new shell once it has been upgraded. The Optional and Terminal Emulator tiers
