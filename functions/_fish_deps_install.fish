@@ -58,6 +58,10 @@
 #     unzip         Before the wakatime-cli binary download.
 #     Go            Before go install of ov, where the distro has no ov.
 #
+#   The rustup installer runs with --no-modify-path: config.fish already
+#   puts $CARGO_HOME/bin on PATH, so rustup's conf.d/rustup.fish would
+#   duplicate it as an untracked file in this repository.
+#
 #   Every crates.io install passes --locked, so cargo builds against the
 #   dependency versions the crate was published with rather than whatever is
 #   newest. Without it, eza 0.23.5 fails to compile against a newer
@@ -498,7 +502,11 @@ function _fish_deps_install
                     case pm
                         _fish_deps_pm_install $pm_pkg
                     case special-rustup
-                        _fish_deps_run_script https://sh.rustup.rs sh
+                        # --no-modify-path: config.fish already puts
+                        # $CARGO_HOME/bin on PATH, so rustup's own
+                        # conf.d/rustup.fish (and its shell rc edits)
+                        # would only duplicate it, as an untracked file.
+                        _fish_deps_run_script https://sh.rustup.rs sh --no-modify-path
                         set -l _rustup_status $status
                         # Put cargo on PATH for the rest of this session, so no
                         # restart is needed. Both candidates are added: rustup

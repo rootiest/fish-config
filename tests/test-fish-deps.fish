@@ -1004,6 +1004,21 @@ inst_run y,n '1\n'
 check "declining the compiler fails the install" 1 $_inst_rc
 check "declining the compiler never calls cargo install" false (inst_saw install (inst_log cargo))
 
+# ---- the rustup installer leaves PATH to config.fish -------------------------
+# No package carries rustup here, so its installer script is the only method.
+functions -c _fish_deps_run_script __fdt_orig_run_script
+function _fish_deps_run_script
+    echo "$argv" >>$work/inst-logs/run-script.log
+    return 0
+end
+inst_reset cargo
+inst_run y ''
+check "rustup installs through its script" true (inst_saw https://sh.rustup.rs (string collect <$work/inst-logs/run-script.log))
+check "rustup is told not to write conf.d/rustup.fish" "https://sh.rustup.rs sh --no-modify-path" (string collect <$work/inst-logs/run-script.log)
+functions -e _fish_deps_run_script
+functions -c __fdt_orig_run_script _fish_deps_run_script
+functions -e __fdt_orig_run_script
+
 # ---- gt and gh: system package first, release download second ---------------
 function _fish_deps_gt_binary
     echo called >>$work/inst-logs/gt-binary.log
