@@ -75,6 +75,11 @@ if status is-interactive
         # use custom completion
         complete -c z -f # disable files by default 
         complete -c z -x -a '(_zoxide_z_complete)'
+
+        # zi takes query keywords for its picker; offer the database's
+        # directories (cdi wraps zi, so it inherits these).
+        complete -c zi -f -d zoxide \
+            -a '(command zoxide query -l -- (commandline -ct) 2>/dev/null | head -n 25)'
     end
 
 end

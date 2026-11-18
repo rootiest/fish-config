@@ -25,7 +25,7 @@
 #
 # EXAMPLE
 #   lsr ~/projects
-function lsr --description 'Reversed time-sorted listing'
+function lsr --wraps eza --description 'Reversed time-sorted listing'
     __fish_help_header (status current-function) $argv; and return 0
 
     if which eza >/dev/null 2>&1

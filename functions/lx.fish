@@ -25,7 +25,7 @@
 #
 # EXAMPLE
 #   lx ~/projects
-function lx --description 'Extension-sorted listing'
+function lx --wraps eza --description 'Extension-sorted listing'
     __fish_help_header (status current-function) $argv; and return 0
 
     if which eza >/dev/null 2>&1

@@ -576,6 +576,21 @@ Give every function a `--description`, since it's what shows up in `fish -c
 function my_function --description 'Short, imperative description'
 ```
 
+### Completions
+
+A user-facing function that parses options or subcommands of its own needs
+a `completions/<name>.fish`; fish derives nothing from `argparse` or a
+`switch` over `$argv`. `tests/test-completions.fish` enforces it, and checks
+that every subcommand listed in `__help_subcommands` (`tests/test-help.fish`)
+is offered on Tab. An exemption goes on that test's allow-list with a reason.
+
+- A function that only forwards its arguments to another command declares
+  `--wraps <command>` instead, and inherits that command's completions.
+- A shadow of a real command that adds its own options would hide fish's
+  completions for that command with a file of the same name. Call
+  `__fish_source_upstream_completion <cmd> (status filename)` at the top of
+  the file to load them first, then add the shadow's options.
+
 ### Adding a template
 
 Templates live in `templates/targets/` (what runs) and `templates/modifiers/` (how it runs); presets (recipes made only of `set -l` lines) live in `templates/presets/`. A template is a fragment, not a function:

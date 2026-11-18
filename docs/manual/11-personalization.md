@@ -95,8 +95,9 @@ default `~/.config/.user-dots/fish/completions/` is used.
 
 fish loads only the first `<command>.fish` it finds, so a file here
 replaces this config's or the system's completion for that command rather
-than adding to it. To extend an existing completion instead, source the
-original at the top of your file, or put the extra `complete` lines in
-local.fish.
+than adding to it. To extend an existing completion instead, load the
+original at the top of your file with
+`__fish_source_upstream_completion <command> (status filename)`, or put the
+extra `complete` lines in local.fish.
 
 ---
