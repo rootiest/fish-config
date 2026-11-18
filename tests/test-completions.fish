@@ -224,6 +224,10 @@ for fn in bkg wake-lock detach split
     check "$fn fis<Tab> offers fish" true (contains -- fish $got; and echo true; or echo false)
 end
 
+# Past the command's name, the command's own completions take over.
+set -l got (_offered 'detach split -')
+check "detach split -<Tab> offers split's --vertical" true (contains -- --vertical $got; and echo true; or echo false)
+
 set -l got (_offered 'sbver --brief -')
 check "sbver takes one flag at most" false (contains -- --brief $got; and echo true; or echo false)
 
