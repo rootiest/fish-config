@@ -125,7 +125,9 @@ noise. `_fish_deps_wakatime_binary` says plainly when it is missing.
 
 Installer scripts (`rustup`, `uv`, `starship`, `lazydocker`) are downloaded
 to a temporary file and run only after the download succeeds; they are never
-streamed into `sh`. Downloaded binaries (`wakatime-cli`, `gt`, `gh`,
+streamed into `sh`. The rustup installer runs with `--no-modify-path`:
+`config.fish` already puts `$CARGO_HOME/bin` on `PATH`, so rustup's own
+`conf.d/rustup.fish` would only duplicate it. Downloaded binaries (`wakatime-cli`, `gt`, `gh`,
 `win32yank.exe`, the MarkText AppImage) are checked against a SHA-256 digest
 before they are made executable: the release's published checksum file for
 `wakatime-cli`, `gt` and `gh`, the digest GitHub records for the MarkText
