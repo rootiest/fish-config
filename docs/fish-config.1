@@ -2971,25 +2971,32 @@ bkg firefox
 .IP
 .nf
 \f[C]
-Synopsis:  detach [-h] [--version] <command> [args...]
+Synopsis:  detach [-h] [--version] [--] <command> [args...]
 
 Runs a command in the background using nohup, fully detached from the
 terminal with stdout/stderr discarded. The command survives the current
 session.
 
+detach reads its own options only before the command. The first other
+word is the command\[aq]s name, and it and everything after it are passed
+on unchanged, so options meant for the command (even -h or --version)
+reach it. Use -- to run a command whose name starts with -.
+
 Arguments:
   -h, --help   Show help message
   --version    Show version information
+  --           End detach\[aq]s options
   command      The command to run detached
   args...      Additional arguments for the command
 
 Exit Status:
   0  Command launched or help/version shown
   1  nohup is not installed
-  2  No command provided, or unknown option
+  2  No command provided, or an unknown option before the command
 
 Example:
 detach rsync -a ./data remote:/backup/
+detach ls -la
 \f[R]
 .fi
 .PP
