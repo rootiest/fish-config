@@ -548,6 +548,8 @@ to \f[V]zoxide\f[R]-backed navigation.
 Tab completions for \f[V]cd\f[R] and \f[V]z\f[R] blend standard
 directory entries (CWD and \f[V]CDPATH\f[R]) with frecency results so
 both familiar and frequently-visited paths appear in one list.
+Tab after \f[V]zi\f[R] or \f[V]cdi\f[R] offers the matching directories
+from the \f[V]zoxide\f[R] database.
 .SS DirEnv
 .PP
 Automatically loads \f[V].envrc\f[R] files on directory change.
@@ -7489,9 +7491,10 @@ When \f[V]__fish_user_dots_path\f[R] is unset, the default
 fish loads only the first \f[V]<command>.fish\f[R] it finds, so a file
 here replaces this config\[cq]s or the system\[cq]s completion for that
 command rather than adding to it.
-To extend an existing completion instead, source the original at the top
-of your file, or put the extra \f[V]complete\f[R] lines in
-\f[V]local.fish\f[R].
+To extend an existing completion instead, load the original at the top
+of your file with
+\f[V]__fish_source_upstream_completion <command> (status filename)\f[R],
+or put the extra \f[V]complete\f[R] lines in \f[V]local.fish\f[R].
 .PP
    *   *   *   *   *
 .SH 12. FUNCTION TEMPLATES
