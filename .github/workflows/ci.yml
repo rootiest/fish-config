@@ -39,6 +39,16 @@ on:
           - test
           - docs
 
+# A PR's newer push cancels the run of its older one, whose result no
+# longer matters (docs/ship-it.md, merge-it). Pushes to main and manual
+# runs each get a group of their own (the commit), so they are never
+# cancelled or queued: their docs job deploys to Cloudflare Pages and
+# commits the regenerated docs, and stopping that halfway would leave
+# the site or the commit half done.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   # This workflow file is mirrored to GitHub as-is. The real jobs below
   # depend on Gitea-only things (the fish-ci image in the Gitea registry,
