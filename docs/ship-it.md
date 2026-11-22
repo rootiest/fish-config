@@ -6,17 +6,17 @@ name; anything left out uses that step's defaults.
 ## merge-it
 - Merge method: merge commit.
 - Always ask before merging, unless the user has asked for these exact PRs to be merged.
-- **Branch protection sets the pace.** A PR that is behind `main` cannot merge, and
-  `CI / test (pull_request)` must pass on the head it merges with. So after each merge the next
-  PR needs "Update branch", and its PR run on the new head has to pass: that wait cannot be
-  skipped.
-- **Skip the wait on `main`.** Do not wait for `main`'s run on a merge commit before starting on
-  the next PR. Update the next PR straight after the merge and watch only its PR run. A newer
-  push to a PR cancels the run it supersedes (`concurrency` in `ci.yml`), and a cancelled run
-  of a superseded commit is not a failure.
-- **The docs commit.** `main`'s run commits regenerated docs (`chore(docs): regenerate ...`,
-  as Rootiest CI) a few minutes after a merge that changes them. If it lands while the next PR's
-  run is going, that PR is behind again: update it once more. After the last merge, watch
-  `main`'s run on the last merge commit (and its docs commit, if one comes) before reporting.
-- If `main`'s run fails after a batch, find the merge that broke it by running
-  `fish tests/run-tests.fish` at each merge commit since the last green one, oldest first.
+- **Batch independent PRs.** When none of the PRs is stacked on another, and each is mergeable
+  with `CI / test (pull_request)` green on its current head, merge them back to back without
+  waiting for `main`'s run on each merge commit. Branch protection does not require a PR to be
+  up to date with `main`, and each PR has already passed on its own head.
+- **Then watch `main` once.** `main`'s runs queue (`concurrency` in `ci.yml`): they are never
+  cancelled, because their docs job deploys the site and commits regenerated docs. Watch the run
+  on the last merge commit, and the `chore(docs): regenerate ...` commit it makes when the
+  generated docs changed, before reporting.
+- **If that run fails**, find the merge that broke it: check out each merge commit of the batch,
+  oldest first, and run `fish tests/run-tests.fish`. The first that fails is the culprit. Fix it
+  forward on a new branch.
+- Stacked PRs still merge bottom-up, each retargeted onto `main` once its parent merges.
+- A newer push to a PR cancels the run it supersedes. A cancelled run of a superseded commit is
+  not a failure.

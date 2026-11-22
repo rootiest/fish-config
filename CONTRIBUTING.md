@@ -194,10 +194,11 @@ one is a hard rejection, not a review comment:
 - **`CI / test (pull_request)` must pass** before a PR can merge.
 - **A PR with changes requested by a reviewer can't merge** until that's
   resolved, even with enough approvals otherwise.
-- **A PR behind `main` can't merge** — use Gitea's "Update branch" first.
-  This bites a stacked PR specifically: once the PR it was based on merges,
-  the stacked one now shows behind `main` and needs an update before it can
-  merge too, even though nothing about its own content changed.
+- **A PR does not need to be up to date with `main`** to merge: its own
+  `CI / test (pull_request)` run is what gates it. When several PRs merge
+  back to back, `main`'s run on the last merge commit is the check that
+  they work together (see [docs/ship-it.md](docs/ship-it.md)). A stacked
+  PR still merges after the one it was based on, retargeted onto `main`.
 - The repo owner is on the bypass allowlist and can override the above when
   there's a genuine reason to (the emergency valve for [item 3 of keeping
   feature branches focused](#branching--pull-requests)) — this is the
