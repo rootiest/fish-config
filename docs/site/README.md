@@ -73,6 +73,13 @@ true`) and codeblock (`codeblock: true`) icon support are wired up in
 `astro.config.mjs` but unused so far — see the plugin docs for the
 `icon:` sidebar syntax if you want to add them.
 
+## Docs hub link
+
+Every page ends with an "All Rootiest docs" link to
+[rootiest.fyi](https://rootiest.fyi), the index of the Rootiest docs sites.
+It comes from a `Footer` override (`src/components/starlight/Footer.astro`)
+that renders Starlight's own footer and adds the link below it.
+
 ## Development
 
 ```fish title="local dev server"

@@ -1,0 +1,27 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+
+// Starlight's own footer (edit link, last updated, pagination), followed by
+// a link back to rootiest.fyi, the index of every Rootiest docs site.
+---
+
+<Default><slot /></Default>
+<p class="docs-hub">
+  <a href="https://rootiest.fyi">All Rootiest docs</a>
+</p>
+
+<style>
+  @layer starlight.core {
+    .docs-hub {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: var(--sl-text-sm);
+    }
+    .docs-hub a {
+      color: var(--sl-color-text-accent);
+    }
+    .docs-hub a:hover {
+      color: var(--sl-color-white);
+    }
+  }
+</style>
