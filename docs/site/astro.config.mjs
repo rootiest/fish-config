@@ -47,6 +47,7 @@ export default defineConfig({
         ],
         components: {
           SocialIcons: './src/components/starlight/SocialIcons.astro',
+          Footer: './src/components/starlight/Footer.astro',
         },
         head: [
           // Link-preview image: Starlight writes og:title/description/url and twitter:card
