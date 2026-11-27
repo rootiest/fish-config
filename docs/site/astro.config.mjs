@@ -60,6 +60,24 @@ export default defineConfig({
             ['og:image:height', '630'],
             ['og:image:alt', 'Rootiest Fish Config: reference manual for the fish configuration'],
           ].map(([property, content]) => ({ tag: 'meta', attrs: { property, content } })),
+          // Installable as the "Fish config" app: public/manifest.webmanifest, with
+          // rootiest-icons' rootiest-fish-config icons.
+          { tag: 'link', attrs: { rel: 'manifest', href: '/manifest.webmanifest' } },
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'apple-touch-icon',
+              href: 'https://pages.rootiest.fyi/icons/color/raster/rootiest-fish-config/apple-touch-icon.png',
+            },
+          },
+          ...[
+            ['apple-mobile-web-app-title', 'Fish config'],
+            ['application-name', 'Fish config'],
+          ].map(([name, content]) => ({ tag: 'meta', attrs: { name, content } })),
+          ...[
+            ['#eff1f5', '(prefers-color-scheme: light)'],
+            ['#1e1e2e', '(prefers-color-scheme: dark)'],
+          ].map(([content, media]) => ({ tag: 'meta', attrs: { name: 'theme-color', content, media } })),
           {
             tag: 'script',
             content: 'document.addEventListener("DOMContentLoaded", () => { document.querySelectorAll("starlight-file-tree").forEach(tree => { tree.querySelectorAll("details").forEach((d, i) => { if (i !== 0) d.removeAttribute("open"); }); }); });',
